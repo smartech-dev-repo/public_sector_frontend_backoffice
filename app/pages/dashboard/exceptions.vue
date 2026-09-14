@@ -1,9 +1,9 @@
 <template>
  <div class="space-y-6">
-    <div v-if="isLoading" class="py-20">
-      <UiPulseLoader />
-    </div>
-    <div v-else class="space-y-6">
+ <div v-if="isLoading" class="py-20">
+ <UiPulseLoader />
+ </div>
+ <div v-else class="space-y-6">
  <div>
  <p class="text-sm text-slate-500 mt-1">Manage and resolve cases flagged for manual intervention.</p>
  </div>
@@ -61,7 +61,7 @@
  </div>
  </div>
  </div>
-    </div>
+ </div>
 </template>
 
 <script setup>
@@ -71,9 +71,9 @@ import { onMounted, ref } from 'vue';
 const isLoading = ref(true);
 
 onMounted(() => {
-  setTimeout(() => {
-    isLoading.value = false;
-  }, 800);
+ setTimeout(() => {
+ isLoading.value = false;
+ }, 800);
 });
 
 import { useMockData } from '@/composables/modules/useMockData';

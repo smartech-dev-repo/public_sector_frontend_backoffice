@@ -1,9 +1,9 @@
 <template>
  <div class="space-y-6">
-    <div v-if="isLoading" class="py-20">
-      <UiPulseLoader />
-    </div>
-    <div v-else class="space-y-6">
+ <div v-if="isLoading" class="py-20">
+ <UiPulseLoader />
+ </div>
+ <div v-else class="space-y-6">
  <div>
  <p class="text-sm text-slate-500 mt-1">System of record for all high-risk operations and access changes.</p>
  </div>
@@ -22,9 +22,9 @@
  <div class="flex-1">
  <input type="text" placeholder="Search logs..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-emerald-500 transition-colors" />
  </div>
-      <ClientOnly>
-        <flat-pickr v-model="selectedDate" class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-emerald-500 transition-colors text-slate-600 min-w-[150px]" placeholder="Select Date" />
-      </ClientOnly>
+ <ClientOnly>
+ <flat-pickr v-model="selectedDate" class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-emerald-500 transition-colors text-slate-600 min-w-[150px]" placeholder="Select Date" />
+ </ClientOnly>
  <button class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-sm transition-colors flex items-center gap-2">
  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
  Export CSV
@@ -59,7 +59,7 @@
  </div>
  </div>
  </div>
-    </div>
+ </div>
 </template>
 
 <script setup>
@@ -72,13 +72,13 @@ import 'flatpickr/dist/flatpickr.css';
 const isLoading = ref(true);
 
 onMounted(() => {
-  setTimeout(() => {
-    isLoading.value = false;
-  }, 800);
+ setTimeout(() => {
+ isLoading.value = false;
+ }, 800);
 });
 
 definePageMeta({
-  layout: 'dashboard'
+ layout: 'dashboard'
 });
 
 const { auditLogs } = useMockData();

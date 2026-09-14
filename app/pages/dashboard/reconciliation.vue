@@ -1,9 +1,9 @@
 <template>
  <div class="space-y-6">
-    <div v-if="isLoading" class="py-20">
-      <UiPulseLoader />
-    </div>
-    <div v-else class="space-y-6">
+ <div v-if="isLoading" class="py-20">
+ <UiPulseLoader />
+ </div>
+ <div v-else class="space-y-6">
  <div class="flex justify-between items-end">
  <div>
  <p class="text-sm text-slate-500 mt-1">Match approved portal loans against CBA disbursement records.</p>
@@ -67,23 +67,23 @@
  {{ record.matchStatus }}
  </div>
  </td>
-          <td class="px-6 py-4 text-right">
-            <div class="flex justify-end">
-              <UiTableDropdown v-if="record.matchStatus !== 'Matched'">
-                <button @click="resolveRecord(record)" class="w-full text-left px-4 py-2.5 text-sm text-emerald-600 hover:bg-emerald-50 transition-colors">
-                  Resolve Record
-                </button>
-              </UiTableDropdown>
-              <span v-else class="text-slate-300">-</span>
-            </div>
-          </td>
+ <td class="px-6 py-4 text-right">
+ <div class="flex justify-end">
+ <UiTableDropdown v-if="record.matchStatus !== 'Matched'">
+ <button @click="resolveRecord(record)" class="w-full text-left px-4 py-2.5 text-sm text-emerald-600 hover:bg-emerald-50 transition-colors">
+ Resolve Record
+ </button>
+ </UiTableDropdown>
+ <span v-else class="text-slate-300">-</span>
+ </div>
+ </td>
  </tr>
  </tbody>
  </table>
  </div>
  </div>
  </div>
-    </div>
+ </div>
 </template>
 
 <script setup>
@@ -93,9 +93,9 @@ import { onMounted, ref } from 'vue';
 const isLoading = ref(true);
 
 onMounted(() => {
-  setTimeout(() => {
-    isLoading.value = false;
-  }, 800);
+ setTimeout(() => {
+ isLoading.value = false;
+ }, 800);
 });
 
 import { useMockData } from '@/composables/modules/useMockData';

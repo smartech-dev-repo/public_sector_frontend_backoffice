@@ -1,9 +1,9 @@
 <template>
  <div class="space-y-6">
-    <div v-if="isLoading" class="py-20">
-      <UiPulseLoader />
-    </div>
-    <div v-else class="space-y-6">
+ <div v-if="isLoading" class="py-20">
+ <UiPulseLoader />
+ </div>
+ <div v-else class="space-y-6">
  <div class="flex items-center justify-between mb-8">
  <p class="text-sm text-slate-500 max-w-xl">Upload monthly employer broadsheets to refresh customer eligibility, or upload repayment schedules to update active loan balances in real-time.</p>
  </div>
@@ -82,7 +82,7 @@
  </div>
  </div>
  </div>
-    </div>
+ </div>
 </template>
 
 <script setup>
@@ -92,9 +92,9 @@ import { onMounted, ref } from 'vue';
 const isLoading = ref(true);
 
 onMounted(() => {
-  setTimeout(() => {
-    isLoading.value = false;
-  }, 800);
+ setTimeout(() => {
+ isLoading.value = false;
+ }, 800);
 });
 
 

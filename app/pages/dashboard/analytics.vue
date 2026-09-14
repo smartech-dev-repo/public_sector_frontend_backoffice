@@ -1,9 +1,9 @@
 <template>
  <div class="space-y-6">
-    <div v-if="isLoading" class="py-20">
-      <UiPulseLoader />
-    </div>
-    <div v-else class="space-y-6">
+ <div v-if="isLoading" class="py-20">
+ <UiPulseLoader />
+ </div>
+ <div v-else class="space-y-6">
  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
  <div>
  <p class="text-sm text-slate-500">View platform performance metrics and download segmented data for analysis.</p>
@@ -131,7 +131,7 @@
  </div>
  </div>
  </div>
-    </div>
+ </div>
 </template>
 
 <script setup>
@@ -141,9 +141,9 @@ import { onMounted, ref } from 'vue';
 const isLoading = ref(true);
 
 onMounted(() => {
-  setTimeout(() => {
-    isLoading.value = false;
-  }, 800);
+ setTimeout(() => {
+ isLoading.value = false;
+ }, 800);
 });
 
 import { useMockData } from '@/composables/modules/useMockData';
@@ -161,27 +161,27 @@ const downloadReport = () => {
  addToast('Exporting CSV report for the selected period...', 'info');
  
  setTimeout(() => {
-   const headers = ['Metric', 'Value'];
-   const rows = [
-     ['Total Applications', analyticsStats.totalApplications],
-     ['Approval Rate', analyticsStats.approvalRate],
-     ['Average Processing Time', analyticsStats.avgProcessingTime],
-     ['Active Agents', analyticsStats.activeAgents]
-   ];
-   
-   const csvContent = "data:text/csv;charset=utf-8," 
-     + headers.join(",") + "\n"
-     + rows.map(e => e.join(",")).join("\n");
-     
-   const encodedUri = encodeURI(csvContent);
-   const link = document.createElement("a");
-   link.setAttribute("href", encodedUri);
-   link.setAttribute("download", `analytics_export_${new Date().toISOString().split('T')[0]}.csv`);
-   document.body.appendChild(link);
-   link.click();
-   document.body.removeChild(link);
+ const headers = ['Metric', 'Value'];
+ const rows = [
+ ['Total Applications', analyticsStats.totalApplications],
+ ['Approval Rate', analyticsStats.approvalRate],
+ ['Average Processing Time', analyticsStats.avgProcessingTime],
+ ['Active Agents', analyticsStats.activeAgents]
+ ];
+ 
+ const csvContent = "data:text/csv;charset=utf-8," 
+ + headers.join(",") + "\n"
+ + rows.map(e => e.join(",")).join("\n");
+ 
+ const encodedUri = encodeURI(csvContent);
+ const link = document.createElement("a");
+ link.setAttribute("href", encodedUri);
+ link.setAttribute("download", `analytics_export_${new Date().toISOString().split('T')[0]}.csv`);
+ document.body.appendChild(link);
+ link.click();
+ document.body.removeChild(link);
 
-   addToast('CSV export downloaded successfully.', 'success');
+ addToast('CSV export downloaded successfully.', 'success');
  }, 1000);
 };
 </script>

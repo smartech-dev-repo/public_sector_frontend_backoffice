@@ -30,9 +30,9 @@
  :readonly="readonly"
  :required="required"
  :autocomplete="autocomplete"
-    :maxlength="maxlength"
-    class="peer w-full rounded-xl border bg-white px-4 py-3 text-[15px] font-medium text-slate-800 placeholder:text-slate-400 placeholder:font-normal outline-none transition-all duration-200"
-    :class="[ inputSizeClass, hasError ? 'border-red-400 bg-red-50/50 focus:border-red-500 focus:ring-1 focus:ring-red-500' : 'border-slate-200 hover:border-slate-300 focus:border-emerald-500 focus:bg-white', ($slots.prefix || prefixIcon) ? 'pl-12' : '', ($slots.suffix || suffixIcon || type === 'password' || clearable) ? 'pr-12' : '', ]"
+ :maxlength="maxlength"
+ class="peer w-full rounded-xl border bg-white px-4 py-3 text-[15px] font-medium text-slate-800 placeholder:text-slate-400 placeholder:font-normal outline-none transition-all duration-200"
+ :class="[ inputSizeClass, hasError ? 'border-red-400 bg-red-50/50 focus:border-red-500 focus:ring-1 focus:ring-red-500' : 'border-slate-200 hover:border-slate-300 focus:border-emerald-500 focus:bg-white', ($slots.prefix || prefixIcon) ? 'pl-12' : '', ($slots.suffix || suffixIcon || type === 'password' || clearable) ? 'pr-12' : '', ]"
  @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
  @focus="isFocused = true"
  @blur="handleBlur"
@@ -50,9 +50,9 @@
  :readonly="readonly"
  :required="required"
  :rows="rows"
-    :maxlength="maxlength"
-    class="peer w-full rounded-xl border bg-white px-4 py-3 text-[15px] font-medium text-slate-800 placeholder:text-slate-400 placeholder:font-normal outline-none transition-all duration-200 resize-none"
-    :class="[ hasError ? 'border-red-400 bg-red-50/50 focus:border-red-500 focus:ring-1 focus:ring-red-500' : 'border-slate-200 hover:border-slate-300 focus:border-emerald-500 focus:bg-white', ]"
+ :maxlength="maxlength"
+ class="peer w-full rounded-xl border bg-white px-4 py-3 text-[15px] font-medium text-slate-800 placeholder:text-slate-400 placeholder:font-normal outline-none transition-all duration-200 resize-none"
+ :class="[ hasError ? 'border-red-400 bg-red-50/50 focus:border-red-500 focus:ring-1 focus:ring-red-500' : 'border-slate-200 hover:border-slate-300 focus:border-emerald-500 focus:bg-white', ]"
  @input="$emit('update:modelValue', ($event.target as HTMLTextAreaElement).value)"
  @focus="isFocused = true"
  @blur="handleBlur"
@@ -90,20 +90,20 @@
 
  </div>
 
-  <!-- Bottom Row: Error / Hint / Character Count -->
-  <div v-if="hasError || hint || (maxlength && showCount)" class="flex items-start justify-between mt-1">
-    <div class="flex-1">
-      <p v-if="hasError && errorMessage" class="text-xs font-medium text-red-500 flex items-center gap-1">
-        <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        {{ errorMessage }}
-      </p>
-      <p v-else-if="hint" class="text-xs text-slate-400">{{ hint }}</p>
-    </div>
-    <span v-if="maxlength && showCount" class="text-xs text-slate-400 ml-2 tabular-nums">
-      {{ (modelValue || '').length }}/{{ maxlength }}
-    </span>
-  </div>
-  </div>
+ <!-- Bottom Row: Error / Hint / Character Count -->
+ <div v-if="hasError || hint || (maxlength && showCount)" class="flex items-start justify-between mt-1">
+ <div class="flex-1">
+ <p v-if="hasError && errorMessage" class="text-xs font-medium text-red-500 flex items-center gap-1">
+ <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+ {{ errorMessage }}
+ </p>
+ <p v-else-if="hint" class="text-xs text-slate-400">{{ hint }}</p>
+ </div>
+ <span v-if="maxlength && showCount" class="text-xs text-slate-400 ml-2 tabular-nums">
+ {{ (modelValue || '').length }}/{{ maxlength }}
+ </span>
+ </div>
+ </div>
 </template>
 
 <script setup lang="ts">

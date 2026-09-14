@@ -1,9 +1,9 @@
 <template>
  <div class="space-y-6">
-    <div v-if="isLoading" class="py-20">
-      <UiPulseLoader />
-    </div>
-    <div v-else class="space-y-6">
+ <div v-if="isLoading" class="py-20">
+ <UiPulseLoader />
+ </div>
+ <div v-else class="space-y-6">
  <div class="flex items-center justify-between mb-8">
  <button @click="showAddModal = true" class="bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 px-5 rounded-lg transition-all flex items-center gap-2">
  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
@@ -100,7 +100,7 @@
  <p class="text-sm">Are you sure you want to revoke platform access for <strong>{{ memberToRevoke?.name }}</strong>? They will be immediately disconnected.</p>
  </UiModal>
  </div>
-    </div>
+ </div>
 </template>
 
 <script setup>
@@ -110,9 +110,9 @@ import { onMounted, ref } from 'vue';
 const isLoading = ref(true);
 
 onMounted(() => {
-  setTimeout(() => {
-    isLoading.value = false;
-  }, 800);
+ setTimeout(() => {
+ isLoading.value = false;
+ }, 800);
 });
 
 import { useMockData } from '@/composables/modules/useMockData';
@@ -137,16 +137,16 @@ const showRevokeModal = ref(false);
 const memberToRevoke = ref(null);
 
 const confirmRevokeAccess = (member) => {
-  memberToRevoke.value = member;
-  showRevokeModal.value = true;
+ memberToRevoke.value = member;
+ showRevokeModal.value = true;
 };
 
 const executeRevokeAccess = () => {
-  if (memberToRevoke.value) {
-    memberToRevoke.value.status = 'Inactive';
-    addToast(`${memberToRevoke.value.name}'s access has been successfully revoked.`, 'warning');
-  }
-  showRevokeModal.value = false;
+ if (memberToRevoke.value) {
+ memberToRevoke.value.status = 'Inactive';
+ addToast(`${memberToRevoke.value.name}'s access has been successfully revoked.`, 'warning');
+ }
+ showRevokeModal.value = false;
 };
 
 const editTarget = (member) => {

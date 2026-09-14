@@ -117,33 +117,33 @@
  Application not found.
  </div>
 
-  <!-- Rejection Modal -->
-  <UiModal v-model="showRejectModal" title="Reject Application" @confirm="confirmAction">
-    <div class="space-y-4">
-      <p class="text-sm text-slate-600">Please provide a reason for rejecting this application. This will be recorded in the audit log.</p>
-      <UiCustomInput v-model="rejectionReason" type="textarea" placeholder="Enter rejection reason..." rows="3" required />
-    </div>
-  </UiModal>
+ <!-- Rejection Modal -->
+ <UiModal v-model="showRejectModal" title="Reject Application" @confirm="confirmAction">
+ <div class="space-y-4">
+ <p class="text-sm text-slate-600">Please provide a reason for rejecting this application. This will be recorded in the audit log.</p>
+ <UiCustomInput v-model="rejectionReason" type="textarea" placeholder="Enter rejection reason..." rows="3" required />
+ </div>
+ </UiModal>
 
-  <!-- Document Preview Modal -->
-  <UiModal v-model="showPreviewModal" title="Document Preview" @confirm="showPreviewModal = false">
-    <div class="space-y-4 text-center">
-      <p class="text-sm text-slate-600 mb-2">{{ previewedDocument?.name }}</p>
-      <div class="bg-slate-100 rounded-xl p-4 flex items-center justify-center min-h-[300px] border border-slate-200">
-        <!-- Mock Image Preview -->
-        <img v-if="previewedDocument?.type === 'JPG' || previewedDocument?.type === 'PNG'" src="https://images.unsplash.com/photo-1568822617270-2c1579f8dfe2?w=500&q=80" alt="Document Preview" class="max-w-full max-h-[400px] rounded object-contain shadow-sm" />
-        <div v-else class="text-slate-400 flex flex-col items-center gap-2">
-          <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-          <span class="text-sm">PDF Preview Available in Full Version</span>
-        </div>
-      </div>
-    </div>
-    <template #footer>
-      <div class="w-full flex justify-end">
-        <button @click="showPreviewModal = false" class="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium">Close Preview</button>
-      </div>
-    </template>
-  </UiModal>
+ <!-- Document Preview Modal -->
+ <UiModal v-model="showPreviewModal" title="Document Preview" @confirm="showPreviewModal = false">
+ <div class="space-y-4 text-center">
+ <p class="text-sm text-slate-600 mb-2">{{ previewedDocument?.name }}</p>
+ <div class="bg-slate-100 rounded-xl p-4 flex items-center justify-center min-h-[300px] border border-slate-200">
+ <!-- Mock Image Preview -->
+ <img v-if="previewedDocument?.type === 'JPG' || previewedDocument?.type === 'PNG'" src="https://images.unsplash.com/photo-1568822617270-2c1579f8dfe2?w=500&q=80" alt="Document Preview" class="max-w-full max-h-[400px] rounded object-contain shadow-sm" />
+ <div v-else class="text-slate-400 flex flex-col items-center gap-2">
+ <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+ <span class="text-sm">PDF Preview Available in Full Version</span>
+ </div>
+ </div>
+ </div>
+ <template #footer>
+ <div class="w-full flex justify-end">
+ <button @click="showPreviewModal = false" class="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium">Close Preview</button>
+ </div>
+ </template>
+ </UiModal>
 
  <!-- Confirmation Modal -->
  <UiModal v-model="showConfirmModal" :title="confirmTitle" @confirm="confirmAction">
@@ -159,7 +159,7 @@ import { useToast } from '@/composables/useToast';
 import UiModal from '@/components/ui/Modal.vue';
 
 definePageMeta({
-  layout: 'dashboard'
+ layout: 'dashboard'
 });
 
 const route = useRoute();
@@ -168,7 +168,7 @@ const { agentApplications } = useMockData();
 const { addToast } = useToast();
 
 const application = computed(() => {
-  return agentApplications.find(a => a.id === route.params.id);
+ return agentApplications.find(a => a.id === route.params.id);
 });
 
 const currentStatus = ref(application.value?.status);
@@ -182,54 +182,54 @@ const confirmMessage = ref('');
 const rejectionReason = ref('');
 
 const previewDocument = (doc) => {
-  previewedDocument.value = doc;
-  showPreviewModal.value = true;
+ previewedDocument.value = doc;
+ showPreviewModal.value = true;
 };
 
 const promptAction = (action) => {
-  pendingAction.value = action;
-  if (action === 'Recommended') {
-    confirmTitle.value = 'Recommend Application';
-    confirmMessage.value = 'Are you sure you want to recommend this application to Internal Control?';
-    showConfirmModal.value = true;
-  } else if (action === 'Approved') {
-    confirmTitle.value = 'Approve Application';
-    confirmMessage.value = 'Are you sure you want to approve this application? The agent will be onboarded.';
-  } else if (action === 'Rejected') {
-    confirmTitle.value = 'Reject Application';
-    confirmMessage.value = 'Are you sure you want to reject this application? This action cannot be undone.';
-    showRejectModal.value = true;
-    return;
-  }
-  showConfirmModal.value = true;
+ pendingAction.value = action;
+ if (action === 'Recommended') {
+ confirmTitle.value = 'Recommend Application';
+ confirmMessage.value = 'Are you sure you want to recommend this application to Internal Control?';
+ showConfirmModal.value = true;
+ } else if (action === 'Approved') {
+ confirmTitle.value = 'Approve Application';
+ confirmMessage.value = 'Are you sure you want to approve this application? The agent will be onboarded.';
+ } else if (action === 'Rejected') {
+ confirmTitle.value = 'Reject Application';
+ confirmMessage.value = 'Are you sure you want to reject this application? This action cannot be undone.';
+ showRejectModal.value = true;
+ return;
+ }
+ showConfirmModal.value = true;
 };
 
 const confirmAction = () => {
-  if (pendingAction.value === 'Rejected') {
-    if (!rejectionReason.value.trim()) {
-      addToast('Please provide a reason for rejection.', 'error');
-      return;
-    }
-    currentStatus.value = 'Rejected';
-    addToast('Application rejected.', 'warning');
-    showConfirmModal.value = false;
-    setTimeout(() => router.push('/dashboard/maker-checker'), 1000);
-    return;
-  }
+ if (pendingAction.value === 'Rejected') {
+ if (!rejectionReason.value.trim()) {
+ addToast('Please provide a reason for rejection.', 'error');
+ return;
+ }
+ currentStatus.value = 'Rejected';
+ addToast('Application rejected.', 'warning');
+ showConfirmModal.value = false;
+ setTimeout(() => router.push('/dashboard/maker-checker'), 1000);
+ return;
+ }
 
-  if (pendingAction.value === 'Recommended') {
-    currentStatus.value = 'Recommended';
-    addToast('Application Recommended by Team Lead. Forwarded to Internal Control.', 'success');
-    showConfirmModal.value = false;
-    setTimeout(() => router.push('/dashboard/maker-checker'), 1000);
-    return;
-  }
+ if (pendingAction.value === 'Recommended') {
+ currentStatus.value = 'Recommended';
+ addToast('Application Recommended by Team Lead. Forwarded to Internal Control.', 'success');
+ showConfirmModal.value = false;
+ setTimeout(() => router.push('/dashboard/maker-checker'), 1000);
+ return;
+ }
 
-  if (pendingAction.value === 'Approved') {
-    currentStatus.value = 'Approved';
-    addToast('Application Approved successfully!', 'success');
-    showConfirmModal.value = false;
-    setTimeout(() => router.push('/dashboard/maker-checker'), 1000);
-  }
+ if (pendingAction.value === 'Approved') {
+ currentStatus.value = 'Approved';
+ addToast('Application Approved successfully!', 'success');
+ showConfirmModal.value = false;
+ setTimeout(() => router.push('/dashboard/maker-checker'), 1000);
+ }
 };
 </script>

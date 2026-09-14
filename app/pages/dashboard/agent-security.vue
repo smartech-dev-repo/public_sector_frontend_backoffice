@@ -1,9 +1,9 @@
 <template>
  <div class="space-y-6">
-    <div v-if="isLoading" class="py-20">
-      <UiPulseLoader />
-    </div>
-    <div v-else class="space-y-6">
+ <div v-if="isLoading" class="py-20">
+ <UiPulseLoader />
+ </div>
+ <div v-else class="space-y-6">
  <div class="flex justify-between items-end">
  <div>
  <p class="text-sm text-slate-500 mt-1">Monitor agent activity and enforce immediate suspension for flagged agents.</p>
@@ -24,11 +24,11 @@
  <div class="flex-1">
  <input type="text" placeholder="Search by Agent Name or ID..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-emerald-500 transition-colors" />
  </div>
-      <UiSelect 
-        :options="[{label: 'All Statuses', value: ''}, {label: 'Active', value: 'Active'}, {label: 'Suspended', value: 'Suspended'}]"
-        :modelValue="''"
-        class="w-48"
-      />
+ <UiSelect 
+ :options="[{label: 'All Statuses', value: ''}, {label: 'Active', value: 'Active'}, {label: 'Suspended', value: 'Suspended'}]"
+ :modelValue="''"
+ class="w-48"
+ />
  </div>
 
  <!-- Agent List -->
@@ -68,72 +68,72 @@
  <td class="px-6 py-4 text-slate-600">
  {{ new Date(agent.lastActive).toLocaleDateString() }}
  </td>
-          <td class="px-6 py-4 text-right">
-            <div class="flex justify-end">
-              <UiTableDropdown>
-                <button v-if="agent.status === 'Active'" @click="toggleStatus(agent)" class="w-full text-left px-4 py-2.5 text-sm text-rose-600 hover:bg-rose-50 transition-colors">
-                  Suspend Agent
-                </button>
-                <button v-else @click="toggleStatus(agent)" class="w-full text-left px-4 py-2.5 text-sm text-emerald-600 hover:bg-emerald-50 transition-colors">
-                  Reactivate Agent
-                </button>
-                <button @click="previewAgent(agent)" class="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
-                  Preview Details
-                </button>
-                <button class="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
-                  View Audit Logs
-                </button>
-              </UiTableDropdown>
-            </div>
-          </td>
+ <td class="px-6 py-4 text-right">
+ <div class="flex justify-end">
+ <UiTableDropdown>
+ <button v-if="agent.status === 'Active'" @click="toggleStatus(agent)" class="w-full text-left px-4 py-2.5 text-sm text-rose-600 hover:bg-rose-50 transition-colors">
+ Suspend Agent
+ </button>
+ <button v-else @click="toggleStatus(agent)" class="w-full text-left px-4 py-2.5 text-sm text-emerald-600 hover:bg-emerald-50 transition-colors">
+ Reactivate Agent
+ </button>
+ <button @click="previewAgent(agent)" class="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+ Preview Details
+ </button>
+ <button class="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+ View Audit Logs
+ </button>
+ </UiTableDropdown>
+ </div>
+ </td>
  </tr>
  </tbody>
  </table>
  </div>
  </div>
 
-  <!-- Suspension Modal -->
-  <UiModal v-model="showActionModal" :title="`Confirm ${pendingAction === 'suspend' ? 'Suspension' : 'Reactivation'}`" @confirm="executeAction">
-    Are you sure you want to {{ pendingAction }} <strong>{{ pendingAgent?.name }}</strong>? This action will be immutably recorded in the audit trail.
-  </UiModal>
+ <!-- Suspension Modal -->
+ <UiModal v-model="showActionModal" :title="`Confirm ${pendingAction === 'suspend' ? 'Suspension' : 'Reactivation'}`" @confirm="executeAction">
+ Are you sure you want to {{ pendingAction }} <strong>{{ pendingAgent?.name }}</strong>? This action will be immutably recorded in the audit trail.
+ </UiModal>
 
-  <!-- Preview Modal -->
-  <UiModal v-model="showPreviewModal" title="Agent Overview" @confirm="showPreviewModal = false">
-    <div v-if="previewData" class="space-y-4 text-sm">
-      <div class="flex items-center gap-4 border-b border-slate-100 pb-4">
-        <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl font-medium">
-          {{ previewData.name.charAt(0) }}
-        </div>
-        <div>
-          <h3 class="font-medium text-slate-800 text-lg">{{ previewData.name }}</h3>
-          <p class="text-slate-500 font-mono">{{ previewData.id }}</p>
-        </div>
-      </div>
-      <div class="grid grid-cols-2 gap-4 pt-2">
-        <div>
-          <p class="text-slate-400 text-xs uppercase tracking-wider">Status</p>
-          <p class="font-medium mt-1" :class="previewData.status === 'Active' ? 'text-emerald-600' : 'text-rose-600'">{{ previewData.status }}</p>
-        </div>
-        <div>
-          <p class="text-slate-400 text-xs uppercase tracking-wider">Total Originated</p>
-          <p class="font-medium text-slate-800 mt-1">{{ previewData.originatedCount }}</p>
-        </div>
-        <div>
-          <p class="text-slate-400 text-xs uppercase tracking-wider">Last Active</p>
-          <p class="font-medium text-slate-800 mt-1">{{ new Date(previewData.lastActive).toLocaleDateString() }}</p>
-        </div>
-      </div>
-    </div>
-    <template #footer>
-      <div class="w-full flex justify-end">
-        <button @click="showPreviewModal = false" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg transition-colors">
-          Close
-        </button>
-      </div>
-    </template>
-  </UiModal>
-    </div>
-  </div>
+ <!-- Preview Modal -->
+ <UiModal v-model="showPreviewModal" title="Agent Overview" @confirm="showPreviewModal = false">
+ <div v-if="previewData" class="space-y-4 text-sm">
+ <div class="flex items-center gap-4 border-b border-slate-100 pb-4">
+ <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl font-medium">
+ {{ previewData.name.charAt(0) }}
+ </div>
+ <div>
+ <h3 class="font-medium text-slate-800 text-lg">{{ previewData.name }}</h3>
+ <p class="text-slate-500 font-mono">{{ previewData.id }}</p>
+ </div>
+ </div>
+ <div class="grid grid-cols-2 gap-4 pt-2">
+ <div>
+ <p class="text-slate-400 text-xs uppercase tracking-wider">Status</p>
+ <p class="font-medium mt-1" :class="previewData.status === 'Active' ? 'text-emerald-600' : 'text-rose-600'">{{ previewData.status }}</p>
+ </div>
+ <div>
+ <p class="text-slate-400 text-xs uppercase tracking-wider">Total Originated</p>
+ <p class="font-medium text-slate-800 mt-1">{{ previewData.originatedCount }}</p>
+ </div>
+ <div>
+ <p class="text-slate-400 text-xs uppercase tracking-wider">Last Active</p>
+ <p class="font-medium text-slate-800 mt-1">{{ new Date(previewData.lastActive).toLocaleDateString() }}</p>
+ </div>
+ </div>
+ </div>
+ <template #footer>
+ <div class="w-full flex justify-end">
+ <button @click="showPreviewModal = false" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg transition-colors">
+ Close
+ </button>
+ </div>
+ </template>
+ </UiModal>
+ </div>
+ </div>
 </template>
 
 <script setup>
@@ -143,9 +143,9 @@ import { onMounted, ref } from 'vue';
 const isLoading = ref(true);
 
 onMounted(() => {
-  setTimeout(() => {
-    isLoading.value = false;
-  }, 800);
+ setTimeout(() => {
+ isLoading.value = false;
+ }, 800);
 });
 
 import { useToast } from '@/composables/useToast';
@@ -177,17 +177,17 @@ const toggleStatus = (agent) => {
 };
 
 const executeAction = () => {
-  if (pendingAgent.value) {
-    const isSuspending = pendingAgent.value.status === 'Active';
-    pendingAgent.value.status = isSuspending ? 'Suspended' : 'Active';
-    addToast(`Agent successfully ${isSuspending ? 'suspended' : 'reactivated'}.`, isSuspending ? 'warning' : 'success');
-  }
-  showActionModal.value = false;
-  pendingAgent.value = null;
+ if (pendingAgent.value) {
+ const isSuspending = pendingAgent.value.status === 'Active';
+ pendingAgent.value.status = isSuspending ? 'Suspended' : 'Active';
+ addToast(`Agent successfully ${isSuspending ? 'suspended' : 'reactivated'}.`, isSuspending ? 'warning' : 'success');
+ }
+ showActionModal.value = false;
+ pendingAgent.value = null;
 };
 
 const previewAgent = (agent) => {
-  previewData.value = agent;
-  showPreviewModal.value = true;
+ previewData.value = agent;
+ showPreviewModal.value = true;
 };
 </script>

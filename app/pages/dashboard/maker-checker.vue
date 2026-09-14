@@ -1,9 +1,9 @@
 <template>
  <div class="space-y-6">
-    <div v-if="isLoading" class="py-20">
-      <UiPulseLoader />
-    </div>
-    <div v-else class="space-y-6">
+ <div v-if="isLoading" class="py-20">
+ <UiPulseLoader />
+ </div>
+ <div v-else class="space-y-6">
  <div class="flex items-center justify-between mb-8">
  <div class="bg-white rounded-lg border border-slate-200 px-4 py-2 flex items-center gap-2">
  <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -66,7 +66,7 @@
  </div>
  </div>
  </div>
-    </div>
+ </div>
 </template>
 
 <script setup>
@@ -76,9 +76,9 @@ import { computed, onMounted, ref } from 'vue';
 const isLoading = ref(true);
 
 onMounted(() => {
-  setTimeout(() => {
-    isLoading.value = false;
-  }, 800);
+ setTimeout(() => {
+ isLoading.value = false;
+ }, 800);
 });
 
 import { useMockData } from '@/composables/modules/useMockData';
