@@ -46,12 +46,14 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useToast } from '@/composables/useToast';
 
 definePageMeta({
   layout: false
 });
 
 const router = useRouter();
+const { addToast } = useToast();
 const password = ref('');
 const confirmPassword = ref('');
 
@@ -70,7 +72,7 @@ const pillClass = (isValid) => {
 
 const handleReset = () => {
   if (password.value !== confirmPassword.value) {
-    alert("Passwords do not match");
+    addToast("Passwords do not match", 'error');
     return;
   }
   router.push('/password-reset-success');

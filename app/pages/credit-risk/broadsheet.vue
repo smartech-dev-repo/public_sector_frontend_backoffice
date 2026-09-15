@@ -99,10 +99,13 @@
 
 <script setup>
 import { ref, computed } from 'vue';
+import { useToast } from '@/composables/useToast';
 
 definePageMeta({
   layout: 'credit-risk'
 });
+
+const { addToast } = useToast();
 
 // State
 const showFilter = ref(false);
@@ -156,7 +159,7 @@ const triggerRepaymentUpload = () => {
 const handleIppisUpload = (event) => {
   const file = event.target.files[0];
   if (file) {
-    alert(`File selected: ${file.name}\nReady for backend upload processing.`);
+    addToast(`File selected: ${file.name}\nReady for backend upload processing.`, 'success');
     // Reset input
     event.target.value = '';
   }
@@ -165,7 +168,7 @@ const handleIppisUpload = (event) => {
 const handleRepaymentUpload = (event) => {
   const file = event.target.files[0];
   if (file) {
-    alert(`File selected: ${file.name}\nReady for backend upload processing.`);
+    addToast(`File selected: ${file.name}\nReady for backend upload processing.`, 'success');
     // Reset input
     event.target.value = '';
   }
@@ -186,7 +189,7 @@ const handleDownload = (item, type) => {
 };
 
 const handleExportExcel = () => {
-  alert('Exporting all data to Excel...');
+  addToast('Exporting all data to Excel...', 'success');
   // Same simulated download logic could go here for the full sheet
   const content = `Mock Complete Export\nGenerated on ${new Date().toISOString()}`;
   const blob = new Blob([content], { type: 'text/csv' });

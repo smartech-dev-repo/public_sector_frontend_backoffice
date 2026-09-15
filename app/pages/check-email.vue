@@ -28,12 +28,16 @@
 </template>
 
 <script setup>
+import { useToast } from '@/composables/useToast';
+
 definePageMeta({
   layout: false
 });
 
+const { addToast } = useToast();
+
 const handleResend = () => {
   // Mock resend action
-  alert("Password reset link has been resent.");
+  addToast("Password reset link has been resent.", 'success');
 };
 </script>

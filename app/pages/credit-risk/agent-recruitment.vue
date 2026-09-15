@@ -61,7 +61,7 @@
             <tr v-if="filteredAgents.length === 0">
               <td colspan="6" class="px-6 py-8 text-center text-slate-500">No agents match your filter criteria.</td>
             </tr>
-            <tr v-for="agent in filteredAgents" :key="agent.id" class="hover:bg-slate-50/50 transition-colors group">
+            <tr v-for="agent in paginatedAgents" :key="agent.id" class="hover:bg-slate-50/50 transition-colors group">
               <td class="px-6 py-4 font-medium text-slate-900">{{ agent.name }}</td>
               <td class="px-6 py-4 text-slate-600">{{ agent.nin }}</td>
               <td class="px-6 py-4 text-slate-600 truncate max-w-[200px]">{{ agent.address }}</td>
@@ -81,9 +81,17 @@
         </table>
       </div>
     </div>
+    
+    <!-- Pagination -->
+    <UiPagination 
+      :total-items="filteredAgents.length" 
+      v-model:current-page="currentPage" 
+      v-model:items-per-page="itemsPerPage" 
+    />
 
     <!-- Modal -->
-    <div v-if="selectedAgent" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <Teleport to="body">
+      <div v-if="selectedAgent" class="fixed inset-0 z-50 flex items-center justify-center p-4">
       <!-- Backdrop -->
       <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" @click="closeModal"></div>
       
@@ -183,13 +191,19 @@
           </div>
         </div>
       </div>
-    </div>
-
+    </Teleport>
+    <!-- Confirmation Modal -->
+    <UiModal v-model="showConfirmModal" :title="confirmTitle" @confirm="executeAction">
+      <p class="text-sm">{{ confirmMessage }}</p>
+    </UiModal>
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue';
+import UiModal from '@/components/ui/Modal.vue';
+import UiPagination from '@/components/ui/Pagination.vue';
+import { useToast } from '@/composables/useToast';
 
 definePageMeta({
   layout: 'credit-risk'
@@ -199,6 +213,12 @@ definePageMeta({
 const showFilter = ref(false);
 const searchQuery = ref('');
 const selectedAgent = ref(null);
+const { addToast } = useToast();
+
+const showConfirmModal = ref(false);
+const confirmTitle = ref('');
+const confirmMessage = ref('');
+const pendingAction = ref('');
 
 // Mock Data
 const agentsData = ref([
@@ -214,13 +234,25 @@ const agentsData = ref([
 
 // Computed
 const filteredAgents = computed(() => {
-  if (!searchQuery.value) return agentsData.value;
-  const lower = searchQuery.value.toLowerCase();
-  return agentsData.value.filter(agent => 
-    agent.name.toLowerCase().includes(lower) || 
-    agent.nin.includes(lower) ||
-    agent.status.toLowerCase().includes(lower)
-  );
+  let result = agentsData.value;
+  if (searchQuery.value) {
+    const lower = searchQuery.value.toLowerCase();
+    result = result.filter(agent => 
+      agent.name.toLowerCase().includes(lower) || 
+      agent.nin.includes(lower) ||
+      agent.status.toLowerCase().includes(lower)
+    );
+  }
+  return result;
+});
+
+const currentPage = ref(1);
+const itemsPerPage = ref(10);
+
+const paginatedAgents = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value;
+  const end = start + itemsPerPage.value;
+  return filteredAgents.value.slice(start, end);
 });
 
 // Actions
@@ -233,7 +265,7 @@ const closeModal = () => {
 };
 
 const handleExportExcel = () => {
-  alert('Exporting agents to Excel...');
+  addToast('Exporting agents to Excel...', 'success');
   const content = `Mock Agent Export\nGenerated on ${new Date().toISOString()}`;
   const blob = new Blob([content], { type: 'text/csv' });
   const url = window.URL.createObjectURL(blob);
@@ -248,7 +280,7 @@ const handleExportExcel = () => {
 
 const handleDocDownload = (docName) => {
   if (!selectedAgent.value) return;
-  alert(`Downloading ${docName} for ${selectedAgent.value.name}`);
+  addToast(`Downloading ${docName} for ${selectedAgent.value.name}`, 'success');
   const content = `Mock Document: ${docName}\nFor: ${selectedAgent.value.name}`;
   const blob = new Blob([content], { type: 'text/plain' });
   const url = window.URL.createObjectURL(blob);
@@ -262,22 +294,34 @@ const handleDocDownload = (docName) => {
 };
 
 const handleRecommend = () => {
-  alert(`Agent ${selectedAgent.value.name} has been recommended!`);
-  // Mock action: update status and close
-  const index = agentsData.value.findIndex(a => a.id === selectedAgent.value.id);
-  if(index !== -1) {
-    agentsData.value[index].status = 'Approved';
-  }
-  closeModal();
+  confirmTitle.value = 'Recommend Application';
+  confirmMessage.value = 'Are you sure you want to recommend this application to Internal Control?';
+  pendingAction.value = 'Recommend';
+  showConfirmModal.value = true;
 };
 
 const handleReject = () => {
-  alert(`Agent ${selectedAgent.value.name} has been rejected.`);
-  // Mock action: update status and close
-  const index = agentsData.value.findIndex(a => a.id === selectedAgent.value.id);
-  if(index !== -1) {
-    agentsData.value[index].status = 'Rejected';
+  confirmTitle.value = 'Reject Application';
+  confirmMessage.value = 'Are you sure you want to reject this application? This action cannot be undone.';
+  pendingAction.value = 'Reject';
+  showConfirmModal.value = true;
+};
+
+const executeAction = () => {
+  if (pendingAction.value === 'Recommend') {
+    addToast(`Agent ${selectedAgent.value.name} has been recommended!`, 'success');
+    const index = agentsData.value.findIndex(a => a.id === selectedAgent.value.id);
+    if(index !== -1) {
+      agentsData.value[index].status = 'Approved';
+    }
+  } else if (pendingAction.value === 'Reject') {
+    addToast(`Agent ${selectedAgent.value.name} has been rejected.`, 'warning');
+    const index = agentsData.value.findIndex(a => a.id === selectedAgent.value.id);
+    if(index !== -1) {
+      agentsData.value[index].status = 'Rejected';
+    }
   }
+  showConfirmModal.value = false;
   closeModal();
 };
 </script>
