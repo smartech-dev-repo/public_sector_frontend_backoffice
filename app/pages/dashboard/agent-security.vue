@@ -20,15 +20,42 @@
  </div>
 
  <!-- Filters -->
- <div class="bg-white rounded-2xl p-4 border border-slate-200 flex items-center gap-4">
- <div class="flex-1">
- <input type="text" placeholder="Search by Agent Name or ID..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-emerald-500 transition-colors" />
- </div>
- <UiSelect 
- :options="[{label: 'All Statuses', value: ''}, {label: 'Active', value: 'Active'}, {label: 'Suspended', value: 'Suspended'}]"
- :modelValue="''"
- class="w-48"
- />
+ <div class="flex items-center justify-between gap-4">
+   <div class="flex-1 max-w-md">
+     <span class="text-sm text-slate-400">Showing {{ filteredAgents.length }} of {{ agentList.length }} agents</span>
+   </div>
+   
+   <div class="flex items-center gap-3 relative">
+     <button @click="showFilter = !showFilter" class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors shadow-sm">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+       Filter
+     </button>
+     
+     <!-- Filter Dropdown -->
+     <div v-if="showFilter" class="absolute top-12 right-0 w-80 bg-white rounded-xl shadow-xl border border-slate-100 p-4 z-50">
+       <h3 class="text-sm font-semibold text-slate-900 mb-3">Filter Agents</h3>
+       
+       <div class="space-y-3 mb-4">
+         <input v-model="filterParams.search" type="text" placeholder="Search by Agent Name or ID..." class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500">
+         
+         <UiSelect 
+           v-model="filterParams.status"
+           placeholder="All Statuses"
+           :options="[{label: 'All Statuses', value: ''}, {label: 'Active', value: 'Active'}, {label: 'Suspended', value: 'Suspended'}]" 
+         />
+         
+         <UiDatePicker 
+           v-model="filterParams.dateRange"
+           placeholder="Select last active date"
+         />
+       </div>
+       
+       <div class="flex gap-2">
+         <button @click="clearFilters" class="flex-1 py-2 bg-slate-50 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-100 transition-colors">Clear</button>
+         <button @click="showFilter = false" class="flex-1 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors">Apply Filter</button>
+       </div>
+     </div>
+   </div>
  </div>
 
  <!-- Agent List -->
@@ -45,7 +72,10 @@
  </tr>
  </thead>
  <tbody class="divide-y divide-slate-100">
- <tr v-for="agent in agentList" :key="agent.id" class="hover:bg-slate-50/50 transition-colors">
+ <tr v-if="paginatedAgents.length === 0">
+ <td colspan="5" class="px-6 py-8 text-center text-slate-500">No agents found.</td>
+ </tr>
+ <tr v-for="agent in paginatedAgents" :key="agent.id" class="hover:bg-slate-50/50 transition-colors">
  <td class="px-6 py-4">
  <div class="flex items-center gap-3">
  <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-medium">
@@ -91,6 +121,13 @@
  </table>
  </div>
  </div>
+
+ <!-- Pagination -->
+ <UiPagination 
+ :total-items="filteredAgents.length" 
+ v-model:current-page="currentPage" 
+ v-model:items-per-page="itemsPerPage" 
+ />
 
  <!-- Suspension Modal -->
  <UiModal v-model="showActionModal" :title="`Confirm ${pendingAction === 'suspend' ? 'Suspension' : 'Reactivation'}`" @confirm="executeAction">
@@ -138,7 +175,8 @@
 
 <script setup>
 import UiPulseLoader from '@/components/ui/PulseLoader.vue';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
+import UiPagination from '@/components/ui/Pagination.vue';
 
 const isLoading = ref(true);
 
@@ -152,6 +190,7 @@ import { useToast } from '@/composables/useToast';
 import UiModal from '@/components/ui/Modal.vue';
 import UiSelect from '@/components/ui/Select.vue';
 import UiTableDropdown from '@/components/ui/TableDropdown.vue';
+import UiDatePicker from '@/components/ui/DatePicker.vue';
 
 definePageMeta({
  layout: 'dashboard'
@@ -169,6 +208,53 @@ const agentList = ref([
  { id: 'AGT-3045', name: 'Solomon Peter', status: 'Active', originatedCount: 12, lastActive: '2026-09-13T14:20:00Z' },
  { id: 'AGT-3011', name: 'Grace Adeleke', status: 'Suspended', originatedCount: 45, lastActive: '2026-09-10T09:15:00Z' }
 ]);
+
+const showFilter = ref(false);
+const filterParams = ref({
+  search: '',
+  status: '',
+  dateRange: ''
+});
+
+const clearFilters = () => {
+  filterParams.value = { search: '', status: '', dateRange: '' };
+};
+
+const filteredAgents = computed(() => {
+  let result = agentList.value;
+  
+  if (filterParams.value.search) {
+    const lower = filterParams.value.search.toLowerCase();
+    result = result.filter(a => a.name.toLowerCase().includes(lower) || a.id.toLowerCase().includes(lower));
+  }
+  
+  if (filterParams.value.status) {
+    result = result.filter(a => a.status === filterParams.value.status);
+  }
+  
+  if (filterParams.value.dateRange) {
+    const dates = filterParams.value.dateRange.split(' to ');
+    if (dates.length > 0) {
+      const start = new Date(dates[0]).getTime();
+      const end = dates.length === 2 ? new Date(dates[1]).getTime() : start;
+      result = result.filter(a => {
+        const itemDate = new Date(a.lastActive).getTime();
+        return itemDate >= start && itemDate <= end;
+      });
+    }
+  }
+  
+  return result;
+});
+
+const currentPage = ref(1);
+const itemsPerPage = ref(10);
+
+const paginatedAgents = computed(() => {
+ const start = (currentPage.value - 1) * itemsPerPage.value;
+ const end = start + itemsPerPage.value;
+ return filteredAgents.value.slice(start, end);
+});
 
 const toggleStatus = (agent) => {
  pendingAgent.value = agent;

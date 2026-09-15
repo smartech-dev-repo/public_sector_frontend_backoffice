@@ -11,10 +11,28 @@
       </button>
 
       <!-- Filter Dropdown -->
-      <div v-if="showFilter" class="absolute top-10 right-36 w-64 bg-white rounded-xl shadow-xl border border-slate-100 p-4 z-50">
+      <div v-if="showFilter" class="absolute top-10 right-36 w-80 bg-white rounded-xl shadow-xl border border-slate-100 p-4 z-50">
         <h3 class="text-sm font-semibold text-slate-900 mb-3">Filter Agents</h3>
-        <input v-model="searchQuery" type="text" placeholder="Search by name or NIN..." class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm mb-3 focus:outline-none focus:border-emerald-500">
-        <button @click="showFilter = false" class="w-full py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700">Apply Filter</button>
+        
+        <div class="space-y-3 mb-4">
+          <input v-model="filterParams.search" type="text" placeholder="Search by name or NIN..." class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500">
+          
+          <UiSelect 
+            v-model="filterParams.status"
+            placeholder="All Statuses"
+            :options="[{label: 'All Statuses', value: ''}, {label: 'Recommend', value: 'Recommend'}, {label: 'Approved', value: 'Approved'}, {label: 'Rejected', value: 'Rejected'}]" 
+          />
+          
+          <UiDatePicker 
+            v-model="filterParams.dateRange"
+            placeholder="Select date range"
+          />
+        </div>
+        
+        <div class="flex gap-2">
+          <button @click="clearFilters" class="flex-1 py-2 bg-slate-50 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-100 transition-colors">Clear</button>
+          <button @click="showFilter = false" class="flex-1 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors">Apply Filter</button>
+        </div>
       </div>
 
       <!-- Export Button -->
@@ -72,8 +90,8 @@
                 </span>
               </td>
               <td class="px-6 py-4">
-                <button @click="openModal(agent)" class="font-medium text-slate-900 hover:text-emerald-600 transition-colors">
-                  View
+                <button @click="openModal(agent)" class="font-medium text-slate-400 hover:text-emerald-600 transition-colors" title="View Details">
+                  <Eye class="w-5 h-5" />
                 </button>
               </td>
             </tr>
@@ -191,6 +209,7 @@
           </div>
         </div>
       </div>
+      </div>
     </Teleport>
     <!-- Confirmation Modal -->
     <UiModal v-model="showConfirmModal" :title="confirmTitle" @confirm="executeAction">
@@ -201,8 +220,11 @@
 
 <script setup>
 import { ref, computed } from 'vue';
+import { Eye } from 'lucide-vue-next';
 import UiModal from '@/components/ui/Modal.vue';
 import UiPagination from '@/components/ui/Pagination.vue';
+import UiSelect from '@/components/ui/Select.vue';
+import UiDatePicker from '@/components/ui/DatePicker.vue';
 import { useToast } from '@/composables/useToast';
 
 definePageMeta({
@@ -211,7 +233,16 @@ definePageMeta({
 
 // State
 const showFilter = ref(false);
-const searchQuery = ref('');
+const filterParams = ref({
+  search: '',
+  status: '',
+  dateRange: ''
+});
+
+const clearFilters = () => {
+  filterParams.value = { search: '', status: '', dateRange: '' };
+};
+
 const selectedAgent = ref(null);
 const { addToast } = useToast();
 
@@ -235,14 +266,31 @@ const agentsData = ref([
 // Computed
 const filteredAgents = computed(() => {
   let result = agentsData.value;
-  if (searchQuery.value) {
-    const lower = searchQuery.value.toLowerCase();
+  
+  if (filterParams.value.search) {
+    const lower = filterParams.value.search.toLowerCase();
     result = result.filter(agent => 
       agent.name.toLowerCase().includes(lower) || 
-      agent.nin.includes(lower) ||
-      agent.status.toLowerCase().includes(lower)
+      agent.nin.includes(lower)
     );
   }
+  
+  if (filterParams.value.status) {
+    result = result.filter(agent => agent.status === filterParams.value.status);
+  }
+  
+  if (filterParams.value.dateRange) {
+    const dates = filterParams.value.dateRange.split(' to ');
+    if (dates.length > 0) {
+      const start = new Date(dates[0]).getTime();
+      const end = dates.length === 2 ? new Date(dates[1]).getTime() : start;
+      result = result.filter(agent => {
+        const itemDate = new Date(agent.date).getTime();
+        return itemDate >= start && itemDate <= end;
+      });
+    }
+  }
+  
   return result;
 });
 

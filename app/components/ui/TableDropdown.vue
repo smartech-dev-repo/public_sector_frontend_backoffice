@@ -1,6 +1,6 @@
 <template>
  <div ref="containerRef" class="inline-block">
- <button ref="buttonRef" @click.stop="toggle" class="p-1.5 text-slate-400 hover:text-emerald-600 rounded-lg hover:bg-emerald-50 transition-colors">
+ <button ref="buttonRef" @click="toggle" class="p-1.5 text-slate-400 hover:text-emerald-600 rounded-lg hover:bg-emerald-50 transition-colors">
  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path></svg>
  </button>
  
@@ -29,6 +29,7 @@ const containerRef = ref(null);
 const buttonRef = ref(null);
 const menuRef = ref(null);
 const dropdownStyle = ref({ top: '0px', left: '0px' });
+const uid = Math.random().toString(36).substring(2, 9);
 
 const updatePosition = () => {
  if (!buttonRef.value || !isOpen.value || !menuRef.value) return;
@@ -51,6 +52,9 @@ const updatePosition = () => {
 };
 
 const toggle = async () => {
+ if (!isOpen.value) {
+   window.dispatchEvent(new CustomEvent('close-table-dropdowns', { detail: uid }));
+ }
  isOpen.value = !isOpen.value;
  if (isOpen.value) {
  await nextTick();
@@ -72,14 +76,22 @@ const handleScroll = () => {
  }
 };
 
+const handleCloseDropdowns = (e) => {
+  if (e.detail !== uid) {
+    isOpen.value = false;
+  }
+};
+
 onMounted(() => {
  document.addEventListener('click', handleClickOutside);
  window.addEventListener('scroll', handleScroll, true);
  window.addEventListener('resize', handleScroll);
+ window.addEventListener('close-table-dropdowns', handleCloseDropdowns);
 });
 onUnmounted(() => {
  document.removeEventListener('click', handleClickOutside);
  window.removeEventListener('scroll', handleScroll, true);
  window.removeEventListener('resize', handleScroll);
+ window.removeEventListener('close-table-dropdowns', handleCloseDropdowns);
 });
 </script>

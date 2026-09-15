@@ -18,17 +18,41 @@
  </div>
 
  <!-- Filters -->
- <div class="bg-white rounded-2xl p-4 border border-slate-200 flex items-center gap-4">
- <div class="flex-1">
- <input type="text" placeholder="Search logs..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-emerald-500 transition-colors" />
- </div>
- <ClientOnly>
- <flat-pickr v-model="selectedDate" class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-emerald-500 transition-colors text-slate-600 min-w-[150px]" placeholder="Select Date" />
- </ClientOnly>
- <button class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-sm transition-colors flex items-center gap-2">
- <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
- Export CSV
- </button>
+ <div class="flex items-center justify-between gap-4">
+   <div class="flex-1 max-w-md">
+     <span class="text-sm text-slate-400">Showing {{ filteredLogs.length }} of {{ auditLogsRef.length }} logs</span>
+   </div>
+   
+   <div class="flex items-center gap-3 relative">
+     <button @click="showFilter = !showFilter" class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors shadow-sm">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+       Filter
+     </button>
+     
+     <!-- Filter Dropdown -->
+     <div v-if="showFilter" class="absolute top-12 right-0 w-80 bg-white rounded-xl shadow-xl border border-slate-100 p-4 z-50">
+       <h3 class="text-sm font-semibold text-slate-900 mb-3">Filter Logs</h3>
+       
+       <div class="space-y-3 mb-4">
+         <input v-model="filterParams.search" type="text" placeholder="Search by actor or target..." class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500">
+         
+         <UiDatePicker 
+           v-model="filterParams.dateRange"
+           placeholder="Select date range"
+         />
+       </div>
+       
+       <div class="flex gap-2">
+         <button @click="clearFilters" class="flex-1 py-2 bg-slate-50 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-100 transition-colors">Clear</button>
+         <button @click="showFilter = false" class="flex-1 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors">Apply Filter</button>
+       </div>
+     </div>
+     
+     <button class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 border border-slate-200 shadow-sm">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+       Export CSV
+     </button>
+   </div>
  </div>
 
  <!-- Log List -->
@@ -45,7 +69,10 @@
  </tr>
  </thead>
  <tbody class="divide-y divide-slate-100 text-sm">
- <tr v-for="log in auditLogs" :key="log.id" class="hover:bg-slate-50/50 transition-colors group">
+ <tr v-if="paginatedLogs.length === 0">
+ <td colspan="5" class="px-6 py-8 text-center text-slate-500">No logs found.</td>
+ </tr>
+ <tr v-for="log in paginatedLogs" :key="log.id" class="hover:bg-slate-50/50 transition-colors group">
  <td class="px-6 py-4 font-mono text-slate-500 whitespace-nowrap">{{ new Date(log.timestamp).toLocaleString('en-GB') }}</td>
  <td class="px-6 py-4 font-medium text-slate-800">{{ log.actor }}</td>
  <td class="px-6 py-4">
@@ -58,16 +85,23 @@
  </table>
  </div>
  </div>
+
+ <!-- Pagination -->
+ <UiPagination 
+ :total-items="filteredLogs.length" 
+ v-model:current-page="currentPage" 
+ v-model:items-per-page="itemsPerPage" 
+ />
  </div>
  </div>
 </template>
 
 <script setup>
 import UiPulseLoader from '@/components/ui/PulseLoader.vue';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { useMockData } from '@/composables/modules/useMockData';
-import flatPickr from 'vue-flatpickr-component';
-import 'flatpickr/dist/flatpickr.css';
+import UiPagination from '@/components/ui/Pagination.vue';
+import UiDatePicker from '@/components/ui/DatePicker.vue';
 
 const isLoading = ref(true);
 
@@ -82,5 +116,51 @@ definePageMeta({
 });
 
 const { auditLogs } = useMockData();
-const selectedDate = ref(null);
+
+const auditLogsRef = ref(auditLogs);
+
+const showFilter = ref(false);
+const filterParams = ref({
+  search: '',
+  dateRange: ''
+});
+
+const clearFilters = () => {
+  filterParams.value = { search: '', dateRange: '' };
+};
+
+const filteredLogs = computed(() => {
+  let result = auditLogsRef.value;
+  
+  if (filterParams.value.search) {
+    const lower = filterParams.value.search.toLowerCase();
+    result = result.filter(log => 
+      log.actor.toLowerCase().includes(lower) || 
+      log.target.toLowerCase().includes(lower)
+    );
+  }
+  
+  if (filterParams.value.dateRange) {
+    const dates = filterParams.value.dateRange.split(' to ');
+    if (dates.length > 0) {
+      const start = new Date(dates[0]).getTime();
+      const end = dates.length === 2 ? new Date(dates[1]).getTime() : start;
+      result = result.filter(log => {
+        const itemDate = new Date(log.timestamp).getTime();
+        return itemDate >= start && itemDate <= end;
+      });
+    }
+  }
+  
+  return result;
+});
+
+const currentPage = ref(1);
+const itemsPerPage = ref(10);
+
+const paginatedLogs = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value;
+  const end = start + itemsPerPage.value;
+  return filteredLogs.value.slice(start, end);
+});
 </script>

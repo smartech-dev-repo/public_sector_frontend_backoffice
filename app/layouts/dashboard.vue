@@ -12,31 +12,30 @@
             class="fixed inset-0 bg-slate-900/50 z-30 md:hidden backdrop-blur-sm transition-opacity"></div>
 
         <aside :class="[
-            'bg-white border-r border-slate-200 text-slate-800 flex-shrink-0 flex flex-col z-40 transition-all duration-300',
+            'bg-white border-r border-slate-200 text-slate-800 flex-shrink-0 flex flex-col z-40 transition-all duration-300 relative',
             'fixed inset-y-0 left-0 md:relative md:translate-x-0',
             isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full',
             isSidebarMinimized ? 'w-20' : 'w-64'
         ]">
+            <!-- Sidebar Shrink Toggle -->
+            <button @click="isSidebarMinimized = !isSidebarMinimized"
+                class="hidden md:flex absolute -right-3.5 top-1/2 -translate-y-1/2 items-center justify-center w-7 h-7 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-emerald-600 hover:border-emerald-600 transition-all shadow-sm z-50"
+                :title="isSidebarMinimized ? 'Expand Sidebar' : 'Collapse Sidebar'">
+                <svg v-if="!isSidebarMinimized" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+            </button>
+
             <div class="h-16 flex items-center border-b border-transparent gap-3"
-                :class="isSidebarMinimized ? 'justify-center px-4' : 'justify-between px-6'">
-                <div class="flex items-center gap-3 overflow-hidden" v-if="!isSidebarMinimized">
-                    <div class="mx-auto rounded-lg flex items-center justify-center mb-6">
+                :class="isSidebarMinimized ? 'justify-center px-4' : 'justify-center px-6'">
+                <div class="flex items-center gap-3 overflow-hidden w-full" v-if="!isSidebarMinimized">
+                    <div class="w-full flex items-center justify-center mb-6">
                         <img src="@/assets/img/logo.png" class="h-6 w-auto" />
                     </div>
                 </div>
-                <button @click="isSidebarMinimized = !isSidebarMinimized"
-                    class="hidden md:flex items-center justify-center p-2 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-900 transition-all shrink-0"
-                    :title="isSidebarMinimized ? 'Expand Sidebar' : 'Collapse Sidebar'">
-                    <svg v-if="!isSidebarMinimized" class="w-5 h-5" fill="none" stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path>
-                    </svg>
-                    <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M13 5l7 7-7 7M5 5l7 7-7 7"></path>
-                    </svg>
-                </button>
             </div>
             <div class="p-6 space-y-8 flex-1 overflow-y-auto overflow-x-hidden">
                 <!-- General Section -->
@@ -233,8 +232,8 @@
                         </button>
                     </div>
                 </div>
-                <div class="flex items-center gap-4 shrink-0">
-                    <div class="flex items-center gap-3 border-l border-slate-200 pl-4">
+                <div class="flex items-center gap-4 shrink-0 relative" ref="profileDropdownRef">
+                    <button @click="isProfileDropdownOpen = !isProfileDropdownOpen" class="flex items-center gap-3 border-l border-slate-200 pl-4 hover:bg-slate-50 py-1.5 rounded-lg transition-colors cursor-pointer text-left">
                         <div class="w-9 h-9 rounded-full bg-slate-200 overflow-hidden border-2 border-white">
                             <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah" alt="User"
                                 class="w-full h-full object-cover" />
@@ -243,6 +242,24 @@
                             <div class="text-sm text-slate-700">Sarah Admin</div>
                             <div class="text-xs text-slate-500">Internal Control</div>
                         </div>
+                        <div class="text-slate-400 hover:text-slate-600 transition-colors ml-1">
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </button>
+                    
+                    <div v-if="isProfileDropdownOpen" class="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 py-1 z-50">
+                        <div class="px-4 py-2 border-b border-slate-100 mb-1">
+                          <div class="text-sm font-medium text-slate-800">Sarah Admin</div>
+                          <div class="text-xs text-slate-500">sarah@example.com</div>
+                        </div>
+                        <button class="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors flex items-center gap-2">
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                          Profile Settings
+                        </button>
+                        <button @click="triggerLogout" class="w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 transition-colors flex items-center gap-2">
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                          Sign out
+                        </button>
                     </div>
                 </div>
             </header>
@@ -257,7 +274,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import UiToast from '@/components/ui/Toast.vue';
 import UiModal from '@/components/ui/Modal.vue';
@@ -270,6 +287,23 @@ const isSidebarMinimized = ref(false);
 const isMobileSidebarOpen = ref(false);
 const showLogoutModal = ref(false);
 const showSearchModal = ref(false);
+
+const isProfileDropdownOpen = ref(false);
+const profileDropdownRef = ref(null);
+
+const closeProfileDropdown = (e) => {
+  if (profileDropdownRef.value && !profileDropdownRef.value.contains(e.target)) {
+    isProfileDropdownOpen.value = false;
+  }
+};
+
+onMounted(() => {
+  document.addEventListener('click', closeProfileDropdown);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', closeProfileDropdown);
+});
 
 // Close mobile sidebar on route change
 watch(() => route.fullPath, () => {

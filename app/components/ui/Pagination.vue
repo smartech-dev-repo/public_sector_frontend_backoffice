@@ -30,17 +30,27 @@
       </div>
       <div class="flex items-center gap-4">
         <!-- Items per page selector -->
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 relative" ref="dropdownRef">
           <label class="text-sm text-slate-600">Rows per page:</label>
-          <select 
-            :value="itemsPerPage"
-            @change="updateItemsPerPage($event.target.value)"
-            class="rounded-md border-0 py-1.5 pl-3 pr-8 text-slate-900 ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-emerald-600 sm:text-sm sm:leading-6"
+          <button 
+            @click="isDropdownOpen = !isDropdownOpen"
+            class="flex items-center justify-between w-16 rounded-md border-0 py-1.5 pl-3 pr-2 text-slate-900 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-600 sm:text-sm sm:leading-6 bg-white transition-colors cursor-pointer shadow-sm"
           >
-            <option v-for="option in [5, 10, 25, 50, 100]" :key="option" :value="option">
+            {{ itemsPerPage }}
+            <svg class="h-4 w-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+          </button>
+          
+          <div v-if="isDropdownOpen" class="absolute bottom-full right-0 mb-1 w-16 rounded-md bg-white shadow-lg ring-1 ring-black/5 z-50 overflow-hidden py-1">
+            <button
+              v-for="option in [5, 10, 25, 50, 100]"
+              :key="option"
+              @click="updateItemsPerPage(option)"
+              class="w-full text-left px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 transition-colors"
+              :class="{ 'bg-emerald-50 text-emerald-700 font-medium': option === itemsPerPage }"
+            >
               {{ option }}
-            </option>
-          </select>
+            </button>
+          </div>
         </div>
 
         <div>
@@ -87,7 +97,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 
 const props = defineProps({
   totalItems: {
@@ -105,6 +115,23 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:currentPage', 'update:itemsPerPage']);
+
+const isDropdownOpen = ref(false);
+const dropdownRef = ref(null);
+
+const closeDropdown = (e) => {
+  if (dropdownRef.value && !dropdownRef.value.contains(e.target)) {
+    isDropdownOpen.value = false;
+  }
+};
+
+onMounted(() => {
+  document.addEventListener('click', closeDropdown);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', closeDropdown);
+});
 
 const totalPages = computed(() => Math.ceil(props.totalItems / props.itemsPerPage));
 const startIndex = computed(() => (props.currentPage - 1) * props.itemsPerPage);
@@ -149,5 +176,6 @@ const prevPage = () => {
 const updateItemsPerPage = (value) => {
   emit('update:itemsPerPage', Number(value));
   emit('update:currentPage', 1); // Reset to first page when changing page size
+  isDropdownOpen.value = false;
 };
 </script>

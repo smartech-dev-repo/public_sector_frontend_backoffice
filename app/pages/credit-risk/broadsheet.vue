@@ -11,10 +11,28 @@
       </button>
 
       <!-- Filter Dropdown -->
-      <div v-if="showFilter" class="absolute top-10 right-32 w-64 bg-white rounded-xl shadow-xl border border-slate-100 p-4 z-50">
+      <div v-if="showFilter" class="absolute top-10 right-32 w-80 bg-white rounded-xl shadow-xl border border-slate-100 p-4 z-50">
         <h3 class="text-sm font-semibold text-slate-900 mb-3">Filter Uploads</h3>
-        <input v-model="searchQuery" type="text" placeholder="Search by month or user..." class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm mb-3 focus:outline-none focus:border-emerald-500">
-        <button @click="showFilter = false" class="w-full py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700">Apply Filter</button>
+        
+        <div class="space-y-3 mb-4">
+          <input v-model="filterParams.search" type="text" placeholder="Search by month or user..." class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500">
+          
+          <UiSelect 
+            v-model="filterParams.status"
+            placeholder="All Statuses"
+            :options="[{label: 'All Statuses', value: ''}, {label: 'Validated', value: 'Validated'}, {label: 'Pending', value: 'Pending'}]" 
+          />
+          
+          <UiDatePicker 
+            v-model="filterParams.dateRange"
+            placeholder="Select date range"
+          />
+        </div>
+        
+        <div class="flex gap-2">
+          <button @click="clearFilters" class="flex-1 py-2 bg-slate-50 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-100 transition-colors">Clear</button>
+          <button @click="showFilter = false" class="flex-1 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors">Apply Filter</button>
+        </div>
       </div>
 
       <!-- Export Button -->
@@ -100,6 +118,8 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useToast } from '@/composables/useToast';
+import UiSelect from '@/components/ui/Select.vue';
+import UiDatePicker from '@/components/ui/DatePicker.vue';
 
 definePageMeta({
   layout: 'credit-risk'
@@ -109,7 +129,16 @@ const { addToast } = useToast();
 
 // State
 const showFilter = ref(false);
-const searchQuery = ref('');
+const filterParams = ref({
+  search: '',
+  status: '',
+  dateRange: ''
+});
+
+const clearFilters = () => {
+  filterParams.value = { search: '', status: '', dateRange: '' };
+};
+
 const ippisFileInput = ref(null);
 const repaymentFileInput = ref(null);
 
@@ -131,20 +160,48 @@ const repaymentData = ref([
 ]);
 
 // Computed
+const parseMockDate = (dateStr) => {
+  // Convert "2nd of July, 2026" -> "2 July 2026"
+  const cleaned = dateStr.replace(/(st|nd|rd|th)\s+of\s+/, ' ').replace(',', '');
+  return new Date(cleaned).getTime();
+};
+
+const filterData = (dataArray) => {
+  let result = dataArray;
+  
+  if (filterParams.value.search) {
+    const lower = filterParams.value.search.toLowerCase();
+    result = result.filter(item => 
+      item.month.toLowerCase().includes(lower) || 
+      item.user.toLowerCase().includes(lower)
+    );
+  }
+  
+  if (filterParams.value.status) {
+    result = result.filter(item => item.status === filterParams.value.status);
+  }
+  
+  if (filterParams.value.dateRange) {
+    const dates = filterParams.value.dateRange.split(' to ');
+    if (dates.length > 0) {
+      const start = new Date(dates[0]).getTime();
+      const end = dates.length === 2 ? new Date(dates[1]).getTime() : start;
+      result = result.filter(item => {
+        const itemDate = parseMockDate(item.date);
+        return itemDate >= start && itemDate <= end;
+      });
+    }
+  }
+  
+  return result;
+};
+
 const filteredIppis = computed(() => {
-  if (!searchQuery.value) return ippisData.value;
-  const lower = searchQuery.value.toLowerCase();
-  return ippisData.value.filter(item => 
-    item.month.toLowerCase().includes(lower) || item.user.toLowerCase().includes(lower)
-  );
+  return filterData(ippisData.value);
 });
 
 const filteredRepayment = computed(() => {
-  if (!searchQuery.value) return repaymentData.value;
-  const lower = searchQuery.value.toLowerCase();
-  return repaymentData.value.filter(item => 
-    item.month.toLowerCase().includes(lower) || item.user.toLowerCase().includes(lower)
-  );
+  return filterData(repaymentData.value);
 });
 
 // Actions

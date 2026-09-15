@@ -24,7 +24,10 @@
  </tr>
  </thead>
  <tbody class="divide-y divide-slate-100">
- <tr v-for="member in teamMembers" :key="member.id" class="hover:bg-slate-50/50 transition-colors">
+ <tr v-if="paginatedTeam.length === 0">
+ <td colspan="5" class="px-6 py-8 text-center text-slate-500">No members found.</td>
+ </tr>
+ <tr v-for="member in paginatedTeam" :key="member.id" class="hover:bg-slate-50/50 transition-colors">
  <td class="px-6 py-4">
  <div class="text-slate-800">{{ member.name }}</div>
  <div class="text-xs font-mono text-slate-500">{{ member.id }}</div>
@@ -61,6 +64,13 @@
  </table>
  </div>
  </div>
+
+ <!-- Pagination -->
+ <UiPagination 
+ :total-items="teamMembersRef.length" 
+ v-model:current-page="currentPage" 
+ v-model:items-per-page="itemsPerPage" 
+ />
 
  <!-- Create Officer Modal -->
  <Teleport to="body">
@@ -105,7 +115,8 @@
 
 <script setup>
 import UiPulseLoader from '@/components/ui/PulseLoader.vue';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
+import UiPagination from '@/components/ui/Pagination.vue';
 
 const isLoading = ref(true);
 
@@ -127,6 +138,17 @@ definePageMeta({
 
 const { teamMembers } = useMockData();
 const { addToast } = useToast();
+
+const teamMembersRef = ref(teamMembers);
+
+const currentPage = ref(1);
+const itemsPerPage = ref(10);
+
+const paginatedTeam = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value;
+  const end = start + itemsPerPage.value;
+  return teamMembersRef.value.slice(start, end);
+});
 
 const showAddModal = ref(false);
 const showTargetModal = ref(false);
