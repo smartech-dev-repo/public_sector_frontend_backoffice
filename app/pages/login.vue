@@ -39,19 +39,26 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAuth } from '~/composables/core/useAuth';
 
 definePageMeta({
   layout: false
 });
 
 const router = useRouter();
+const { adminLogin, loading, error } = useAuth();
 const email = ref('');
 const password = ref('');
 
-const handleLogin = () => {
-  router.push('/dashboard');
+const handleLogin = async () => {
+  try {
+    await adminLogin({ email: email.value, password: password.value });
+    router.push('/dashboard');
+  } catch (e) {
+    // Error is handled in composable, can also show a toast here
+  }
 };
 </script>

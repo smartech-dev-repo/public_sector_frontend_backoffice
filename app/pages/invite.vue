@@ -29,17 +29,30 @@
   </div>
 </template>
 
-<script setup>
-import { useRouter } from 'vue-router';
+<script setup lang="ts">
+import { ref } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+import { useAuth } from '~/composables/core/useAuth';
 
 definePageMeta({
   layout: false
 });
 
 const router = useRouter();
+const route = useRoute();
+const { acceptInvite, loading, error } = useAuth();
 
-const handleAccept = () => {
-  router.push('/setup-account');
+// Ideally the token and email come from the query params
+const token = ref(route.query.token as string || '');
+const email = ref(route.query.email as string || 'name@moneyfieldmfb.com');
+
+const handleAccept = async () => {
+  try {
+    await acceptInvite({ token: token.value, email: email.value });
+    router.push('/setup-account');
+  } catch (e) {
+    // Error handled in composable
+  }
 };
 
 const handleDecline = () => {
