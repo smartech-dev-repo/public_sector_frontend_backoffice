@@ -1,0 +1,97 @@
+[GET] Health/GET /health - Success: {{base_url}}/health
+[POST] Admin/Auth/POST /auth/admin/login - Success: {{base_url}}/auth/admin/login
+[POST] Admin/Auth/POST /auth/admin/login - Invalid credentials (401): {{base_url}}/auth/admin/login
+[POST] Admin/Auth/POST /auth/admin/login - Validation error (400): {{base_url}}/auth/admin/login
+[POST] Admin/Auth/POST /auth/admin/accept-invite - Success: {{base_url}}/auth/admin/accept-invite
+[POST] Admin/Auth/POST /auth/admin/accept-invite - Invalid/expired token (401): {{base_url}}/auth/admin/accept-invite
+[POST] Admin/Session/POST /auth/refresh - Success (admin token): {{base_url}}/auth/refresh
+[POST] Admin/Session/POST /auth/refresh - Unknown token (401): {{base_url}}/auth/refresh
+[GET] Admin/Session/GET /auth/sessions - Success: {{base_url}}/auth/sessions
+[GET] Admin/Session/GET /auth/sessions - Unauthenticated (401): {{base_url}}/auth/sessions
+[DELETE] Admin/Session/DELETE /auth/sessions/:id - Success: {{base_url}}/auth/sessions/{{session_id}}
+[DELETE] Admin/Session/DELETE /auth/sessions/:id - Not found / not owned (404): {{base_url}}/auth/sessions/00000000-0000-0000-0000-000000000000
+[POST] Admin/Session/POST /auth/logout - Success: {{base_url}}/auth/logout
+[POST] Admin/Session/POST /auth/logout-all - Success: {{base_url}}/auth/logout-all
+[POST] Admin/Session/POST /auth/logout-all - Unauthenticated (401): {{base_url}}/auth/logout-all
+[GET] Admin/Reference/GET /admin/me - Success: {{base_url}}/admin/me
+[GET] Admin/Reference/GET /admin/me - Unauthenticated (401): {{base_url}}/admin/me
+[POST] Admin/Invites/POST /admin/invites - Success: {{base_url}}/admin/invites
+[POST] Admin/Invites/POST /admin/invites - Missing permission (403): {{base_url}}/admin/invites
+[POST] Admin/Invites/POST /admin/invites - Validation error (400): {{base_url}}/admin/invites
+[POST] Admin/Invites/POST /admin/invites/:id/resend - Success: {{base_url}}/admin/invites/{{invite_id}}/resend
+[POST] Admin/Invites/POST /admin/invites/:id/resend - Not found / not pending (404): {{base_url}}/admin/invites/00000000-0000-0000-0000-000000000000/resend
+[GET] Admin/Invites/GET /admin/invites - Success (all): {{base_url}}/admin/invites
+[GET] Admin/Invites/GET /admin/invites - Filtered by status=PENDING: {{base_url}}/admin/invites?status=PENDING
+[GET] Admin/Audit Logs/GET /admin/audit-logs - Success (all): {{base_url}}/admin/audit-logs
+[GET] Admin/Audit Logs/GET /admin/audit-logs - Filtered by actorType + action: {{base_url}}/admin/audit-logs?actorType=ADMIN&action=admin.invite.created
+[GET] Admin/Audit Logs/GET /admin/audit-logs - Filtered by targetType + targetId: {{base_url}}/admin/audit-logs?targetType=AdminInvite&targetId={{invite_id}}
+[GET] Admin/Audit Logs/GET /admin/audit-logs - Missing permission (403): {{base_url}}/admin/audit-logs
+[POST] Admin/Force-Revoke Sessions/POST /admin/agents/:id/sessions/revoke-all - Success: {{base_url}}/admin/agents/{{agent_id}}/sessions/revoke-all
+[POST] Admin/Force-Revoke Sessions/POST /admin/agents/:id/sessions/revoke-all - Missing permission (403): {{base_url}}/admin/agents/{{agent_id}}/sessions/revoke-all
+[POST] Admin/Force-Revoke Sessions/POST /admin/agents/:id/sessions/revoke-all - Unauthenticated (401): {{base_url}}/admin/agents/{{agent_id}}/sessions/revoke-all
+[POST] Admin/Force-Revoke Sessions/POST /admin/clients/:id/sessions/revoke-all - Success: {{base_url}}/admin/clients/{{client_id}}/sessions/revoke-all
+[POST] Admin/Force-Revoke Sessions/POST /admin/clients/:id/sessions/revoke-all - Missing permission (403): {{base_url}}/admin/clients/{{client_id}}/sessions/revoke-all
+[POST] Admin/Permissions/POST /admin/permissions - Success: {{base_url}}/admin/permissions
+[POST] Admin/Permissions/POST /admin/permissions - Invalid key format (400): {{base_url}}/admin/permissions
+[POST] Admin/Permissions/POST /admin/permissions - Duplicate key (409): {{base_url}}/admin/permissions
+[GET] Admin/Permissions/GET /admin/permissions - Success (all): {{base_url}}/admin/permissions
+[GET] Admin/Permissions/GET /admin/permissions/:id - Success: {{base_url}}/admin/permissions/{{permission_id}}
+[PATCH] Admin/Permissions/PATCH /admin/permissions/:id - Success: {{base_url}}/admin/permissions/{{permission_id}}
+[DELETE] Admin/Permissions/DELETE /admin/permissions/:id - Blocked, in use by a role (409): {{base_url}}/admin/permissions/{{permission_id}}
+[DELETE] Admin/Permissions/DELETE /admin/permissions/:id - Success: {{base_url}}/admin/permissions/{{permission_id}}
+[POST] Admin/Roles/POST /admin/roles - Success: {{base_url}}/admin/roles
+[POST] Admin/Roles/POST /admin/roles - Duplicate name (409): {{base_url}}/admin/roles
+[GET] Admin/Roles/GET /admin/roles - Success (all): {{base_url}}/admin/roles
+[GET] Admin/Roles/GET /admin/roles/:id - Success: {{base_url}}/admin/roles/{{role_id}}
+[PATCH] Admin/Roles/PATCH /admin/roles/:id - Success: {{base_url}}/admin/roles/{{role_id}}
+[PATCH] Admin/Roles/PATCH /admin/roles/:id - Rejects renaming SUPER_ADMIN (409): {{base_url}}/admin/roles/{{super_admin_role_id}}
+[DELETE] Admin/Roles/DELETE /admin/roles/:id - Rejects deleting SUPER_ADMIN (409): {{base_url}}/admin/roles/{{super_admin_role_id}}
+[POST] Admin/Roles/POST /admin/roles/:id/permissions - Success: {{base_url}}/admin/roles/{{role_id}}/permissions
+[DELETE] Admin/Roles/DELETE /admin/roles/:id/permissions/:permissionId - Success: {{base_url}}/admin/roles/{{role_id}}/permissions/{{permission_id}}
+[DELETE] Admin/Roles/DELETE /admin/roles/:id - Success: {{base_url}}/admin/roles/{{role_id}}
+[GET] Admin/Admins/GET /admin/admins - Success: {{base_url}}/admin/admins
+[POST] Admin/Admins/POST /admin/admins/:id/roles - Success: {{base_url}}/admin/admins/{{admin_id}}/roles
+[DELETE] Admin/Admins/DELETE /admin/admins/:id/roles/:roleId - Success: {{base_url}}/admin/admins/{{admin_id}}/roles/{{role_id}}
+[DELETE] Admin/Admins/DELETE /admin/admins/:id/roles/:roleId - Blocked, last SUPER_ADMIN holder (409): {{base_url}}/admin/admins/{{admin_id}}/roles/{{super_admin_role_id}}
+[POST] Agent/Auth/POST /auth/agent/login - Success: {{base_url}}/auth/agent/login
+[POST] Agent/Auth/POST /auth/agent/login - Invalid credentials (401): {{base_url}}/auth/agent/login
+[POST] Agent/Auth/POST /auth/agent/login - Validation error (400): {{base_url}}/auth/agent/login
+[POST] Agent/Session/POST /auth/refresh - Success (agent token): {{base_url}}/auth/refresh
+[POST] Agent/Session/POST /auth/refresh - Unknown token (401): {{base_url}}/auth/refresh
+[GET] Agent/Session/GET /auth/sessions - Success: {{base_url}}/auth/sessions
+[GET] Agent/Session/GET /auth/sessions - Unauthenticated (401): {{base_url}}/auth/sessions
+[DELETE] Agent/Session/DELETE /auth/sessions/:id - Success: {{base_url}}/auth/sessions/{{agent_session_id}}
+[DELETE] Agent/Session/DELETE /auth/sessions/:id - Not found / not owned (404): {{base_url}}/auth/sessions/00000000-0000-0000-0000-000000000000
+[POST] Agent/Session/POST /auth/logout - Success: {{base_url}}/auth/logout
+[POST] Agent/Session/POST /auth/logout-all - Success: {{base_url}}/auth/logout-all
+[POST] Agent/Session/POST /auth/logout-all - Unauthenticated (401): {{base_url}}/auth/logout-all
+[POST] IPPIS/Documents/POST /admin/documents/ippis-broadsheet/upload - Success: {{base_url}}/admin/documents/ippis-broadsheet/upload
+[POST] IPPIS/Documents/POST /admin/documents/ippis-broadsheet/upload - Unauthenticated (401): {{base_url}}/admin/documents/ippis-broadsheet/upload
+[POST] IPPIS/Documents/POST /admin/documents/disbursed-loans/upload - Success: {{base_url}}/admin/documents/disbursed-loans/upload
+[POST] IPPIS/Documents/POST /admin/documents/disbursed-loans/upload - Missing permission (403): {{base_url}}/admin/documents/disbursed-loans/upload
+[POST] IPPIS/Documents/POST /admin/documents/repayment-schedule/upload - Success: {{base_url}}/admin/documents/repayment-schedule/upload
+[POST] IPPIS/Documents/POST /admin/documents/repayment-schedule/upload - Missing period (400): {{base_url}}/admin/documents/repayment-schedule/upload
+[POST] IPPIS/Documents/POST /admin/documents/repayment-schedule/upload - Invalid period format (400): {{base_url}}/admin/documents/repayment-schedule/upload
+[GET] IPPIS/Documents/GET /admin/documents/batches - Success (all): {{base_url}}/admin/documents/batches
+[GET] IPPIS/Documents/GET /admin/documents/batches - Filtered by documentType + status: {{base_url}}/admin/documents/batches?documentType=IPPIS_BROADSHEET&status=COMPLETED
+[GET] IPPIS/Documents/GET /admin/documents/batches/:id - Success: {{base_url}}/admin/documents/batches/{{ippis_batch_id}}
+[GET] IPPIS/Documents/GET /admin/documents/batches/:id - Missing permission (403): {{base_url}}/admin/documents/batches/{{ippis_batch_id}}
+[GET] IPPIS/Documents/GET /admin/documents/files/:key - Success (download): {{base_url}}/admin/documents/files/{{file_storage_key}}
+[GET] IPPIS/Documents/GET /admin/documents/files/:key - Not found (404): {{base_url}}/admin/documents/files/does%2Fnot%2Fexist.xlsx
+[POST] IPPIS/Session (admin identity)/POST /auth/refresh - Success (admin token): {{base_url}}/auth/refresh
+[GET] IPPIS/Session (admin identity)/GET /auth/sessions - Success: {{base_url}}/auth/sessions
+[POST] IPPIS/Session (admin identity)/POST /auth/logout - Success: {{base_url}}/auth/logout
+[POST] Client/Auth/POST /auth/client/otp/request - Success: {{base_url}}/auth/client/otp/request
+[POST] Client/Auth/POST /auth/client/otp/request - Validation error (400): {{base_url}}/auth/client/otp/request
+[POST] Client/Auth/POST /auth/client/otp/verify - Success: {{base_url}}/auth/client/otp/verify
+[POST] Client/Auth/POST /auth/client/otp/verify - Invalid or expired code (401): {{base_url}}/auth/client/otp/verify
+[POST] Client/Auth/POST /auth/client/otp/verify - Validation error (400, code not 6 digits): {{base_url}}/auth/client/otp/verify
+[POST] Client/Session/POST /auth/refresh - Success (client token): {{base_url}}/auth/refresh
+[POST] Client/Session/POST /auth/refresh - Unknown token (401): {{base_url}}/auth/refresh
+[GET] Client/Session/GET /auth/sessions - Success: {{base_url}}/auth/sessions
+[GET] Client/Session/GET /auth/sessions - Unauthenticated (401): {{base_url}}/auth/sessions
+[DELETE] Client/Session/DELETE /auth/sessions/:id - Success: {{base_url}}/auth/sessions/{{client_session_id}}
+[DELETE] Client/Session/DELETE /auth/sessions/:id - Not found / not owned (404): {{base_url}}/auth/sessions/00000000-0000-0000-0000-000000000000
+[POST] Client/Session/POST /auth/logout - Success: {{base_url}}/auth/logout
+[POST] Client/Session/POST /auth/logout-all - Success: {{base_url}}/auth/logout-all
+[POST] Client/Session/POST /auth/logout-all - Unauthenticated (401): {{base_url}}/auth/logout-all

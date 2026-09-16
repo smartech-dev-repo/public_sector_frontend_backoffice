@@ -1,6 +1,5 @@
 import axios, { type AxiosResponse } from "axios";
-import { useCustomToast } from '@/composables/core/useCustomToast'
-import { useNetworkStatus } from '@/composables/core/useNetworkStatus'
+import { useToast } from '@/composables/useToast'
 
 const $GATEWAY_ENDPOINT_WITHOUT_VERSION = import.meta.env.VITE_API_BASE_URL as string;
 const $GATEWAY_ENDPOINT = import.meta.env.VITE_API_BASE_URL + "/api/v1";
@@ -55,7 +54,7 @@ instanceArray.forEach((instance) => {
  instance.interceptors.request.use((config: any) => {
  let tokenValue = '';
  if (typeof window !== 'undefined') {
- const match = document.cookie.match(new RegExp('(^| )errandr_dispatch_token=([^;]+)'));
+ const match = document.cookie.match(new RegExp('(^| )public_sector_token=([^;]+)'));
  if (match) {
  tokenValue = decodeURIComponent(match[2]);
  } else {
@@ -81,10 +80,10 @@ instanceArray.forEach((instance) => {
  (err: any) => {
  // Check for timeout or network connection error
  if (err.code === 'ECONNABORTED' || err.message?.includes('timeout') || err.message?.includes('Network Error') || typeof err.response === "undefined") {
- try {
- const { recordSlowNetwork } = useNetworkStatus();
- recordSlowNetwork();
- } catch (e) {}
+ // try {
+ // const { recordSlowNetwork } = useNetworkStatus();
+ // recordSlowNetwork();
+ // } catch (e) {}
  
  return {
  type: "ERROR",
@@ -96,64 +95,59 @@ instanceArray.forEach((instance) => {
  // Only log out if we're not already on auth pages
  const isOnAuthPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/auth')
  if (!isOnAuthPage && typeof window !== 'undefined') {
- document.cookie = 'errandr_dispatch_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
- document.cookie = 'errandr_dispatch_user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+ document.cookie = 'public_sector_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+ document.cookie = 'public_sector_user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
  localStorage.removeItem('token');
  localStorage.removeItem('user');
  window.location.href = '/auth/login';
  }
- useCustomToast().showToast({
- title: "Error",
- message: err?.response?.data?.message || err?.response?.data?.error || "An error occured",
- toastType: "error",
- duration: 3000
- });
+ useToast().addToast(
+ err?.response?.data?.message || err?.response?.data?.error || "An error occured",
+ "error",
+ 3000
+ );
  return {
  type: "ERROR",
  ...err.response,
  };
  } else if (statusCodeStartsWith(err.response.status, 4)) {
  if (err.response.data.message) {
- useCustomToast().showToast({
- title: "Error",
- message: err?.response?.data?.message || err?.response?.data?.error || "An error occured",
- toastType: "error",
- duration: 3000
- });
+ useToast().addToast(
+ err?.response?.data?.message || err?.response?.data?.error || "An error occured",
+ "error",
+ 3000
+ );
  }
  return {
  type: "ERROR",
  ...err.response,
  };
  } else if (err.response.status === 500) {
- useCustomToast().showToast({
- title: "Error",
- message: err?.response?.data?.message || err?.response?.data?.error || "An error occured",
- toastType: "error",
- duration: 3000
- });
+ useToast().addToast(
+ err?.response?.data?.message || err?.response?.data?.error || "An error occured",
+ "error",
+ 3000
+ );
  return {
  type: "ERROR",
  ...err.response,
  };
  } else if (err.response.status === 409) {
- useCustomToast().showToast({
- title: "Error",
- message: err?.response?.data?.message || err?.response?.data?.error || "An error occured",
- toastType: "error",
- duration: 3000
- });
+ useToast().addToast(
+ err?.response?.data?.message || err?.response?.data?.error || "An error occured",
+ "error",
+ 3000
+ );
  return {
  type: "ERROR",
  ...err.response,
  };
  } else {
- useCustomToast().showToast({
- title: "Error",
- message: err?.response?.data?.message || err?.response?.data?.error || "An unexpected error occurred",
- toastType: "error",
- duration: 3000
- });
+ useToast().addToast(
+ err?.response?.data?.message || err?.response?.data?.error || "An unexpected error occurred",
+ "error",
+ 3000
+ );
  return {
  type: "ERROR",
  ...err.response,
