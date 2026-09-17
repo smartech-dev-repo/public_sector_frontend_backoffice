@@ -2,7 +2,7 @@ import axios, { type AxiosResponse } from "axios";
 import { useToast } from '@/composables/useToast'
 
 const $GATEWAY_ENDPOINT_WITHOUT_VERSION = import.meta.env.VITE_API_BASE_URL as string;
-const $GATEWAY_ENDPOINT = import.meta.env.VITE_API_BASE_URL + "/api/v1";
+const $GATEWAY_ENDPOINT = import.meta.env.VITE_API_BASE_URL as string;
 const $GATEWAY_ENDPOINT_V2 = import.meta.env.VITE_API_BASE_URL + "/v2";
 const $IMAGE_UPLOAD_ENDPOINT = import.meta.env.VITE_IMAGE_UPLOAD_BASE_URL as string;
 
@@ -92,14 +92,14 @@ instanceArray.forEach((instance) => {
  }
  if (err.response.status === 401) {
  console.log(err.response.data.error)
- // Only log out if we're not already on auth pages
- const isOnAuthPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/auth')
+ // Only log out if we're not already on login page
+ const isOnAuthPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/login')
  if (!isOnAuthPage && typeof window !== 'undefined') {
  document.cookie = 'public_sector_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
  document.cookie = 'public_sector_user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
  localStorage.removeItem('token');
  localStorage.removeItem('user');
- window.location.href = '/auth/login';
+ window.location.href = '/login';
  }
  useToast().addToast(
  err?.response?.data?.message || err?.response?.data?.error || "An error occured",
