@@ -7,11 +7,20 @@ export const useAuth = () => {
   const loading = useState('auth-loading', () => false);
   const error = useState('auth-error', () => null);
 
+  const setToken = (data: any) => {
+    const token = data?.token || data?.accessToken || data?.data?.token || data?.data?.accessToken;
+    if (token && typeof window !== 'undefined') {
+      document.cookie = `public_sector_token=${encodeURIComponent(token)}; path=/; max-age=86400`;
+      localStorage.setItem('token', token);
+    }
+  };
+
   const login = async (payload: any) => {
     loading.value = true;
     error.value = null;
     try {
       const response = await auth_api.login(payload);
+      setToken(response.data);
       user.value = response.data;
       isAuthenticated.value = true;
       return response.data;
@@ -28,6 +37,7 @@ export const useAuth = () => {
     error.value = null;
     try {
       const response = await auth_api.adminLogin(payload);
+      setToken(response.data);
       user.value = response.data;
       isAuthenticated.value = true;
       return response.data;
@@ -44,6 +54,7 @@ export const useAuth = () => {
     error.value = null;
     try {
       const response = await auth_api.acceptInvite(payload);
+      setToken(response.data);
       user.value = response.data;
       isAuthenticated.value = true;
       return response.data;
@@ -71,6 +82,7 @@ export const useAuth = () => {
     error.value = null;
     try {
       const response = await auth_api.agentLogin(payload);
+      setToken(response.data);
       user.value = response.data;
       isAuthenticated.value = true;
       return response.data;
@@ -101,6 +113,7 @@ export const useAuth = () => {
     error.value = null;
     try {
       const response = await auth_api.clientOtpVerify(payload);
+      setToken(response.data);
       user.value = response.data;
       isAuthenticated.value = true;
       return response.data;

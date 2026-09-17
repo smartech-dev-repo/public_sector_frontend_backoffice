@@ -20,7 +20,7 @@
  </div>
 
  <!-- High-level KPIs -->
- <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+ <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
  <div class="bg-white rounded-2xl p-6 border border-slate-200">
  <div class="text-xs text-slate-500 uppercase tracking-wider mb-2">Total Loans Originated</div>
  <div class="text-3xl font-medium text-slate-800">{{ analyticsStats.totalLoansOriginated.toLocaleString() }}</div>
@@ -53,7 +53,7 @@
  </div>
  </div>
 
- <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
+ <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mt-8">
  <!-- Quick Actions -->
  <div class="bg-white rounded-2xl p-6 border border-slate-200">
  <h3 class="text-lg font-medium text-slate-800 mb-4">Quick Actions</h3>
@@ -74,7 +74,7 @@
  </div>
 
  <!-- Recent Activity Feed -->
- <div class="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-200">
+ <div class="xl:col-span-2 bg-white rounded-2xl p-6 border border-slate-200">
  <h3 class="text-lg font-medium text-slate-800 mb-6">Recent Activity</h3>
  <div class="space-y-6">
  <div v-for="log in auditLogs.slice(0, 4)" :key="log.id" class="flex gap-4">

@@ -88,7 +88,7 @@
  <p class="text-sm text-slate-400 mb-6">Review the applicant's details and KYC verification. Recommend to forward to Internal Control.</p>
  
  <div class="space-y-3">
- <button @click="promptAction('Recommended')" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-colors">
+ <button @click="promptAction('Recommended')" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl transition-colors">
  Recommend Agent
  </button>
  <button @click="promptAction('Rejected')" class="w-full py-3 bg-transparent border-2 border-rose-500/30 text-rose-400 hover:bg-rose-500/10 rounded-xl transition-colors">
