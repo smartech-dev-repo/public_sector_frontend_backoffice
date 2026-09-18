@@ -2,7 +2,7 @@
   <main class="p-6">
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-2xl font-semibold text-slate-800">Role Management</h1>
-      <button @click="showCreateRole = true" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium">
+      <button @click="openCreateModal" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium">
         Create Role
       </button>
     </div>
@@ -25,7 +25,8 @@
             <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-mono">{{ role.id }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-medium">{{ role.name }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{{ role.description }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
+              <button @click="openEditModal(role)" class="text-blue-600 hover:text-blue-800 font-medium transition-colors">Edit</button>
               <button @click="handleDelete(role.id)" class="text-rose-600 hover:text-rose-800 font-medium transition-colors">Delete</button>
             </td>
           </tr>
@@ -46,19 +47,19 @@
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
               </button>
             </div>
-            <form @submit.prevent="handleCreateRole" class="space-y-4">
+            <form @submit.prevent="handleSaveRole" class="space-y-4">
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1">Role Name</label>
-                <input v-model="createRoleForm.name" type="text" placeholder="e.g. SUPER_ADMIN" required class="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all" />
+                <input v-model="form.name" type="text" placeholder="e.g. SUPER_ADMIN" required class="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all" />
               </div>
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1">Description</label>
-                <input v-model="createRoleForm.description" type="text" placeholder="What does this role do?" class="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all" />
+                <input v-model="form.description" type="text" placeholder="What does this role do?" class="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all" />
               </div>
               <div class="flex items-center gap-3 justify-end mt-6">
                 <button type="button" @click="showCreateRole = false" class="px-5 py-2.5 rounded-lg text-sm text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors">Cancel</button>
                 <button type="submit" :disabled="submitting" class="px-5 py-2.5 rounded-lg text-sm text-white bg-emerald-600 hover:bg-emerald-700 transition-colors disabled:opacity-50">
-                  {{ submitting ? 'Creating...' : 'Create Role' }}
+                  {{ submitting ? 'Saving...' : 'Save Role' }}
                 </button>
               </div>
             </form>
@@ -76,32 +77,56 @@ import { useToast } from '@/composables/useToast';
 
 definePageMeta({ layout: 'dashboard' });
 
-const { loading, error, roles, fetchRoles, deleteRole, createRole } = useRoles();
+const { loading, error, roles, fetchRoles, deleteRole, createRole, updateRole } = useRoles();
 const { addToast } = useToast();
 
 const showCreateRole = ref(false);
 const submitting = ref(false);
-const createRoleForm = reactive({ name: '', description: '' });
+const isEditing = ref(false);
+const editId = ref('');
+const form = reactive({ name: '', description: '' });
 
 onMounted(() => {
   fetchRoles();
 });
 
-const handleCreateRole = async () => {
-  if (!createRoleForm.name.trim()) return;
+const openCreateModal = () => {
+  isEditing.value = false;
+  editId.value = '';
+  form.name = '';
+  form.description = '';
+  showCreateRole.value = true;
+};
+
+const openEditModal = (role: any) => {
+  isEditing.value = true;
+  editId.value = role.id;
+  form.name = role.name;
+  form.description = role.description || '';
+  showCreateRole.value = true;
+};
+
+const handleSaveRole = async () => {
+  if (!form.name.trim()) return;
   submitting.value = true;
   try {
-    await createRole({
-      name: createRoleForm.name.trim(),
-      description: createRoleForm.description.trim()
-    });
-    addToast('Role created successfully!', 'success');
+    if (isEditing.value) {
+      await updateRole(editId.value, {
+        name: form.name.trim(),
+        description: form.description.trim()
+      });
+      addToast('Role updated successfully!', 'success');
+    } else {
+      await createRole({
+        name: form.name.trim(),
+        description: form.description.trim()
+      });
+      addToast('Role created successfully!', 'success');
+    }
     showCreateRole.value = false;
-    createRoleForm.name = '';
-    createRoleForm.description = '';
     fetchRoles();
   } catch (e: any) {
-    addToast(e?.response?.data?.message || 'Failed to create role', 'error');
+    addToast(e?.response?.data?.message || 'Failed to save role', 'error');
   } finally {
     submitting.value = false;
   }

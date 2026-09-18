@@ -2,7 +2,7 @@
   <main class="p-6">
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-2xl font-semibold text-slate-800">Permission Management</h1>
-      <button @click="showCreatePermission = true" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium">
+      <button @click="openCreateModal" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium">
         Create Permission
       </button>
     </div>
@@ -25,7 +25,8 @@
             <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-mono">{{ permission.id }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-medium">{{ permission.key }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{{ permission.description }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
+              <button @click="openEditModal(permission)" class="text-blue-600 hover:text-blue-800 font-medium transition-colors">Edit</button>
               <button @click="handleDelete(permission.id)" class="text-rose-600 hover:text-rose-800 font-medium transition-colors">Delete</button>
             </td>
           </tr>
@@ -46,19 +47,19 @@
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
               </button>
             </div>
-            <form @submit.prevent="handleCreatePermission" class="space-y-4">
+            <form @submit.prevent="handleSavePermission" class="space-y-4">
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1">Permission Key</label>
-                <input v-model="createForm.key" type="text" placeholder="e.g. users.read" required class="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all" />
+                <input v-model="form.key" type="text" placeholder="e.g. users.read" required class="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all" />
               </div>
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1">Description</label>
-                <input v-model="createForm.description" type="text" placeholder="What does this permission allow?" class="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all" />
+                <input v-model="form.description" type="text" placeholder="What does this permission allow?" class="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all" />
               </div>
               <div class="flex items-center gap-3 justify-end mt-6">
                 <button type="button" @click="showCreatePermission = false" class="px-5 py-2.5 rounded-lg text-sm text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors">Cancel</button>
                 <button type="submit" :disabled="submitting" class="px-5 py-2.5 rounded-lg text-sm text-white bg-emerald-600 hover:bg-emerald-700 transition-colors disabled:opacity-50">
-                  {{ submitting ? 'Creating...' : 'Create Permission' }}
+                  {{ submitting ? 'Saving...' : 'Save Permission' }}
                 </button>
               </div>
             </form>
@@ -76,32 +77,56 @@ import { useToast } from '@/composables/useToast';
 
 definePageMeta({ layout: 'dashboard' });
 
-const { loading, error, permissions, fetchPermissions, deletePermission, createPermission } = usePermissions();
+const { loading, error, permissions, fetchPermissions, deletePermission, createPermission, updatePermission } = usePermissions();
 const { addToast } = useToast();
 
 const showCreatePermission = ref(false);
 const submitting = ref(false);
-const createForm = reactive({ key: '', description: '' });
+const isEditing = ref(false);
+const editId = ref('');
+const form = reactive({ key: '', description: '' });
 
 onMounted(() => {
   fetchPermissions();
 });
 
-const handleCreatePermission = async () => {
-  if (!createForm.key.trim()) return;
+const openCreateModal = () => {
+  isEditing.value = false;
+  editId.value = '';
+  form.key = '';
+  form.description = '';
+  showCreatePermission.value = true;
+};
+
+const openEditModal = (permission: any) => {
+  isEditing.value = true;
+  editId.value = permission.id;
+  form.key = permission.key;
+  form.description = permission.description || '';
+  showCreatePermission.value = true;
+};
+
+const handleSavePermission = async () => {
+  if (!form.key.trim()) return;
   submitting.value = true;
   try {
-    await createPermission({
-      key: createForm.key.trim(),
-      description: createForm.description.trim()
-    });
-    addToast('Permission created successfully!', 'success');
+    if (isEditing.value) {
+      await updatePermission(editId.value, {
+        key: form.key.trim(),
+        description: form.description.trim()
+      });
+      addToast('Permission updated successfully!', 'success');
+    } else {
+      await createPermission({
+        key: form.key.trim(),
+        description: form.description.trim()
+      });
+      addToast('Permission created successfully!', 'success');
+    }
     showCreatePermission.value = false;
-    createForm.key = '';
-    createForm.description = '';
     fetchPermissions();
   } catch (e: any) {
-    addToast(e?.response?.data?.message || 'Failed to create permission', 'error');
+    addToast(e?.response?.data?.message || 'Failed to save permission', 'error');
   } finally {
     submitting.value = false;
   }

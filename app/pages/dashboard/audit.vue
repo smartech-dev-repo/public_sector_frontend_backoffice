@@ -19,9 +19,9 @@
 
  <!-- Filters -->
  <div class="flex items-center justify-between gap-4">
-   <div class="flex-1 max-w-md">
-     <span class="text-sm text-slate-400">Showing {{ filteredLogs.length }} of {{ auditLogsRef.length }} logs</span>
-   </div>
+    <div class="flex-1 max-w-md">
+      <span class="text-sm text-slate-400">Showing {{ filteredLogs.length }} of {{ logs.length }} logs</span>
+    </div>
    
    <div class="flex items-center gap-3 relative">
      <button @click="showFilter = !showFilter" class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors shadow-sm">
@@ -72,15 +72,15 @@
  <tr v-if="paginatedLogs.length === 0">
  <td colspan="5" class="px-6 py-8 text-center text-slate-500">No logs found.</td>
  </tr>
- <tr v-for="log in paginatedLogs" :key="log.id" class="hover:bg-slate-50/50 transition-colors group">
- <td class="px-6 py-4 font-mono text-slate-500 whitespace-nowrap">{{ new Date(log.timestamp).toLocaleString('en-GB') }}</td>
- <td class="px-6 py-4 font-medium text-slate-800">{{ log.actor }}</td>
- <td class="px-6 py-4">
- <span class="px-2.5 py-1 rounded-md text-xs whitespace-nowrap" :class="{ 'bg-rose-100 text-rose-700': log.action.includes('Suspend') || log.action.includes('Reject'), 'bg-emerald-100 text-emerald-700': log.action.includes('Approve') || log.action.includes('Complete'), 'bg-blue-100 text-blue-700': log.action.includes('Export') || log.action.includes('Upload') }">{{ log.action }}</span>
- </td>
- <td class="px-6 py-4 font-mono text-slate-600">{{ log.target }}</td>
- <td class="px-6 py-4 text-slate-600 text-xs">{{ log.reason }}</td>
- </tr>
+  <tr v-for="log in paginatedLogs" :key="log.id" class="hover:bg-slate-50/50 transition-colors group">
+  <td class="px-6 py-4 font-mono text-slate-500 whitespace-nowrap">{{ new Date(log.createdAt).toLocaleString() }}</td>
+  <td class="px-6 py-4 font-medium text-slate-800">{{ log.actorType }} ({{ log.actorId }})</td>
+  <td class="px-6 py-4">
+  <span class="px-2.5 py-1 rounded-md text-xs whitespace-nowrap bg-blue-100 text-blue-700">{{ log.action }}</span>
+  </td>
+  <td class="px-6 py-4 font-mono text-slate-600">{{ log.targetType }} ({{ log.targetId }})</td>
+  <td class="px-6 py-4 text-slate-600 text-xs">{{ log.reason || log.ipAddress }}</td>
+  </tr>
  </tbody>
  </table>
  </div>
@@ -96,28 +96,22 @@
  </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import UiPulseLoader from '@/components/ui/PulseLoader.vue';
 import { onMounted, ref, computed } from 'vue';
-import { useMockData } from '@/composables/modules/useMockData';
+import { useAuditLogs } from '@/composables/modules/useAuditLogs';
 import UiPagination from '@/components/ui/Pagination.vue';
 import UiDatePicker from '@/components/ui/DatePicker.vue';
-
-const isLoading = ref(true);
-
-onMounted(() => {
- setTimeout(() => {
- isLoading.value = false;
- }, 800);
-});
 
 definePageMeta({
  layout: 'dashboard'
 });
 
-const { auditLogs } = useMockData();
+const { loading: isLoading, error, logs, fetchLogs } = useAuditLogs();
 
-const auditLogsRef = ref(auditLogs);
+onMounted(() => {
+  fetchLogs();
+});
 
 const showFilter = ref(false);
 const filterParams = ref({
@@ -130,13 +124,14 @@ const clearFilters = () => {
 };
 
 const filteredLogs = computed(() => {
-  let result = auditLogsRef.value;
+  let result = logs.value;
   
   if (filterParams.value.search) {
     const lower = filterParams.value.search.toLowerCase();
-    result = result.filter(log => 
-      log.actor.toLowerCase().includes(lower) || 
-      log.target.toLowerCase().includes(lower)
+    result = result.filter((log: any) => 
+      String(log.actorId).toLowerCase().includes(lower) || 
+      String(log.targetId).toLowerCase().includes(lower) ||
+      String(log.action).toLowerCase().includes(lower)
     );
   }
   
@@ -145,8 +140,8 @@ const filteredLogs = computed(() => {
     if (dates.length > 0) {
       const start = new Date(dates[0]).getTime();
       const end = dates.length === 2 ? new Date(dates[1]).getTime() : start;
-      result = result.filter(log => {
-        const itemDate = new Date(log.timestamp).getTime();
+      result = result.filter((log: any) => {
+        const itemDate = new Date(log.createdAt).getTime();
         return itemDate >= start && itemDate <= end;
       });
     }
