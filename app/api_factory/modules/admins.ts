@@ -9,5 +9,11 @@ export const admins_api = {
   },
   removeRoleFromAdmin: (adminId: string, roleId: string) => {
     return GATEWAY_ENDPOINT_WITH_AUTH.delete(`/admin/admins/${adminId}/roles/${roleId}`);
+  },
+  deactivateAdmin: (adminId: string) => {
+    return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/admins/${adminId}/deactivate`);
+  },
+  reactivateAdmin: (adminId: string) => {
+    return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/admins/${adminId}/reactivate`);
   }
 };

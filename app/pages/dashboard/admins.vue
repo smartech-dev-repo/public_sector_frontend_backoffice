@@ -25,6 +25,8 @@
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
               <button @click="openAssignRoleModal(admin)" class="text-emerald-600 hover:text-emerald-800 font-medium transition-colors">Assign Role</button>
               <button @click="openRemoveRoleModal(admin)" class="text-rose-600 hover:text-rose-800 font-medium transition-colors">Remove Role</button>
+              <button @click="handleDeactivate(admin)" class="text-amber-600 hover:text-amber-800 font-medium transition-colors">Deactivate</button>
+              <button @click="handleReactivate(admin)" class="text-blue-600 hover:text-blue-800 font-medium transition-colors">Reactivate</button>
             </td>
           </tr>
         </tbody>
@@ -99,7 +101,7 @@ import { useToast } from '@/composables/useToast';
 
 definePageMeta({ layout: 'dashboard' });
 
-const { loading, error, admins, fetchAdmins, assignRole, removeRole } = useAdmins();
+const { loading, error, admins, fetchAdmins, assignRole, removeRole, deactivateAdmin, reactivateAdmin } = useAdmins();
 const { addToast } = useToast();
 
 const showAssignModal = ref(false);
@@ -148,6 +150,30 @@ const handleRemoveRole = async () => {
     addToast(e?.response?.data?.message || 'Failed to remove role', 'error');
   } finally {
     submitting.value = false;
+  }
+};
+
+const handleDeactivate = async (admin: any) => {
+  if (confirm(`Are you sure you want to deactivate ${admin.email}?`)) {
+    try {
+      await deactivateAdmin(admin.id);
+      addToast('Admin deactivated successfully', 'success');
+      fetchAdmins();
+    } catch (e: any) {
+      addToast(e?.response?.data?.message || 'Failed to deactivate admin', 'error');
+    }
+  }
+};
+
+const handleReactivate = async (admin: any) => {
+  if (confirm(`Are you sure you want to reactivate ${admin.email}?`)) {
+    try {
+      await reactivateAdmin(admin.id);
+      addToast('Admin reactivated successfully', 'success');
+      fetchAdmins();
+    } catch (e: any) {
+      addToast(e?.response?.data?.message || 'Failed to reactivate admin', 'error');
+    }
   }
 };
 
