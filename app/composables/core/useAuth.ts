@@ -1,11 +1,11 @@
-import { useState } from '#app';
-import { auth_api } from '@/api_factory/modules/auth';
+import { useState } from 'react';
+import { auth_api } from '@/app/api_factory/modules/auth';
 
 export const useAuth = () => {
-  const user = useState('user', () => null);
-  const isAuthenticated = useState('isAuthenticated', () => false);
-  const loading = useState('auth-loading', () => false);
-  const error = useState('auth-error', () => null);
+  const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const setToken = (data: any) => {
     const token = data?.token || data?.accessToken || data?.data?.token || data?.data?.accessToken;
@@ -16,112 +16,112 @@ export const useAuth = () => {
   };
 
   const login = async (payload: any) => {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
     try {
       const response = await auth_api.login(payload);
       setToken(response.data);
-      user.value = response.data;
-      isAuthenticated.value = true;
+      setUser(response.data);
+      setIsAuthenticated(true);
       return response.data;
     } catch (err: any) {
-      error.value = err.message;
+      setError(err.message);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   };
 
   const adminLogin = async (payload: any) => {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
     try {
       const response = await auth_api.adminLogin(payload);
       setToken(response.data);
-      user.value = response.data;
-      isAuthenticated.value = true;
+      setUser(response.data);
+      setIsAuthenticated(true);
       return response.data;
     } catch (err: any) {
-      error.value = err.message;
+      setError(err.message);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   };
 
   const acceptInvite = async (payload: any) => {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
     try {
       const response = await auth_api.acceptInvite(payload);
       setToken(response.data);
-      user.value = response.data;
-      isAuthenticated.value = true;
+      setUser(response.data);
+      setIsAuthenticated(true);
       return response.data;
     } catch (err: any) {
-      error.value = err.message;
+      setError(err.message);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   };
 
   const fetchAdminProfile = async () => {
     try {
       const response = await auth_api.getAdminProfile();
-      user.value = response.data;
+      setUser(response.data);
       return response.data;
     } catch (err: any) {
-      error.value = err.message;
+      setError(err.message);
       throw err;
     }
   };
 
   const agentLogin = async (payload: any) => {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
     try {
       const response = await auth_api.agentLogin(payload);
       setToken(response.data);
-      user.value = response.data;
-      isAuthenticated.value = true;
+      setUser(response.data);
+      setIsAuthenticated(true);
       return response.data;
     } catch (err: any) {
-      error.value = err.message;
+      setError(err.message);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   };
 
   const clientOtpRequest = async (payload: any) => {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
     try {
       const response = await auth_api.clientOtpRequest(payload);
       return response.data;
     } catch (err: any) {
-      error.value = err.message;
+      setError(err.message);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   };
 
   const clientOtpVerify = async (payload: any) => {
-    loading.value = true;
-    error.value = null;
+    setLoading(true);
+    setError(null);
     try {
       const response = await auth_api.clientOtpVerify(payload);
       setToken(response.data);
-      user.value = response.data;
-      isAuthenticated.value = true;
+      setUser(response.data);
+      setIsAuthenticated(true);
       return response.data;
     } catch (err: any) {
-      error.value = err.message;
+      setError(err.message);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   };
 
@@ -141,8 +141,8 @@ export const useAuth = () => {
     } catch (err) {
       console.error('Logout API failed', err);
     } finally {
-      user.value = null;
-      isAuthenticated.value = false;
+      setUser(null);
+      setIsAuthenticated(false);
     }
   };
 
@@ -152,8 +152,8 @@ export const useAuth = () => {
     } catch (err) {
       console.error('LogoutAll API failed', err);
     } finally {
-      user.value = null;
-      isAuthenticated.value = false;
+      setUser(null);
+      setIsAuthenticated(false);
     }
   };
 
