@@ -1,0 +1,3 @@
+module.exports=[42,a=>{"use strict";a.s(["default",()=>b]);let b=(0,a.i(11857).registerClientReference)(function(){throw Error("Attempted to call the default export of [project]/app/credit-risk/layout.tsx from the server, but it's on the client. It's not possible to invoke a client function from the server, it can only be rendered as a Component or passed to props of a Client Component.")},"[project]/app/credit-risk/layout.tsx","default")},51391,a=>{"use strict";var b=a.i(42);a.n(b)},54197,function(a){a.n(a.i(51391))}];
+
+//# sourceMappingURL=app_credit-risk_layout_tsx_0or7_oa._.js.map

@@ -1,60 +1,60 @@
-import { useState } from '#app';
-import { permissions_api } from '@/api_factory/modules/permissions';
+import { useState } from 'react';
+import { permissions_api } from '@/app/api_factory/modules/permissions';
 
 export const usePermissions = () => {
-  const loading = useState('permissions-loading', () => false);
-  const error = useState('permissions-error', () => null);
-  const permissions = useState('permissions-data', () => [] as any[]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [permissions, setPermissions] = useState([] as any[]);
 
   const fetchPermissions = async (params?: any) => {
-    loading.value = true;
+    setLoading(true);
     try {
       const res = await permissions_api.getPermissions(params);
-      permissions.value = res.data;
+      setPermissions(res.data);
       return res.data;
     } catch (err: any) {
-      error.value = err.message;
+      setError(err.message);
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   };
 
   const createPermission = async (payload: any) => {
-    loading.value = true;
+    setLoading(true);
     try {
       const res = await permissions_api.createPermission(payload);
       return res.data;
     } catch (err: any) {
-      error.value = err.message;
+      setError(err.message);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   };
 
   const updatePermission = async (id: string, payload: any) => {
-    loading.value = true;
+    setLoading(true);
     try {
       const res = await permissions_api.updatePermission(id, payload);
       return res.data;
     } catch (err: any) {
-      error.value = err.message;
+      setError(err.message);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   };
 
   const deletePermission = async (id: string) => {
-    loading.value = true;
+    setLoading(true);
     try {
       const res = await permissions_api.deletePermission(id);
       return res.data;
     } catch (err: any) {
-      error.value = err.message;
+      setError(err.message);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   };
 

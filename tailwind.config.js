@@ -1,7 +1,7 @@
 export default {
   darkMode: 'class',
   content: [
-    "./app/**/*.{js,vue,ts}",
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {

@@ -1,30 +1,54 @@
-import { ref } from 'vue';
+import { useState, useEffect } from 'react';
 
-const toasts = ref([]);
+type ToastType = 'success' | 'error' | 'info' | 'warning';
+
+interface Toast {
+  id: number;
+  message: string;
+  type: ToastType;
+}
+
+let toasts: Toast[] = [];
 let toastIdCounter = 0;
+const listeners = new Set<() => void>();
+
+const notifyListeners = () => {
+  listeners.forEach((listener) => listener());
+};
+
+export const addToast = (message: string, type: ToastType = 'success', duration = 3000) => {
+  const id = ++toastIdCounter;
+  toasts = [...toasts, { id, message, type }];
+  notifyListeners();
+  
+  if (duration > 0) {
+    setTimeout(() => {
+      removeToast(id);
+    }, duration);
+  }
+};
+
+export const removeToast = (id: number) => {
+  toasts = toasts.filter((t) => t.id !== id);
+  notifyListeners();
+};
 
 export const useToast = () => {
- const addToast = (message, type = 'success', duration = 3000) => {
- const id = ++toastIdCounter;
- toasts.value.push({ id, message, type });
- 
- if (duration > 0) {
- setTimeout(() => {
- removeToast(id);
- }, duration);
- }
- };
+  const [currentToasts, setCurrentToasts] = useState<Toast[]>(toasts);
 
- const removeToast = (id) => {
- const index = toasts.value.findIndex(t => t.id === id);
- if (index > -1) {
- toasts.value.splice(index, 1);
- }
- };
+  useEffect(() => {
+    const updateToasts = () => {
+      setCurrentToasts(toasts);
+    };
+    listeners.add(updateToasts);
+    return () => {
+      listeners.delete(updateToasts);
+    };
+  }, []);
 
- return {
- toasts,
- addToast,
- removeToast
- };
+  return {
+    toasts: currentToasts,
+    addToast,
+    removeToast
+  };
 };

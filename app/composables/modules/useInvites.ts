@@ -1,47 +1,47 @@
-import { useState } from '#app';
-import { invites_api } from '@/api_factory/modules/invites';
+import { useState } from 'react';
+import { invites_api } from '@/app/api_factory/modules/invites';
 
 export const useInvites = () => {
-  const loading = useState('invites-loading', () => false);
-  const error = useState('invites-error', () => null);
-  const invites = useState('invites-data', () => [] as any[]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [invites, setInvites] = useState([] as any[]);
 
   const fetchInvites = async (params?: any) => {
-    loading.value = true;
+    setLoading(true);
     try {
       const res = await invites_api.getInvites(params);
-      invites.value = res.data;
+      setInvites(res.data);
       return res.data;
     } catch (err: any) {
-      error.value = err.message;
+      setError(err.message);
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   };
 
   const createInvite = async (payload: any) => {
-    loading.value = true;
+    setLoading(true);
     try {
       const res = await invites_api.createInvite(payload);
       return res.data;
     } catch (err: any) {
-      error.value = err.message;
+      setError(err.message);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   };
 
   const resendInvite = async (id: string) => {
-    loading.value = true;
+    setLoading(true);
     try {
       const res = await invites_api.resendInvite(id);
       return res.data;
     } catch (err: any) {
-      error.value = err.message;
+      setError(err.message);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   };
 

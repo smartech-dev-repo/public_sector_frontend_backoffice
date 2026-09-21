@@ -1,60 +1,60 @@
-import { useState } from '#app';
-import { clients_api } from '@/api_factory/modules/clients';
+import { useState } from 'react';
+import { clients_api } from '@/app/api_factory/modules/clients';
 
 export const useClients = () => {
-  const loading = useState('clients-loading', () => false);
-  const error = useState('clients-error', () => null);
-  const clients = useState('clients-data', () => [] as any[]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [clients, setClients] = useState([] as any[]);
 
   const fetchClients = async (params?: any) => {
-    loading.value = true;
+    setLoading(true);
     try {
       const res = await clients_api.getClients(params);
-      clients.value = res.data;
+      setClients(res.data);
       return res.data;
     } catch (err: any) {
-      error.value = err.message;
+      setError(err.message);
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   };
 
   const getClientById = async (id: string) => {
-    loading.value = true;
+    setLoading(true);
     try {
       const res = await clients_api.getClientById(id);
       return res.data;
     } catch (err: any) {
-      error.value = err.message;
+      setError(err.message);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   };
 
   const retryClient = async (id: string) => {
-    loading.value = true;
+    setLoading(true);
     try {
       const res = await clients_api.retryClient(id);
       return res.data;
     } catch (err: any) {
-      error.value = err.message;
+      setError(err.message);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   };
 
   const approveClient = async (id: string) => {
-    loading.value = true;
+    setLoading(true);
     try {
       const res = await clients_api.approveClient(id);
       return res.data;
     } catch (err: any) {
-      error.value = err.message;
+      setError(err.message);
       throw err;
     } finally {
-      loading.value = false;
+      setLoading(false);
     }
   };
 

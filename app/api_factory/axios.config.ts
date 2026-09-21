@@ -1,10 +1,10 @@
 import axios, { type AxiosResponse } from "axios";
-import { useToast } from '@/composables/useToast'
+import { addToast } from '@/app/composables/useToast'
 
-const $GATEWAY_ENDPOINT_WITHOUT_VERSION = import.meta.env.VITE_API_BASE_URL as string;
-const $GATEWAY_ENDPOINT = import.meta.env.VITE_API_BASE_URL as string;
-const $GATEWAY_ENDPOINT_V2 = import.meta.env.VITE_API_BASE_URL + "/v2";
-const $IMAGE_UPLOAD_ENDPOINT = import.meta.env.VITE_IMAGE_UPLOAD_BASE_URL as string;
+const $GATEWAY_ENDPOINT_WITHOUT_VERSION = process.env.NEXT_PUBLIC_API_BASE_URL as string;
+const $GATEWAY_ENDPOINT = process.env.NEXT_PUBLIC_API_BASE_URL as string;
+const $GATEWAY_ENDPOINT_V2 = process.env.NEXT_PUBLIC_API_BASE_URL + "/v2";
+const $IMAGE_UPLOAD_ENDPOINT = process.env.NEXT_PUBLIC_IMAGE_UPLOAD_BASE_URL as string;
 
 export const GATEWAY_ENDPOINT = axios.create({
  baseURL: $GATEWAY_ENDPOINT,
@@ -101,7 +101,7 @@ instanceArray.forEach((instance) => {
  localStorage.removeItem('user');
  window.location.href = '/login';
  }
- useToast().addToast(
+ addToast(
  err?.response?.data?.message || err?.response?.data?.error || "An error occured",
  "error",
  3000
@@ -112,7 +112,7 @@ instanceArray.forEach((instance) => {
  };
  } else if (statusCodeStartsWith(err.response.status, 4)) {
  if (err.response.data.message) {
- useToast().addToast(
+ addToast(
  err?.response?.data?.message || err?.response?.data?.error || "An error occured",
  "error",
  3000
@@ -123,7 +123,7 @@ instanceArray.forEach((instance) => {
  ...err.response,
  };
  } else if (err.response.status === 500) {
- useToast().addToast(
+ addToast(
  err?.response?.data?.message || err?.response?.data?.error || "An error occured",
  "error",
  3000
@@ -133,7 +133,7 @@ instanceArray.forEach((instance) => {
  ...err.response,
  };
  } else if (err.response.status === 409) {
- useToast().addToast(
+ addToast(
  err?.response?.data?.message || err?.response?.data?.error || "An error occured",
  "error",
  3000
@@ -143,7 +143,7 @@ instanceArray.forEach((instance) => {
  ...err.response,
  };
  } else {
- useToast().addToast(
+ addToast(
  err?.response?.data?.message || err?.response?.data?.error || "An unexpected error occurred",
  "error",
  3000

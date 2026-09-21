@@ -1,12 +1,12 @@
-import { useState } from '#app';
+import { useState } from 'react';
 
 export const useTheme = () => {
-  const isDark = useState('theme-dark', () => false);
+  const [isDark, setIsDark] = useState(false);
 
   const toggleTheme = () => {
-    isDark.value = !isDark.value;
+    setIsDark(!isDark);
     if (typeof window !== 'undefined') {
-      if (isDark.value) {
+      if (isDark) {
         document.documentElement.classList.add('dark');
         localStorage.setItem('theme', 'dark');
       } else {
@@ -21,10 +21,10 @@ export const useTheme = () => {
       const storedTheme = localStorage.getItem('theme');
       // Default to light mode as requested
       if (storedTheme === 'dark') {
-        isDark.value = true;
+        setIsDark(true);
         document.documentElement.classList.add('dark');
       } else {
-        isDark.value = false;
+        setIsDark(false);
         document.documentElement.classList.remove('dark');
       }
     }
