@@ -72,59 +72,59 @@ export default function Pagination({
 
   const updateItemsPerPage = (value: number) => {
     onItemsPerPageChange(value);
-    onPageChange(1); // Reset to first page
+    onPageChange(1);
     setIsDropdownOpen(false);
   };
 
   return (
-    <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 bg-white sm:px-6">
+    <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-card sm:px-6">
       <div className="flex flex-1 justify-between sm:hidden">
         <button 
           onClick={prevPage} 
           disabled={currentPage === 1}
-          className="relative inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="relative inline-flex items-center rounded-md border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Previous
         </button>
         <button 
           onClick={nextPage} 
           disabled={currentPage === totalPages || totalPages === 0}
-          className="relative ml-3 inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="relative ml-3 inline-flex items-center rounded-md border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Next
         </button>
       </div>
       <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm text-slate-700">
+          <p className="text-sm text-muted-foreground">
             Showing{' '}
-            <span className="font-medium">{totalItems === 0 ? 0 : startIndex + 1}</span>
+            <span className="font-semibold text-foreground">{totalItems === 0 ? 0 : startIndex + 1}</span>
             {' '}to{' '}
-            <span className="font-medium">{Math.min(endIndex, totalItems)}</span>
+            <span className="font-semibold text-foreground">{Math.min(endIndex, totalItems)}</span>
             {' '}of{' '}
-            <span className="font-medium">{totalItems}</span>
+            <span className="font-semibold text-foreground">{totalItems}</span>
             {' '}results
           </p>
         </div>
         <div className="flex items-center gap-4">
           {/* Items per page selector */}
           <div className="flex items-center gap-2 relative" ref={dropdownRef}>
-            <label className="text-sm text-slate-600">Rows per page:</label>
+            <label className="text-sm text-muted-foreground">Rows per page:</label>
             <button 
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center justify-between w-16 rounded-md border-0 py-1.5 pl-3 pr-2 text-slate-900 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-600 sm:text-sm sm:leading-6 bg-white transition-colors cursor-pointer shadow-sm"
+              className="flex items-center justify-between w-16 rounded-lg border-0 py-1.5 pl-3 pr-2 text-foreground ring-1 ring-inset ring-border hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary sm:text-sm sm:leading-6 bg-card transition-colors cursor-pointer shadow-sm"
             >
               {itemsPerPage}
-              <svg className="h-4 w-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+              <svg className="h-4 w-4 text-muted-foreground shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
             </button>
             
             {isDropdownOpen && (
-              <div className="absolute bottom-full right-0 mb-1 w-16 rounded-md bg-white shadow-lg ring-1 ring-black/5 z-50 overflow-hidden py-1">
+              <div className="absolute bottom-full right-0 mb-1 w-16 rounded-lg bg-popover shadow-lg ring-1 ring-border z-50 overflow-hidden py-1">
                 {[5, 10, 25, 50, 100].map(option => (
                   <button
                     key={option}
                     onClick={() => updateItemsPerPage(option)}
-                    className={`w-full text-left px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 transition-colors ${option === itemsPerPage ? 'bg-emerald-50 text-emerald-700 font-medium' : ''}`}
+                    className={`w-full text-left px-3 py-1.5 text-sm text-popover-foreground hover:bg-accent transition-colors ${option === itemsPerPage ? 'bg-primary/10 text-primary font-medium' : ''}`}
                   >
                     {option}
                   </button>
@@ -138,7 +138,7 @@ export default function Pagination({
               <button 
                 onClick={prevPage}
                 disabled={currentPage === 1}
-                className="relative inline-flex items-center rounded-l-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="relative inline-flex items-center rounded-l-md px-2 py-2 text-muted-foreground ring-1 ring-inset ring-border hover:bg-accent focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span className="sr-only">Previous</span>
                 <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -152,8 +152,8 @@ export default function Pagination({
                   onClick={() => goToPage(page)}
                   className={
                     page === currentPage 
-                      ? 'relative z-10 inline-flex items-center bg-emerald-600 px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600' 
-                      : 'relative inline-flex items-center px-4 py-2 text-sm font-semibold text-slate-900 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0'
+                      ? 'relative z-10 inline-flex items-center bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary' 
+                      : 'relative inline-flex items-center px-4 py-2 text-sm font-semibold text-foreground ring-1 ring-inset ring-border hover:bg-accent focus:z-20 focus:outline-offset-0'
                   }
                 >
                   {page}
@@ -163,7 +163,7 @@ export default function Pagination({
               <button 
                 onClick={nextPage}
                 disabled={currentPage === totalPages || totalPages === 0}
-                className="relative inline-flex items-center rounded-r-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="relative inline-flex items-center rounded-r-md px-2 py-2 text-muted-foreground ring-1 ring-inset ring-border hover:bg-accent focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span className="sr-only">Next</span>
                 <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
