@@ -3,8 +3,13 @@
 import { useEffect, useState } from 'react';
 import { useRoles } from '@/app/composables/modules/useRoles';
 import { useToast } from '@/app/composables/useToast';
+import PulseLoader from '@/app/components/ui/PulseLoader';
+import EmptyState from '@/app/components/ui/EmptyState';
+import { useConfirm } from '@/app/composables/useConfirm';
 
 export default function RolesPage() {
+  const { confirm } = useConfirm();
+
   const { loading, error, roles, fetchRoles, deleteRole, createRole, updateRole } = useRoles();
   const { addToast } = useToast();
 
@@ -60,7 +65,8 @@ export default function RolesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this role?')) {
+    const confirmed = await confirm({ message: 'Are you sure you want to delete this role?' });
+    if (confirmed) {
       try {
         await deleteRole(id);
         addToast('Role deleted successfully', 'success');
@@ -80,12 +86,13 @@ export default function RolesPage() {
         </button>
       </div>
 
-      {loading && <div className="text-slate-500 py-12 text-center">Loading roles...</div>}
+      {loading && <PulseLoader />}
       {!loading && error && <div className="text-red-500 py-12 text-center">{error}</div>}
       
       {!loading && !error && (
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-          <table className="min-w-full divide-y divide-slate-200">
+          <div className="overflow-x-auto">
+<table className="min-w-full divide-y divide-slate-200">
             <thead className="bg-slate-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">ID</th>
@@ -108,9 +115,8 @@ export default function RolesPage() {
               ))}
             </tbody>
           </table>
-          {roles.length === 0 && (
-            <div className="p-8 text-center text-slate-400">No roles found.</div>
-          )}
+</div>
+          {roles.length === 0 && <EmptyState message="No roles found." />}
         </div>
       )}
 

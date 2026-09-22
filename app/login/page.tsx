@@ -29,7 +29,7 @@ export default function LoginPage() {
         <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 text-center">
           {/* Logo placeholder */}
           <div className="mx-auto rounded-lg flex items-center justify-center mb-6">
-            <img src="/img/logo.png" className="h-6 w-auto" alt="Logo" />
+            <img src="/logo.png" className="h-6 w-auto" alt="Logo" />
           </div>
           
           <h2 className="text-2xl font-semibold text-slate-900">Welcome back</h2>

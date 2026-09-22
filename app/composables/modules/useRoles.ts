@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { roles_api } from '@/app/api_factory/modules/roles';
 
 export const useRoles = () => {
@@ -6,20 +6,22 @@ export const useRoles = () => {
   const [error, setError] = useState(null);
   const [roles, setRoles] = useState([] as any[]);
 
-  const fetchRoles = async (params?: any) => {
+  const fetchRoles = useCallback(async (params?: any) => {
     setLoading(true);
     try {
       const res = await roles_api.getRoles(params);
-      setRoles(res.data);
-      return res.data;
+      let dataList = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || res.data?.agents || res.data?.clients || res.data?.roles || res.data?.admins || res.data?.logs || res.data?.invites || res.data?.permissions || res.data?.batches || []);
+      dataList = Array.isArray(dataList) ? dataList : [];
+      setRoles(dataList);
+      return dataList;
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const createRole = async (payload: any) => {
+  const createRole = useCallback(async (payload: any) => {
     setLoading(true);
     try {
       const res = await roles_api.createRole(payload);
@@ -30,9 +32,9 @@ export const useRoles = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const updateRole = async (id: string, payload: any) => {
+  const updateRole = useCallback(async (id: string, payload: any) => {
     setLoading(true);
     try {
       const res = await roles_api.updateRole(id, payload);
@@ -43,9 +45,9 @@ export const useRoles = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const deleteRole = async (id: string) => {
+  const deleteRole = useCallback(async (id: string) => {
     setLoading(true);
     try {
       const res = await roles_api.deleteRole(id);
@@ -56,9 +58,9 @@ export const useRoles = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const assignPermission = async (roleId: string, payload: any) => {
+  const assignPermission = useCallback(async (roleId: string, payload: any) => {
     setLoading(true);
     try {
       const res = await roles_api.assignPermissionToRole(roleId, payload);
@@ -69,9 +71,9 @@ export const useRoles = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const removePermission = async (roleId: string, permissionId: string) => {
+  const removePermission = useCallback(async (roleId: string, permissionId: string) => {
     setLoading(true);
     try {
       const res = await roles_api.removePermissionFromRole(roleId, permissionId);
@@ -82,7 +84,7 @@ export const useRoles = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   return { loading, error, roles, fetchRoles, createRole, updateRole, deleteRole, assignPermission, removePermission };
 };

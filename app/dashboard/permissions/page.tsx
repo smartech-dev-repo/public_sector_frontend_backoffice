@@ -4,8 +4,13 @@ import { useEffect, useState } from 'react';
 import { usePermissions } from '@/app/composables/modules/usePermissions';
 import { useToast } from '@/app/composables/useToast';
 import { createPortal } from 'react-dom';
+import PulseLoader from '@/app/components/ui/PulseLoader';
+import EmptyState from '@/app/components/ui/EmptyState';
+import { useConfirm } from '@/app/composables/useConfirm';
 
 export default function PermissionsPage() {
+  const { confirm } = useConfirm();
+
   const { loading, error, permissions, fetchPermissions, deletePermission, createPermission, updatePermission } = usePermissions();
   const { addToast } = useToast();
 
@@ -61,7 +66,8 @@ export default function PermissionsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this permission?')) {
+    const confirmed = await confirm({ message: 'Are you sure you want to delete this permission?' });
+    if (confirmed) {
       try {
         await deletePermission(id);
         addToast('Permission deleted successfully', 'success');
@@ -81,12 +87,13 @@ export default function PermissionsPage() {
         </button>
       </div>
 
-      {loading && <div className="text-slate-500 py-12 text-center">Loading permissions...</div>}
+      {loading && <PulseLoader />}
       {!loading && error && <div className="text-red-500 py-12 text-center">{error}</div>}
       
       {!loading && !error && (
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-          <table className="min-w-full divide-y divide-slate-200">
+          <div className="overflow-x-auto">
+<table className="min-w-full divide-y divide-slate-200">
             <thead className="bg-slate-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">ID</th>
@@ -109,9 +116,8 @@ export default function PermissionsPage() {
               ))}
             </tbody>
           </table>
-          {permissions.length === 0 && (
-            <div className="p-8 text-center text-slate-400">No permissions found.</div>
-          )}
+</div>
+          {permissions.length === 0 && <EmptyState message="No permissions found." />}
         </div>
       )}
 
