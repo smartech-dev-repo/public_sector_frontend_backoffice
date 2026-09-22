@@ -6,23 +6,24 @@ import Pagination from '@/app/components/ui/Pagination';
 import Select from '@/app/components/ui/Select';
 import DatePicker from '@/app/components/ui/DatePicker';
 import TableDropdown from '@/app/components/ui/TableDropdown';
-import { useMockData } from '@/app/composables/modules/useMockData';
+import { useReconciliation } from '@/app/composables/modules/useReconciliation';
 import { useToast } from '@/app/composables/useToast';
 
 export default function ReconciliationPage() {
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 800);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const { reconciliationRecords } = useMockData();
+  const { reconciliation, fetchReconciliation } = useReconciliation();
   const { addToast } = useToast();
 
-  const [recordsList, setRecordsList] = useState(reconciliationRecords);
+  const [recordsList, setRecordsList] = useState([] as any[]);
+
+  useEffect(() => {
+    fetchReconciliation().then((data) => {
+      setRecordsList(data || []);
+      setIsLoading(false);
+    });
+  }, [fetchReconciliation]);
+
   const [showFilter, setShowFilter] = useState(false);
   const [filterParams, setFilterParams] = useState({
     search: '',
@@ -40,8 +41,8 @@ export default function ReconciliationPage() {
     if (filterParams.search) {
       const lower = filterParams.search.toLowerCase();
       result = result.filter(r => 
-        r.customer.toLowerCase().includes(lower) || 
-        r.loanId.toLowerCase().includes(lower)
+        (r.client?.firstName?.toLowerCase().includes(lower) || r.client?.lastName?.toLowerCase().includes(lower)) || 
+        r.id?.toLowerCase().includes(lower)
       );
     }
     
@@ -201,8 +202,8 @@ export default function ReconciliationPage() {
                   )}
                   {paginatedRecords.map(record => (
                     <tr key={record.id} className="hover:bg-slate-50/50 transition-colors group">
-                      <td className="px-6 py-4 font-mono text-slate-600">{record.loanId}</td>
-                      <td className="px-6 py-4 font-medium text-slate-800">{record.customer}</td>
+                      <td className="px-6 py-4 font-mono text-slate-600">{record.id?.split('-')[0]}</td>
+                      <td className="px-6 py-4 font-medium text-slate-800">{record.client?.firstName} {record.client?.lastName}</td>
                       <td className="px-6 py-4 text-slate-600">₦{record.amount.toLocaleString()}</td>
                       <td className="px-6 py-4">
                         <span className="px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-100 text-emerald-700 whitespace-nowrap">{record.portalStatus}</span>

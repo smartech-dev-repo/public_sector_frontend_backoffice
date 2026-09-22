@@ -92,7 +92,13 @@ export default function TableDropdown({ children }: TableDropdownProps) {
 
   return (
     <div ref={containerRef} className="inline-block">
-      <button ref={buttonRef} onClick={toggle} type="button" className="p-1.5 text-slate-400 hover:text-emerald-600 rounded-lg hover:bg-emerald-50 transition-colors">
+      <button 
+        ref={buttonRef} 
+        onClick={toggle} 
+        type="button" 
+        className="inline-flex items-center justify-center p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors bg-white border border-slate-200 shadow-sm"
+      >
+        <span className="sr-only">Open actions</span>
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
         </svg>

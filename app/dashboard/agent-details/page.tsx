@@ -70,7 +70,7 @@ export default function AgentDetailsPage() {
     <div className="space-y-6 pb-12">
       {/* Breadcrumb */}
       <div className="text-sm">
-        <Link href="/credit-risk/agent-management" className="text-slate-400 hover:text-slate-600 transition-colors">Agent management</Link>
+        <Link href="/dashboard/agent-management" className="text-slate-400 hover:text-slate-600 transition-colors">Agent management</Link>
         <span className="text-slate-400 mx-2">/</span>
         <span className="text-slate-900 font-medium">Agent details</span>
       </div>

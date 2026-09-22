@@ -153,7 +153,7 @@ export default function ExceptionsPage() {
 
           {/* Exception List */}
           <div className="space-y-4">
-            {filteredExceptions.length === 0 && <EmptyState message="
+            {filteredExceptions.length === 0 && <EmptyState title="
                 No exceptions match your filter criteria.
               " />}
             {paginatedExceptions.map((exc: any) => (

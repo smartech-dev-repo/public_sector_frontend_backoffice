@@ -92,7 +92,7 @@ export default function InvitesPage() {
             </tbody>
           </table>
 </div>
-          {invites.length === 0 && <EmptyState message="No pending invites." />}
+          {invites.length === 0 && <EmptyState title="No pending invites." />}
         </div>
       )}
 
