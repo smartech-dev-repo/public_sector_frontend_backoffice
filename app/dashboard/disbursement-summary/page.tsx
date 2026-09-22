@@ -53,7 +53,7 @@ export default function DisbursementSummaryPage() {
 
       {!loading && !error && (!disbursementSummary || disbursementSummary.totalCount === 0) && (
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-          <EmptyState message="No disbursement data for this month." />
+          <EmptyState title="No disbursement data for this month." />
         </div>
       )}
     </main>

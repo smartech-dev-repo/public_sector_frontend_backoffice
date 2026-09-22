@@ -14,6 +14,8 @@ export default function RolesPage() {
   const { addToast } = useToast();
 
   const [showCreateRole, setShowCreateRole] = useState(false);
+  const [showViewPermissions, setShowViewPermissions] = useState(false);
+  const [viewingRole, setViewingRole] = useState<any>(null);
   const [submitting, setSubmitting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState('');
@@ -35,6 +37,11 @@ export default function RolesPage() {
     setEditId(role.id);
     setForm({ name: role.name, description: role.description || '' });
     setShowCreateRole(true);
+  };
+
+  const openViewPermissionsModal = (role: any) => {
+    setViewingRole(role);
+    setShowViewPermissions(true);
   };
 
   const handleSaveRole = async (e: React.FormEvent) => {
@@ -98,16 +105,35 @@ export default function RolesPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">ID</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Name</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Description</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Permissions</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {roles.map((role: any) => (
                 <tr key={role.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-mono">{role.id}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-mono">{role.id.substring(0, 8)}...</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-medium">{role.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{role.description}</td>
+                  <td className="px-6 py-4 text-sm text-slate-600 max-w-md">
+                    <div className="flex flex-wrap gap-1.5">
+                      {role.permissions?.slice(0, 5).map((p: any) => (
+                        <span key={p.permission?.id || Math.random()} className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded text-[11px] font-medium tracking-wide shadow-sm" title={p.permission?.description}>
+                          {p.permission?.key}
+                        </span>
+                      ))}
+                      {role.permissions?.length > 5 && (
+                        <span className="px-2 py-0.5 bg-slate-100 text-slate-600 border border-slate-200 rounded text-[11px] font-medium shadow-sm">
+                          +{role.permissions.length - 5} more
+                        </span>
+                      )}
+                      {(!role.permissions || role.permissions.length === 0) && (
+                        <span className="text-slate-400 italic text-xs">No permissions assigned</span>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
+                    <button onClick={() => openViewPermissionsModal(role)} className="text-emerald-600 hover:text-emerald-800 font-medium transition-colors">View</button>
                     <button onClick={() => openEditModal(role)} className="text-blue-600 hover:text-blue-800 font-medium transition-colors">Edit</button>
                     <button onClick={() => handleDelete(role.id)} className="text-rose-600 hover:text-rose-800 font-medium transition-colors">Delete</button>
                   </td>
@@ -116,7 +142,7 @@ export default function RolesPage() {
             </tbody>
           </table>
 </div>
-          {roles.length === 0 && <EmptyState message="No roles found." />}
+          {roles.length === 0 && <EmptyState title="No roles found." />}
         </div>
       )}
 
@@ -160,6 +186,55 @@ export default function RolesPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* View Permissions Modal */}
+      {showViewPermissions && viewingRole && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setShowViewPermissions(false)}></div>
+          <div className="relative bg-white rounded-2xl p-6 w-full max-w-2xl mx-4 shadow-2xl max-h-[90vh] flex flex-col">
+            <div className="flex items-start justify-between mb-6 shrink-0">
+              <div>
+                <h3 className="text-xl font-bold text-slate-900">Role Permissions</h3>
+                <p className="text-sm text-slate-500 mt-1">Viewing permissions for <span className="font-semibold text-emerald-700">{viewingRole.name}</span></p>
+              </div>
+              <button onClick={() => setShowViewPermissions(false)} className="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-full p-1.5 transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto pr-2 space-y-3">
+              {(!viewingRole.permissions || viewingRole.permissions.length === 0) ? (
+                <div className="text-center py-10 bg-slate-50 rounded-xl border border-slate-100">
+                  <p className="text-slate-500 font-medium">No permissions assigned to this role.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {viewingRole.permissions.map((p: any) => (
+                    <div key={p.permission?.id || Math.random()} className="bg-white border border-slate-200 p-4 rounded-xl hover:border-emerald-300 hover:shadow-md transition-all group relative overflow-hidden">
+                      <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                      <div className="flex items-start gap-3">
+                        <div className="bg-emerald-50 p-2 rounded-lg text-emerald-600 shrink-0">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-slate-800 text-sm mb-1">{p.permission?.key}</h4>
+                          <p className="text-xs text-slate-500 leading-relaxed">{p.permission?.description}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            <div className="mt-6 pt-4 border-t border-slate-100 shrink-0 flex justify-end">
+              <button onClick={() => setShowViewPermissions(false)} className="px-6 py-2.5 rounded-xl text-sm font-semibold text-white bg-slate-800 hover:bg-slate-900 transition-colors shadow-sm">
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

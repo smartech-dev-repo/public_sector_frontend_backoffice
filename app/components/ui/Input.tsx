@@ -1,70 +1,83 @@
-import React, { useMemo } from 'react';
+import { cva, type VariantProps } from 'class-variance-authority';
+import * as React from 'react';
 
-export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> {
-  value?: string | number;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement> | any) => void;
-  label?: string;
-  type?: string;
-  placeholder?: string;
-  hint?: string;
-  required?: boolean;
-  icon?: React.ReactNode;
-}
+import { cn } from '@/lib/utils';
 
-export default function Input({
-  value = '',
-  onChange,
-  label = '',
-  type = 'text',
-  placeholder = '',
-  hint = '',
-  required = false,
-  icon,
-  ...rest
-}: InputProps) {
-  const formattedValue = useMemo(() => {
-    if (type === 'money' && value) {
-      const num = String(value).replace(/\D/g, '');
-      return num.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    }
-    return value;
-  }, [type, value]);
+const inputVariants = cva(
+  'flex w-full rounded-md border border-input bg-background px-3 py-2 text-base transition-[color,box-shadow] file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm',
+  {
+    variants: {
+      size: {
+        xs: 'h-7 text-xs',
+        sm: 'h-8 text-xs',
+        md: 'h-9',
+        lg: 'h-10 text-base',
+        xl: 'h-11 text-lg',
+      },
+      variant: {
+        default: '',
+        success: 'border-success/50 focus-visible:ring-success',
+        error: 'border-destructive focus-visible:ring-destructive',
+      },
+    },
+    defaultVariants: {
+      size: 'md',
+      variant: 'default',
+    },
+  },
+);
 
-  const handleInput = (event: React.ChangeEvent<HTMLInputElement>) => {
-    let val = event.target.value;
-    if (type === 'money') {
-      val = val.replace(/\D/g, '');
-    }
-    
-    if (onChange) {
-      // Pass synthetic event or simply just update the value
-      const newEvent = { ...event, target: { ...event.target, value: val } };
-      onChange(newEvent as any);
-    }
+export type InputProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> &
+  VariantProps<typeof inputVariants> & {
+    error?: string;
+    success?: boolean;
   };
 
-  const hasIcon = Boolean(icon) || type === 'money';
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  (
+    {
+      className,
+      type,
+      size,
+      error,
+      success,
+      variant,
+      id,
+      'aria-invalid': ariaInvalid,
+      'aria-describedby': ariaDescribedBy,
+      ...props
+    },
+    ref,
+  ) => {
+    const uid = React.useId();
+    const inputId = id ?? uid;
+    const errorId = `${inputId}-error`;
+    const v = error ? 'error' : success ? 'success' : variant;
+    const invalid = Boolean(error) || ariaInvalid === true;
+    const describedBy = [ariaDescribedBy, error ? errorId : undefined].filter(Boolean).join(' ') || undefined;
 
-  return (
-    <div className="relative">
-      {label && <label className="block text-sm text-slate-700 mb-1.5">{label}</label>}
-      <div className="relative flex items-center">
-        {hasIcon && (
-          <div className="absolute left-3 text-slate-400 pointer-events-none">
-            {icon || (type === 'money' && <span className="text-sm font-medium">₦</span>)}
-          </div>
-        )}
-        <input 
-          type={type === 'money' ? 'text' : type} 
-          value={formattedValue} 
-          onChange={handleInput}
-          placeholder={placeholder}
-          required={required}
-          className={`w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 text-sm text-slate-800 outline-none transition-all focus:border-emerald-500 focus:bg-white ${hasIcon ? 'pl-8 pr-4' : 'px-4'}`}
-          {...rest}
+    return (
+      <div className="flex w-full flex-col gap-1">
+        <input
+          id={inputId}
+          type={type}
+          className={cn(inputVariants({ size, variant: v }), className)}
+          ref={ref}
+          aria-invalid={invalid || undefined}
+          aria-describedby={describedBy}
+          {...props}
         />
+        {error ? (
+          <p id={errorId} className="text-xs text-destructive" role="alert">
+            {error}
+          </p>
+        ) : null}
       </div>
-      {hint && <p className="mt-1.5 text-xs text-slate-500">{hint}</p>}
-    </div>
-  );
-}
+    );
+  },
+);
+Input.displayName = 'Input';
+
+export { Input, inputVariants };
+
+export default Input;
