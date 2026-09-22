@@ -1,8 +1,6 @@
 import './globals.css';
 import type { Metadata } from 'next';
-import { Outfit } from 'next/font/google';
-
-const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' });
+import { ThemeProvider } from '@/components/theme-provider';
 
 export const metadata: Metadata = {
   title: 'Admin Portal',
@@ -18,12 +16,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={outfit.variable}>
-      <body className="font-sans antialiased">
-        <ConfirmProvider>
-          {children}
-        </ConfirmProvider>
-        <ToastContainer />
+    <html lang="en" suppressHydrationWarning>
+      <body className="font-sans antialiased bg-background text-foreground">
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <ConfirmProvider>
+            {children}
+          </ConfirmProvider>
+          <ToastContainer />
+        </ThemeProvider>
       </body>
     </html>
   );
