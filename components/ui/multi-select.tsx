@@ -75,7 +75,7 @@ export function MultiSelect({
                   variant="secondary"
                   key={item}
                   className="mr-1 mb-1"
-                  onClick={(e) => {
+                  onClick={(e: React.MouseEvent) => {
                     e.stopPropagation()
                     handleUnselect(item)
                   }}

@@ -215,17 +215,17 @@ const SelectItem = React.forwardRef<
     <SelectPrimitive.Item
       ref={ref}
       value={value}
-      onPointerUp={(e) => {
+      onPointerUp={(e: React.PointerEvent) => {
          e.preventDefault();
          e.stopPropagation();
          forceSelect(value!);
-         if (props.onPointerUp) props.onPointerUp(e);
+         if (props.onPointerUp) props.onPointerUp(e as any);
       }}
-      onClick={(e) => {
+      onClick={(e: React.MouseEvent) => {
          e.preventDefault();
          e.stopPropagation();
          forceSelect(value!);
-         if (props.onClick) props.onClick(e);
+         if (props.onClick) props.onClick(e as any);
       }}
       className={cn(
         'relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pr-8 pl-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent hover:text-accent-foreground transition-colors',

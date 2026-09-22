@@ -35,7 +35,7 @@ export function TimePicker({ value, onChange, className, disabled }: TimePickerP
   return (
     <div className={cn('flex items-center gap-1.5', className)}>
       <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
-      <Select value={hour} onValueChange={(v) => handleChange('hour', v)} disabled={disabled}>
+      <Select value={hour} onValueChange={(v: string) => handleChange('hour', v)} disabled={disabled}>
         <SelectTrigger className="h-9 w-[72px] px-2">
           <SelectValue placeholder="HH" />
         </SelectTrigger>
@@ -46,7 +46,7 @@ export function TimePicker({ value, onChange, className, disabled }: TimePickerP
         </SelectContent>
       </Select>
       <span className="text-sm font-semibold text-muted-foreground">:</span>
-      <Select value={minute} onValueChange={(v) => handleChange('minute', v)} disabled={disabled}>
+      <Select value={minute} onValueChange={(v: string) => handleChange('minute', v)} disabled={disabled}>
         <SelectTrigger className="h-9 w-[72px] px-2">
           <SelectValue placeholder="MM" />
         </SelectTrigger>
