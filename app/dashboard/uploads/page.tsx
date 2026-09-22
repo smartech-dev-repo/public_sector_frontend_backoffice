@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useDocuments } from '@/app/composables/modules/useDocuments';
 import { useToast } from '@/app/composables/useToast';
+import PulseLoader from '@/app/components/ui/PulseLoader';
+import EmptyState from '@/app/components/ui/EmptyState';
 
 export default function UploadsPage() {
   const { loading, batches, fetchDocumentBatches, uploadIppisBroadsheet, uploadDisbursedLoans, uploadRepaymentSchedule } = useDocuments();
@@ -129,7 +131,8 @@ export default function UploadsPage() {
           <div>
             <h2 className="text-lg font-semibold text-slate-800 mb-4">Upload Batches</h2>
             <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-              <table className="min-w-full divide-y divide-slate-200">
+              <div className="overflow-x-auto">
+<table className="min-w-full divide-y divide-slate-200">
                 <thead className="bg-slate-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">ID</th>
@@ -162,6 +165,7 @@ export default function UploadsPage() {
                   )}
                 </tbody>
               </table>
+</div>
             </div>
           </div>
         </div>

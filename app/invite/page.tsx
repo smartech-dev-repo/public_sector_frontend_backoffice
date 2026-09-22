@@ -37,7 +37,7 @@ function InviteForm() {
     <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 text-center">
       {/* Logo placeholder */}
       <div className="mx-auto rounded-lg flex items-center justify-center mb-6">
-        <span className="font-bold text-lg text-emerald-600 tracking-tight">MAKERCHECKER</span>
+        <img src="/logo.png" className="h-8 w-auto" alt="Logo" />
       </div>
       
       <h2 className="text-xl text-center font-semibold text-slate-900 text-left">You&apos;ve been invited.</h2>

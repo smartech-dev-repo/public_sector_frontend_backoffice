@@ -94,11 +94,11 @@ export const CustomInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, Cu
   const hasPrefix = Boolean(prefix || prefixIcon);
   const hasSuffix = Boolean(suffix || suffixIcon || type === 'password' || (clearable && value));
   
-  const baseClasses = `peer w-full rounded-xl border bg-white px-4 text-[15px] font-medium text-slate-800 placeholder:text-slate-400 placeholder:font-normal outline-none transition-all duration-200 ${inputSizeClass}`;
+  const baseClasses = `peer w-full rounded-xl border bg-card px-4 text-[15px] font-medium text-foreground placeholder:text-muted-foreground placeholder:font-normal outline-none transition-all duration-200 ${inputSizeClass}`;
   
   const stateClasses = hasError 
-    ? 'border-red-400 bg-red-50/50 focus:border-red-500 focus:ring-1 focus:ring-red-500' 
-    : 'border-slate-200 hover:border-slate-300 focus:border-emerald-500 focus:bg-white';
+    ? 'border-destructive bg-destructive/5 focus:border-destructive focus:ring-1 focus:ring-destructive' 
+    : 'border-border hover:border-muted-foreground/30 focus:border-primary focus:bg-card';
     
   const paddingClasses = `${hasPrefix ? 'pl-12' : ''} ${hasSuffix ? 'pr-12' : ''}`;
   
@@ -107,15 +107,15 @@ export const CustomInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, Cu
   return (
     <div className={`w-full ${containerClass}`}>
       {label && (
-        <label htmlFor={inputId} className="block text-sm text-slate-700 mb-2 tracking-wide">
+        <label htmlFor={inputId} className="block text-sm font-semibold text-foreground mb-2 tracking-wide">
           {label}
-          {required && <span className="text-red-500 ml-0.5">*</span>}
+          {required && <span className="text-destructive ml-0.5">*</span>}
         </label>
       )}
 
       <div className={`relative group ${disabled ? 'opacity-60 pointer-events-none' : ''}`}>
         {hasPrefix && (
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors duration-200 z-10">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors duration-200 z-10">
             {prefix || (prefixIcon && <span className="text-lg">{prefixIcon}</span>)}
           </div>
         )}
@@ -150,7 +150,7 @@ export const CustomInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, Cu
             required={required}
             rows={rows}
             maxLength={maxLength}
-            className={`peer w-full rounded-xl border bg-white px-4 py-3 text-[15px] font-medium text-slate-800 placeholder:text-slate-400 placeholder:font-normal outline-none transition-all duration-200 resize-none ${stateClasses}`}
+            className={`peer w-full rounded-xl border bg-card px-4 py-3 text-[15px] font-medium text-foreground placeholder:text-muted-foreground placeholder:font-normal outline-none transition-all duration-200 resize-none ${stateClasses}`}
             onChange={handleChange}
             onFocus={(e) => { setIsFocused(true); onFocus?.(e); }}
             onBlur={handleBlur}
@@ -164,7 +164,7 @@ export const CustomInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, Cu
             {clearable && value && (
               <button
                 type="button"
-                className="w-5 h-5 flex items-center justify-center rounded-full bg-slate-200 hover:bg-slate-300 text-slate-500 hover:text-slate-700 transition-all duration-150"
+                className="w-5 h-5 flex items-center justify-center rounded-full bg-muted hover:bg-muted-foreground/20 text-muted-foreground hover:text-foreground transition-all duration-150"
                 onClick={handleClear}
               >
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -176,7 +176,7 @@ export const CustomInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, Cu
             {type === 'password' && (
               <button
                 type="button"
-                className="text-slate-400 hover:text-emerald-600 transition-colors duration-200"
+                className="text-muted-foreground hover:text-primary transition-colors duration-200"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {!showPassword ? (
@@ -192,7 +192,7 @@ export const CustomInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, Cu
               </button>
             )}
 
-            {suffix || (suffixIcon && <span className="text-slate-400 text-lg">{suffixIcon}</span>)}
+            {suffix || (suffixIcon && <span className="text-muted-foreground text-lg">{suffixIcon}</span>)}
           </div>
         )}
       </div>
@@ -201,18 +201,18 @@ export const CustomInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, Cu
         <div className="flex items-start justify-between mt-1">
           <div className="flex-1">
             {hasError && errorMessage ? (
-              <p className="text-xs font-medium text-red-500 flex items-center gap-1">
+              <p className="text-xs font-medium text-destructive flex items-center gap-1">
                 <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 {errorMessage}
               </p>
             ) : hint ? (
-              <p className="text-xs text-slate-400">{hint}</p>
+              <p className="text-xs text-muted-foreground">{hint}</p>
             ) : null}
           </div>
           {maxLength && showCount && (
-            <span className="text-xs text-slate-400 ml-2 tabular-nums">
+            <span className="text-xs text-muted-foreground ml-2 tabular-nums">
               {stringValue.length}/{maxLength}
             </span>
           )}

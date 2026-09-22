@@ -7,6 +7,9 @@ export const invites_api = {
   getInvites: (params?: any) => {
     return GATEWAY_ENDPOINT_WITH_AUTH.get('/admin/invites', { params });
   },
+  revokeInvite: (id: string) => {
+    return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/invites/${id}/revoke`);
+  },
   resendInvite: (id: string) => {
     return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/invites/${id}/resend`);
   }
