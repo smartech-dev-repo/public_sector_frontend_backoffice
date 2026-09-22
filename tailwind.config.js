@@ -1,51 +1,77 @@
-export default {
-  darkMode: 'class',
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  darkMode: ["class"],
   content: [
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    './app/**/*.{ts,tsx}',
+    './components/**/*.{ts,tsx}',
   ],
   theme: {
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: {
+        "2xl": "1400px",
+      },
+    },
     extend: {
       fontFamily: {
-        sans: ['"Satoshi"', 'sans-serif'],
+        sans: ['Satoshi', 'Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
       },
       colors: {
-        emerald: {
-          50: '#e6f3ed',
-          100: '#c2e2d1',
-          200: '#9acdb3',
-          300: '#71b794',
-          400: '#48a175',
-          500: '#018752', // Brand Color
-          600: '#016b41',
-          700: '#004f30',
-          800: '#003420',
-          900: '#001a10',
-          950: '#000c07',
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
         },
-        purple: {
-          50: '#e6f3ed',
-          100: '#c2e2d1',
-          200: '#9acdb3',
-          300: '#71b794',
-          400: '#48a175',
-          500: '#018752', // Brand Color
-          600: '#016b41',
-          700: '#004f30',
-          800: '#003420',
-          900: '#001a10',
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
         },
-        fuchsia: {
-          50: '#e6f3ed',
-          100: '#c2e2d1',
-          200: '#9acdb3',
-          300: '#71b794',
-          400: '#48a175',
-          500: '#018752', // Brand Color
-          600: '#016b41',
-          700: '#004f30',
-          800: '#003420',
-          900: '#001a10',
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
+        info: {
+          DEFAULT: "hsl(var(--info))",
+          foreground: "hsl(var(--info-foreground))",
+        },
+        soft: {
+          DEFAULT: "hsl(var(--soft))",
+          foreground: "hsl(var(--soft-foreground))",
         }
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
       }
     },
   },

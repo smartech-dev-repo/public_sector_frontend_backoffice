@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { Eye } from 'lucide-react';
 import Pagination from '@/app/components/ui/Pagination';
 import DatePicker from '@/app/components/ui/DatePicker';
+import PulseLoader from '@/app/components/ui/PulseLoader';
+import EmptyState from '@/app/components/ui/EmptyState';
 
 export default function AgentDetailsPage() {
   const [showFilter, setShowFilter] = useState(false);
