@@ -17,7 +17,9 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/feedback/skeleton';
 import { TableExportButton } from '@/components/data-display/table-export-button';
 import { cn } from '@/lib/utils';
-import { getAdminAuditColumns, AUDIT_FIELDS } from '@/lib/admin-audit-columns';
+// Mock AUDIT_FIELDS and getAdminAuditColumns
+const AUDIT_FIELDS = ['createdAt', 'updatedAt', 'createdBy', 'updatedBy'];
+const getAdminAuditColumns = () => [];
 
 export type DataTableProps<TData, TValue> = {
   columns: ColumnDef<TData, TValue>[];
@@ -130,7 +132,7 @@ export function DataTable<TData, TValue>({
     if (data && data.length > 0) {
       const existingFields = new Set<string>();
       data.forEach(row => {
-        AUDIT_FIELDS.forEach(field => {
+        AUDIT_FIELDS.forEach((field: any) => {
           if ((row as any)?.[field] !== undefined && (row as any)?.[field] !== null) {
             existingFields.add(field);
           }
@@ -138,7 +140,7 @@ export function DataTable<TData, TValue>({
       });
       
       if (existingFields.size > 0) {
-        const auditCols = getAdminAuditColumns().filter(col => existingFields.has(col.id as string)) as ColumnDef<TData, any>[];
+        const auditCols = getAdminAuditColumns().filter((col: any) => existingFields.has(col.id as string)) as ColumnDef<TData, any>[];
         
         const actionsColIdx = cols.findIndex(c => (c as any).id === 'actions');
         if (actionsColIdx !== -1) {
@@ -188,7 +190,7 @@ export function DataTable<TData, TValue>({
                   <Input
                     placeholder={filterPlaceholder || "Search..."}
                     value={(filterCol.getFilterValue() as string) ?? ''}
-                    onChange={(e) => filterCol.setFilterValue(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => filterCol.setFilterValue(e.target.value)}
                     disabled={loading}
                     className="pl-10 pr-12 h-9 w-full rounded-full bg-muted/40 border-border/60 focus-visible:ring-1 focus-visible:ring-primary/30 transition-shadow"
                   />
@@ -213,7 +215,7 @@ export function DataTable<TData, TValue>({
             {exportConfig?.enabled && (
               <div className="shrink-0 flex items-center">
                 <TableExportButton 
-                  data={table.getFilteredRowModel().rows.map(row => row.original)}
+                  data={table.getFilteredRowModel().rows.map((row: any) => row.original)}
                   filename={exportConfig.filename}
                   dateField={exportConfig.dateField}
                   columns={exportConfig.columns || finalColumns
@@ -241,9 +243,9 @@ export function DataTable<TData, TValue>({
           >
           <table className="w-full caption-bottom text-sm">
             <thead className="bg-muted/50 sticky top-0 z-10 border-b border-border">
-              {table.getHeaderGroups().map((hg) => (
+              {table.getHeaderGroups().map((hg: any) => (
                 <tr key={hg.id}>
-                  {hg.headers.map((header) => (
+                  {hg.headers.map((header: any) => (
                     <th
                       key={header.id}
                       scope="col"
@@ -271,7 +273,7 @@ export function DataTable<TData, TValue>({
                 ))}
               </>
             ) : table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map((row) => (
+              table.getRowModel().rows.map((row: any) => (
                 <tr
                   key={row.id}
                   className={cn(
@@ -280,7 +282,7 @@ export function DataTable<TData, TValue>({
                   )}
                   onClick={() => onRowClick?.(row.original)}
                 >
-                  {row.getVisibleCells().map((cell) => (
+                  {row.getVisibleCells().map((cell: any) => (
                     <td key={cell.id} className="px-5 py-4 align-middle">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>

@@ -2,8 +2,7 @@ import { Menu } from 'lucide-react';
 import * as React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
-import { cld } from '@/lib/cloudinary';
-import { IMAGES } from '@/lib/images';
+
 import { cn } from '@/lib/utils';
 
 import { Breadcrumbs, type BreadcrumbItem } from './breadcrumbs';
@@ -66,14 +65,8 @@ export function AppShell({
   };
 
   const defaultSidebarHeader = (
-    <Link to="/" className="flex items-center">
-      <img
-        src={cld(IMAGES.logo, 'w_320')}
-        alt="Smartech Design Library"
-        width={160}
-        height={40}
-        className="h-10 w-auto object-contain"
-      />
+    <Link to="/" className="flex items-center text-lg font-bold">
+      Public Sector Admin
     </Link>
   );
 
