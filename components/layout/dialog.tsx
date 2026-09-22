@@ -268,7 +268,7 @@ const DialogContent = React.forwardRef<
     <DialogPortal>
       <DialogOverlay className={cn(overlayClassName, isMinimized && 'opacity-0 pointer-events-none')} />
       <DialogPrimitive.Content
-        ref={(node) => {
+        ref={(node: HTMLDivElement | null) => {
           // Merge refs
           (contentRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
           // Also wire the drag ref so reset() works before first drag
@@ -279,7 +279,7 @@ const DialogContent = React.forwardRef<
         data-draggable-modal
         onPointerDown={onPointerDown}
         // Reset drag position to center every time the modal opens (article pattern)
-        onOpenAutoFocus={(e) => {
+        onOpenAutoFocus={(e: Event) => {
           reset();
           onOpenAutoFocus?.(e);
         }}
@@ -290,10 +290,10 @@ const DialogContent = React.forwardRef<
           isMaximized && '!w-screen !h-[100dvh] !max-w-none !max-h-none !rounded-none !border-none !overflow-y-auto',
           isMinimized && 'opacity-0 pointer-events-none scale-75 !duration-150',
         )}
-        onInteractOutside={(e) => {
+        onInteractOutside={(e: Event) => {
           e.preventDefault();
         }}
-        onEscapeKeyDown={(e) => {
+        onEscapeKeyDown={(e: KeyboardEvent) => {
           if (isMinimized) e.preventDefault();
         }}
         {...props}

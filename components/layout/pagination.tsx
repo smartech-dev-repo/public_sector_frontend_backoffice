@@ -56,7 +56,7 @@ export function Pagination({ page, pageCount, onPageChange, limit, onLimitChange
       {onLimitChange && limit && (
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground whitespace-nowrap">Rows per page:</span>
-          <Select value={String(limit)} onValueChange={(val) => {
+          <Select value={String(limit)} onValueChange={(val: string) => {
             const num = Number(val);
             try {
               localStorage.setItem('camco_admin_table_page_size', num.toString());
