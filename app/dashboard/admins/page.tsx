@@ -7,6 +7,7 @@ import { createPortal } from 'react-dom';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { useConfirm } from '@/app/composables/useConfirm';
+import TableDropdown from '@/app/components/ui/TableDropdown';
 
 export default function AdminsPage() {
   const { confirm } = useConfirm();
@@ -104,7 +105,7 @@ export default function AdminsPage() {
       
       {!loading && !error && (
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-          {admins.length === 0 && <EmptyState message="No admins found." />}
+          {admins.length === 0 && <EmptyState title="No admins found." />}
           {admins.length > 0 && (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-slate-200">
@@ -122,11 +123,26 @@ export default function AdminsPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-mono">{admin.id}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">{admin.email}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{admin.firstName} {admin.lastName}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                        <button onClick={() => openAssignRoleModal(admin)} className="text-emerald-600 hover:text-emerald-800 font-medium transition-colors">Assign Role</button>
-                        <button onClick={() => openRemoveRoleModal(admin)} className="text-rose-600 hover:text-rose-800 font-medium transition-colors">Remove Role</button>
-                        <button onClick={() => handleDeactivate(admin)} className="text-amber-600 hover:text-amber-800 font-medium transition-colors">Deactivate</button>
-                        <button onClick={() => handleReactivate(admin)} className="text-blue-600 hover:text-blue-800 font-medium transition-colors">Reactivate</button>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative">
+                        <TableDropdown>
+                          <button onClick={() => { openAssignRoleModal(admin); }} className="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+                            Assign Role
+                          </button>
+                          <button onClick={() => { openRemoveRoleModal(admin); }} className="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-rose-50 hover:text-rose-700 transition-colors flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 12H4"></path></svg>
+                            Remove Role
+                          </button>
+                          <div className="h-px bg-slate-100 my-1.5"></div>
+                          <button onClick={() => { handleDeactivate(admin); }} className="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-amber-50 hover:text-amber-700 transition-colors flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                            Deactivate
+                          </button>
+                          <button onClick={() => { handleReactivate(admin); }} className="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Reactivate
+                          </button>
+                        </TableDropdown>
                       </td>
                     </tr>
                   ))}

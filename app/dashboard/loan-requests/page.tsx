@@ -94,7 +94,7 @@ export default function LoanRequestsPage() {
       
       {!loading && !error && (
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-          {loanRequests.length === 0 && <EmptyState message="No loan requests found." />}
+          {loanRequests.length === 0 && <EmptyState title="No loan requests found." />}
           {loanRequests.length > 0 && (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-slate-200">

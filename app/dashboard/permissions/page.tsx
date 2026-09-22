@@ -117,7 +117,7 @@ export default function PermissionsPage() {
             </tbody>
           </table>
 </div>
-          {permissions.length === 0 && <EmptyState message="No permissions found." />}
+          {permissions.length === 0 && <EmptyState title="No permissions found." />}
         </div>
       )}
 

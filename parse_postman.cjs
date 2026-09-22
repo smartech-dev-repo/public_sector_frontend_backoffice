@@ -1,25 +1,27 @@
 const fs = require('fs');
+const postman = JSON.parse(fs.readFileSync('/Users/marquis/public-sector/admin/Public Sector Backend.postman_collection (2).json', 'utf8'));
 
-const data = JSON.parse(fs.readFileSync('Public Sector Backend.postman_collection.json', 'utf8'));
+const endpoints = [];
 
-function extractEndpoints(items, path = '') {
-  let endpoints = [];
+function extractEndpoints(items, folderPath = '') {
   for (const item of items) {
     if (item.item) {
-      endpoints = endpoints.concat(extractEndpoints(item.item, path + item.name + ' / '));
+      extractEndpoints(item.item, folderPath ? `${folderPath}/${item.name}` : item.name);
     } else if (item.request) {
       const method = item.request.method;
-      const url = item.request.url?.raw || (item.request.url?.path ? item.request.url.path.join('/') : 'unknown');
-      endpoints.push({
-        folder: path,
-        name: item.name,
-        method,
-        url: url.replace(/\{\{[^}]+\}\}/g, '') // remove environment vars like {{baseUrl}}
-      });
+      let url = '';
+      if (typeof item.request.url === 'string') {
+        url = item.request.url;
+      } else if (item.request.url && item.request.url.raw) {
+        url = item.request.url.raw;
+      }
+      
+      // Clean url (remove {{base_url}})
+      url = url.replace('{{base_url}}', '');
+      endpoints.push({ method, url, name: item.name, folderPath });
     }
   }
-  return endpoints;
 }
 
-const endpoints = extractEndpoints(data.item);
-endpoints.forEach(e => console.log(`[${e.method}] ${e.name} - ${e.url}`));
+extractEndpoints(postman.item);
+console.log(JSON.stringify(endpoints, null, 2));
