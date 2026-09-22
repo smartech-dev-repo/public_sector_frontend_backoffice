@@ -94,7 +94,7 @@ export default function LoanTermsPage() {
       
       {!loading && !error && (
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-          {loanTerms.length === 0 && <EmptyState message="No loan terms found." />}
+          {loanTerms.length === 0 && <EmptyState title="No loan terms found." />}
           {loanTerms.length > 0 && (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-slate-200">

@@ -1,30 +1,59 @@
-import React from 'react';
+import * as React from 'react';
+import { cn } from '@/lib/utils';
+import { SearchX } from 'lucide-react'; // Fallback icon
 
-interface EmptyStateProps {
-  message?: string;
-  title?: string;
+export type EmptyStateProps = React.HTMLAttributes<HTMLDivElement> & {
   icon?: React.ReactNode;
+  title: string;
+  description?: string;
   action?: React.ReactNode;
-}
+};
 
-export default function EmptyState({ 
-  message = "No records found matching your criteria.", 
-  title = "No data found",
+export function EmptyState({
+  className,
   icon,
-  action
+  title,
+  description,
+  action,
+  ...props
 }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center p-16 text-muted-foreground bg-muted/50 rounded-2xl border border-dashed border-border">
-      {icon || (
-        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-          <svg className="w-8 h-8 text-muted-foreground/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-          </svg>
-        </div>
+    <div
+      role="status"
+      className={cn(
+        'relative flex min-h-[300px] w-full flex-col items-center justify-center gap-4 rounded-2xl border border-slate-100 bg-white/50 p-8 text-center shadow-sm backdrop-blur-xl animate-in fade-in zoom-in-95 duration-500',
+        className,
       )}
-      <h3 className="text-base font-bold text-foreground mb-1">{title}</h3>
-      <p className="text-sm text-muted-foreground max-w-sm text-center">{message}</p>
-      {action && <div className="mt-4">{action}</div>}
+      {...props}
+    >
+      {/* Decorative background element */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-50/50 rounded-2xl pointer-events-none" />
+
+      {/* Icon Container */}
+      <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-emerald-50/50 text-emerald-600 shadow-inner ring-1 ring-emerald-100/50 mb-2">
+        {icon ? (
+          icon
+        ) : (
+          <SearchX className="h-10 w-10 text-emerald-500/80 stroke-[1.5]" />
+        )}
+      </div>
+
+      {/* Text Content */}
+      <div className="relative z-10 max-w-sm space-y-2">
+        <h3 className="text-xl font-semibold text-slate-800 tracking-tight">{title}</h3>
+        {description ? (
+          <p className="text-sm leading-relaxed text-slate-500">{description}</p>
+        ) : null}
+      </div>
+
+      {/* Optional Action Button */}
+      {action ? (
+        <div className="relative z-10 mt-4 animate-in slide-in-from-bottom-2 duration-700 fade-in">
+          {action}
+        </div>
+      ) : null}
     </div>
   );
 }
+
+export default EmptyState;
