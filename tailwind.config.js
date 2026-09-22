@@ -6,7 +6,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['"Satoshi"', 'sans-serif'],
+        sans: ['var(--font-outfit)', 'Outfit', 'sans-serif'],
       },
       colors: {
         emerald: {

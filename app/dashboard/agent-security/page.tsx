@@ -4,8 +4,13 @@ import { useEffect, useState, useMemo } from 'react';
 import { useAgents } from '@/app/composables/modules/useAgents';
 import { useSessions } from '@/app/composables/modules/useSessions';
 import { useToast } from '@/app/composables/useToast';
+import PulseLoader from '@/app/components/ui/PulseLoader';
+import EmptyState from '@/app/components/ui/EmptyState';
+import { useConfirm } from '@/app/composables/useConfirm';
 
 export default function AgentSecurityPage() {
+  const { confirm } = useConfirm();
+
   const { loading, error, agents, fetchAgents } = useAgents();
   const { revokeAgentSessions } = useSessions();
   const { addToast } = useToast();
@@ -21,7 +26,8 @@ export default function AgentSecurityPage() {
   }, [agents]);
 
   const handleRevoke = async (agent: any) => {
-    if (!confirm(`Are you sure you want to revoke all sessions for ${agent.firstName}?`)) return;
+    const confirmed = await confirm({ message: `Are you sure you want to revoke all sessions for ${agent.firstName}?` });
+    if (!confirmed) return;
     setRevokingId(agent.id);
     try {
       await revokeAgentSessions(agent.id);

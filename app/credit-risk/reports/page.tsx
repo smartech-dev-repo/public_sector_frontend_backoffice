@@ -4,6 +4,8 @@ import { useState, useMemo } from 'react';
 import Pagination from '@/app/components/ui/Pagination';
 import Select from '@/app/components/ui/Select';
 import DatePicker from '@/app/components/ui/DatePicker';
+import PulseLoader from '@/app/components/ui/PulseLoader';
+import EmptyState from '@/app/components/ui/EmptyState';
 
 export default function ReportsPage() {
   const [showFilter, setShowFilter] = useState(false);

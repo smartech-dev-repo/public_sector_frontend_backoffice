@@ -3,6 +3,8 @@
 import { useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useAgents } from '@/app/composables/modules/useAgents';
+import PulseLoader from '@/app/components/ui/PulseLoader';
+import EmptyState from '@/app/components/ui/EmptyState';
 
 export default function MakerCheckerPage() {
   const { loading, error, agents, fetchAgents } = useAgents();

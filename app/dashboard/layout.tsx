@@ -110,7 +110,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <div className="w-full flex items-center justify-center mb-6">
                   <Link href="/dashboard" className="flex items-center justify-center cursor-pointer w-full">
                     {/* Placeholder text for logo for now */}
-                    <span className="font-bold text-lg text-emerald-600 tracking-tight">MAKERCHECKER</span>
+                    <img src="/logo.png" className="h-8 w-auto" alt="Logo" />
                   </Link>
               </div>
             </div>
@@ -143,6 +143,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                 </svg>
                 {!isSidebarMinimized && <span className="whitespace-nowrap">Analytics & Reports</span>}
+              </Link>
+              <Link href="/dashboard/clients"
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all group ${
+                  pathname.startsWith('/dashboard/clients') ? 'bg-emerald-600 text-white [&>svg]:text-white' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
+                }`}
+                title={isSidebarMinimized ? 'Clients' : ''}
+              >
+                <svg className="w-5 h-5 shrink-0 text-slate-400 group-hover:text-emerald-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                </svg>
+                {!isSidebarMinimized && <span className="whitespace-nowrap">Clients</span>}
               </Link>
             </nav>
           </div>
@@ -213,6 +224,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </svg>
                 {!isSidebarMinimized && <span className="whitespace-nowrap">Reconciliation</span>}
               </Link>
+              <Link href="/dashboard/loan-terms"
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all group ${
+                  pathname.startsWith('/dashboard/loan-terms') ? 'bg-emerald-600 text-white [&>svg]:text-white' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
+                }`}
+                title={isSidebarMinimized ? 'Loan Terms' : ''}
+              >
+                <svg className="w-5 h-5 shrink-0 text-slate-400 group-hover:text-emerald-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                {!isSidebarMinimized && <span className="whitespace-nowrap">Loan Terms</span>}
+              </Link>
+              <Link href="/dashboard/loan-requests"
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all group ${
+                  pathname.startsWith('/dashboard/loan-requests') ? 'bg-emerald-600 text-white [&>svg]:text-white' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
+                }`}
+                title={isSidebarMinimized ? 'Loan Requests' : ''}
+              >
+                <svg className="w-5 h-5 shrink-0 text-slate-400 group-hover:text-emerald-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                {!isSidebarMinimized && <span className="whitespace-nowrap">Loan Requests</span>}
+              </Link>
             </nav>
           </div>
 
@@ -220,17 +253,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="mt-8">
             {!isSidebarMinimized && <div className="text-xs uppercase tracking-wider text-slate-500 mb-3">Administration</div>}
             <nav className="space-y-2">
-              <Link href="/dashboard/team"
-                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all group ${
-                  pathname.startsWith('/dashboard/team') ? 'bg-emerald-600 text-white [&>svg]:text-white' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
-                }`}
-                title={isSidebarMinimized ? 'Team Management' : ''}
-              >
-                <svg className="w-5 h-5 shrink-0 text-slate-400 group-hover:text-emerald-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                </svg>
-                {!isSidebarMinimized && <span className="whitespace-nowrap">Team Management</span>}
-              </Link>
+
               <Link href="/dashboard/admins"
                 className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all group ${
                   pathname.startsWith('/dashboard/admins') ? 'bg-emerald-600 text-white [&>svg]:text-white' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
@@ -286,17 +309,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </svg>
                 {!isSidebarMinimized && <span className="whitespace-nowrap">Agent Security</span>}
               </Link>
-              <Link href="/dashboard/audit"
-                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all group ${
-                  pathname.startsWith('/dashboard/audit') ? 'bg-emerald-600 text-white [&>svg]:text-white' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
-                }`}
-                title={isSidebarMinimized ? 'Audit Trail (Mock)' : ''}
-              >
-                <svg className="w-5 h-5 shrink-0 text-slate-400 group-hover:text-emerald-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                </svg>
-                {!isSidebarMinimized && <span className="whitespace-nowrap">Audit Trail (Mock)</span>}
-              </Link>
+
               <Link href="/dashboard/audit-logs"
                 className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all group ${
                   pathname.startsWith('/dashboard/audit-logs') ? 'bg-emerald-600 text-white [&>svg]:text-white' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'

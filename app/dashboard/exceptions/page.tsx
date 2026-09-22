@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import PulseLoader from '@/app/components/ui/PulseLoader';
+import EmptyState from '@/app/components/ui/EmptyState';
 import Pagination from '@/app/components/ui/Pagination';
 import Select from '@/app/components/ui/Select';
 import DatePicker from '@/app/components/ui/DatePicker';
@@ -152,11 +153,9 @@ export default function ExceptionsPage() {
 
           {/* Exception List */}
           <div className="space-y-4">
-            {filteredExceptions.length === 0 && (
-              <div className="text-center py-8 text-slate-500 bg-white rounded-2xl border border-slate-200">
+            {filteredExceptions.length === 0 && <EmptyState message="
                 No exceptions match your filter criteria.
-              </div>
-            )}
+              " />}
             {paginatedExceptions.map((exc: any) => (
               <div key={exc.id} className="bg-white rounded-2xl p-6 border border-slate-200 flex items-start justify-between group hover:border-emerald-300 transition-colors">
                 <div className="flex items-start gap-4">
