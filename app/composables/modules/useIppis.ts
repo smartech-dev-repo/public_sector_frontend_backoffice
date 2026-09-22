@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { ippis_api } from '@/app/api_factory/modules/ippis';
 
 export const useIppis = () => {
@@ -6,20 +6,22 @@ export const useIppis = () => {
   const [error, setError] = useState(null);
   const [batches, setBatches] = useState([] as any[]);
 
-  const fetchBatches = async (params?: any) => {
+  const fetchBatches = useCallback(async (params?: any) => {
     setLoading(true);
     try {
       const res = await ippis_api.getDocumentBatches(params);
-      setBatches(res.data);
-      return res.data;
+      let dataList = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || res.data?.agents || res.data?.clients || res.data?.roles || res.data?.admins || res.data?.logs || res.data?.invites || res.data?.permissions || res.data?.batches || []);
+      dataList = Array.isArray(dataList) ? dataList : [];
+      setBatches(dataList);
+      return dataList;
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const uploadBroadsheet = async (formData: FormData) => {
+  const uploadBroadsheet = useCallback(async (formData: FormData) => {
     setLoading(true);
     try {
       const res = await ippis_api.uploadBroadsheet(formData);
@@ -30,9 +32,9 @@ export const useIppis = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
   
-  const uploadDisbursedLoans = async (formData: FormData) => {
+  const uploadDisbursedLoans = useCallback(async (formData: FormData) => {
     setLoading(true);
     try {
       const res = await ippis_api.uploadDisbursedLoans(formData);
@@ -43,9 +45,9 @@ export const useIppis = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
   
-  const uploadRepaymentSchedule = async (formData: FormData) => {
+  const uploadRepaymentSchedule = useCallback(async (formData: FormData) => {
     setLoading(true);
     try {
       const res = await ippis_api.uploadRepaymentSchedule(formData);
@@ -56,9 +58,9 @@ export const useIppis = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const downloadFile = async (key: string) => {
+  const downloadFile = useCallback(async (key: string) => {
     setLoading(true);
     try {
       const res = await ippis_api.downloadDocumentFile(key);
@@ -69,7 +71,7 @@ export const useIppis = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   return { loading, error, batches, fetchBatches, uploadBroadsheet, uploadDisbursedLoans, uploadRepaymentSchedule, downloadFile };
 };

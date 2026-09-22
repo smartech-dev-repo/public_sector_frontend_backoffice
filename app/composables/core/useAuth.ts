@@ -66,6 +66,34 @@ export const useAuth = () => {
     }
   };
 
+  const forgotPassword = async (payload: any) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await auth_api.forgotPassword(payload);
+      return response.data;
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetPassword = async (payload: any) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await auth_api.resetPassword(payload);
+      return response.data;
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchAdminProfile = async () => {
     try {
       const response = await auth_api.getAdminProfile();
@@ -165,6 +193,8 @@ export const useAuth = () => {
     login,
     adminLogin,
     acceptInvite,
+    forgotPassword,
+    resetPassword,
     fetchAdminProfile,
     agentLogin,
     clientOtpRequest,

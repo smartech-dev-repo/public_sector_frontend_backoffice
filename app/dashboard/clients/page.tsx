@@ -4,8 +4,13 @@ import { useEffect } from 'react';
 import { useClients } from '@/app/composables/modules/useClients';
 import { useSessions } from '@/app/composables/modules/useSessions';
 import { useToast } from '@/app/composables/useToast';
+import PulseLoader from '@/app/components/ui/PulseLoader';
+import EmptyState from '@/app/components/ui/EmptyState';
+import { useConfirm } from '@/app/composables/useConfirm';
 
 export default function ClientsPage() {
+  const { confirm } = useConfirm();
+
   const { loading, error, clients, fetchClients, retryClient, approveClient } = useClients();
   const { revokeClientSessions } = useSessions();
   const { addToast } = useToast();
@@ -15,7 +20,8 @@ export default function ClientsPage() {
   }, [fetchClients]);
 
   const handleApprove = async (id: string) => {
-    if (confirm('Approve this client?')) {
+    const confirmed = await confirm({ message: 'Approve this client?' });
+    if (confirmed) {
       try {
         await approveClient(id);
         addToast('Client approved successfully', 'success');
@@ -27,7 +33,8 @@ export default function ClientsPage() {
   };
 
   const handleRetry = async (id: string) => {
-    if (confirm('Retry workflow for this client?')) {
+    const confirmed = await confirm({ message: 'Retry workflow for this client?' });
+    if (confirmed) {
       try {
         await retryClient(id);
         addToast('Client retry initiated', 'success');
@@ -39,7 +46,8 @@ export default function ClientsPage() {
   };
 
   const handleRevoke = async (id: string) => {
-    if (confirm('Revoke all sessions for this client?')) {
+    const confirmed = await confirm({ message: 'Revoke all sessions for this client?' });
+    if (confirmed) {
       try {
         await revokeClientSessions(id);
         addToast('Sessions revoked', 'success');
@@ -64,12 +72,13 @@ export default function ClientsPage() {
         <h1 className="text-2xl font-semibold text-slate-800">Clients Management</h1>
       </div>
 
-      {loading && <div className="text-slate-500 py-12 text-center">Loading clients...</div>}
+      {loading && <PulseLoader />}
       {!loading && error && <div className="text-red-500 py-12 text-center">{error}</div>}
       
       {!loading && !error && (
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-          <table className="min-w-full divide-y divide-slate-200">
+          <div className="overflow-x-auto">
+<table className="min-w-full divide-y divide-slate-200">
             <thead className="bg-slate-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">ID</th>
@@ -106,6 +115,7 @@ export default function ClientsPage() {
               )}
             </tbody>
           </table>
+</div>
         </div>
       )}
     </main>

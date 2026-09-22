@@ -4,6 +4,8 @@ import { useState, useMemo, useRef } from 'react';
 import Select from '@/app/components/ui/Select';
 import DatePicker from '@/app/components/ui/DatePicker';
 import { useToast } from '@/app/composables/useToast';
+import PulseLoader from '@/app/components/ui/PulseLoader';
+import EmptyState from '@/app/components/ui/EmptyState';
 
 export default function BroadsheetPage() {
   const { addToast } = useToast();
@@ -203,11 +205,9 @@ export default function BroadsheetPage() {
 
           {/* List */}
           <div className="space-y-4">
-            {filteredIppis.length === 0 && (
-              <div className="text-center py-4 text-sm text-slate-500">
+            {filteredIppis.length === 0 && <EmptyState message="
                 No IPPIS uploads found.
-              </div>
-            )}
+              " />}
             {filteredIppis.map((item) => (
               <div key={item.id} className="flex items-center justify-between border-b border-slate-50 pb-4 last:border-0 hover:bg-slate-50/30 -mx-2 px-2 rounded-lg transition-colors">
                 <div>
@@ -240,11 +240,9 @@ export default function BroadsheetPage() {
 
           {/* List */}
           <div className="space-y-4">
-            {filteredRepayment.length === 0 && (
-              <div className="text-center py-4 text-sm text-slate-500">
+            {filteredRepayment.length === 0 && <EmptyState message="
                 No repayment schedules found.
-              </div>
-            )}
+              " />}
             {filteredRepayment.map((item) => (
               <div key={item.id} className="flex items-center justify-between border-b border-slate-50 pb-4 last:border-0 hover:bg-slate-50/30 -mx-2 px-2 rounded-lg transition-colors">
                 <div>

@@ -2,6 +2,8 @@
 
 import { useEffect } from 'react';
 import { useIppis } from '@/app/composables/modules/useIppis';
+import PulseLoader from '@/app/components/ui/PulseLoader';
+import EmptyState from '@/app/components/ui/EmptyState';
 
 export default function IppisPage() {
   const { loading, error, batches, fetchBatches } = useIppis();
@@ -19,12 +21,13 @@ export default function IppisPage() {
         </button>
       </div>
 
-      {loading && <div className="text-slate-500 py-12 text-center">Loading documents...</div>}
+      {loading && <PulseLoader />}
       {!loading && error && <div className="text-red-500 py-12 text-center">{error}</div>}
       
       {!loading && !error && (
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-          <table className="min-w-full divide-y divide-slate-200">
+          <div className="overflow-x-auto">
+<table className="min-w-full divide-y divide-slate-200">
             <thead className="bg-slate-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">ID</th>
@@ -53,6 +56,7 @@ export default function IppisPage() {
               )}
             </tbody>
           </table>
+</div>
         </div>
       )}
     </main>

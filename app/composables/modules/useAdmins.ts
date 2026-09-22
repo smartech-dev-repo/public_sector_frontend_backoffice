@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { admins_api } from '@/app/api_factory/modules/admins';
 
 export const useAdmins = () => {
@@ -6,20 +6,22 @@ export const useAdmins = () => {
   const [error, setError] = useState(null);
   const [admins, setAdmins] = useState([] as any[]);
 
-  const fetchAdmins = async (params?: any) => {
+  const fetchAdmins = useCallback(async (params?: any) => {
     setLoading(true);
     try {
       const res = await admins_api.getAdmins(params);
-      setAdmins(res.data);
-      return res.data;
+      let dataList = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || res.data?.agents || res.data?.clients || res.data?.roles || res.data?.admins || res.data?.logs || res.data?.invites || res.data?.permissions || res.data?.batches || []);
+      dataList = Array.isArray(dataList) ? dataList : [];
+      setAdmins(dataList);
+      return dataList;
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const assignRole = async (adminId: string, payload: any) => {
+  const assignRole = useCallback(async (adminId: string, payload: any) => {
     setLoading(true);
     try {
       const res = await admins_api.assignRoleToAdmin(adminId, payload);
@@ -30,9 +32,9 @@ export const useAdmins = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const removeRole = async (adminId: string, roleId: string) => {
+  const removeRole = useCallback(async (adminId: string, roleId: string) => {
     setLoading(true);
     try {
       const res = await admins_api.removeRoleFromAdmin(adminId, roleId);
@@ -43,9 +45,9 @@ export const useAdmins = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const deactivateAdmin = async (adminId: string) => {
+  const deactivateAdmin = useCallback(async (adminId: string) => {
     setLoading(true);
     try {
       const res = await admins_api.deactivateAdmin(adminId);
@@ -56,9 +58,9 @@ export const useAdmins = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const reactivateAdmin = async (adminId: string) => {
+  const reactivateAdmin = useCallback(async (adminId: string) => {
     setLoading(true);
     try {
       const res = await admins_api.reactivateAdmin(adminId);
@@ -69,7 +71,7 @@ export const useAdmins = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   return { loading, error, admins, fetchAdmins, assignRole, removeRole, deactivateAdmin, reactivateAdmin };
 };

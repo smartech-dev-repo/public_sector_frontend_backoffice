@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { documents_api } from '@/app/api_factory/modules/documents';
 
 export const useDocuments = () => {
@@ -6,7 +6,7 @@ export const useDocuments = () => {
   const [error, setError] = useState(null);
   const [batches, setBatches] = useState([] as any[]);
 
-  const uploadIppisBroadsheet = async (payload: FormData) => {
+  const uploadIppisBroadsheet = useCallback(async (payload: FormData) => {
     setLoading(true);
     try {
       const res = await documents_api.uploadIppisBroadsheet(payload);
@@ -17,9 +17,9 @@ export const useDocuments = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const uploadDisbursedLoans = async (payload: FormData) => {
+  const uploadDisbursedLoans = useCallback(async (payload: FormData) => {
     setLoading(true);
     try {
       const res = await documents_api.uploadDisbursedLoans(payload);
@@ -30,9 +30,9 @@ export const useDocuments = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const uploadRepaymentSchedule = async (payload: FormData) => {
+  const uploadRepaymentSchedule = useCallback(async (payload: FormData) => {
     setLoading(true);
     try {
       const res = await documents_api.uploadRepaymentSchedule(payload);
@@ -43,22 +43,24 @@ export const useDocuments = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchDocumentBatches = async (params?: any) => {
+  const fetchDocumentBatches = useCallback(async (params?: any) => {
     setLoading(true);
     try {
       const res = await documents_api.getDocumentBatches(params);
-      setBatches(res.data);
-      return res.data;
+      let dataList = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || res.data?.agents || res.data?.clients || res.data?.roles || res.data?.admins || res.data?.logs || res.data?.invites || res.data?.permissions || res.data?.batches || []);
+      dataList = Array.isArray(dataList) ? dataList : [];
+      setBatches(dataList);
+      return dataList;
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const getDocumentBatchById = async (id: string) => {
+  const getDocumentBatchById = useCallback(async (id: string) => {
     setLoading(true);
     try {
       const res = await documents_api.getDocumentBatchById(id);
@@ -69,9 +71,9 @@ export const useDocuments = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const getDocumentFile = async (fileKey: string) => {
+  const getDocumentFile = useCallback(async (fileKey: string) => {
     setLoading(true);
     try {
       const res = await documents_api.getDocumentFile(fileKey);
@@ -82,7 +84,7 @@ export const useDocuments = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   return { 
     loading, error, batches, 

@@ -6,8 +6,13 @@ import Link from 'next/link';
 import { useAgents } from '@/app/composables/modules/useAgents';
 import { useSessions } from '@/app/composables/modules/useSessions';
 import { useToast } from '@/app/composables/useToast';
+import PulseLoader from '@/app/components/ui/PulseLoader';
+import EmptyState from '@/app/components/ui/EmptyState';
+import { useConfirm } from '@/app/composables/useConfirm';
 
 export default function AgentPage({ params }: { params: Promise<{ id: string }> }) {
+  const { confirm } = useConfirm();
+
   const router = useRouter();
   const { id } = use(params);
   const { getAgentById, approveAgent, rejectAgent, resendCredentials } = useAgents();
@@ -35,7 +40,8 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
   }, [id]); // fetchAgentDetails removed from dependency array to avoid infinite loop since it is not wrapped in useCallback
 
   const handleApprove = async () => {
-    if (!confirm('Are you sure you want to approve this agent?')) return;
+    const confirmed = await confirm({ message: 'Are you sure you want to approve this agent?' });
+    if (!confirmed) return;
     setSubmitting(true);
     try {
       await approveAgent(application.id);
@@ -49,11 +55,12 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
   };
 
   const handleReject = async () => {
-    if (!confirm('Are you sure you want to reject this agent?')) return;
+    const confirmed = await confirm({ message: 'Are you sure you want to reject this agent?' });
+    if (!confirmed) return;
     setSubmitting(true);
     try {
-      await rejectAgent(application.id);
-      addToast('Agent rejected successfully', 'success');
+      await rejectAgent(application.id, { reason: 'Rejected by admin' });
+      addToast('Application rejected successfully', 'success');
       await fetchAgentDetails();
     } catch (err: any) {
       addToast(err?.response?.data?.message || 'Failed to reject', 'error');
@@ -63,7 +70,8 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
   };
 
   const handleResendCredentials = async () => {
-    if (!confirm('Are you sure you want to resend credentials?')) return;
+    const confirmed = await confirm({ message: 'Are you sure you want to resend credentials?' });
+    if (!confirmed) return;
     try {
       await resendCredentials(application.id);
       addToast('Credentials resent successfully', 'success');
@@ -73,7 +81,8 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
   };
 
   const handleRevokeSessions = async () => {
-    if (!confirm('Are you sure you want to revoke all sessions for this agent?')) return;
+    const confirmed = await confirm({ message: 'Are you sure you want to revoke all sessions for this agent?' });
+    if (!confirmed) return;
     try {
       await revokeAgentSessions(application.id);
       addToast('Sessions revoked successfully', 'success');
@@ -105,7 +114,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
         )}
       </div>
 
-      {loading && <div className="text-center py-20 text-slate-500">Loading application...</div>}
+      {loading && <PulseLoader />}
       {!loading && !application && <div className="text-center py-20 text-slate-500">Application not found.</div>}
 
       {!loading && application && (

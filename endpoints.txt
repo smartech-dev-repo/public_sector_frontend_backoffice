@@ -1,0 +1,124 @@
+[POST] POST /auth/admin/login - Success - /auth/admin/login
+[POST] POST /auth/admin/login - Invalid credentials (401) - /auth/admin/login
+[POST] POST /auth/admin/login - Validation error (400) - /auth/admin/login
+[POST] POST /auth/admin/accept-invite - Success - /auth/admin/accept-invite
+[POST] POST /auth/admin/accept-invite - Invalid/expired token (401) - /auth/admin/accept-invite
+[POST] POST /auth/admin/forgot-password - Success (200, always) - /auth/admin/forgot-password
+[POST] POST /auth/admin/reset-password - Success - /auth/admin/reset-password
+[POST] POST /auth/admin/reset-password - Invalid/expired token (401) - /auth/admin/reset-password
+[POST] POST /auth/admin/change-password - Success - /auth/admin/change-password
+[POST] POST /auth/admin/change-password - Wrong current password (401) - /auth/admin/change-password
+[POST] POST /auth/admin/2fa/setup - TOTP - /auth/admin/2fa/setup
+[POST] POST /auth/admin/2fa/setup - EMAIL - /auth/admin/2fa/setup
+[POST] POST /auth/admin/2fa/setup - Already enabled (409) - /auth/admin/2fa/setup
+[POST] POST /auth/admin/2fa/confirm - Success - /auth/admin/2fa/confirm
+[POST] POST /auth/admin/2fa/confirm - Invalid code (401) - /auth/admin/2fa/confirm
+[POST] POST /auth/admin/2fa/disable - Success - /auth/admin/2fa/disable
+[POST] POST /auth/admin/login - Two-factor required - /auth/admin/login
+[POST] POST /auth/admin/2fa/login-verify - Success - /auth/admin/2fa/login-verify
+[POST] POST /auth/admin/2fa/login-verify - Invalid code (401) - /auth/admin/2fa/login-verify
+[POST] POST /auth/refresh - Success (admin token) - /auth/refresh
+[POST] POST /auth/refresh - Unknown token (401) - /auth/refresh
+[GET] GET /auth/sessions - Success - /auth/sessions
+[GET] GET /auth/sessions - Unauthenticated (401) - /auth/sessions
+[DELETE] DELETE /auth/sessions/:id - Success - /auth/sessions/
+[DELETE] DELETE /auth/sessions/:id - Not found / not owned (404) - /auth/sessions/00000000-0000-0000-0000-000000000000
+[POST] POST /auth/logout - Success - /auth/logout
+[POST] POST /auth/logout-all - Success - /auth/logout-all
+[POST] POST /auth/logout-all - Unauthenticated (401) - /auth/logout-all
+[GET] GET /admin/me - Success - /admin/me
+[GET] GET /admin/me - Unauthenticated (401) - /admin/me
+[POST] POST /admin/invites - Success - /admin/invites
+[POST] POST /admin/invites - Missing permission (403) - /admin/invites
+[POST] POST /admin/invites - Validation error (400) - /admin/invites
+[POST] POST /admin/invites/:id/resend - Success - /admin/invites//resend
+[POST] POST /admin/invites/:id/resend - Not found / not pending (404) - /admin/invites/00000000-0000-0000-0000-000000000000/resend
+[GET] GET /admin/invites - Success (all) - /admin/invites
+[GET] GET /admin/invites - Filtered by status=PENDING - /admin/invites?status=PENDING
+[GET] GET /admin/audit-logs - Success (all) - /admin/audit-logs
+[GET] GET /admin/audit-logs - Filtered by actorType + action - /admin/audit-logs?actorType=ADMIN&action=admin.invite.created
+[GET] GET /admin/audit-logs - Filtered by targetType + targetId - /admin/audit-logs?targetType=AdminInvite&targetId=
+[GET] GET /admin/audit-logs - Missing permission (403) - /admin/audit-logs
+[POST] POST /admin/agents/:id/sessions/revoke-all - Success - /admin/agents//sessions/revoke-all
+[POST] POST /admin/agents/:id/sessions/revoke-all - Missing permission (403) - /admin/agents//sessions/revoke-all
+[POST] POST /admin/agents/:id/sessions/revoke-all - Unauthenticated (401) - /admin/agents//sessions/revoke-all
+[POST] POST /admin/clients/:id/sessions/revoke-all - Success - /admin/clients//sessions/revoke-all
+[POST] POST /admin/clients/:id/sessions/revoke-all - Missing permission (403) - /admin/clients//sessions/revoke-all
+[POST] POST /admin/permissions - Success - /admin/permissions
+[POST] POST /admin/permissions - Invalid key format (400) - /admin/permissions
+[POST] POST /admin/permissions - Duplicate key (409) - /admin/permissions
+[GET] GET /admin/permissions - Success (all) - /admin/permissions
+[GET] GET /admin/permissions/:id - Success - /admin/permissions/
+[PATCH] PATCH /admin/permissions/:id - Success - /admin/permissions/
+[DELETE] DELETE /admin/permissions/:id - Blocked, in use by a role (409) - /admin/permissions/
+[DELETE] DELETE /admin/permissions/:id - Success - /admin/permissions/
+[POST] POST /admin/roles - Success - /admin/roles
+[POST] POST /admin/roles - Duplicate name (409) - /admin/roles
+[GET] GET /admin/roles - Success (all) - /admin/roles
+[GET] GET /admin/roles/:id - Success - /admin/roles/
+[PATCH] PATCH /admin/roles/:id - Success - /admin/roles/
+[PATCH] PATCH /admin/roles/:id - Rejects renaming SUPER_ADMIN (409) - /admin/roles/
+[DELETE] DELETE /admin/roles/:id - Rejects deleting SUPER_ADMIN (409) - /admin/roles/
+[POST] POST /admin/roles/:id/permissions - Success - /admin/roles//permissions
+[DELETE] DELETE /admin/roles/:id/permissions/:permissionId - Success - /admin/roles//permissions/
+[DELETE] DELETE /admin/roles/:id - Success - /admin/roles/
+[GET] GET /admin/admins - Success - /admin/admins
+[POST] POST /admin/admins/:id/roles - Success - /admin/admins//roles
+[DELETE] DELETE /admin/admins/:id/roles/:roleId - Success - /admin/admins//roles/
+[DELETE] DELETE /admin/admins/:id/roles/:roleId - Blocked, last SUPER_ADMIN holder (409) - /admin/admins//roles/
+[POST] POST /admin/admins/:id/deactivate - Self-deactivation blocked (409) - /admin/admins//deactivate
+[POST] POST /admin/admins/:id/deactivate - Success - /admin/admins//deactivate
+[POST] POST /admin/admins/:id/reactivate - Success - /admin/admins//reactivate
+[POST] POST /admin/documents/ippis-broadsheet/upload - Success - /admin/documents/ippis-broadsheet/upload
+[POST] POST /admin/documents/ippis-broadsheet/upload - Unauthenticated (401) - /admin/documents/ippis-broadsheet/upload
+[POST] POST /admin/documents/disbursed-loans/upload - Success - /admin/documents/disbursed-loans/upload
+[POST] POST /admin/documents/disbursed-loans/upload - Missing permission (403) - /admin/documents/disbursed-loans/upload
+[POST] POST /admin/documents/repayment-schedule/upload - Success - /admin/documents/repayment-schedule/upload
+[POST] POST /admin/documents/repayment-schedule/upload - Missing period (400) - /admin/documents/repayment-schedule/upload
+[POST] POST /admin/documents/repayment-schedule/upload - Invalid period format (400) - /admin/documents/repayment-schedule/upload
+[GET] GET /admin/documents/batches - Success (all) - /admin/documents/batches
+[GET] GET /admin/documents/batches - Filtered by documentType + status - /admin/documents/batches?documentType=IPPIS_BROADSHEET&status=COMPLETED
+[GET] GET /admin/documents/batches/:id - Success - /admin/documents/batches/
+[GET] GET /admin/documents/batches/:id - Missing permission (403) - /admin/documents/batches/
+[GET] GET /admin/documents/files/:key - Success (download) - /admin/documents/files/
+[GET] GET /admin/documents/files/:key - Not found (404) - /admin/documents/files/does%2Fnot%2Fexist.xlsx
+[GET] GET /admin/reconciliation - Success - /admin/reconciliation?agency=NSCDC&status=MATCHED&period=2026-08
+[GET] GET /admin/reconciliation - Missing permission (403) - /admin/reconciliation
+[GET] GET /admin/loans - Success - /admin/loans
+[GET] GET /admin/ippis-records - Success - /admin/ippis-records
+[POST] POST /admin/loan-terms - Success - /admin/loan-terms
+[POST] POST /admin/loan-terms - Validation error (400) - /admin/loan-terms
+[POST] POST /admin/loan-terms - Missing permission (403) - /admin/loan-terms
+[GET] GET /admin/loan-terms - Success (all) - /admin/loan-terms
+[GET] GET /admin/loan-terms - Filtered by agency - /admin/loan-terms?agency=NPF
+[PATCH] PATCH /admin/loan-terms/:id - Success - /admin/loan-terms/
+[PATCH] PATCH /admin/loan-terms/:id - Not found (404) - /admin/loan-terms/00000000-0000-0000-0000-000000000000
+[GET] GET /admin/clients - Unauthenticated (401) - /admin/clients
+[GET] GET /admin/clients - Filtered by status - /admin/clients?status=MANUAL_REVIEW
+[GET] GET /admin/clients/:id - Success - /admin/clients/
+[POST] POST /admin/clients/:id/retry - Success - /admin/clients//retry
+[POST] POST /admin/clients/:id/retry - Missing note (400) - /admin/clients//retry
+[POST] POST /admin/clients/:id/approve - Blocked, not in MANUAL_REVIEW (409) - /admin/clients//approve
+[GET] GET /admin/clients/:clientId/wallet - Success - /admin/clients//wallet
+[POST] POST /admin/clients/:clientId/wallet/credit - Success - /admin/clients//wallet/credit
+[POST] POST /admin/clients/:clientId/wallet/debit - Insufficient balance (422) - /admin/clients//wallet/debit
+[GET] GET /admin/loan-requests - Success (all) - /admin/loan-requests
+[GET] GET /admin/loan-requests - Filtered by status=CONFIRMED - /admin/loan-requests?status=CONFIRMED
+[GET] GET /admin/loan-requests - Missing permission (403) - /admin/loan-requests
+[POST] POST /admin/loan-requests/:id/approve - Success - /admin/loan-requests//approve
+[POST] POST /admin/loan-requests/:id/approve - Blocked, not CONFIRMED (409) - /admin/loan-requests//approve
+[POST] POST /admin/loan-requests/:id/reject - Success - /admin/loan-requests//reject
+[POST] POST /admin/loan-requests/:id/reject - Missing reason (400) - /admin/loan-requests//reject
+[POST] POST /admin/loan-requests/:id/disburse - Success - /admin/loan-requests//disburse
+[POST] POST /admin/loan-requests/:id/disburse - Blocked, not APPROVED (409) - /admin/loan-requests//disburse
+[GET] GET /admin/client-loans/disbursement-summary - Success - /admin/client-loans/disbursement-summary?month=2026-09
+[GET] GET /admin/client-loans/disbursement-summary - Invalid month format (400) - /admin/client-loans/disbursement-summary?month=not-a-month
+[GET] GET /admin/client-loans/disbursement-summary - Missing permission (403) - /admin/client-loans/disbursement-summary?month=2026-09
+[GET] GET /admin/agents - Success - /admin/agents
+[GET] GET /admin/agents/:id - Success - /admin/agents/
+[POST] POST /admin/agents/:id/approve - Success - /admin/agents//approve
+[POST] POST /admin/agents/:id/approve - Blocked, not PENDING_REVIEW (409) - /admin/agents//approve
+[POST] POST /admin/agents/:id/reject - Success - /admin/agents//reject
+[POST] POST /admin/agents/:id/reject - Missing reason (400) - /admin/agents//reject
+[POST] POST /admin/agents/:id/resend-credentials - Success - /admin/agents//resend-credentials
+[POST] POST /admin/agents/:id/resend-credentials - Blocked, already logged in (409) - /admin/agents//resend-credentials

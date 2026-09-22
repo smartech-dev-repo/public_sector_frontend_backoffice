@@ -10,6 +10,27 @@ export const auth_api = {
   acceptInvite: (payload: any) => {
     return GATEWAY_ENDPOINT.post('/auth/admin/accept-invite', payload);
   },
+  forgotPassword: (payload: any) => {
+    return GATEWAY_ENDPOINT.post('/auth/admin/forgot-password', payload);
+  },
+  resetPassword: (payload: any) => {
+    return GATEWAY_ENDPOINT.post('/auth/admin/reset-password', payload);
+  },
+  changePassword: (payload: any) => {
+    return GATEWAY_ENDPOINT_WITH_AUTH.post('/auth/admin/change-password', payload);
+  },
+  setup2fa: () => {
+    return GATEWAY_ENDPOINT_WITH_AUTH.post('/auth/admin/2fa/setup');
+  },
+  confirm2fa: (payload: any) => {
+    return GATEWAY_ENDPOINT_WITH_AUTH.post('/auth/admin/2fa/confirm', payload);
+  },
+  disable2fa: (payload: any) => {
+    return GATEWAY_ENDPOINT_WITH_AUTH.post('/auth/admin/2fa/disable', payload);
+  },
+  loginVerify2fa: (payload: any) => {
+    return GATEWAY_ENDPOINT.post('/auth/admin/2fa/login-verify', payload);
+  },
   getAdminProfile: () => {
     return GATEWAY_ENDPOINT_WITH_AUTH.get('/admin/me');
   },
