@@ -39,9 +39,7 @@ export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './tool
 export * from './rate-limit-modal';
 export { Tabs, TabsContent, TabsList, TabsTrigger } from './tabs';
 export { Breadcrumbs, BreadcrumbEllipsis, type BreadcrumbItem, type BreadcrumbsProps } from './breadcrumbs';
-export { AppShell, type AppShellProps } from './app-shell';
 export { Navbar, type NavbarProps } from './navbar';
-export { Sidebar, type SidebarNavItem, type SidebarProps } from './sidebar';
 export { Pagination, type PaginationProps } from './pagination';
 export { CommandPalette, type CommandAction, type CommandPaletteProps } from './command-palette';
 export { ThemeToggle } from './theme-toggle';

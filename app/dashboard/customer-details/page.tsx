@@ -7,7 +7,7 @@ export default function CustomerDetailsPage() {
     <div className="space-y-8 pb-12">
       {/* Breadcrumb */}
       <div className="text-sm">
-        <Link href="/credit-risk/customer-management" className="text-slate-400 hover:text-slate-600 transition-colors">Customer management</Link>
+        <Link href="/dashboard/customer-management" className="text-slate-400 hover:text-slate-600 transition-colors">Customer management</Link>
         <span className="text-slate-400 mx-2">/</span>
         <span className="text-slate-900 font-medium">Customer details</span>
       </div>

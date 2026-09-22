@@ -7,6 +7,7 @@ import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { createPortal } from 'react-dom';
 import { useConfirm } from '@/app/composables/useConfirm';
+import TableDropdown from '@/app/components/ui/TableDropdown';
 
 export default function AgentManagementPage() {
   const { confirm } = useConfirm();
@@ -36,6 +37,8 @@ export default function AgentManagementPage() {
   };
 
   const handleResendCredentials = async (id: string) => {
+    const confirmed = await confirm({ message: 'Are you sure you want to resend credentials to this agent?' });
+    if (!confirmed) return;
     try {
       await resendCredentials(id);
       addToast('Credentials resent successfully', 'success');
@@ -79,7 +82,7 @@ export default function AgentManagementPage() {
       
       {!loading && !error && (
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-          {agents.length === 0 && <EmptyState message="No agents found." />}
+          {agents.length === 0 && <EmptyState title="No agents found." />}
           {agents.length > 0 && (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-slate-200">
@@ -99,14 +102,26 @@ export default function AgentManagementPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <span className="px-2 py-1 bg-slate-100 rounded text-xs font-medium">{agent.status || agent.reviewStatus}</span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                        {agent.status === 'PENDING_REVIEW' && (
-                          <>
-                            <button onClick={() => handleApprove(agent.id)} className="text-emerald-600 hover:text-emerald-800 transition-colors">Approve</button>
-                            <button onClick={() => openRejectModal(agent)} className="text-rose-600 hover:text-rose-800 transition-colors">Reject</button>
-                          </>
-                        )}
-                        <button onClick={() => handleResendCredentials(agent.id)} className="text-blue-600 hover:text-blue-800 transition-colors">Resend Credentials</button>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <TableDropdown>
+                          {agent.status === 'PENDING_REVIEW' && (
+                            <>
+                              <button onClick={() => handleApprove(agent.id)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 transition-colors flex items-center gap-2">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                                Approve
+                              </button>
+                              <button onClick={() => openRejectModal(agent)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-700 hover:bg-rose-50 transition-colors flex items-center gap-2">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                Reject
+                              </button>
+                              <div className="h-px bg-slate-100 my-1.5"></div>
+                            </>
+                          )}
+                          <button onClick={() => handleResendCredentials(agent.id)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-blue-700 hover:bg-blue-50 transition-colors flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                            Resend Credentials
+                          </button>
+                        </TableDropdown>
                       </td>
                     </tr>
                   ))}

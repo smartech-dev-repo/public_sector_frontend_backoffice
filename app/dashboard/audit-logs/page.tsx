@@ -45,7 +45,7 @@ export default function AuditLogsPage() {
             </tbody>
           </table>
 </div>
-          {logs.length === 0 && <EmptyState message="No audit logs found." />}
+          {logs.length === 0 && <EmptyState title="No audit logs found." />}
         </div>
       )}
     </main>

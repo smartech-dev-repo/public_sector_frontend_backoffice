@@ -17,7 +17,7 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       await adminLogin({ email, password });
-      router.push('/dashboard');
+      router.push('/dashboard/broadsheet');
     } catch (err) {
       // Error is handled in composable, can also show a toast here
     }
