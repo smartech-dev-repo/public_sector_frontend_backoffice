@@ -1,6 +1,9 @@
 import { GATEWAY_ENDPOINT_WITH_AUTH } from '../axios.config';
 
 export const ippis_api = {
+  getIppisRecords: (params?: any) => {
+    return GATEWAY_ENDPOINT_WITH_AUTH.get('/admin/ippis-records', { params });
+  },
   uploadBroadsheet: (formData: FormData) => {
     return GATEWAY_ENDPOINT_WITH_AUTH.post('/admin/documents/ippis-broadsheet/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
