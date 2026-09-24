@@ -98,7 +98,7 @@ export default function AdminsPage() {
                 <table className="min-w-full divide-y divide-slate-200">
                   <thead className="bg-[#E9F4EE]">
                     <tr>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">ID</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Created</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Email</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Name</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Role</th>
@@ -110,7 +110,7 @@ export default function AdminsPage() {
                 <tbody className="divide-y divide-slate-100">
                   {admins.map((admin: any) => (
                     <tr key={admin.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-mono">{admin.id}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-mono">{new Date(admin.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">{admin.email}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{admin.fullName}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">

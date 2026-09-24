@@ -102,17 +102,18 @@ export default function RolesTab() {
 <table className="min-w-full divide-y divide-slate-200">
             <thead className="bg-[#E9F4EE]">
                   <tr>
-                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">ID</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Created</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Name</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Description</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Permissions</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Updated At</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {roles.map((role: any) => (
                 <tr key={role.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-mono">{role.id.substring(0, 8)}...</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-mono">{new Date(role.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-medium">{role.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{role.description}</td>
                   <td className="px-6 py-4 text-sm text-slate-600 max-w-md">
@@ -131,6 +132,9 @@ export default function RolesTab() {
                         <span className="text-slate-400 italic text-xs">No permissions assigned</span>
                       )}
                     </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                    {new Date(role.updatedAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
                     <button onClick={() => openViewPermissionsModal(role)} className="text-emerald-600 hover:text-emerald-800 font-medium transition-colors">View</button>
