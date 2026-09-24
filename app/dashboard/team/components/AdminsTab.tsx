@@ -97,19 +97,20 @@ export default function AdminsTab() {
               <table className="min-w-full divide-y divide-slate-200">
                 <thead className="bg-[#E9F4EE]">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">ID</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Created</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Email</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Name</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Role</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Department</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Updated At</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {admins.map((admin: any) => (
                     <tr key={admin.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-mono">{admin.id}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-mono">{new Date(admin.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">{admin.email}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{admin.fullName}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
@@ -126,6 +127,9 @@ export default function AdminsTab() {
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${admin.isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
                           {admin.isActive ? 'Active' : 'Suspended'}
                         </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                        {new Date(admin.updatedAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative">
                         <TableDropdown>

@@ -135,18 +135,18 @@ export default function UploadsPage() {
 <table className="min-w-full divide-y divide-slate-200">
                 <thead className="bg-[#E9F4EE]">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">ID</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Created</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Type</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Total Rows</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Processed</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Updated At</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {batches.map((batch: any) => (
                     <tr key={batch.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-mono">{batch.id}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-mono">{new Date(batch.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">{batch.documentType}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <span className={`px-2.5 py-1 text-xs rounded-full font-medium ${statusClass(batch.status)}`}>
@@ -155,7 +155,7 @@ export default function UploadsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{batch.totalRows || 0}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{batch.processedRows || 0}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{new Date(batch.createdAt).toLocaleDateString()}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{new Date(batch.updatedAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                     </tr>
                   ))}
                   {batches.length === 0 && (

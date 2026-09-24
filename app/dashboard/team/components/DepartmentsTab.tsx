@@ -111,8 +111,10 @@ export default function DepartmentsTab() {
             <table className="w-full text-sm text-left">
               <thead className="bg-[#E9F4EE]">
                   <tr>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Created</th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Name</th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Description</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Updated At</th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -120,10 +122,16 @@ export default function DepartmentsTab() {
                 {departments.map((department: any) => (
                   <tr key={department.id} className="hover:bg-accent/50 transition-colors">
                     <td className="px-6 py-4">
+                      <div className="font-medium text-slate-800 font-mono">{new Date(department.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                    </td>
+                    <td className="px-6 py-4">
                       <div className="font-medium text-foreground">{department.name}</div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-muted-foreground">{department.description || 'N/A'}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-slate-500 text-sm">{new Date(department.updatedAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <TableDropdown>

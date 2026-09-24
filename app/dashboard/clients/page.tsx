@@ -81,23 +81,27 @@ export default function ClientsPage() {
 <table className="min-w-full divide-y divide-slate-200">
             <thead className="bg-[#E9F4EE]">
                   <tr>
-                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">ID</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Created</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Name</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Email</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Updated At</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {clients.map((client: any) => (
                 <tr key={client.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-mono">{client.id}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-mono">{new Date(client.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">{client.firstName} {client.lastName}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{client.email}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <span className={`px-2.5 py-1 text-xs rounded-full font-medium ${statusClass(client.status)}`}>
                       {client.status || 'UNKNOWN'}
                     </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                    {new Date(client.updatedAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
                     {client.status === 'MANUAL_REVIEW' && (
