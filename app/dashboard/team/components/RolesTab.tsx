@@ -7,7 +7,7 @@ import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { useConfirm } from '@/app/composables/useConfirm';
 
-export default function RolesPage() {
+export default function RolesTab() {
   const { confirm } = useConfirm();
 
   const { loading, error, roles, fetchRoles, deleteRole, createRole, updateRole } = useRoles();

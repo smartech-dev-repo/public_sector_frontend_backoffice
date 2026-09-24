@@ -1,20 +1,20 @@
 import { useState, useCallback } from 'react';
-import { admins_api } from '@/app/api_factory/modules/admins';
+import { departments_api } from '@/app/api_factory/modules/departments';
 
-export const useAdmins = () => {
+export const useDepartments = () => {
   const [loading, setLoading] = useState(false);
   const [meta, setMeta] = useState({ total: 0, page: 1, limit: 25, totalPages: 1 });
   const [error, setError] = useState(null);
-  const [admins, setAdmins] = useState([] as any[]);
+  const [departments, setDepartments] = useState([] as any[]);
 
-  const fetchAdmins = useCallback(async (params?: any) => {
+  const fetchDepartments = useCallback(async (params?: any) => {
     setLoading(true);
     try {
-      const res = await admins_api.getAdmins(params);
-      let dataList = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || res.data?.agents || res.data?.clients || res.data?.roles || res.data?.admins || res.data?.logs || res.data?.invites || res.data?.permissions || res.data?.batches || []);
+      const res = await departments_api.getDepartments(params);
+      let dataList = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || res.data?.departments || []);
       if (res.data?.meta) setMeta(res.data.meta);
       dataList = Array.isArray(dataList) ? dataList : [];
-      setAdmins(dataList);
+      setDepartments(dataList);
       return dataList;
     } catch (err: any) {
       setError(err.message);
@@ -23,10 +23,10 @@ export const useAdmins = () => {
     }
   }, []);
 
-  const assignRole = useCallback(async (adminId: string, payload: any) => {
+  const createDepartment = useCallback(async (payload: any) => {
     setLoading(true);
     try {
-      const res = await admins_api.assignRoleToAdmin(adminId, payload);
+      const res = await departments_api.createDepartment(payload);
       return res.data;
     } catch (err: any) {
       setError(err.message);
@@ -36,10 +36,10 @@ export const useAdmins = () => {
     }
   }, []);
 
-  const suspendAdmin = useCallback(async (adminId: string) => {
+  const updateDepartment = useCallback(async (id: string, payload: any) => {
     setLoading(true);
     try {
-      const res = await admins_api.suspendAdmin(adminId);
+      const res = await departments_api.updateDepartment(id, payload);
       return res.data;
     } catch (err: any) {
       setError(err.message);
@@ -49,10 +49,10 @@ export const useAdmins = () => {
     }
   }, []);
 
-  const unsuspendAdmin = useCallback(async (adminId: string) => {
+  const deleteDepartment = useCallback(async (id: string) => {
     setLoading(true);
     try {
-      const res = await admins_api.unsuspendAdmin(adminId);
+      const res = await departments_api.deleteDepartment(id);
       return res.data;
     } catch (err: any) {
       setError(err.message);
@@ -62,5 +62,5 @@ export const useAdmins = () => {
     }
   }, []);
 
-  return { loading, error, admins, fetchAdmins, assignRole, suspendAdmin, unsuspendAdmin, meta };
+  return { loading, error, departments, fetchDepartments, createDepartment, updateDepartment, deleteDepartment, meta };
 };

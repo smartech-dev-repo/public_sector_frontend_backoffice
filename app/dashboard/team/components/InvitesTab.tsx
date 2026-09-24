@@ -7,7 +7,7 @@ import { createPortal } from 'react-dom';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 
-export default function InvitesPage() {
+export default function InvitesTab() {
   const { loading, error, invites, fetchInvites, resendInvite, createInvite } = useInvites();
   const { addToast } = useToast();
 
