@@ -3,6 +3,7 @@ import { permissions_api } from '@/app/api_factory/modules/permissions';
 
 export const usePermissions = () => {
   const [loading, setLoading] = useState(false);
+  const [meta, setMeta] = useState({ total: 0, page: 1, limit: 25, totalPages: 1 });
   const [error, setError] = useState(null);
   const [permissions, setPermissions] = useState([] as any[]);
 
@@ -11,6 +12,7 @@ export const usePermissions = () => {
     try {
       const res = await permissions_api.getPermissions(params);
       let dataList = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || res.data?.agents || res.data?.clients || res.data?.roles || res.data?.admins || res.data?.logs || res.data?.invites || res.data?.permissions || res.data?.batches || []);
+      if (res.data?.meta) setMeta(res.data.meta);
       dataList = Array.isArray(dataList) ? dataList : [];
       setPermissions(dataList);
       return dataList;
@@ -60,5 +62,5 @@ export const usePermissions = () => {
     }
   }, []);
 
-  return { loading, error, permissions, fetchPermissions, createPermission, updatePermission, deletePermission };
+  return { loading, error, permissions, fetchPermissions, createPermission, updatePermission, deletePermission, meta };
 };
