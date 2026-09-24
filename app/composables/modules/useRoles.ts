@@ -3,6 +3,7 @@ import { roles_api } from '@/app/api_factory/modules/roles';
 
 export const useRoles = () => {
   const [loading, setLoading] = useState(false);
+  const [meta, setMeta] = useState({ total: 0, page: 1, limit: 25, totalPages: 1 });
   const [error, setError] = useState(null);
   const [roles, setRoles] = useState([] as any[]);
 
@@ -11,6 +12,7 @@ export const useRoles = () => {
     try {
       const res = await roles_api.getRoles(params);
       let dataList = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || res.data?.agents || res.data?.clients || res.data?.roles || res.data?.admins || res.data?.logs || res.data?.invites || res.data?.permissions || res.data?.batches || []);
+      if (res.data?.meta) setMeta(res.data.meta);
       dataList = Array.isArray(dataList) ? dataList : [];
       setRoles(dataList);
       return dataList;
@@ -86,5 +88,18 @@ export const useRoles = () => {
     }
   }, []);
 
-  return { loading, error, roles, fetchRoles, createRole, updateRole, deleteRole, assignPermission, removePermission };
+  const assignBulkPermissions = useCallback(async (roleId: string, payload: { permissionIds: string[] }) => {
+    setLoading(true);
+    try {
+      const res = await roles_api.assignBulkPermissionsToRole(roleId, payload);
+      return res.data;
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { loading, error, roles, fetchRoles, createRole, updateRole, deleteRole, assignPermission, removePermission, assignBulkPermissions, meta };
 };

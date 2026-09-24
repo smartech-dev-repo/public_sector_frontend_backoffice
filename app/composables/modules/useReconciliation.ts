@@ -3,6 +3,7 @@ import { reconciliation_api } from '@/app/api_factory/modules/reconciliation';
 
 export const useReconciliation = () => {
   const [loading, setLoading] = useState(false);
+  const [meta, setMeta] = useState({ total: 0, page: 1, limit: 25, totalPages: 1 });
   const [error, setError] = useState(null);
   const [reconciliation, setReconciliation] = useState([] as any[]);
 
@@ -11,6 +12,7 @@ export const useReconciliation = () => {
     try {
       const res = await reconciliation_api.getReconciliation(params);
       let dataList = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || res.data?.agents || res.data?.clients || res.data?.roles || res.data?.admins || res.data?.logs || res.data?.invites || res.data?.permissions || res.data?.batches || []);
+      if (res.data?.meta) setMeta(res.data.meta);
       dataList = Array.isArray(dataList) ? dataList : [];
       setReconciliation(dataList);
       return dataList;
@@ -21,5 +23,5 @@ export const useReconciliation = () => {
     }
   }, []);
 
-  return { loading, error, reconciliation, fetchReconciliation };
+  return { loading, error, reconciliation, fetchReconciliation, meta };
 };

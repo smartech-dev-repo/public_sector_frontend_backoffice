@@ -133,7 +133,7 @@ export default function ReconciliationPage() {
             
             <div className="flex items-center gap-3 relative">
               <button onClick={() => setShowFilter(!showFilter)} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors shadow-sm">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="8" x2="20" y2="8"></line><circle cx="9" cy="8" r="2"></circle><line x1="4" y1="16" x2="20" y2="16"></line><circle cx="15" cy="16" r="2"></circle></svg>
                 Filter
               </button>
               
@@ -183,15 +183,15 @@ export default function ReconciliationPage() {
           <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden mt-6">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50/80 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 ">
-                    <th className="px-6 py-4">Ref ID</th>
-                    <th className="px-6 py-4">Customer</th>
-                    <th className="px-6 py-4">Amount</th>
-                    <th className="px-6 py-4">Portal Status</th>
-                    <th className="px-6 py-4">CBA Status</th>
-                    <th className="px-6 py-4 text-center">Match Status</th>
-                    <th className="px-6 py-4 text-right">Action</th>
+                <thead className="bg-[#E9F4EE]">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Ref ID</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Customer</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Amount</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Portal Status</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">CBA Status</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Match Status</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-sm">

@@ -10,7 +10,7 @@ import EmptyState from '@/app/components/ui/EmptyState';
 import { useConfirm } from '@/app/composables/useConfirm';
 import TableDropdown from '@/app/components/ui/TableDropdown';
 
-export default function AdminsPage() {
+export default function AdminsTab() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(25);
   const { confirm } = useConfirm();
@@ -93,17 +93,17 @@ export default function AdminsPage() {
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
           {admins.length === 0 && <EmptyState title="No admins found." />}
           {admins.length > 0 && (
-            <>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-slate-200">
-                  <thead className="bg-[#E9F4EE]">
-                    <tr>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-200">
+                <thead className="bg-[#E9F4EE]">
+                  <tr>
                     <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Created</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Email</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Name</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Role</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Department</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Updated At</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
@@ -127,6 +127,9 @@ export default function AdminsPage() {
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${admin.isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
                           {admin.isActive ? 'Active' : 'Suspended'}
                         </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                        {new Date(admin.updatedAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative">
                         <TableDropdown>
@@ -152,18 +155,18 @@ export default function AdminsPage() {
                   ))}
                 </tbody>
               </table>
+              {meta && (
+                <div className="mt-4 border-t border-slate-100 pt-4">
+                  <Pagination
+                    totalItems={meta.total || 0}
+                    currentPage={page || 1}
+                    itemsPerPage={limit || 25}
+                    onPageChange={(p) => setPage(p)}
+                    onItemsPerPageChange={(l) => setLimit(l)}
+                  />
+                </div>
+              )}
             </div>
-
-            {meta && (
-              <Pagination
-                totalItems={meta.total || 0}
-                currentPage={page || 1}
-                itemsPerPage={limit || 25}
-                onPageChange={(p) => setPage(p)}
-                onItemsPerPageChange={(l) => setLimit(l)}
-              />
-            )}
-            </>
           )}
         </div>
       )}

@@ -7,7 +7,7 @@ import Toast from '@/app/components/ui/Toast';
 import Modal from '@/app/components/ui/Modal';
 import SearchModal from '@/app/components/ui/SearchModal';
 import { useTheme } from 'next-themes';
-import { Monitor, Moon, Sun, FolderOpen, UserPlus, Users, User, FileText, UserCog, ClipboardList, Scale, ShieldCheck, Settings } from 'lucide-react';
+import { Monitor, Moon, Sun, Folder, UserPlus, Users, User, LineChart, UserCog, ClipboardList, Scale, ShieldCheck, Settings } from 'lucide-react';
 
 export default function CreditRiskLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -56,7 +56,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
     if (pathname.includes('/dashboard/agent-security')) return 'Agent Security & Suspension';
     if (pathname.includes('/dashboard/agent')) return 'Agent Application Details';
     if (pathname.includes('/dashboard/audit-logs')) return 'Audit Trail Log';
-    if (pathname.includes('/dashboard/admins')) return 'Team Management';
+    if (pathname.includes('/dashboard/team')) return 'Team Management';
     if (pathname.includes('/dashboard/uploads')) return 'Credit Risk Uploads';
     if (pathname.includes('/dashboard/analytics')) return 'Analytics & Reports';
     if (pathname.includes('/dashboard/exceptions')) return 'Exception Queue';
@@ -143,12 +143,12 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
               }`}
               title={isSidebarMinimized ? 'Broadsheet and Repayment' : ''}
             >
-              <FolderOpen className="w-5 h-5 shrink-0 transition-colors" />
+              <Folder className="w-5 h-5 shrink-0 transition-colors" />
               {!isSidebarMinimized && <span className="whitespace-nowrap">Broadsheet and Repayment</span>}
             </Link>
-            <Link href="/dashboard/invites"
+            <Link href="/dashboard/agent-recruitment"
               className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all group ${
-                pathname.startsWith('/dashboard/invites') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                pathname.startsWith('/dashboard/agent-recruitment') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
               }`}
               title={isSidebarMinimized ? 'Agent Recruitment' : ''}
             >
@@ -179,12 +179,12 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
               }`}
               title={isSidebarMinimized ? 'Report' : ''}
             >
-              <FileText className="w-5 h-5 shrink-0 transition-colors" />
+              <LineChart className="w-5 h-5 shrink-0 transition-colors" />
               {!isSidebarMinimized && <span className="whitespace-nowrap">Report</span>}
             </Link>
-            <Link href="/dashboard/roles"
+            <Link href="/dashboard/team"
               className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all group ${
-                pathname.startsWith('/dashboard/roles') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                pathname.startsWith('/dashboard/team') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
               }`}
               title={isSidebarMinimized ? 'Role management' : ''}
             >
@@ -218,15 +218,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
               <ShieldCheck className="w-5 h-5 shrink-0 transition-colors" />
               {!isSidebarMinimized && <span className="whitespace-nowrap">Audit Trail Log</span>}
             </Link>
-            <Link href="/dashboard/admins"
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all group ${
-                pathname.startsWith('/dashboard/admins') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-              }`}
-              title={isSidebarMinimized ? 'Team Management' : ''}
-            >
-              <Users className="w-5 h-5 shrink-0 transition-colors" />
-              {!isSidebarMinimized && <span className="whitespace-nowrap">Team Management</span>}
-            </Link>
+
             <Link href="/dashboard/loan-terms"
               className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all group ${
                 pathname.startsWith('/dashboard/loan-terms') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
