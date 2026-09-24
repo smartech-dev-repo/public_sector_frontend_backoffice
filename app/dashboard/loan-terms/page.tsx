@@ -98,14 +98,14 @@ export default function LoanTermsPage() {
           {loanTerms.length > 0 && (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-slate-200">
-                <thead className="bg-slate-50">
+                <thead className="bg-[#E9F4EE]">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Agency</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Min Amount</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Max Amount</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Interest Rate</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Tenor (Months)</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Agency</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Min Amount</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Max Amount</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Interest Rate</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Tenor (Months)</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">

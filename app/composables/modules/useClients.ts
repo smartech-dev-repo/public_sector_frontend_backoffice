@@ -3,6 +3,7 @@ import { clients_api } from '@/app/api_factory/modules/clients';
 
 export const useClients = () => {
   const [loading, setLoading] = useState(false);
+  const [meta, setMeta] = useState({ total: 0, page: 1, limit: 25, totalPages: 1 });
   const [error, setError] = useState(null);
   const [clients, setClients] = useState([] as any[]);
 
@@ -11,6 +12,7 @@ export const useClients = () => {
     try {
       const res = await clients_api.getClients(params);
       let dataList = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || res.data?.agents || res.data?.clients || res.data?.roles || res.data?.admins || res.data?.logs || res.data?.invites || res.data?.permissions || res.data?.batches || []);
+      if (res.data?.meta) setMeta(res.data.meta);
       dataList = Array.isArray(dataList) ? dataList : [];
       setClients(dataList);
       return dataList;
@@ -99,5 +101,5 @@ export const useClients = () => {
     }
   }, []);
 
-  return { loading, error, clients, fetchClients, getClientById, retryClient, approveClient, getClientWallet, creditClientWallet, debitClientWallet };
+  return { loading, error, clients, fetchClients, getClientById, retryClient, approveClient, getClientWallet, creditClientWallet, debitClientWallet, meta };
 };
