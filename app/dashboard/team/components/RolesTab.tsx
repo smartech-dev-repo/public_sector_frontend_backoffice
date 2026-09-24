@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRoles } from '@/app/composables/modules/useRoles';
+import { usePermissions } from '@/app/composables/modules/usePermissions';
 import { useToast } from '@/app/composables/useToast';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
@@ -10,7 +11,8 @@ import { useConfirm } from '@/app/composables/useConfirm';
 export default function RolesTab() {
   const { confirm } = useConfirm();
 
-  const { loading, error, roles, fetchRoles, deleteRole, createRole, updateRole } = useRoles();
+  const { loading, error, roles, fetchRoles, deleteRole, createRole, updateRole, assignBulkPermissions } = useRoles();
+  const { permissions: availablePermissions, fetchPermissions } = usePermissions();
   const { addToast } = useToast();
 
   const [showCreateRole, setShowCreateRole] = useState(false);
@@ -20,15 +22,18 @@ export default function RolesTab() {
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState('');
   const [form, setForm] = useState({ name: '', description: '' });
+  const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
 
   useEffect(() => {
     fetchRoles();
-  }, [fetchRoles]);
+    fetchPermissions();
+  }, [fetchRoles, fetchPermissions]);
 
   const openCreateModal = () => {
     setIsEditing(false);
     setEditId('');
     setForm({ name: '', description: '' });
+    setSelectedPermissions([]);
     setShowCreateRole(true);
   };
 
@@ -36,6 +41,8 @@ export default function RolesTab() {
     setIsEditing(true);
     setEditId(role.id);
     setForm({ name: role.name, description: role.description || '' });
+    const currentPerms = role.permissions ? role.permissions.map((p: any) => p.permission?.id).filter(Boolean) : [];
+    setSelectedPermissions(currentPerms);
     setShowCreateRole(true);
   };
 
@@ -54,12 +61,19 @@ export default function RolesTab() {
           name: form.name.trim(),
           description: form.description.trim()
         });
+        if (selectedPermissions.length > 0) {
+          await assignBulkPermissions(editId, { permissionIds: selectedPermissions });
+        }
         addToast('Role updated successfully!', 'success');
       } else {
-        await createRole({
+        const newRole = await createRole({
           name: form.name.trim(),
           description: form.description.trim()
         });
+        const roleId = newRole?.id || newRole?.data?.id || newRole?.result?.id;
+        if (roleId && selectedPermissions.length > 0) {
+          await assignBulkPermissions(roleId, { permissionIds: selectedPermissions });
+        }
         addToast('Role created successfully!', 'success');
       }
       setShowCreateRole(false);
@@ -154,7 +168,7 @@ export default function RolesTab() {
       {showCreateRole && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center">
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setShowCreateRole(false)}></div>
-          <div className="relative bg-white rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
+          <div className="relative bg-white rounded-2xl p-6 w-full max-w-2xl mx-4 shadow-2xl">
             <div className="flex items-start justify-between mb-4">
               <h3 className="text-lg font-semibold text-slate-800">{isEditing ? 'Edit Role' : 'Create New Role'}</h3>
               <button onClick={() => setShowCreateRole(false)} className="text-slate-400 hover:text-slate-600">
@@ -182,6 +196,34 @@ export default function RolesTab() {
                   placeholder="What does this role do?" 
                   className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all" 
                 />
+                            </div>
+              <div className="pt-2">
+                <label className="block text-sm font-medium text-slate-700 mb-2">Assign Permissions</label>
+                <div className="max-h-[300px] overflow-y-auto border border-slate-200 rounded-lg p-3 grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50">
+                  {availablePermissions?.map((perm: any) => (
+                    <label key={perm.id} className="flex items-start gap-2 p-2 bg-white rounded border border-slate-100 hover:border-emerald-200 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        className="mt-1 w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                        checked={selectedPermissions.includes(perm.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedPermissions(prev => [...prev, perm.id]);
+                          } else {
+                            setSelectedPermissions(prev => prev.filter(id => id !== perm.id));
+                          }
+                        }}
+                      />
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-slate-800">{perm.key}</div>
+                        <div className="text-xs text-slate-500 leading-tight line-clamp-1" title={perm.description}>{perm.description}</div>
+                      </div>
+                    </label>
+                  ))}
+                  {(!availablePermissions || availablePermissions.length === 0) && (
+                     <div className="text-sm text-slate-500 col-span-2 text-center py-4">No permissions available.</div>
+                  )}
+                </div>
               </div>
               <div className="flex items-center gap-3 justify-end mt-6">
                 <button type="button" onClick={() => setShowCreateRole(false)} className="px-5 py-2.5 rounded-lg text-sm text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors">Cancel</button>

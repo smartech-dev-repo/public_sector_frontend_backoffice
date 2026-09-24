@@ -88,5 +88,18 @@ export const useRoles = () => {
     }
   }, []);
 
-  return { loading, error, roles, fetchRoles, createRole, updateRole, deleteRole, assignPermission, removePermission, meta };
+  const assignBulkPermissions = useCallback(async (roleId: string, payload: { permissionIds: string[] }) => {
+    setLoading(true);
+    try {
+      const res = await roles_api.assignBulkPermissionsToRole(roleId, payload);
+      return res.data;
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { loading, error, roles, fetchRoles, createRole, updateRole, deleteRole, assignPermission, removePermission, assignBulkPermissions, meta };
 };

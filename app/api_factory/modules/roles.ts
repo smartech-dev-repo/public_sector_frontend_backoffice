@@ -21,5 +21,8 @@ export const roles_api = {
   },
   removePermissionFromRole: (roleId: string, permissionId: string) => {
     return GATEWAY_ENDPOINT_WITH_AUTH.delete(`/admin/roles/${roleId}/permissions/${permissionId}`);
+  },
+  assignBulkPermissionsToRole: (roleId: string, payload: { permissionIds: string[] }) => {
+    return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/roles/${roleId}/permissions/bulk`, payload);
   }
 };
