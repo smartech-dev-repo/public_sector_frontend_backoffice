@@ -140,7 +140,7 @@ export default function AgentDetailsPage() {
         
         {/* Filter Button */}
         <button onClick={() => setShowFilter(!showFilter)} className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors shadow-sm">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="8" x2="20" y2="8"></line><circle cx="9" cy="8" r="2"></circle><line x1="4" y1="16" x2="20" y2="16"></line><circle cx="15" cy="16" r="2"></circle></svg>
           Filter
         </button>
 
@@ -181,15 +181,15 @@ export default function AgentDetailsPage() {
       <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden mt-4">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="bg-[#EAF5F0]">
-              <tr>
-                <th className="px-6 py-4 font-semibold text-[#1B7855] text-xs tracking-wider uppercase">Name</th>
-                <th className="px-6 py-4 font-semibold text-[#1B7855] text-xs tracking-wider uppercase">IPPIS NO.</th>
-                <th className="px-6 py-4 font-semibold text-[#1B7855] text-xs tracking-wider uppercase">Agent</th>
-                <th className="px-6 py-4 font-semibold text-[#1B7855] text-xs tracking-wider uppercase">Sector</th>
-                <th className="px-6 py-4 font-semibold text-[#1B7855] text-xs tracking-wider uppercase">Loan Amt</th>
-                <th className="px-6 py-4 font-semibold text-[#1B7855] text-xs tracking-wider uppercase">Date</th>
-                <th className="px-6 py-4 font-semibold text-[#1B7855] text-xs tracking-wider uppercase">Action</th>
+            <thead className="bg-[#E9F4EE]">
+                  <tr>
+                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Name</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">IPPIS NO.</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Agent</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Sector</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Loan Amt</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">

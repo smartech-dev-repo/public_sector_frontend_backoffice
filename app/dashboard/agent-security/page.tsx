@@ -66,7 +66,7 @@ export default function AgentSecurityPage() {
           <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
-                <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-100">
+                <thead className="bg-[#E9F4EE]">
                   <tr>
                     <th scope="col" className="px-6 py-4 tracking-wider">Agent Details</th>
                     <th scope="col" className="px-6 py-4 tracking-wider">Status</th>

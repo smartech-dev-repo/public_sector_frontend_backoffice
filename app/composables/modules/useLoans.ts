@@ -3,6 +3,7 @@ import { loans_api } from '@/app/api_factory/modules/loans';
 
 export const useLoans = () => {
   const [loading, setLoading] = useState(false);
+  const [meta, setMeta] = useState({ total: 0, page: 1, limit: 25, totalPages: 1 });
   const [error, setError] = useState(null);
   const [loans, setLoans] = useState([] as any[]);
   const [loanTerms, setLoanTerms] = useState([] as any[]);
@@ -14,6 +15,7 @@ export const useLoans = () => {
     try {
       const res = await loans_api.getLoans(params);
       let dataList = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || res.data?.agents || res.data?.clients || res.data?.roles || res.data?.admins || res.data?.logs || res.data?.invites || res.data?.permissions || res.data?.batches || []);
+      if (res.data?.meta) setMeta(res.data.meta);
       dataList = Array.isArray(dataList) ? dataList : [];
       setLoans(dataList);
       return dataList;
