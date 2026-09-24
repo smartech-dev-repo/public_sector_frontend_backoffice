@@ -2,15 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import { useRoles } from '@/app/composables/modules/useRoles';
+import { usePermissions } from '@/app/composables/modules/usePermissions';
 import { useToast } from '@/app/composables/useToast';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { useConfirm } from '@/app/composables/useConfirm';
 
-export default function RolesPage() {
+export default function RolesTab() {
   const { confirm } = useConfirm();
 
-  const { loading, error, roles, fetchRoles, deleteRole, createRole, updateRole } = useRoles();
+  const { loading, error, roles, fetchRoles, deleteRole, createRole, updateRole, assignBulkPermissions } = useRoles();
+  const { permissions: availablePermissions, fetchPermissions } = usePermissions();
   const { addToast } = useToast();
 
   const [showCreateRole, setShowCreateRole] = useState(false);
@@ -20,15 +22,18 @@ export default function RolesPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState('');
   const [form, setForm] = useState({ name: '', description: '' });
+  const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
 
   useEffect(() => {
     fetchRoles();
-  }, [fetchRoles]);
+    fetchPermissions();
+  }, [fetchRoles, fetchPermissions]);
 
   const openCreateModal = () => {
     setIsEditing(false);
     setEditId('');
     setForm({ name: '', description: '' });
+    setSelectedPermissions([]);
     setShowCreateRole(true);
   };
 
@@ -36,6 +41,8 @@ export default function RolesPage() {
     setIsEditing(true);
     setEditId(role.id);
     setForm({ name: role.name, description: role.description || '' });
+    const currentPerms = role.permissions ? role.permissions.map((p: any) => p.permission?.id).filter(Boolean) : [];
+    setSelectedPermissions(currentPerms);
     setShowCreateRole(true);
   };
 
@@ -54,12 +61,19 @@ export default function RolesPage() {
           name: form.name.trim(),
           description: form.description.trim()
         });
+        if (selectedPermissions.length > 0) {
+          await assignBulkPermissions(editId, { permissionIds: selectedPermissions });
+        }
         addToast('Role updated successfully!', 'success');
       } else {
-        await createRole({
+        const newRole = await createRole({
           name: form.name.trim(),
           description: form.description.trim()
         });
+        const roleId = newRole?.id || newRole?.data?.id || newRole?.result?.id;
+        if (roleId && selectedPermissions.length > 0) {
+          await assignBulkPermissions(roleId, { permissionIds: selectedPermissions });
+        }
         addToast('Role created successfully!', 'success');
       }
       setShowCreateRole(false);
@@ -106,13 +120,14 @@ export default function RolesPage() {
                 <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Name</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Description</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Permissions</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Updated At</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {roles.map((role: any) => (
                 <tr key={role.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-mono">{role.id.substring(0, 8)}...</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-mono">{new Date(role.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-medium">{role.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{role.description}</td>
                   <td className="px-6 py-4 text-sm text-slate-600 max-w-md">
@@ -132,6 +147,9 @@ export default function RolesPage() {
                       )}
                     </div>
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                    {new Date(role.updatedAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
                     <button onClick={() => openViewPermissionsModal(role)} className="text-emerald-600 hover:text-emerald-800 font-medium transition-colors">View</button>
                     <button onClick={() => openEditModal(role)} className="text-blue-600 hover:text-blue-800 font-medium transition-colors">Edit</button>
@@ -150,7 +168,7 @@ export default function RolesPage() {
       {showCreateRole && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center">
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setShowCreateRole(false)}></div>
-          <div className="relative bg-white rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
+          <div className="relative bg-white rounded-2xl p-6 w-full max-w-2xl mx-4 shadow-2xl">
             <div className="flex items-start justify-between mb-4">
               <h3 className="text-lg font-semibold text-slate-800">{isEditing ? 'Edit Role' : 'Create New Role'}</h3>
               <button onClick={() => setShowCreateRole(false)} className="text-slate-400 hover:text-slate-600">
@@ -178,6 +196,34 @@ export default function RolesPage() {
                   placeholder="What does this role do?" 
                   className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all" 
                 />
+                            </div>
+              <div className="pt-2">
+                <label className="block text-sm font-medium text-slate-700 mb-2">Assign Permissions</label>
+                <div className="max-h-[300px] overflow-y-auto border border-slate-200 rounded-lg p-3 grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50">
+                  {availablePermissions?.map((perm: any) => (
+                    <label key={perm.id} className="flex items-start gap-2 p-2 bg-white rounded border border-slate-100 hover:border-emerald-200 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        className="mt-1 w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                        checked={selectedPermissions.includes(perm.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedPermissions(prev => [...prev, perm.id]);
+                          } else {
+                            setSelectedPermissions(prev => prev.filter(id => id !== perm.id));
+                          }
+                        }}
+                      />
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-slate-800">{perm.key}</div>
+                        <div className="text-xs text-slate-500 leading-tight line-clamp-1" title={perm.description}>{perm.description}</div>
+                      </div>
+                    </label>
+                  ))}
+                  {(!availablePermissions || availablePermissions.length === 0) && (
+                     <div className="text-sm text-slate-500 col-span-2 text-center py-4">No permissions available.</div>
+                  )}
+                </div>
               </div>
               <div className="flex items-center gap-3 justify-end mt-6">
                 <button type="button" onClick={() => setShowCreateRole(false)} className="px-5 py-2.5 rounded-lg text-sm text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors">Cancel</button>

@@ -3,6 +3,7 @@ import { sessions_api } from '@/app/api_factory/modules/sessions';
 
 export const useSessions = () => {
   const [loading, setLoading] = useState(false);
+  const [meta, setMeta] = useState({ total: 0, page: 1, limit: 25, totalPages: 1 });
   const [error, setError] = useState(null);
 
   const revokeAgentSessions = useCallback(async (agentId: string) => {
@@ -31,5 +32,5 @@ export const useSessions = () => {
     }
   }, []);
 
-  return { loading, error, revokeAgentSessions, revokeClientSessions };
+  return { loading, error, revokeAgentSessions, revokeClientSessions, meta };
 };
