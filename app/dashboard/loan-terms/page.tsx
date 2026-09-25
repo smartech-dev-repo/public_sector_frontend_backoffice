@@ -100,23 +100,23 @@ export default function LoanTermsPage() {
               <table className="min-w-full divide-y divide-slate-200">
                 <thead className="bg-[#E9F4EE]">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Agency</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Min Amount</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Max Amount</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Interest Rate</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Tenor (Months)</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Agency</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Min Amount</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Max Amount</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Interest Rate</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Tenor (Months)</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {loanTerms.map((term: any) => (
                     <tr key={term.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">{term.agency}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">₦{term.minAmount?.toLocaleString()}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">₦{term.maxAmount?.toLocaleString()}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{term.interestRate}%</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{term.tenorMonths}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-800">{term.agency}</td>
+                      <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-600">₦{term.minAmount?.toLocaleString()}</td>
+                      <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-600">₦{term.maxAmount?.toLocaleString()}</td>
+                      <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-600">{term.interestRate}%</td>
+                      <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-600">{term.tenorMonths}</td>
+                      <td className="px-6 py-2 whitespace-nowrap text-right text-sm font-medium">
                         <button onClick={() => openEditModal(term)} className="text-emerald-600 hover:text-emerald-800 transition-colors">Edit</button>
                       </td>
                     </tr>

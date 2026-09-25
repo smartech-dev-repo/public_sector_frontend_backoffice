@@ -183,13 +183,13 @@ export default function AgentDetailsPage() {
           <table className="w-full text-left text-sm">
             <thead className="bg-[#E9F4EE]">
                   <tr>
-                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Name</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">IPPIS NO.</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Agent</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Sector</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Loan Amt</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Action</th>
+                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Name</th>
+                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">IPPIS NO.</th>
+                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Agent</th>
+                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Sector</th>
+                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Loan Amt</th>
+                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date</th>
+                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -200,13 +200,13 @@ export default function AgentDetailsPage() {
               )}
               {paginatedLoans.map((loan) => (
                 <tr key={loan.id} className="hover:bg-slate-50/50 transition-colors group">
-                  <td className="px-6 py-4 font-medium text-slate-900">{loan.name}</td>
-                  <td className="px-6 py-4 text-slate-600">{loan.ippis}</td>
-                  <td className="px-6 py-4 font-medium text-slate-900">{loan.agent}</td>
-                  <td className="px-6 py-4 text-slate-600">{loan.sector}</td>
-                  <td className="px-6 py-4 font-semibold text-slate-900">{loan.loanAmt}</td>
-                  <td className="px-6 py-4 text-slate-600">{loan.date}</td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-2 font-medium text-slate-900">{loan.name}</td>
+                  <td className="px-6 py-2 text-slate-600">{loan.ippis}</td>
+                  <td className="px-6 py-2 font-medium text-slate-900">{loan.agent}</td>
+                  <td className="px-6 py-2 text-slate-600">{loan.sector}</td>
+                  <td className="px-6 py-2 font-semibold text-slate-900">{loan.loanAmt}</td>
+                  <td className="px-6 py-2 text-slate-600">{loan.date}</td>
+                  <td className="px-6 py-2">
                     <button className="font-medium text-slate-400 hover:text-emerald-600 transition-colors" title="View Details">
                       <Eye className="w-5 h-5" />
                     </button>
