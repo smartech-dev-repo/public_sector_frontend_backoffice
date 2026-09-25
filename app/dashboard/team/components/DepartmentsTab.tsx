@@ -111,29 +111,29 @@ export default function DepartmentsTab() {
             <table className="w-full text-sm text-left">
               <thead className="bg-[#E9F4EE]">
                   <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Created</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Description</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Updated At</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Created</th>
+                  <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Description</th>
+                  <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Updated At</th>
+                  <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {departments.map((department: any) => (
                   <tr key={department.id} className="hover:bg-accent/50 transition-colors">
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-2">
                       <div className="font-medium text-slate-800 font-mono">{new Date(department.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-2">
                       <div className="font-medium text-foreground">{department.name}</div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-2">
                       <div className="text-muted-foreground">{department.description || 'N/A'}</div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-2">
                       <div className="text-slate-500 text-sm">{new Date(department.updatedAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-2 text-right">
                       <TableDropdown>
                         <button onClick={() => handleEdit(department)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">Edit</button>
                         <button onClick={() => handleDelete(department.id)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-colors">Delete</button>
@@ -161,7 +161,7 @@ export default function DepartmentsTab() {
       {showModal && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
           <div className="bg-card w-full max-w-md rounded-xl border border-border shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="px-6 py-4 border-b border-border flex justify-between items-center">
+            <div className="px-6 py-2 border-b border-border flex justify-between items-center">
               <h3 className="text-lg font-semibold text-foreground">
                 {editingDepartment ? 'Edit Department' : 'Create Department'}
               </h3>

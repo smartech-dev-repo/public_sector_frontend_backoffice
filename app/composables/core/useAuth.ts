@@ -10,7 +10,7 @@ export const useAuth = () => {
   const setToken = (data: any) => {
     const token = data?.token || data?.accessToken || data?.data?.token || data?.data?.accessToken;
     if (token && typeof window !== 'undefined') {
-      document.cookie = `public_sector_token=${encodeURIComponent(token)}; path=/; max-age=86400`;
+      document.cookie = `public_sector_token=${encodeURIComponent(token)}; path=/; max-age=31536000`; // 1 year
       localStorage.setItem('token', token);
     }
   };

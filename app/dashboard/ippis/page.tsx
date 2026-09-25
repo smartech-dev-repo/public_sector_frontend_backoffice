@@ -30,23 +30,23 @@ export default function IppisPage() {
 <table className="min-w-full divide-y divide-slate-200">
             <thead className="bg-[#E9F4EE]">
                   <tr>
-                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Created</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Type</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date</th>
+                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Created</th>
+                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Type</th>
+                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
+                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {batches.map((batch: any) => (
                 <tr key={batch.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-mono">{new Date(batch.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-medium">{batch.documentType}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-800 font-mono">{new Date(batch.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                  <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-800 font-medium">{batch.documentType}</td>
+                  <td className="px-6 py-2 whitespace-nowrap text-sm">
                     <span className={`px-2.5 py-1 text-xs rounded-full font-medium ${batch.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
                       {batch.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{new Date(batch.createdAt).toLocaleDateString()}</td>
+                  <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-600">{new Date(batch.createdAt).toLocaleDateString()}</td>
                 </tr>
               ))}
               {batches.length === 0 && (

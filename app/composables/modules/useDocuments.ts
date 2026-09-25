@@ -89,7 +89,7 @@ export const useDocuments = () => {
   }, []);
 
   return { 
-    loading, error, batches, 
+    loading, error, batches, meta,
     uploadIppisBroadsheet, uploadDisbursedLoans, uploadRepaymentSchedule, 
     fetchDocumentBatches, getDocumentBatchById, getDocumentFile 
   };
