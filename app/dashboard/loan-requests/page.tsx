@@ -100,23 +100,23 @@ export default function LoanRequestsPage() {
               <table className="min-w-full divide-y divide-slate-200">
                 <thead className="bg-[#E9F4EE]">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Created</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Client</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Amount</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Created</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Client</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Amount</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {loanRequests.map((req: any) => (
                     <tr key={req.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-mono">{new Date(req.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">{req.clientId}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">₦{req.amount?.toLocaleString()}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-800 font-mono">{new Date(req.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                      <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-800">{req.clientId}</td>
+                      <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-600">₦{req.amount?.toLocaleString()}</td>
+                      <td className="px-6 py-2 whitespace-nowrap text-sm">
                         <span className="px-2 py-1 bg-slate-100 rounded text-xs font-medium">{req.status}</span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
+                      <td className="px-6 py-2 whitespace-nowrap text-right text-sm font-medium space-x-3">
                         {req.status === 'CONFIRMED' && (
                           <>
                             <button onClick={() => handleApprove(req.id)} className="text-emerald-600 hover:text-emerald-800 transition-colors">Approve</button>
