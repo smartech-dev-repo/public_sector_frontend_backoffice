@@ -8,21 +8,25 @@ import EmptyState from '@/app/components/ui/EmptyState';
 import { createPortal } from 'react-dom';
 import { useConfirm } from '@/app/composables/useConfirm';
 import TableDropdown from '@/app/components/ui/TableDropdown';
+import Pagination from '@/app/components/ui/Pagination';
+import Link from 'next/link';
 
 export default function AgentManagementPage() {
   const { confirm } = useConfirm();
 
-  const { loading, error, agents, fetchAgents, approveAgent, rejectAgent, resendCredentials } = useAgents();
+  const { loading, error, agents, fetchAgents, approveAgent, rejectAgent, resendCredentials, meta } = useAgents();
   const { addToast } = useToast();
 
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<any>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
 
   useEffect(() => {
-    fetchAgents();
-  }, [fetchAgents]);
+    fetchAgents({ page: currentPage, limit: itemsPerPage });
+  }, [fetchAgents, currentPage, itemsPerPage]);
 
   const handleApprove = async (id: string) => {
     const confirmed = await confirm({ message: 'Are you sure you want to approve this agent?' });
@@ -88,21 +92,25 @@ export default function AgentManagementPage() {
               <table className="min-w-full divide-y divide-slate-200">
                 <thead className="bg-[#E9F4EE]">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Created</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Name</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Created</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Name</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Email</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Phone</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {agents.map((agent: any) => (
                     <tr key={agent.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-mono">{new Date(agent.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">{agent.firstName} {agent.lastName}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-800 font-mono">{new Date(agent.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                      <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-800">{agent.fullName || `${agent.firstName} ${agent.lastName}`}</td>
+                      <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-800">{agent.email}</td>
+                      <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-800">{agent.phone || '-'}</td>
+                      <td className="px-6 py-2 whitespace-nowrap text-sm">
                         <span className="px-2 py-1 bg-slate-100 rounded text-xs font-medium">{agent.status || agent.reviewStatus}</span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <td className="px-6 py-2 whitespace-nowrap text-right text-sm font-medium">
                         <TableDropdown>
                           {agent.status === 'PENDING_REVIEW' && (
                             <>
@@ -121,6 +129,10 @@ export default function AgentManagementPage() {
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
                             Resend Credentials
                           </button>
+                          <Link href={`/dashboard/agent/${agent.id}`} className="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                            View Details
+                          </Link>
                         </TableDropdown>
                       </td>
                     </tr>
@@ -128,6 +140,15 @@ export default function AgentManagementPage() {
                 </tbody>
               </table>
             </div>
+          )}
+          {agents.length > 0 && (
+            <Pagination 
+              totalItems={meta?.total || 0}
+              currentPage={currentPage}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+              onItemsPerPageChange={setItemsPerPage}
+            />
           )}
         </div>
       )}

@@ -126,7 +126,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
               <div className="grid grid-cols-2 gap-y-6 gap-x-4">
                 <div>
                   <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">Full Name</div>
-                  <div className="font-medium text-slate-800 text-lg">{application.firstName} {application.lastName}</div>
+                  <div className="font-medium text-slate-800 text-lg">{application.fullName || `${application.firstName} ${application.lastName}`}</div>
                 </div>
                 <div>
                   <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">Application Ref (ID)</div>
@@ -137,9 +137,25 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
                   <div className="font-medium text-slate-800">{application.email}</div>
                 </div>
                 <div>
+                  <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">Phone</div>
+                  <div className="font-medium text-slate-800">{application.phone || '-'}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">Address</div>
+                  <div className="font-medium text-slate-800">{application.address || '-'}</div>
+                </div>
+                <div>
                   <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">Submission Date</div>
                   <div className="font-medium text-slate-800">{new Date(application.createdAt).toLocaleDateString()}</div>
                 </div>
+                {application.cvKey && (
+                  <div>
+                    <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">CV/Document</div>
+                    <div className="font-medium text-blue-600 hover:underline">
+                      <a href={`/${application.cvKey}`} target="_blank" rel="noopener noreferrer">View CV</a>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

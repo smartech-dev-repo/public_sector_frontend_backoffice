@@ -98,37 +98,37 @@ export default function AdminsPage() {
                 <table className="min-w-full divide-y divide-slate-200">
                   <thead className="bg-[#E9F4EE]">
                     <tr>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Created</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Email</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Name</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Role</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Department</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Created</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Email</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Name</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Role</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Department</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {admins.map((admin: any) => (
                     <tr key={admin.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-mono">{new Date(admin.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">{admin.email}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{admin.fullName}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                      <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-800 font-mono">{new Date(admin.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                      <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-800">{admin.email}</td>
+                      <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-600">{admin.fullName}</td>
+                      <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-600">
                         {admin.role ? (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                             {admin.role.name}
                           </span>
                         ) : <span className="text-slate-400">No Role</span>}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                      <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-600">
                         {admin.department?.name || <span className="text-slate-400">-</span>}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <td className="px-6 py-2 whitespace-nowrap text-sm">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${admin.isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
                           {admin.isActive ? 'Active' : 'Suspended'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative">
+                      <td className="px-6 py-2 whitespace-nowrap text-right text-sm font-medium relative">
                         <TableDropdown>
                           <button onClick={() => { openAssignRoleModal(admin); }} className="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors flex items-center gap-2">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>

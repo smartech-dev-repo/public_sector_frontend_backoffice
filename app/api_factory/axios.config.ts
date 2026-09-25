@@ -93,14 +93,15 @@ instanceArray.forEach((instance) => {
  if (err.response.status === 401) {
  console.log(err.response.data.error)
  // Only log out if we're not already on login page
- const isOnAuthPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/login')
- if (!isOnAuthPage && typeof window !== 'undefined') {
- document.cookie = 'public_sector_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
- document.cookie = 'public_sector_user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
- localStorage.removeItem('token');
- localStorage.removeItem('user');
- window.location.href = '/login';
- }
+ // Commented out to prevent frequent logouts based on arbitrary 401s
+ // const isOnAuthPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/login')
+ // if (!isOnAuthPage && typeof window !== 'undefined') {
+ // document.cookie = 'public_sector_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+ // document.cookie = 'public_sector_user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+ // localStorage.removeItem('token');
+ // localStorage.removeItem('user');
+ // window.location.href = '/login';
+ // }
  addToast(
  err?.response?.data?.message || err?.response?.data?.error || "An error occured",
  "error",

@@ -116,21 +116,21 @@ export default function RolesTab() {
 <table className="min-w-full divide-y divide-slate-200">
             <thead className="bg-[#E9F4EE]">
                   <tr>
-                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Created</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Name</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Description</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Permissions</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Updated At</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Created</th>
+                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Name</th>
+                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Description</th>
+                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Permissions</th>
+                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Updated At</th>
+                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {roles.map((role: any) => (
                 <tr key={role.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-mono">{new Date(role.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-medium">{role.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{role.description}</td>
-                  <td className="px-6 py-4 text-sm text-slate-600 max-w-md">
+                  <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-800 font-mono">{new Date(role.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                  <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-800 font-medium">{role.name}</td>
+                  <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-600">{role.description}</td>
+                  <td className="px-6 py-2 text-sm text-slate-600 max-w-md">
                     <div className="flex flex-wrap gap-1.5">
                       {role.permissions?.slice(0, 5).map((p: any) => (
                         <span key={p.permission?.id || Math.random()} className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded text-[11px] font-medium tracking-wide shadow-sm" title={p.permission?.description}>
@@ -147,10 +147,10 @@ export default function RolesTab() {
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                  <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-500">
                     {new Date(role.updatedAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
+                  <td className="px-6 py-2 whitespace-nowrap text-right text-sm font-medium space-x-3">
                     <button onClick={() => openViewPermissionsModal(role)} className="text-emerald-600 hover:text-emerald-800 font-medium transition-colors">View</button>
                     <button onClick={() => openEditModal(role)} className="text-blue-600 hover:text-blue-800 font-medium transition-colors">Edit</button>
                     <button onClick={() => handleDelete(role.id)} className="text-rose-600 hover:text-rose-800 font-medium transition-colors">Delete</button>

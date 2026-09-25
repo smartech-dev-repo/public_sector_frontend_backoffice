@@ -5,20 +5,23 @@ import { useDocuments } from '@/app/composables/modules/useDocuments';
 import { useToast } from '@/app/composables/useToast';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
+import Pagination from '@/app/components/ui/Pagination';
 
 export default function UploadsPage() {
-  const { loading, batches, fetchDocumentBatches, uploadIppisBroadsheet, uploadDisbursedLoans, uploadRepaymentSchedule } = useDocuments();
+  const { loading, batches, meta, fetchDocumentBatches, uploadIppisBroadsheet, uploadDisbursedLoans, uploadRepaymentSchedule } = useDocuments();
   const { addToast } = useToast();
 
   const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
 
   const broadsheetInput = useRef<HTMLInputElement>(null);
   const disbursedInput = useRef<HTMLInputElement>(null);
   const repaymentInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    fetchDocumentBatches().then(() => setIsLoading(false));
-  }, [fetchDocumentBatches]);
+    fetchDocumentBatches({ page: currentPage, limit: itemsPerPage }).then(() => setIsLoading(false));
+  }, [fetchDocumentBatches, currentPage, itemsPerPage]);
 
   const triggerFileSelect = (type: string) => {
     if (type === 'broadsheet') broadsheetInput.current?.click();
@@ -135,27 +138,27 @@ export default function UploadsPage() {
 <table className="min-w-full divide-y divide-slate-200">
                 <thead className="bg-[#E9F4EE]">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Created</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Type</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Total Rows</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Processed</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Updated At</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Created</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Type</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Total Rows</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Processed</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Updated At</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {batches.map((batch: any) => (
                     <tr key={batch.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-mono">{new Date(batch.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800">{batch.documentType}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-800 font-mono">{new Date(batch.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                      <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-800">{batch.documentType}</td>
+                      <td className="px-6 py-2 whitespace-nowrap text-sm">
                         <span className={`px-2.5 py-1 text-xs rounded-full font-medium ${statusClass(batch.status)}`}>
                           {batch.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{batch.totalRows || 0}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{batch.processedRows || 0}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{new Date(batch.updatedAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                      <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-600">{batch.totalRows || 0}</td>
+                      <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-600">{batch.processedRows || 0}</td>
+                      <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-500">{new Date(batch.updatedAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                     </tr>
                   ))}
                   {batches.length === 0 && (
@@ -165,7 +168,16 @@ export default function UploadsPage() {
                   )}
                 </tbody>
               </table>
-</div>
+              </div>
+              {batches.length > 0 && (
+                <Pagination 
+                  totalItems={meta?.total || 0}
+                  currentPage={currentPage}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={setCurrentPage}
+                  onItemsPerPageChange={setItemsPerPage}
+                />
+              )}
             </div>
           </div>
         </div>
