@@ -66,25 +66,25 @@ export default function InvitesPage() {
 <table className="min-w-full divide-y divide-slate-200">
             <thead className="bg-[#E9F4EE]">
                   <tr>
-                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Email</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Role</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Invited At</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Email</th>
+                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Role</th>
+                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
+                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Invited At</th>
+                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {invites.map((invite: any) => (
                 <tr key={invite.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-medium">{invite.email}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{invite.role?.name || 'Unknown'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-800 font-medium">{invite.email}</td>
+                  <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-600">{invite.role?.name || 'Unknown'}</td>
+                  <td className="px-6 py-2 whitespace-nowrap text-sm">
                     <span className="px-2.5 py-1 text-xs rounded-full font-medium bg-amber-100 text-amber-800">
                       {invite.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{new Date(invite.createdAt).toLocaleDateString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-600">{new Date(invite.createdAt).toLocaleDateString()}</td>
+                  <td className="px-6 py-2 whitespace-nowrap text-right text-sm font-medium">
                     <button onClick={() => handleResend(invite.id)} className="text-emerald-600 hover:text-emerald-800 font-medium transition-colors">Resend</button>
                   </td>
                 </tr>

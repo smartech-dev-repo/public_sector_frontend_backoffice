@@ -6,8 +6,11 @@ import Select from '@/app/components/ui/Select';
 import DatePicker from '@/app/components/ui/DatePicker';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
+import { useReports } from '@/app/composables/modules/useReports';
+import { useEffect } from 'react';
 
 export default function ReportsPage() {
+  const { loading, error, reports, meta, fetchReports } = useReports();
   const [showFilter, setShowFilter] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterParams, setFilterParams] = useState({
@@ -41,16 +44,16 @@ export default function ReportsPage() {
     
     if (filterParams.search) {
       const lower = filterParams.search.toLowerCase();
-      result = result.filter(r => r.title.toLowerCase().includes(lower));
+      result = result.filter((r: any) => (r.title || r.name || '').toLowerCase().includes(lower));
     }
     
     if (filterParams.type) {
-      result = result.filter(r => r.type === filterParams.type);
+      result = result.filter((r: any) => r.type === filterParams.type);
     }
     
     if (searchQuery) {
       const lower = searchQuery.toLowerCase();
-      result = result.filter(r => r.title.toLowerCase().includes(lower));
+      result = result.filter((r: any) => (r.title || r.name || '').toLowerCase().includes(lower));
     }
     
     if (filterParams.dateRange) {
@@ -58,24 +61,29 @@ export default function ReportsPage() {
       if (dates.length > 0) {
         const start = new Date(dates[0]).getTime();
         const end = dates.length === 2 ? new Date(dates[1]).getTime() : start;
-        result = result.filter(r => {
-          const itemDate = parseMockDate(r.date);
+        result = result.filter((r: any) => {
+          const itemDate = parseMockDate(r.date || r.createdAt);
           return itemDate >= start && itemDate <= end;
         });
       }
     }
     
     return result;
-  }, [filterParams, searchQuery, reportsData]);
+  }, [filterParams, searchQuery, reports]);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
+  useEffect(() => {
+    fetchReports({ page: currentPage, limit: itemsPerPage, search: searchQuery, type: filterParams.type, dateRange: filterParams.dateRange });
+  }, [fetchReports, currentPage, itemsPerPage, searchQuery, filterParams]);
+
   const paginatedReports = useMemo(() => {
+    if (reports.length > 0) return reports; // If backend handles pagination, we can just use reports. If not, slice it. Assuming backend handles it since we pass params.
     const start = (currentPage - 1) * itemsPerPage;
     const end = start + itemsPerPage;
     return filteredReports.slice(start, end);
-  }, [filteredReports, currentPage, itemsPerPage]);
+  }, [filteredReports, reports, currentPage, itemsPerPage]);
 
   return (
     <div className="space-y-6">
@@ -84,7 +92,7 @@ export default function ReportsPage() {
         <div className="bg-white rounded-xl p-5 border border-slate-100 shadow-sm flex items-center justify-between">
           <div>
             <h3 className="text-[13px] text-slate-500 font-medium mb-1">Total Reports Generated</h3>
-            <div className="text-3xl font-bold text-slate-800">{reportsData.length}</div>
+            <div className="text-3xl font-bold text-slate-800">{meta?.total || reports.length}</div>
           </div>
           <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
@@ -169,16 +177,20 @@ export default function ReportsPage() {
       </div>
 
       {/* Reports Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
+      {loading && <PulseLoader />}
+      {!loading && error && <div className="text-red-500 py-12 text-center">{error}</div>}
+
+      {!loading && !error && (
+        <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
             <thead className="bg-[#E9F4EE]">
                   <tr>
-                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Report Title</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Type</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Generated</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Size</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Action</th>
+                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Report Title</th>
+                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Type</th>
+                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Generated</th>
+                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Size</th>
+                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -187,22 +199,22 @@ export default function ReportsPage() {
                   <td colSpan={5} className="px-6 py-8 text-center text-slate-500">No reports found.</td>
                 </tr>
               )}
-              {paginatedReports.map((report) => (
+              {paginatedReports.map((report: any) => (
                 <tr key={report.id} className="hover:bg-slate-50/50 transition-colors group">
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-2">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded bg-red-50 text-red-500 flex items-center justify-center">
                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2.414L17.586 9H13V4.414zM18 20H6V4h5v7h7v9z"/><path d="M8 13h8v2H8zm0 3h8v2H8z"/></svg>
                       </div>
-                      <span className="font-medium text-slate-900">{report.title}</span>
+                      <span className="font-medium text-slate-900">{report.title || report.name || 'Untitled'}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-slate-600">
-                    <span className="px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-600">{report.type}</span>
+                  <td className="px-6 py-2 text-slate-600">
+                    <span className="px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-600">{report.type || 'Standard'}</span>
                   </td>
-                  <td className="px-6 py-4 text-slate-600">{report.date}</td>
-                  <td className="px-6 py-4 text-slate-600 font-mono text-xs">{report.size}</td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-6 py-2 text-slate-600">{report.date || new Date(report.createdAt).toLocaleDateString()}</td>
+                  <td className="px-6 py-2 text-slate-600 font-mono text-xs">{report.size || 'N/A'}</td>
+                  <td className="px-6 py-2 text-right">
                     <button className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-medium transition-colors">
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                       Download
@@ -214,15 +226,18 @@ export default function ReportsPage() {
           </table>
         </div>
       </div>
+      )}
       
       {/* Pagination */}
-      <Pagination 
-        totalItems={filteredReports.length} 
-        currentPage={currentPage}
-        itemsPerPage={itemsPerPage}
-        onPageChange={setCurrentPage}
-        onItemsPerPageChange={setItemsPerPage}
-      />
+      {!loading && !error && (
+        <Pagination 
+          totalItems={meta?.total || filteredReports.length} 
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={setItemsPerPage}
+        />
+      )}
     </div>
   );
 }
