@@ -12,18 +12,12 @@ import { useToast } from '@/app/composables/useToast';
 export default function ReconciliationPage() {
   const [isLoading, setIsLoading] = useState(true);
 
-  const { reconciliation, fetchReconciliation } = useReconciliation();
+  const { reconciliation, fetchReconciliation, meta } = useReconciliation();
   const { addToast } = useToast();
 
   const [recordsList, setRecordsList] = useState([] as any[]);
-
-  useEffect(() => {
-    fetchReconciliation().then((data) => {
-      setRecordsList(data || []);
-      setIsLoading(false);
-    });
-  }, [fetchReconciliation]);
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [showFilter, setShowFilter] = useState(false);
   const [filterParams, setFilterParams] = useState({
     search: '',
@@ -31,49 +25,29 @@ export default function ReconciliationPage() {
     dateRange: ''
   });
 
+  useEffect(() => {
+    const params: any = { page: currentPage, limit: itemsPerPage };
+    if (filterParams.search) params.search = filterParams.search;
+    if (filterParams.matchStatus) params.status = filterParams.matchStatus;
+    if (filterParams.dateRange) params.dateRange = filterParams.dateRange;
+
+    fetchReconciliation(params).then((data) => {
+      setRecordsList(data || []);
+      setIsLoading(false);
+    });
+  }, [fetchReconciliation, currentPage, itemsPerPage, filterParams]);
+
   const clearFilters = () => {
     setFilterParams({ search: '', matchStatus: '', dateRange: '' });
   };
 
   const filteredRecords = useMemo(() => {
-    let result = recordsList;
-    
-    if (filterParams.search) {
-      const lower = filterParams.search.toLowerCase();
-      result = result.filter(r => 
-        (r.client?.firstName?.toLowerCase().includes(lower) || r.client?.lastName?.toLowerCase().includes(lower)) || 
-        r.id?.toLowerCase().includes(lower)
-      );
-    }
-    
-    if (filterParams.matchStatus) {
-      result = result.filter(r => r.matchStatus === filterParams.matchStatus);
-    }
-    
-    if (filterParams.dateRange) {
-      const dates = filterParams.dateRange.split(' to ');
-      if (dates.length > 0) {
-        const start = new Date(dates[0]).getTime();
-        const end = dates.length === 2 ? new Date(dates[1]).getTime() : start;
-        result = result.filter(r => {
-          if (!r.date) return true;
-          const itemDate = new Date(r.date).getTime();
-          return itemDate >= start && itemDate <= end;
-        });
-      }
-    }
-    
-    return result;
-  }, [filterParams, recordsList]);
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+    return recordsList;
+  }, [recordsList]);
 
   const paginatedRecords = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    return filteredRecords.slice(start, end);
-  }, [currentPage, itemsPerPage, filteredRecords]);
+    return recordsList;
+  }, [recordsList]);
 
   const uploadExtract = () => {
     addToast('Uploading CBA extract. Please wait...', 'info');
@@ -85,6 +59,14 @@ export default function ReconciliationPage() {
   const resolveRecord = (record: any) => {
     setRecordsList(prev => prev.map(r => r.id === record.id ? { ...r, matchStatus: 'Matched' } : r));
     addToast(`Record ${record.loanId} resolved manually.`, 'success');
+  };
+
+  const [selectedRecord, setSelectedRecord] = useState<any>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+
+  const viewRecordDetails = (record: any) => {
+    setSelectedRecord(record);
+    setShowDetailsModal(true);
   };
 
   return (
@@ -128,7 +110,7 @@ export default function ReconciliationPage() {
           {/* Actions & Filters */}
           <div className="flex items-center justify-between gap-4 mb-4">
             <div className="flex-1 max-w-md">
-              <span className="text-sm text-slate-400">Showing {filteredRecords.length} of {recordsList.length} records</span>
+              <span className="text-sm text-slate-400">Total {meta?.total || 0} records found</span>
             </div>
             
             <div className="flex items-center gap-3 relative">
@@ -157,9 +139,10 @@ export default function ReconciliationPage() {
                       placeholder="All Match Statuses"
                       options={[
                         {label: 'All Match Statuses', value: ''}, 
-                        {label: 'Matched', value: 'Matched'}, 
-                        {label: 'Unmatched', value: 'Unmatched'}, 
-                        {label: 'Reversed', value: 'Reversed'}
+                        {label: 'Matched', value: 'MATCHED'}, 
+                        {label: 'Under Paid', value: 'UNDER_PAID'}, 
+                        {label: 'Over Paid', value: 'OVER_PAID'},
+                        {label: 'No Deduction Found', value: 'NO_DEDUCTION_FOUND'}
                       ]} 
                     />
                     
@@ -185,13 +168,13 @@ export default function ReconciliationPage() {
               <table className="w-full text-left border-collapse">
                 <thead className="bg-[#E9F4EE]">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Ref ID</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Customer</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Amount</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Portal Status</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">CBA Status</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Match Status</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Action</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Ref ID</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Customer</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Expected Amount</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actual Amount</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Variance</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-sm">
@@ -202,33 +185,32 @@ export default function ReconciliationPage() {
                   )}
                   {paginatedRecords.map(record => (
                     <tr key={record.id} className="hover:bg-slate-50/50 transition-colors group">
-                      <td className="px-6 py-4 font-mono text-slate-600">{record.id?.split('-')[0]}</td>
-                      <td className="px-6 py-4 font-medium text-slate-800">{record.client?.firstName} {record.client?.lastName}</td>
-                      <td className="px-6 py-4 text-slate-600">₦{record.amount.toLocaleString()}</td>
-                      <td className="px-6 py-4">
-                        <span className="px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-100 text-emerald-700 whitespace-nowrap">{record.portalStatus}</span>
+                      <td className="px-6 py-2 font-mono text-slate-600">{record.id?.split('-')[0]}</td>
+                      <td className="px-6 py-2 font-medium text-slate-800">{record.loan?.customerName || 'Unknown'}</td>
+                      <td className="px-6 py-2 text-slate-600">₦{Number(record.expectedAmount || 0).toLocaleString()}</td>
+                      <td className="px-6 py-2 text-slate-600">₦{Number(record.actualAmount || 0).toLocaleString()}</td>
+                      <td className="px-6 py-2 text-slate-600">
+                        <span className={`px-2.5 py-1 rounded-md text-xs font-medium whitespace-nowrap ${Number(record.variance) < 0 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                          ₦{Number(record.variance || 0).toLocaleString()}
+                        </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2.5 py-1 rounded-md text-xs font-medium whitespace-nowrap ${record.cbaStatus === 'Disbursed' ? 'bg-emerald-100 text-emerald-700' : record.cbaStatus === 'Pending' ? 'bg-slate-100 text-slate-700' : 'bg-rose-100 text-rose-700'}`}>{record.cbaStatus}</span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className={`inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full text-xs border whitespace-nowrap ${record.matchStatus === 'Matched' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : record.matchStatus === 'Unmatched' ? 'bg-rose-50 border-rose-200 text-rose-700' : 'bg-amber-50 border-amber-200 text-amber-700'}`}>
-                          {record.matchStatus === 'Matched' && <span>✓</span>}
-                          {record.matchStatus === 'Unmatched' && <span>!</span>}
-                          {record.matchStatus}
+                      <td className="px-6 py-2">
+                        <div className={`inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full text-xs border whitespace-nowrap ${record.status === 'MATCHED' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-rose-50 border-rose-200 text-rose-700'}`}>
+                          {record.status?.replace(/_/g, ' ') || 'UNKNOWN'}
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-6 py-2 text-right">
                         <div className="flex justify-end">
-                          {record.matchStatus !== 'Matched' ? (
-                            <TableDropdown>
+                          <TableDropdown>
+                            <button onClick={() => viewRecordDetails(record)} className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+                              View Details
+                            </button>
+                            {record.status !== 'MATCHED' && (
                               <button onClick={() => resolveRecord(record)} className="w-full text-left px-4 py-2.5 text-sm text-emerald-600 hover:bg-emerald-50 transition-colors">
                                 Resolve Record
                               </button>
-                            </TableDropdown>
-                          ) : (
-                            <span className="text-slate-300">-</span>
-                          )}
+                            )}
+                          </TableDropdown>
                         </div>
                       </td>
                     </tr>
@@ -240,12 +222,77 @@ export default function ReconciliationPage() {
 
           {/* Pagination */}
           <Pagination 
-            totalItems={filteredRecords.length} 
+            totalItems={meta?.total || 0} 
             currentPage={currentPage}
             itemsPerPage={itemsPerPage}
             onPageChange={setCurrentPage}
             onItemsPerPageChange={setItemsPerPage}
           />
+        </div>
+      )}
+
+      {/* Details Modal */}
+      {showDetailsModal && selectedRecord && (
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-xl">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-bold text-slate-900">Reconciliation Details</h3>
+              <button onClick={() => setShowDetailsModal(false)} className="p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-full transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+            </div>
+            
+            <div className="space-y-4 text-sm">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-slate-500 mb-1 text-xs uppercase tracking-wider">Ref ID</p>
+                  <p className="font-medium text-slate-900 truncate" title={selectedRecord.id}>{selectedRecord.id?.split('-')[0]}...</p>
+                </div>
+                <div>
+                  <p className="text-slate-500 mb-1 text-xs uppercase tracking-wider">Loan ID</p>
+                  <p className="font-medium text-slate-900 truncate" title={selectedRecord.loanId}>{selectedRecord.loanId?.split('-')[0]}...</p>
+                </div>
+                <div>
+                  <p className="text-slate-500 mb-1 text-xs uppercase tracking-wider">Customer Name</p>
+                  <p className="font-medium text-slate-900">{selectedRecord.loan?.customerName || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-slate-500 mb-1 text-xs uppercase tracking-wider">Account Number</p>
+                  <p className="font-medium text-slate-900">{selectedRecord.loan?.accountNumber || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-slate-500 mb-1 text-xs uppercase tracking-wider">IPPIS Number</p>
+                  <p className="font-medium text-slate-900">{selectedRecord.loan?.ippisNumber || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-slate-500 mb-1 text-xs uppercase tracking-wider">Agency</p>
+                  <p className="font-medium text-slate-900">{selectedRecord.loan?.agency || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-slate-500 mb-1 text-xs uppercase tracking-wider">Product</p>
+                  <p className="font-medium text-slate-900">{selectedRecord.loan?.product || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-slate-500 mb-1 text-xs uppercase tracking-wider">Interest Rate</p>
+                  <p className="font-medium text-slate-900">{selectedRecord.loan?.interestRatePercent ? `${selectedRecord.loan.interestRatePercent}%` : 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-slate-500 mb-1 text-xs uppercase tracking-wider">Period</p>
+                  <p className="font-medium text-slate-900">{selectedRecord.period || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-slate-500 mb-1 text-xs uppercase tracking-wider">Disbursement Date</p>
+                  <p className="font-medium text-slate-900">{selectedRecord.loan?.disbursementDate ? new Date(selectedRecord.loan.disbursementDate).toLocaleDateString() : 'N/A'}</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-8 pt-6 border-t border-slate-100 flex justify-end">
+              <button onClick={() => setShowDetailsModal(false)} className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-medium transition-colors">
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

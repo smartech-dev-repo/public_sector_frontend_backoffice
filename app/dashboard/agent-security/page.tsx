@@ -68,9 +68,9 @@ export default function AgentSecurityPage() {
               <table className="w-full text-sm text-left">
                 <thead className="bg-[#E9F4EE]">
                   <tr>
-                    <th scope="col" className="px-6 py-4 tracking-wider">Agent Details</th>
-                    <th scope="col" className="px-6 py-4 tracking-wider">Status</th>
-                    <th scope="col" className="px-6 py-4 tracking-wider text-right">Action</th>
+                    <th scope="col" className="px-6 py-2 tracking-wider">Agent Details</th>
+                    <th scope="col" className="px-6 py-2 tracking-wider">Status</th>
+                    <th scope="col" className="px-6 py-2 tracking-wider text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -81,7 +81,7 @@ export default function AgentSecurityPage() {
                   )}
                   {approvedAgents.map((agent: any) => (
                     <tr key={agent.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-2">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-medium">
                             {agent.firstName?.charAt(0) || 'A'}
@@ -92,12 +92,12 @@ export default function AgentSecurityPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-2">
                         <span className="px-2.5 py-1 rounded-md text-xs whitespace-nowrap bg-emerald-100 text-emerald-700">
                           {agent.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-6 py-2 text-right">
                         <button onClick={() => handleRevoke(agent)} disabled={revokingId === agent.id} className="px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 rounded-lg transition-colors border border-rose-200 disabled:opacity-50">
                           {revokingId === agent.id ? 'Revoking...' : 'Revoke All Sessions'}
                         </button>
