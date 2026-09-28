@@ -156,6 +156,7 @@ export const useAuth = () => {
   const refreshSession = async () => {
     try {
       const response = await auth_api.refresh();
+      setToken(response.data);
       return response.data;
     } catch (err: any) {
       console.error('Session refresh failed', err);

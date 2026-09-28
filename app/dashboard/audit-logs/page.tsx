@@ -13,7 +13,7 @@ export default function AuditLogsPage() {
   }, [fetchLogs]);
 
   return (
-    <main className="p-6">
+    <main className="w-full">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-slate-800">Audit Logs</h1>
       </div>
@@ -27,19 +27,19 @@ export default function AuditLogsPage() {
 <table className="min-w-full divide-y divide-slate-200">
             <thead className="bg-[#E9F4EE]">
                   <tr>
-                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date</th>
-                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Action</th>
-                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actor</th>
-                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Target</th>
+                <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date</th>
+                <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Action</th>
+                <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actor</th>
+                <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Target</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {logs.map((log: any) => (
                 <tr key={log.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-800">{new Date(log.createdAt).toLocaleString()}</td>
-                  <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-800 font-medium">{log.action}</td>
-                  <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-600">{log.actorType} ({log.actorId})</td>
-                  <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-600">{log.targetType} ({log.targetId})</td>
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-800">{new Date(log.createdAt).toLocaleString()}</td>
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-800 font-medium">{log.action}</td>
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-600">{log.actorType} ({log.actorId})</td>
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-600">{log.targetType} ({log.targetId})</td>
                 </tr>
               ))}
             </tbody>

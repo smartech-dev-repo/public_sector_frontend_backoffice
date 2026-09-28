@@ -186,11 +186,11 @@ export default function ReportsPage() {
             <table className="w-full text-left text-sm">
             <thead className="bg-[#E9F4EE]">
                   <tr>
-                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Report Title</th>
-                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Type</th>
-                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Generated</th>
-                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Size</th>
-                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Action</th>
+                <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Report Title</th>
+                <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Type</th>
+                <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Generated</th>
+                <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Size</th>
+                <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -201,7 +201,7 @@ export default function ReportsPage() {
               )}
               {paginatedReports.map((report: any) => (
                 <tr key={report.id} className="hover:bg-slate-50/50 transition-colors group">
-                  <td className="px-6 py-2">
+                  <td className="px-4 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded bg-red-50 text-red-500 flex items-center justify-center">
                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2.414L17.586 9H13V4.414zM18 20H6V4h5v7h7v9z"/><path d="M8 13h8v2H8zm0 3h8v2H8z"/></svg>
@@ -209,12 +209,12 @@ export default function ReportsPage() {
                       <span className="font-medium text-slate-900">{report.title || report.name || 'Untitled'}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-2 text-slate-600">
+                  <td className="px-4 py-4 text-slate-600">
                     <span className="px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-600">{report.type || 'Standard'}</span>
                   </td>
-                  <td className="px-6 py-2 text-slate-600">{report.date || new Date(report.createdAt).toLocaleDateString()}</td>
-                  <td className="px-6 py-2 text-slate-600 font-mono text-xs">{report.size || 'N/A'}</td>
-                  <td className="px-6 py-2 text-right">
+                  <td className="px-4 py-4 text-slate-600">{report.date || new Date(report.createdAt).toLocaleDateString()}</td>
+                  <td className="px-4 py-4 text-slate-600 font-mono text-xs">{report.size || 'N/A'}</td>
+                  <td className="px-4 py-4 text-right">
                     <button className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-medium transition-colors">
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                       Download

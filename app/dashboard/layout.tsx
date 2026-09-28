@@ -6,8 +6,9 @@ import { usePathname, useRouter } from 'next/navigation';
 import Toast from '@/app/components/ui/Toast';
 import Modal from '@/app/components/ui/Modal';
 import SearchModal from '@/app/components/ui/SearchModal';
+import SessionManager from '@/app/components/ui/SessionManager';
 import { useTheme } from 'next-themes';
-import { Monitor, Moon, Sun, Folder, UserPlus, Users, User, LineChart, UserCog, ClipboardList, Scale, ShieldCheck, Settings } from 'lucide-react';
+import { Monitor, Moon, Sun, Folder, UserPlus, Users, User, LineChart, UserCog, ClipboardList, Scale, ShieldCheck, Settings, Banknote } from 'lucide-react';
 
 export default function CreditRiskLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -60,6 +61,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
     if (pathname.includes('/dashboard/uploads')) return 'Credit Risk Uploads';
     if (pathname.includes('/dashboard/analytics')) return 'Analytics & Reports';
     if (pathname.includes('/dashboard/exceptions')) return 'Exception Queue';
+    if (pathname.includes('/dashboard/client-loans')) return 'Client Loans';
     if (pathname.includes('/dashboard/reconciliation')) return 'Finance Reconciliation';
     return 'Platform Overview';
   }, [pathname]);
@@ -86,6 +88,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
   return (
     <div className="h-screen overflow-hidden bg-background font-sans flex text-foreground">
       {/* Global Components */}
+      <SessionManager />
       <Toast />
       <SearchModal isOpen={showSearchModal} onClose={() => setShowSearchModal(false)} />
       <Modal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} onConfirm={confirmLogout} title="Confirm Logout">
@@ -166,12 +169,21 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
             </Link>
             <Link href="/dashboard/clients"
               className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all group ${
-                pathname.startsWith('/dashboard/client') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                pathname.startsWith('/dashboard/clients') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
               }`}
               title={isSidebarMinimized ? 'Customer Management' : ''}
             >
               <User className="w-5 h-5 shrink-0 transition-colors" />
               {!isSidebarMinimized && <span className="whitespace-nowrap">Customer Management</span>}
+            </Link>
+            <Link href="/dashboard/client-loans"
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all group ${
+                pathname.startsWith('/dashboard/client-loans') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+              }`}
+              title={isSidebarMinimized ? 'Client Loans' : ''}
+            >
+              <Banknote className="w-5 h-5 shrink-0 transition-colors" />
+              {!isSidebarMinimized && <span className="whitespace-nowrap">Client Loans</span>}
             </Link>
             <Link href="/dashboard/reports"
               className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all group ${
@@ -343,7 +355,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+        <main className="flex-1 p-4 md:px-4 py-6 overflow-y-auto">
           <div className="max-w-7xl mx-auto">
             {children}
           </div>
