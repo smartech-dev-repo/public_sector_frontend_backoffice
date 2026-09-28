@@ -49,5 +49,18 @@ export const useInvites = () => {
     }
   }, []);
 
-  return { loading, error, invites, fetchInvites, createInvite, resendInvite, meta };
+  const deleteInvite = useCallback(async (id: string) => {
+    setLoading(true);
+    try {
+      const res = await invites_api.deleteInvite(id);
+      return res.data;
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { loading, error, invites, fetchInvites, createInvite, resendInvite, deleteInvite, meta };
 };

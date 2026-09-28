@@ -76,7 +76,7 @@ export default function AgentManagementPage() {
   };
 
   return (
-    <main className="p-6">
+    <main className="w-full">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-slate-800">Agent Management</h1>
       </div>
@@ -92,25 +92,25 @@ export default function AgentManagementPage() {
               <table className="min-w-full divide-y divide-slate-200">
                 <thead className="bg-[#E9F4EE]">
                   <tr>
-                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Created</th>
-                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Name</th>
-                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Email</th>
-                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Phone</th>
-                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Created</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Name</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Email</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Phone</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {agents.map((agent: any) => (
                     <tr key={agent.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-800 font-mono">{new Date(agent.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-                      <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-800">{agent.fullName || `${agent.firstName} ${agent.lastName}`}</td>
-                      <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-800">{agent.email}</td>
-                      <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-800">{agent.phone || '-'}</td>
-                      <td className="px-6 py-2 whitespace-nowrap text-sm">
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-800 font-mono">{new Date(agent.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-800">{agent.fullName || `${agent.firstName} ${agent.lastName}`}</td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-800">{agent.email}</td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-800">{agent.phone || '-'}</td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm">
                         <span className="px-2 py-1 bg-slate-100 rounded text-xs font-medium">{agent.status || agent.reviewStatus}</span>
                       </td>
-                      <td className="px-6 py-2 whitespace-nowrap text-right text-sm font-medium">
+                      <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <TableDropdown>
                           {agent.status === 'PENDING_REVIEW' && (
                             <>

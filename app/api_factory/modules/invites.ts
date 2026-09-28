@@ -12,5 +12,8 @@ export const invites_api = {
   },
   resendInvite: (id: string) => {
     return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/invites/${id}/resend`);
+  },
+  deleteInvite: (id: string) => {
+    return GATEWAY_ENDPOINT_WITH_AUTH.delete(`/admin/invites/${id}`);
   }
 };

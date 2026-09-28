@@ -22,7 +22,7 @@ export default function DisbursementSummaryPage() {
   }, [fetchDisbursementSummary, month]);
 
   return (
-    <main className="p-6">
+    <main className="w-full">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-slate-800">Disbursement Summary</h1>
         <div>

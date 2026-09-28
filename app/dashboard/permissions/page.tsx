@@ -79,7 +79,7 @@ export default function PermissionsPage() {
   };
 
   return (
-    <main className="p-6">
+    <main className="w-full">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-slate-800">Permission Management</h1>
         <button onClick={openCreateModal} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium">
@@ -96,21 +96,21 @@ export default function PermissionsPage() {
 <table className="min-w-full divide-y divide-slate-200">
             <thead className="bg-[#E9F4EE]">
                   <tr>
-                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Created</th>
-                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Key</th>
-                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Description</th>
-                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Updated At</th>
-                <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
+                <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Created</th>
+                <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Key</th>
+                <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Description</th>
+                <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Updated At</th>
+                <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {permissions.map((permission: any) => (
                 <tr key={permission.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-800 font-mono">{new Date(permission.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-                  <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-800 font-medium">{permission.key}</td>
-                  <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-600">{permission.description}</td>
-                  <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-500">{new Date(permission.updatedAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-                  <td className="px-6 py-2 whitespace-nowrap text-right text-sm font-medium space-x-3">
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-800 font-mono">{new Date(permission.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-800 font-medium">{permission.key}</td>
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-600">{permission.description}</td>
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-500">{new Date(permission.updatedAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                  <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
                     <button onClick={() => openEditModal(permission)} className="text-blue-600 hover:text-blue-800 font-medium transition-colors">Edit</button>
                     <button onClick={() => handleDelete(permission.id)} className="text-rose-600 hover:text-rose-800 font-medium transition-colors">Delete</button>
                   </td>
