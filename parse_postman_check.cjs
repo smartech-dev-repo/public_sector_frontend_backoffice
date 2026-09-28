@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const collectionData = fs.readFileSync('/Users/marquis/public-sector/admin/Public Sector Backend.postman_collection.json', 'utf8');
+const collectionData = fs.readFileSync('/Users/marquis/public-sector/admin/Public Sector Backend.postman_collection (4).json', 'utf8');
 const collection = JSON.parse(collectionData);
 
 const endpoints = [];

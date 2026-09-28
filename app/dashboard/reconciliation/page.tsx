@@ -168,13 +168,13 @@ export default function ReconciliationPage() {
               <table className="w-full text-left border-collapse">
                 <thead className="bg-[#E9F4EE]">
                   <tr>
-                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Ref ID</th>
-                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Customer</th>
-                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Expected Amount</th>
-                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actual Amount</th>
-                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Variance</th>
-                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Action</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Ref ID</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Customer</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Expected Amount</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actual Amount</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Variance</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-sm">
@@ -185,21 +185,21 @@ export default function ReconciliationPage() {
                   )}
                   {paginatedRecords.map(record => (
                     <tr key={record.id} className="hover:bg-slate-50/50 transition-colors group">
-                      <td className="px-6 py-2 font-mono text-slate-600">{record.id?.split('-')[0]}</td>
-                      <td className="px-6 py-2 font-medium text-slate-800">{record.loan?.customerName || 'Unknown'}</td>
-                      <td className="px-6 py-2 text-slate-600">₦{Number(record.expectedAmount || 0).toLocaleString()}</td>
-                      <td className="px-6 py-2 text-slate-600">₦{Number(record.actualAmount || 0).toLocaleString()}</td>
-                      <td className="px-6 py-2 text-slate-600">
+                      <td className="px-4 py-4 font-mono text-slate-600">{record.id?.split('-')[0]}</td>
+                      <td className="px-4 py-4 font-medium text-slate-800">{record.loan?.customerName || 'Unknown'}</td>
+                      <td className="px-4 py-4 text-slate-600">₦{Number(record.expectedAmount || 0).toLocaleString()}</td>
+                      <td className="px-4 py-4 text-slate-600">₦{Number(record.actualAmount || 0).toLocaleString()}</td>
+                      <td className="px-4 py-4 text-slate-600">
                         <span className={`px-2.5 py-1 rounded-md text-xs font-medium whitespace-nowrap ${Number(record.variance) < 0 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}`}>
                           ₦{Number(record.variance || 0).toLocaleString()}
                         </span>
                       </td>
-                      <td className="px-6 py-2">
+                      <td className="px-4 py-4">
                         <div className={`inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full text-xs border whitespace-nowrap ${record.status === 'MATCHED' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-rose-50 border-rose-200 text-rose-700'}`}>
                           {record.status?.replace(/_/g, ' ') || 'UNKNOWN'}
                         </div>
                       </td>
-                      <td className="px-6 py-2 text-right">
+                      <td className="px-4 py-4 text-right">
                         <div className="flex justify-end">
                           <TableDropdown>
                             <button onClick={() => viewRecordDetails(record)} className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors">

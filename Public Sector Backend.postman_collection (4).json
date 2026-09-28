@@ -1,4 +1,4 @@
- {
+{
   "item": [
     {
       "name": "Admin",
@@ -9244,6 +9244,175 @@
                   ],
                   "cookie": [],
                   "body": "{\n  \"data\": [\n    {\n      \"id\": \"e5f6a7b8-3333-4c6d-9e0f-1a2b3c4d5e6f\",\n      \"agency\": \"NSCDC\",\n      \"staffId\": \"CD7038686\",\n      \"employeeName\": \"Chinedu Balogun\",\n      \"employeeStatus\": \"ACTIVE\",\n      \"hireDate\": \"2015-03-01T00:00:00.000Z\",\n      \"dateOfBirth\": \"1988-06-12T00:00:00.000Z\",\n      \"maritalStatus\": \"MARRIED\",\n      \"gender\": \"M\",\n      \"jobTitle\": \"ASSISTANT SUPERINTENDENT\",\n      \"department\": \"OPERATIONS\",\n      \"subOrganization\": null,\n      \"grade\": \"08\",\n      \"step\": \"03\",\n      \"salary\": \"185000\",\n      \"phone\": null,\n      \"bankName\": null,\n      \"accountNumber\": null,\n      \"pfaName\": null,\n      \"pinNumber\": null,\n      \"dateTerminated\": null,\n      \"bvn\": null,\n      \"legacyId\": null,\n      \"rawFields\": null,\n      \"createdAt\": \"2026-08-01T09:00:00.000Z\",\n      \"updatedAt\": \"2026-08-01T09:00:00.000Z\"\n    }\n  ],\n  \"meta\": {\n    \"total\": 1,\n    \"page\": 1,\n    \"limit\": 25,\n    \"totalPages\": 1\n  }\n}"
+                },
+                {
+                  "name": "GET /admin/ippis-records - Success",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{admin_access_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/admin/ippis-records",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "admin",
+                        "ippis-records"
+                      ],
+                      "query": [
+                        {
+                          "key": "agency",
+                          "value": "NSCDC",
+                          "description": "Optional. Exact match on the record's agency.",
+                          "disabled": true
+                        },
+                        {
+                          "key": "employeeStatus",
+                          "value": "ACTIVE",
+                          "description": "Optional. Exact match on employeeStatus.",
+                          "disabled": true
+                        },
+                        {
+                          "key": "department",
+                          "value": "Finance",
+                          "description": "Optional. Exact match on department.",
+                          "disabled": true
+                        },
+                        {
+                          "key": "grade",
+                          "value": "GL-08",
+                          "description": "Optional. Exact match on grade.",
+                          "disabled": true
+                        },
+                        {
+                          "key": "q",
+                          "value": "Amaka",
+                          "description": "Optional. Case-insensitive search across employeeName, staffId.",
+                          "disabled": true
+                        },
+                        {
+                          "key": "hireDateFrom",
+                          "value": "2015-01-01",
+                          "description": "Optional. ISO8601 date. Filters hireDate >= this value.",
+                          "disabled": true
+                        },
+                        {
+                          "key": "hireDateTo",
+                          "value": "2020-01-01",
+                          "description": "Optional. ISO8601 date. Filters hireDate <= this value.",
+                          "disabled": true
+                        },
+                        {
+                          "key": "createdFrom",
+                          "value": "2020-01-01",
+                          "description": "Optional. ISO8601 date. Filters createdAt >= this value.",
+                          "disabled": true
+                        },
+                        {
+                          "key": "createdTo",
+                          "value": "2026-01-01",
+                          "description": "Optional. ISO8601 date. Filters createdAt <= this value.",
+                          "disabled": true
+                        },
+                        {
+                          "key": "page",
+                          "value": "1",
+                          "description": "Optional. Page number, defaults to 1.",
+                          "disabled": true
+                        },
+                        {
+                          "key": "limit",
+                          "value": "25",
+                          "description": "Optional. Page size, defaults to 25, hard max 100 (a request above 100 is a 400, not a silent clamp).",
+                          "disabled": true
+                        }
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "date",
+                      "value": "Mon, 28 Sep 2026 04:22:32 GMT"
+                    },
+                    {
+                      "key": "content-type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "transfer-encoding",
+                      "value": "chunked"
+                    },
+                    {
+                      "key": "connection",
+                      "value": "keep-alive"
+                    },
+                    {
+                      "key": "alt-svc",
+                      "value": "h3=\":443\"; ma=86400"
+                    },
+                    {
+                      "key": "etag",
+                      "value": "W/\"18aa-OZ1NCxJZA14wHNC/u9IJqf2fF10\""
+                    },
+                    {
+                      "key": "vary",
+                      "value": "Origin"
+                    },
+                    {
+                      "key": "x-powered-by",
+                      "value": "Express"
+                    },
+                    {
+                      "key": "x-ratelimit-limit",
+                      "value": "100"
+                    },
+                    {
+                      "key": "x-ratelimit-remaining",
+                      "value": "99"
+                    },
+                    {
+                      "key": "x-ratelimit-reset",
+                      "value": "60"
+                    },
+                    {
+                      "key": "x-request-id",
+                      "value": "8643"
+                    },
+                    {
+                      "key": "cf-cache-status",
+                      "value": "DYNAMIC"
+                    },
+                    {
+                      "key": "nel",
+                      "value": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}"
+                    },
+                    {
+                      "key": "report-to",
+                      "value": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=8eqkXHcTfYvu5OzXYsDlP659zJoIcaXgGn9YzRq2Y8oYEz9xKYhzpWmMi5M3xGyzx98wSYlSveQJqopiNd8zWviaXk%2BlRIsKGs9H0la4OiAl8qr8Las8fG4gy9F3KfX%2FQh7uGgWabOi8NydGD9dzx6ZR0F4K6Bo%3D\"}]}"
+                    },
+                    {
+                      "key": "content-encoding",
+                      "value": "br"
+                    },
+                    {
+                      "key": "server",
+                      "value": "cloudflare"
+                    },
+                    {
+                      "key": "cf-ray",
+                      "value": "a41ff7b58813f96e-PRG"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n  \"data\": [\n    {\n      \"id\": \"ecb5c825-92bc-4d08-8739-cc5d391433ee\",\n      \"agency\": \"CORRECTIONAL\",\n      \"staffId\": \"PR80595551\",\n      \"employeeName\": \"AKPA REGINAEPUA\",\n      \"employeeStatus\": \"Active Employee\",\n      \"hireDate\": \"2012-08-06T00:00:00.000Z\",\n      \"dateOfBirth\": \"1979-05-09T00:00:00.000Z\",\n      \"maritalStatus\": \"Married\",\n      \"gender\": \"Female\",\n      \"jobTitle\": \"SENIOR PRISON ASSISTANT- SPA\",\n      \"department\": \"NPS_NASSAWARA\",\n      \"subOrganization\": \"Nigerian Correctional Service\",\n      \"grade\": \"GL09_CONPASS\",\n      \"step\": \"7\",\n      \"salary\": null,\n      \"phone\": \"8029019940\",\n      \"bankName\": \"Ecobank Nigeria Plc\",\n      \"accountNumber\": \"'5462034186\",\n      \"pfaName\": \"Premium Pension Limited\",\n      \"pinNumber\": \"201000000000\",\n      \"dateTerminated\": null,\n      \"bvn\": null,\n      \"legacyId\": \"NCS8018975\",\n      \"rawFields\": {\n        \"assignment status\": \"ACTIVE\"\n      },\n      \"createdAt\": \"2026-09-28T03:43:49.797Z\",\n      \"updatedAt\": \"2026-09-28T03:43:49.797Z\"\n    },\n    {\n      \"id\": \"a42f7fc8-07fb-4327-9000-f24193ec4e30\",\n      \"agency\": \"CORRECTIONAL\",\n      \"staffId\": \"PR80474474\",\n      \"employeeName\": \"EZEMA FERDINANDC\",\n      \"employeeStatus\": \"Ex Employee\",\n      \"hireDate\": \"1993-04-30T00:00:00.000Z\",\n      \"dateOfBirth\": \"1964-12-25T00:00:00.000Z\",\n      \"maritalStatus\": \"Married\",\n      \"gender\": \"Male\",\n      \"jobTitle\": \"SUPERINTENDENT OF PRISONS- SP\",\n      \"department\": \"NPS_DELTA\",\n      \"subOrganization\": \"Nigerian Correctional Service\",\n      \"grade\": \"GL12_CONPASS\",\n      \"step\": \"8\",\n      \"salary\": null,\n      \"phone\": \"8066910688\",\n      \"bankName\": \"UNN Microfinance Bank Limited\",\n      \"accountNumber\": \"'0000007322\",\n      \"pfaName\": \"Leadway Pensure PFA Limited\",\n      \"pinNumber\": \"100000000000\",\n      \"dateTerminated\": \"2024-12-25T00:00:00.000Z\",\n      \"bvn\": null,\n      \"legacyId\": \"NCS8001257\",\n      \"rawFields\": {\n        \"assignment status\": \"INACTIVE\"\n      },\n      \"createdAt\": \"2026-09-28T03:43:49.791Z\",\n      \"updatedAt\": \"2026-09-28T03:43:49.791Z\"\n    },\n    {\n      \"id\": \"8aedf9b0-263f-4a0e-9bbc-2dfacd238813\",\n      \"agency\": \"IMMIGRATION\",\n      \"staffId\": \"NI90211599\",\n      \"employeeName\": \"KOLAWOLE GIDEON\",\n      \"employeeStatus\": \"Ex Employee\",\n      \"hireDate\": \"1990-01-03T00:00:00.000Z\",\n      \"dateOfBirth\": \"1964-08-02T00:00:00.000Z\",\n      \"maritalStatus\": \"Married\",\n      \"gender\": \"Male\",\n      \"jobTitle\": \"ASSISTANT COMPTROLLER OF IMMIGRATION- ACI\",\n      \"department\": null,\n      \"subOrganization\": \"BENUE STATE COMMAND\",\n      \"grade\": \"GL14_CONPASS\",\n      \"step\": \"1\",\n      \"salary\": null,\n      \"phone\": \"8165953836\",\n      \"bankName\": \"First Bank of Nigeria Plc\",\n      \"accountNumber\": \"'2000002606\",\n      \"pfaName\": \"Premium Pension Limited\",\n      \"pinNumber\": \"100000000000\",\n      \"dateTerminated\": \"2024-11-30T00:00:00.000Z\",\n      \"bvn\": null,\n      \"legacyId\": null,\n      \"rawFields\": {\n        \"assignment status\": \"INACTIVE\"\n      },\n      \"createdAt\": \"2026-09-28T03:43:49.783Z\",\n      \"updatedAt\": \"2026-09-28T03:43:49.783Z\"\n    },\n    {\n      \"id\": \"06df4237-032c-4c38-a7d1-e2d8f43ad6dc\",\n      \"agency\": \"IMMIGRATION\",\n      \"staffId\": \"NI90544874\",\n      \"employeeName\": \"ETOBOR GLORIA JAMES\",\n      \"employeeStatus\": \"Active Employee\",\n      \"hireDate\": \"1997-12-17T00:00:00.000Z\",\n      \"dateOfBirth\": \"1973-01-19T00:00:00.000Z\",\n      \"maritalStatus\": \"Married\",\n      \"gender\": \"Female\",\n      \"jobTitle\": \"SUPERINTENDENT OF IMMIGRATION- SI\",\n      \"department\": null,\n      \"subOrganization\": \"Nigerian Immigration Service\",\n      \"grade\": \"GL11_CONPASS\",\n      \"step\": \"3\",\n      \"salary\": null,\n      \"phone\": \"8023718082\",\n      \"bankName\": \"First Bank of Nigeria Plc\",\n      \"accountNumber\": \"'2003035142\",\n      \"pfaName\": \"Stanbic IBTC Pension Managers Limited\",\n      \"pinNumber\": \"200000000000\",\n      \"dateTerminated\": null,\n      \"bvn\": null,\n      \"legacyId\": \"18206\",\n      \"rawFields\": {\n        \"assignment status\": \"ACTIVE\"\n      },\n      \"createdAt\": \"2026-09-28T03:43:49.778Z\",\n      \"updatedAt\": \"2026-09-28T03:43:49.778Z\"\n    },\n    {\n      \"id\": \"47b06734-ea65-4414-b546-a27ec2d17371\",\n      \"agency\": \"NSCDC\",\n      \"staffId\": \"CD70544785\",\n      \"employeeName\": \"BABADELE EMMANUEL JOHNSON\",\n      \"employeeStatus\": \"Ex Employee\",\n      \"hireDate\": \"2017-01-01T00:00:00.000Z\",\n      \"dateOfBirth\": \"1982-05-09T00:00:00.000Z\",\n      \"maritalStatus\": null,\n      \"gender\": \"Male\",\n      \"jobTitle\": \"ASSISTANT SUPERINTENDENT OF CORPS 1- ASC1\",\n      \"department\": null,\n      \"subOrganization\": \"Nigeria Security And Civil Defence Corps\",\n      \"grade\": \"GL10_CONPASS\",\n      \"step\": \"8\",\n      \"salary\": null,\n      \"phone\": \"8035566363\",\n      \"bankName\": \"First Bank of Nigeria Plc\",\n      \"accountNumber\": \"'2019934189\",\n      \"pfaName\": \"Oak Pensions Limited\",\n      \"pinNumber\": \"101000000000\",\n      \"dateTerminated\": \"2024-10-31T00:00:00.000Z\",\n      \"bvn\": null,\n      \"legacyId\": \"CD7008783\",\n      \"rawFields\": {\n        \"assignment status\": \"INACTIVE\"\n      },\n      \"createdAt\": \"2026-09-28T03:43:49.771Z\",\n      \"updatedAt\": \"2026-09-28T03:43:49.771Z\"\n    },\n    {\n      \"id\": \"fbf8078b-9ee3-45ff-abda-bdb4e57484f5\",\n      \"agency\": \"NSCDC\",\n      \"staffId\": \"CD70546646\",\n      \"employeeName\": \"MADUKA JAIRUS\",\n      \"employeeStatus\": \"Active Employee\",\n      \"hireDate\": \"2012-04-16T00:00:00.000Z\",\n      \"dateOfBirth\": \"1982-08-01T00:00:00.000Z\",\n      \"maritalStatus\": null,\n      \"gender\": \"Male\",\n      \"jobTitle\": \"CORPS ASSISTANT 111- CA 111\",\n      \"department\": null,\n      \"subOrganization\": \"Nigeria Security And Civil Defence Corps\",\n      \"grade\": \"GL07_CONPASS\",\n      \"step\": \"9\",\n      \"salary\": null,\n      \"phone\": \"7036527743\",\n      \"bankName\": \"Access Bank Nigeria Plc\",\n      \"accountNumber\": \"'1128669041\",\n      \"pfaName\": \"Leadway Pensure PFA Limited\",\n      \"pinNumber\": \"101000000000\",\n      \"dateTerminated\": null,\n      \"bvn\": null,\n      \"legacyId\": \"CD7048359\",\n      \"rawFields\": {\n        \"assignment status\": \"ACTIVE\"\n      },\n      \"createdAt\": \"2026-09-28T03:43:49.767Z\",\n      \"updatedAt\": \"2026-09-28T03:43:49.767Z\"\n    },\n    {\n      \"id\": \"ef64e579-e330-4e23-9fba-580f70473ad0\",\n      \"agency\": \"NPF\",\n      \"staffId\": \"PF02254690\",\n      \"employeeName\": \"OKON SILAS\",\n      \"employeeStatus\": \"Ex Employee\",\n      \"hireDate\": \"1982-04-01T00:00:00.000Z\",\n      \"dateOfBirth\": \"1961-01-20T00:00:00.000Z\",\n      \"maritalStatus\": \"Married\",\n      \"gender\": \"Male\",\n      \"jobTitle\": \"INSPECTOR OF POLICE II\",\n      \"department\": null,\n      \"subOrganization\": \"ANAMBRA STATE COMMAND\",\n      \"grade\": \"GL07_CONPOSS\",\n      \"step\": \"6\",\n      \"salary\": null,\n      \"phone\": \"8063309529\",\n      \"bankName\": \"Zenith Bank Plc\",\n      \"accountNumber\": \"'2003204357\",\n      \"pfaName\": null,\n      \"pinNumber\": null,\n      \"dateTerminated\": \"2020-02-29T00:00:00.000Z\",\n      \"bvn\": \"22230747096\",\n      \"legacyId\": null,\n      \"rawFields\": {\n        \"grade category\": \"CONPOSS\",\n        \"assignment status\": \"INACTIVE\"\n      },\n      \"createdAt\": \"2026-09-28T03:43:49.763Z\",\n      \"updatedAt\": \"2026-09-28T03:43:49.763Z\"\n    },\n    {\n      \"id\": \"8b9b5720-4d6c-4620-abbb-9a4e29020273\",\n      \"agency\": \"NPF\",\n      \"staffId\": \"PF0122554556\",\n      \"employeeName\": \"BABALE SIMON EJEH\",\n      \"employeeStatus\": \"Active Employee\",\n      \"hireDate\": \"1986-04-01T00:00:00.000Z\",\n      \"dateOfBirth\": \"1968-02-27T00:00:00.000Z\",\n      \"maritalStatus\": \"Married\",\n      \"gender\": \"Male\",\n      \"jobTitle\": \"ASSISTANT SUPERINTENDENT OF POLICE I\",\n      \"department\": null,\n      \"subOrganization\": \"ENUGU STATE COMMAND\",\n      \"grade\": \"GL10_CONPOSS\",\n      \"step\": \"4\",\n      \"salary\": null,\n      \"phone\": \"8038847641\",\n      \"bankName\": \"Union Bank of Nigeria Plc\",\n      \"accountNumber\": \"'0026126280\",\n      \"pfaName\": null,\n      \"pinNumber\": null,\n      \"dateTerminated\": null,\n      \"bvn\": \"22265685093\",\n      \"legacyId\": null,\n      \"rawFields\": {\n        \"grade category\": \"CONPOSS\",\n        \"assignment status\": \"INACTIVE\"\n      },\n      \"createdAt\": \"2026-09-28T03:43:49.756Z\",\n      \"updatedAt\": \"2026-09-28T03:43:49.756Z\"\n    }\n  ],\n  \"meta\": {\n    \"total\": 8,\n    \"page\": 1,\n    \"limit\": 25,\n    \"totalPages\": 1\n  }\n}"
                 }
               ]
             }
