@@ -101,8 +101,8 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="space-y-3">
+      <div className="flex items-center justify-between mb-3">
         <Link href="/dashboard/maker-checker" className="flex items-center text-sm text-slate-500 hover:text-emerald-600 transition-colors">
           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
           Back to Queue
@@ -115,14 +115,14 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
       </div>
 
       {loading && <PulseLoader />}
-      {!loading && !application && <div className="text-center py-20 text-slate-500">Application not found.</div>}
+      {!loading && !application && <div className="text-center py-10 text-slate-500">Application not found.</div>}
 
       {!loading && application && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:p-6">
           {/* Applicant Info */}
-          <div className="col-span-2 space-y-6">
+          <div className="col-span-2 space-y-3">
             <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-4 sm:p-6">
-              <h2 className="text-xl text-slate-800 mb-6 border-b border-slate-100 pb-4">Applicant Information</h2>
+              <h2 className="text-xl text-slate-800 mb-3 border-b border-slate-100 pb-4">Applicant Information</h2>
               <div className="grid grid-cols-2 gap-y-6 gap-x-4">
                 <div>
                   <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">Full Name</div>
@@ -161,11 +161,11 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
           </div>
 
           {/* Actions */}
-          <div className="space-y-6">
+          <div className="space-y-3">
             {application.status === 'PENDING' && (
               <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4 sm:p-6 text-white">
                 <h2 className="text-lg mb-4">Internal Control (Checker)</h2>
-                <p className="text-sm text-slate-400 mb-6">Review the applicant's details and approve or reject.</p>
+                <p className="text-sm text-slate-400 mb-3">Review the applicant's details and approve or reject.</p>
                 
                 <div className="space-y-3">
                   <button onClick={handleApprove} disabled={submitting} className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl transition-colors disabled:opacity-50">

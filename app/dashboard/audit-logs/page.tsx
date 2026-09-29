@@ -4,18 +4,111 @@ import { useEffect } from 'react';
 import { useAuditLogs } from '@/app/composables/modules/useAuditLogs';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
+import Pagination from '@/app/components/ui/Pagination';
+import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
+import { useState } from 'react';
 
 export default function AuditLogsPage() {
-  const { loading, error, logs, fetchLogs } = useAuditLogs();
+  const [showFilter, setShowFilter] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(25);
+  const { loading, error, logs, fetchLogs, meta } = useAuditLogs();
+
+  const [actionFilter, setActionFilter] = useState('');
+  const [actorTypeFilter, setActorTypeFilter] = useState('');
+  const [targetTypeFilter, setTargetTypeFilter] = useState('');
+  const [targetIdFilter, setTargetIdFilter] = useState('');
+  const [createdRange, setCreatedRange] = useState('');
 
   useEffect(() => {
-    fetchLogs();
-  }, [fetchLogs]);
+    const params: any = { page, limit };
+    if (actionFilter) params.action = actionFilter;
+    if (actorTypeFilter && actorTypeFilter !== 'none') params.actorType = actorTypeFilter;
+    if (targetTypeFilter) params.targetType = targetTypeFilter;
+    if (targetIdFilter) params.targetId = targetIdFilter;
+    if (createdRange) {
+      const [from, to] = createdRange.split(' to ');
+      if (from) params.createdFrom = from;
+      if (to) params.createdTo = to;
+    }
+    fetchLogs(params);
+  }, [fetchLogs, page, limit, actionFilter, actorTypeFilter, targetTypeFilter, targetIdFilter, createdRange]);
 
   return (
     <main className="w-full">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
         <h1 className="text-2xl font-semibold text-slate-800">Audit Logs</h1>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setShowFilter(!showFilter)}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-full text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+            Filters
+            <svg className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+          </button>
+        </div>
+      </div>
+
+      <div className="mb-6 space-y-4">
+        {showFilter && (
+          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Action</label>
+                <input 
+                  type="text"
+                  placeholder="Action (e.g. admin.invite.created)..."
+                  value={actionFilter}
+                  onChange={e => setActionFilter(e.target.value)}
+                  className="w-full px-4 py-2 border rounded-lg text-sm bg-white border-slate-200 outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Actor Type</label>
+                <Select value={actorTypeFilter} onValueChange={setActorTypeFilter}>
+                  <SelectTrigger className="w-full bg-white"><SelectValue placeholder="All Actor Types" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">All Actor Types</SelectItem>
+                    <SelectItem value="ADMIN">ADMIN</SelectItem>
+                    <SelectItem value="AGENT">AGENT</SelectItem>
+                    <SelectItem value="CLIENT">CLIENT</SelectItem>
+                    <SelectItem value="SYSTEM">SYSTEM</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Target Type</label>
+                <input 
+                  type="text"
+                  placeholder="Target Type (e.g. AdminInvite)..."
+                  value={targetTypeFilter}
+                  onChange={e => setTargetTypeFilter(e.target.value)}
+                  className="w-full px-4 py-2 border rounded-lg text-sm bg-white border-slate-200 outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Target ID</label>
+                <input 
+                  type="text"
+                  placeholder="Target ID..."
+                  value={targetIdFilter}
+                  onChange={e => setTargetIdFilter(e.target.value)}
+                  className="w-full px-4 py-2 border rounded-lg text-sm bg-white border-slate-200 outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400"
+                />
+              </div>
+              <div className="space-y-1.5 z-[60] relative">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Date Created</label>
+                <CustomDateRangePicker 
+                  value={createdRange} 
+                  onChange={setCreatedRange} 
+                  placeholder="Created Date" 
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {loading && <PulseLoader />}
@@ -28,7 +121,7 @@ export default function AuditLogsPage() {
             <thead className="bg-[#E9F4EE]">
                   <tr>
                 <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date</th>
-                <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Action</th>
+                <th className="px-4 py-4 text-right text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
                 <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actor</th>
                 <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Target</th>
               </tr>
@@ -45,6 +138,17 @@ export default function AuditLogsPage() {
             </tbody>
           </table>
 </div>
+          {meta && logs.length > 0 && (
+            <div className="border-t border-slate-100 pt-4 mt-4 pb-4">
+              <Pagination
+                totalItems={meta.total || 0}
+                currentPage={page || 1}
+                itemsPerPage={limit || 25}
+                onPageChange={setPage}
+                onItemsPerPageChange={setLimit}
+              />
+            </div>
+          )}
           {logs.length === 0 && <EmptyState title="No audit logs found." />}
         </div>
       )}

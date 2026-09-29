@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useInvites } from '@/app/composables/modules/useInvites';
 import { useRoles } from '@/app/composables/modules/useRoles';
 import { useToast } from '@/app/composables/useToast';
@@ -8,9 +8,13 @@ import { useConfirm } from '@/app/composables/useConfirm';
 import { createPortal } from 'react-dom';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
+import Pagination from '@/app/components/ui/Pagination';
+import TableDropdown from '@/app/components/ui/TableDropdown';
+import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 
 export default function InvitesPage() {
-  const { loading, error, invites, fetchInvites, resendInvite, deleteInvite, createInvite } = useInvites();
+  const { loading, error, invites, fetchInvites, resendInvite, deleteInvite, createInvite, meta } = useInvites();
   const { roles, fetchRoles } = useRoles();
   const { addToast } = useToast();
   const { confirm } = useConfirm();
@@ -18,13 +22,54 @@ export default function InvitesPage() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [inviteForm, setInviteForm] = useState({ email: '', roleId: '' });
-  const [roleSearch, setRoleSearch] = useState('');
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
+  const [roleSearch, setRoleSearch] = useState('');
+  
+  const [showFilter, setShowFilter] = useState(false);
+  const [emailFilter, setEmailFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [dateRange, setDateRange] = useState('');
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScroll = () => {
+    if (tableContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = tableContainerRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(Math.ceil(scrollLeft + clientWidth) < scrollWidth);
+    }
+  };
 
   useEffect(() => {
-    fetchInvites();
+    checkScroll();
+    window.addEventListener('resize', checkScroll);
+    return () => window.removeEventListener('resize', checkScroll);
+  }, [invites]);
+
+  const clearFilters = () => {
+    setEmailFilter('');
+    setStatusFilter('');
+    setDateRange('');
+    setCurrentPage(1);
+  };
+
+  useEffect(() => {
+    const params: any = { page: currentPage, limit: itemsPerPage };
+    if (emailFilter.trim()) params.email = emailFilter.trim();
+    if (statusFilter && statusFilter !== 'none') params.status = statusFilter;
+    if (dateRange) {
+      const [from, to] = dateRange.split(' to ');
+      if (from) params.from = from;
+      if (to) params.to = to;
+    }
+    fetchInvites(params);
     fetchRoles();
-  }, [fetchInvites, fetchRoles]);
+  }, [fetchInvites, fetchRoles, currentPage, itemsPerPage, emailFilter, statusFilter, dateRange]);
 
   const handleCreateInvite = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +83,7 @@ export default function InvitesPage() {
       addToast('Invite sent successfully!', 'success');
       setShowInviteModal(false);
       setInviteForm({ email: '', roleId: '' });
-      fetchInvites();
+      fetchInvites({ page: currentPage, limit: itemsPerPage });
     } catch (e: any) {
       addToast(e?.response?.data?.message || 'Failed to send invite', 'error');
     } finally {
@@ -71,7 +116,7 @@ export default function InvitesPage() {
     try {
       await deleteInvite(id);
       addToast('Invite deleted successfully', 'success');
-      fetchInvites();
+      fetchInvites({ page: currentPage, limit: itemsPerPage });
     } catch (e: any) {
       addToast(e?.response?.data?.message || 'Failed to delete invite', 'error');
     }
@@ -79,27 +124,93 @@ export default function InvitesPage() {
 
   return (
     <main className="w-full">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
         <h1 className="text-2xl font-semibold text-slate-800">Pending Invites</h1>
-        <button onClick={() => setShowInviteModal(true)} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium">
-          Invite Admin
-        </button>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setShowFilter(!showFilter)}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-full text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+            Filters
+            <svg className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+          </button>
+          <button onClick={() => setShowInviteModal(true)} className="px-4 py-2 bg-emerald-600 text-white rounded-full text-sm font-medium hover:bg-emerald-700 transition-colors shadow-sm">
+            Invite Admin
+          </button>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="mb-6 space-y-4">
+        {showFilter && (
+          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Search Email</label>
+                <input
+                  value={emailFilter}
+                  onChange={(e) => { setEmailFilter(e.target.value); setCurrentPage(1); }}
+                  type="text"
+                  placeholder="Enter email..."
+                  className="w-full px-4 py-2 border rounded-lg text-sm bg-white border-slate-200 outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Status</label>
+                <Select value={statusFilter} onValueChange={(val) => { setStatusFilter(val === 'none' ? '' : val); setCurrentPage(1); }}>
+                  <SelectTrigger className="w-full bg-white"><SelectValue placeholder="All Statuses" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">All Statuses</SelectItem>
+                    <SelectItem value="PENDING">PENDING</SelectItem>
+                    <SelectItem value="ACCEPTED">ACCEPTED</SelectItem>
+                    <SelectItem value="EXPIRED">EXPIRED</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5 w-full z-[60] relative sm:col-span-2">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Date Range</label>
+                <CustomDateRangePicker 
+                  value={dateRange}
+                  onChange={(val: any) => { setDateRange(val); setCurrentPage(1); }}
+                  placeholder="Filter by date range"
+                />
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end">
+              <button onClick={clearFilters} className="px-5 py-2 bg-white border border-slate-200 rounded-full text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">Clear Filters</button>
+            </div>
+          </div>
+        )}
       </div>
 
       {loading && <PulseLoader />}
       {!loading && error && <div className="text-red-500 py-12 text-center">{error}</div>}
       
       {!loading && !error && (
-        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-          <div className="overflow-x-auto">
-<table className="min-w-full divide-y divide-slate-200">
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden relative w-full max-w-full shadow-sm">
+          {canScrollLeft && (
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); if(tableContainerRef.current) tableContainerRef.current.scrollTo({ left: 0, behavior: 'smooth' }); }}
+              className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white border border-slate-200 flex items-center justify-center z-10 text-slate-400 hover:text-slate-600 shadow-sm"
+              type="button"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
+            </button>
+          )}
+          <div 
+            ref={tableContainerRef}
+            onScroll={checkScroll}
+            className="overflow-x-auto w-full"
+          >
+<table className="min-w-full divide-y divide-slate-200 min-w-[800px]">
             <thead className="bg-[#E9F4EE]">
                   <tr>
                 <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Email</th>
                 <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Role</th>
                 <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
                 <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Invited At</th>
-                <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
+                <th className="px-4 py-4 text-right text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -113,16 +224,42 @@ export default function InvitesPage() {
                     </span>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-600">{new Date(invite.createdAt).toLocaleDateString()}</td>
-                  <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                    <button onClick={() => handleResend(invite.id, invite.email)} className="text-emerald-600 hover:text-emerald-800 font-medium transition-colors">Resend</button>
-                    <button onClick={() => handleDelete(invite.id, invite.email)} className="text-rose-600 hover:text-rose-800 font-medium transition-colors">Delete</button>
+                  <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <TableDropdown>
+                      <button onClick={() => handleResend(invite.id, invite.email)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 transition-colors flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        Resend
+                      </button>
+                      <button onClick={() => handleDelete(invite.id, invite.email)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-700 hover:bg-rose-50 transition-colors flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        Delete
+                      </button>
+                    </TableDropdown>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-</div>
+          </div>
+          {canScrollRight && (
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); if(tableContainerRef.current) tableContainerRef.current.scrollTo({ left: tableContainerRef.current.scrollWidth, behavior: 'smooth' }); }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white border border-slate-200 flex items-center justify-center z-10 text-slate-400 hover:text-slate-600 shadow-sm"
+              type="button"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
+            </button>
+          )}
           {invites.length === 0 && <EmptyState title="No pending invites." />}
+          {invites.length > 0 && (
+            <Pagination 
+              totalItems={meta?.total || 0}
+              currentPage={currentPage}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+              onItemsPerPageChange={setItemsPerPage}
+            />
+          )}
         </div>
       )}
 
@@ -146,14 +283,14 @@ export default function InvitesPage() {
                   type="email" 
                   placeholder="admin@example.com" 
                   required 
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all" 
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 outline-none transition-all" 
                 />
               </div>
               <div className="relative">
                 <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
                 <div className="relative">
                   <div 
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm bg-white cursor-pointer flex justify-between items-center focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm bg-white cursor-pointer flex justify-between items-center focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 outline-none transition-all"
                     onClick={() => setShowRoleDropdown(!showRoleDropdown)}
                     tabIndex={0}
                     onBlur={(e) => {

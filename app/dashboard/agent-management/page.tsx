@@ -10,6 +10,8 @@ import { useConfirm } from '@/app/composables/useConfirm';
 import TableDropdown from '@/app/components/ui/TableDropdown';
 import Pagination from '@/app/components/ui/Pagination';
 import Link from 'next/link';
+import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 
 export default function AgentManagementPage() {
   const { confirm } = useConfirm();
@@ -21,12 +23,31 @@ export default function AgentManagementPage() {
   const [selectedAgent, setSelectedAgent] = useState<any>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [showFilter, setShowFilter] = useState(false);
+  
+  const [statusFilter, setStatusFilter] = useState('');
+  const [qFilter, setQFilter] = useState('');
+  const [createdRange, setCreatedRange] = useState('');
+  const [reviewedRange, setReviewedRange] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
 
   useEffect(() => {
-    fetchAgents({ page: currentPage, limit: itemsPerPage });
-  }, [fetchAgents, currentPage, itemsPerPage]);
+    const params: any = { page: currentPage, limit: itemsPerPage };
+    if (statusFilter && statusFilter !== 'none') params.status = statusFilter;
+    if (qFilter.trim()) params.q = qFilter.trim();
+    if (createdRange) {
+      const [from, to] = createdRange.split(' to ');
+      if (from) params.createdFrom = from;
+      if (to) params.createdTo = to;
+    }
+    if (reviewedRange) {
+      const [from, to] = reviewedRange.split(' to ');
+      if (from) params.reviewedFrom = from;
+      if (to) params.reviewedTo = to;
+    }
+    fetchAgents(params);
+  }, [fetchAgents, currentPage, itemsPerPage, statusFilter, qFilter, createdRange, reviewedRange]);
 
   const handleApprove = async (id: string) => {
     const confirmed = await confirm({ message: 'Are you sure you want to approve this agent?' });
@@ -77,15 +98,78 @@ export default function AgentManagementPage() {
 
   return (
     <main className="w-full">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-semibold text-slate-800">Agent Management</h1>
+      </div>
+
+      {/* Filters Area */}
+      <div className="mb-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <button 
+            onClick={() => setShowFilter(!showFilter)}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-full text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+            Filters
+            <svg className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+          </button>
+        </div>
+
+        {showFilter && (
+          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Search</label>
+                <input 
+                  type="text"
+                  placeholder="Search by name, email, phone..."
+                  value={qFilter}
+                  onChange={(e) => setQFilter(e.target.value)}
+                  className="w-full px-4 py-2 border rounded-lg text-sm bg-white border-slate-200 outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Status</label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full bg-white"><SelectValue placeholder="All Statuses" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">All Statuses</SelectItem>
+                    <SelectItem value="PENDING_REVIEW">PENDING REVIEW</SelectItem>
+                    <SelectItem value="APPROVED">APPROVED</SelectItem>
+                    <SelectItem value="REJECTED">REJECTED</SelectItem>
+                    <SelectItem value="BLOCKED">BLOCKED</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5 w-full z-[60] relative">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Created Date</label>
+                <CustomDateRangePicker 
+                  value={createdRange}
+                  onChange={setCreatedRange}
+                  placeholder="Select created date"
+                />
+              </div>
+              <div className="space-y-1.5 w-full z-[50] relative">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Reviewed Date</label>
+                <CustomDateRangePicker 
+                  value={reviewedRange}
+                  onChange={setReviewedRange}
+                  placeholder="Select reviewed date"
+                />
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end">
+              <button onClick={() => { setQFilter(''); setStatusFilter('none'); setCreatedRange(''); setReviewedRange(''); }} className="px-5 py-2 bg-white border border-slate-200 rounded-full text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">Clear Filters</button>
+            </div>
+          </div>
+        )}
       </div>
 
       {loading && <PulseLoader />}
       {!loading && error && <div className="text-red-500 py-12 text-center">{error}</div>}
       
       {!loading && !error && (
-        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden relative w-full max-w-full shadow-sm">
           {agents.length === 0 && <EmptyState title="No agents found." />}
           {agents.length > 0 && (
             <div className="overflow-x-auto">
@@ -97,7 +181,7 @@ export default function AgentManagementPage() {
                     <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Email</th>
                     <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Phone</th>
                     <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
-                    <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
+                    <th className="px-4 py-4 text-right text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">

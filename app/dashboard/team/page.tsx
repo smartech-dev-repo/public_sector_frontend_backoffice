@@ -17,7 +17,7 @@ export default function TeamManagementPage() {
   ] as const;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-foreground">User Management</h1>
       </div>
@@ -29,7 +29,7 @@ export default function TeamManagementPage() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`
-                whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-sm transition-colors
                 ${activeTab === tab.id
                   ? 'border-primary text-primary'
                   : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
@@ -42,7 +42,7 @@ export default function TeamManagementPage() {
         </nav>
       </div>
 
-      <div className="pt-4">
+      <div className="pt-1">
         {activeTab === 'admins' && <AdminsTab />}
         {activeTab === 'roles' && <RolesTab />}
         {activeTab === 'departments' && <DepartmentsTab />}

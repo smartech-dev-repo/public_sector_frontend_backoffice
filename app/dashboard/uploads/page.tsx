@@ -64,9 +64,9 @@ export default function UploadsPage() {
   };
 
   return (
-    <main className="px-4 py-6 space-y-6">
+    <main className="px-4 py-6 space-y-3">
       {isLoading ? (
-        <div className="py-20 text-center text-slate-500">
+        <div className="py-10 text-center text-slate-500">
           Loading...
         </div>
       ) : (

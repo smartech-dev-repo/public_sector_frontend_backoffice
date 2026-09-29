@@ -7,11 +7,16 @@ import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { createPortal } from 'react-dom';
 
+import TableDropdown from '@/app/components/ui/TableDropdown';
+import Pagination from '@/app/components/ui/Pagination';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
+
 export default function LoanTermsPage() {
   const { loading, error, loanTerms, fetchLoanTerms, createLoanTerm, updateLoanTerm } = useLoans();
   const { addToast } = useToast();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [selectedTerm, setSelectedTerm] = useState<any>(null);
@@ -24,9 +29,17 @@ export default function LoanTermsPage() {
     tenorMonths: ''
   });
 
+  const [agencyFilter, setAgencyFilter] = useState('');
+  const [isActiveFilter, setIsActiveFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(25);
+
   useEffect(() => {
-    fetchLoanTerms();
-  }, [fetchLoanTerms]);
+    const params: any = { page, limit };
+    if (agencyFilter) params.agency = agencyFilter;
+    if (isActiveFilter && isActiveFilter !== 'none') params.isActive = isActiveFilter;
+    fetchLoanTerms(params);
+  }, [fetchLoanTerms, agencyFilter, isActiveFilter, page, limit]);
 
   const handleCreate = async () => {
     setSubmitting(true);
@@ -82,11 +95,57 @@ export default function LoanTermsPage() {
 
   return (
     <main className="w-full">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-3">
         <h1 className="text-2xl font-semibold text-slate-800">Loan Terms</h1>
-        <button onClick={() => { setForm({ agency: '', minAmount: '', maxAmount: '', interestRate: '', tenorMonths: '' }); setShowCreateModal(true); }} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">
+        <button onClick={() => { setForm({ agency: '', minAmount: '', maxAmount: '', interestRate: '', tenorMonths: '' }); setShowCreateModal(true); }} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors whitespace-nowrap">
           Create Loan Term
         </button>
+      </div>
+
+      <div className="mb-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <button 
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-full text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+            Filters
+            <svg className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+          </button>
+        </div>
+
+        {showFilters && (
+          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Search</label>
+                <input 
+                  type="text"
+                  placeholder="Agency (e.g. NPF)..."
+                  value={agencyFilter}
+                  onChange={e => setAgencyFilter(e.target.value)}
+                  className="w-full px-4 py-2 border rounded-lg text-sm bg-white border-slate-200 outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Status</label>
+                <Select value={isActiveFilter} onValueChange={setIsActiveFilter}>
+                  <SelectTrigger className="w-full bg-white"><SelectValue placeholder="All Statuses" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">All Statuses</SelectItem>
+                    <SelectItem value="true">Active</SelectItem>
+                    <SelectItem value="false">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="mt-6 flex justify-end">
+              <button onClick={() => { setAgencyFilter(''); setIsActiveFilter('none'); }} className="px-5 py-2 bg-white border border-slate-200 rounded-full text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">Clear Filters</button>
+            </div>
+          </div>
+        )}
       </div>
 
       {loading && <PulseLoader />}
@@ -105,7 +164,7 @@ export default function LoanTermsPage() {
                     <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Max Amount</th>
                     <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Interest Rate</th>
                     <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Tenor (Months)</th>
-                    <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
+                    <th className="px-4 py-4 text-right text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">

@@ -19,10 +19,16 @@ export default function PermissionsPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState('');
   const [form, setForm] = useState({ key: '', description: '' });
+  
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(25);
+  const [q, setQ] = useState('');
 
   useEffect(() => {
-    fetchPermissions();
-  }, [fetchPermissions]);
+    const params: any = { page, limit };
+    if (q.trim()) params.q = q.trim();
+    fetchPermissions(params);
+  }, [fetchPermissions, page, limit, q]);
 
   const openCreateModal = () => {
     setIsEditing(false);
@@ -80,11 +86,21 @@ export default function PermissionsPage() {
 
   return (
     <main className="w-full">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
         <h1 className="text-2xl font-semibold text-slate-800">Permission Management</h1>
-        <button onClick={openCreateModal} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium">
+        <button onClick={openCreateModal} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium whitespace-nowrap">
           Create Permission
         </button>
+      </div>
+
+      <div className="flex items-center gap-3 mb-6 bg-slate-50 p-3 rounded-xl border border-slate-100">
+        <input 
+          type="text"
+          placeholder="Search by key (e.g. audit)..."
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          className="px-4 py-2 border rounded-lg text-sm bg-white border-slate-200 outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 min-w-[250px]"
+        />
       </div>
 
       {loading && <PulseLoader />}
@@ -100,7 +116,7 @@ export default function PermissionsPage() {
                 <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Key</th>
                 <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Description</th>
                 <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Updated At</th>
-                <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
+                <th className="px-4 py-4 text-right text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -143,7 +159,7 @@ export default function PermissionsPage() {
                   type="text" 
                   placeholder="e.g. users.read" 
                   required 
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all" 
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 outline-none transition-all" 
                 />
               </div>
               <div>
@@ -153,7 +169,7 @@ export default function PermissionsPage() {
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                   type="text" 
                   placeholder="What does this permission allow?" 
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all" 
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 outline-none transition-all" 
                 />
               </div>
               <div className="flex items-center gap-3 justify-end mt-6">

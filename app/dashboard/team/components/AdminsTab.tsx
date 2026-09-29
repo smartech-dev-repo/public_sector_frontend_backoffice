@@ -10,10 +10,16 @@ import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { useConfirm } from '@/app/composables/useConfirm';
 import TableDropdown from '@/app/components/ui/TableDropdown';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
+import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 
 export default function AdminsTab() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(25);
+  const [showFilter, setShowFilter] = useState(false);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [dateRange, setDateRange] = useState('');
   const { confirm } = useConfirm();
 
   const { loading, error, admins, fetchAdmins, assignRole, suspendAdmin, unsuspendAdmin, meta } = useAdmins();
@@ -28,9 +34,24 @@ export default function AdminsTab() {
 
 
   useEffect(() => {
-    fetchAdmins({ page, limit });
+    const params: any = { page, limit };
+    if (search.trim()) params.search = search.trim();
+    if (statusFilter && statusFilter !== 'none') params.status = statusFilter;
+    if (dateRange) {
+      const [from, to] = dateRange.split(' to ');
+      if (from) params.from = from;
+      if (to) params.to = to;
+    }
+    fetchAdmins(params);
     fetchRoles();
-  }, [fetchAdmins, fetchRoles, page, limit]);
+  }, [fetchAdmins, fetchRoles, page, limit, search, statusFilter, dateRange]);
+
+  const clearFilters = () => {
+    setSearch('');
+    setStatusFilter('');
+    setDateRange('');
+    setPage(1);
+  };
 
   const openAssignRoleModal = (admin: any) => {
     setSelectedAdmin(admin);
@@ -85,8 +106,61 @@ export default function AdminsTab() {
 
   return (
     <main className="w-full">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-2xl font-semibold text-slate-800">Admin Users</h1>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setShowFilter(!showFilter)}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-full text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+            Filters
+            <svg className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+          </button>
+        </div>
+      </div>
+
+      <div className="mb-6 space-y-4">
+        {showFilter && (
+          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Search</label>
+                <input 
+                  type="text"
+                  placeholder="Search email or name..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full px-4 py-2 border rounded-lg text-sm bg-white border-slate-200 outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Status</label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full bg-white"><SelectValue placeholder="All Statuses" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">All Statuses</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="suspended">Suspended</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5 z-[70] relative">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Date Created</label>
+                <CustomDateRangePicker 
+                  value={dateRange} 
+                  onChange={setDateRange} 
+                  placeholder="Created Date" 
+                />
+              </div>
+              <div className="flex items-end">
+                <button onClick={clearFilters} className="px-4 py-2 bg-white text-slate-600 border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors w-full">
+                  Clear Filters
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {loading && <PulseLoader />}
@@ -97,7 +171,7 @@ export default function AdminsTab() {
           {admins.length === 0 && <EmptyState title="No admins found." />}
           {admins.length > 0 && (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-slate-200">
+              <table className="w-full min-w-full divide-y divide-slate-200">
                 <thead className="bg-[#E9F4EE]">
                   <tr>
                     <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Created</th>
@@ -107,7 +181,7 @@ export default function AdminsTab() {
                     <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Department</th>
                     <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
                     <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Updated At</th>
-                    <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
+                    <th className="px-4 py-4 text-right text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -188,16 +262,17 @@ export default function AdminsTab() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
-                <select 
+                <Select 
                   value={assignRoleForm.roleId}
-                  onChange={(e) => setAssignRoleForm({ ...assignRoleForm, roleId: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all" 
+                  onValueChange={(val) => setAssignRoleForm({ ...assignRoleForm, roleId: val })}
                 >
-                  <option value="">Select a role</option>
-                  {roles.map((r: any) => (
-                    <option key={r.id} value={r.id}>{r.name}</option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full bg-white"><SelectValue placeholder="Select a role" /></SelectTrigger>
+                  <SelectContent>
+                    {roles.map((r: any) => (
+                      <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div className="flex items-center gap-3 justify-end mt-6">
