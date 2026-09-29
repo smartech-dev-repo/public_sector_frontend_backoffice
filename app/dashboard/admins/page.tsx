@@ -82,7 +82,7 @@ export default function AdminsPage() {
 
   return (
     <main className="w-full">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-3">
         <h1 className="text-2xl font-semibold text-slate-800">Admin Users</h1>
       </div>
 
@@ -104,7 +104,7 @@ export default function AdminsPage() {
                     <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Role</th>
                     <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Department</th>
                     <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
-                    <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
+                    <th className="px-4 py-4 text-right text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -187,7 +187,7 @@ export default function AdminsPage() {
                   onChange={(e) => setAssignRoleForm({ ...assignRoleForm, roleId: e.target.value })}
                   type="text" 
                   placeholder="Enter role ID" 
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all" 
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 outline-none transition-all" 
                 />
               </div>
             </div>

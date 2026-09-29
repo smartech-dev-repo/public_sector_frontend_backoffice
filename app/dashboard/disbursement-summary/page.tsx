@@ -5,6 +5,8 @@ import { useLoans } from '@/app/composables/modules/useLoans';
 import { useToast } from '@/app/composables/useToast';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
+import { MonthPicker } from '@/app/components/ui/MonthPicker';
+import { GATEWAY_ENDPOINT_WITH_AUTH } from '@/app/api_factory/axios.config';
 
 export default function DisbursementSummaryPage() {
   const { loading, error, disbursementSummary, fetchDisbursementSummary } = useLoans();
@@ -21,17 +23,43 @@ export default function DisbursementSummaryPage() {
     }
   }, [fetchDisbursementSummary, month]);
 
+  const handleExportCSV = async () => {
+    if (!month) return;
+    try {
+      const res = await GATEWAY_ENDPOINT_WITH_AUTH.get('/admin/client-loans/disbursement-summary', {
+        params: { month },
+        headers: { Accept: 'text/csv' },
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data as any]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `disbursement-summary-${month}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      addToast('Exported CSV successfully', 'success');
+    } catch (e: any) {
+      addToast(e?.response?.data?.message || 'Failed to export CSV', 'error');
+    }
+  };
+
   return (
     <main className="w-full">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-3">
         <h1 className="text-2xl font-semibold text-slate-800">Disbursement Summary</h1>
-        <div>
-          <input 
-            type="month" 
+        <div className="flex items-center gap-3">
+          <MonthPicker 
             value={month} 
-            onChange={(e) => setMonth(e.target.value)} 
-            className="px-4 py-2 border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            onChange={(val) => setMonth(val)} 
+            className="w-48"
           />
+          <button 
+            onClick={handleExportCSV}
+            className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm hover:bg-emerald-700 transition-colors whitespace-nowrap"
+          >
+            Export CSV
+          </button>
         </div>
       </div>
 

@@ -4,12 +4,13 @@ import { useEffect, useState, useMemo } from 'react';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import Pagination from '@/app/components/ui/Pagination';
-import Select from '@/app/components/ui/Select';
-import DatePicker from '@/app/components/ui/DatePicker';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
+import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import { useMockData } from '@/app/composables/modules/useMockData';
 import { useToast } from '@/app/composables/useToast';
 
 export default function ExceptionsPage() {
+  const [showFilter, setShowFilter] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { exceptions } = useMockData();
   const { addToast } = useToast();
@@ -20,8 +21,6 @@ export default function ExceptionsPage() {
     }, 800);
     return () => clearTimeout(timer);
   }, []);
-
-  const [showFilter, setShowFilter] = useState(false);
   const [filterParams, setFilterParams] = useState({
     search: '',
     team: '',
@@ -84,13 +83,13 @@ export default function ExceptionsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {isLoading ? (
-        <div className="py-20">
+        <div className="py-10">
           <PulseLoader />
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-3">
           <div>
             <p className="text-sm text-slate-500 mt-1">Manage and resolve cases flagged for manual intervention.</p>
           </div>
@@ -101,54 +100,80 @@ export default function ExceptionsPage() {
               <span className="text-sm text-slate-400">Showing {filteredExceptions.length} of {exceptions.length} exceptions</span>
             </div>
             
-            <div className="flex items-center gap-3 relative">
-              <button onClick={() => setShowFilter(!showFilter)} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors shadow-sm">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="8" x2="20" y2="8"></line><circle cx="9" cy="8" r="2"></circle><line x1="4" y1="16" x2="20" y2="16"></line><circle cx="15" cy="16" r="2"></circle></svg>
-                Filter
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => setShowFilter(!showFilter)}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-full text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                Filters
+                <svg className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
               </button>
-              
-              {/* Filter Dropdown */}
-              {showFilter && (
-                <div className="absolute top-12 right-0 w-80 bg-white rounded-xl shadow-xl border border-slate-100 p-4 z-50">
-                  <h3 className="text-sm font-semibold text-slate-900 mb-3">Filter Exceptions</h3>
-                  
-                  <div className="space-y-3 mb-4">
+            </div>
+          </div>
+          
+          {/* Filters */}
+          <div className="mb-6 space-y-4">
+            {showFilter && (
+              <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Search</label>
                     <input 
                       value={filterParams.search}
                       onChange={(e) => setFilterParams({ ...filterParams, search: e.target.value })}
                       type="text" 
                       placeholder="Search by Reference ID..." 
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500" 
+                      className="w-full px-4 py-2 border rounded-lg text-sm bg-white border-slate-200 outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400" 
                     />
-                    
+                  </div>
+                  
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Team</label>
                     <Select 
                       value={filterParams.team}
-                      onChange={(val) => setFilterParams({ ...filterParams, team: val as any })}
-                      placeholder="All Teams"
-                      options={[{label: 'All Teams', value: ''}, {label: 'Risk & Compliance', value: 'Risk & Compliance'}, {label: 'Internal Control', value: 'Internal Control'}, {label: 'Operations', value: 'Operations'}]} 
-                    />
-                    
+                      onValueChange={(val: any) => setFilterParams({ ...filterParams, team: val === 'none' ? '' : val })}
+                    >
+                      <SelectTrigger className="w-full bg-white"><SelectValue placeholder="All Teams" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">All Teams</SelectItem>
+                        <SelectItem value="Risk & Compliance">Risk & Compliance</SelectItem>
+                        <SelectItem value="Internal Control">Internal Control</SelectItem>
+                        <SelectItem value="Operations">Operations</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Status</label>
                     <Select 
                       value={filterParams.status}
-                      onChange={(val) => setFilterParams({ ...filterParams, status: val as any })}
-                      placeholder="All Statuses"
-                      options={[{label: 'All Statuses', value: ''}, {label: 'Open', value: 'Open'}, {label: 'Resolved', value: 'Resolved'}]} 
-                    />
-                    
-                    <DatePicker 
+                      onValueChange={(val: any) => setFilterParams({ ...filterParams, status: val === 'none' ? '' : val })}
+                    >
+                      <SelectTrigger className="w-full bg-white"><SelectValue placeholder="All Statuses" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">All Statuses</SelectItem>
+                        <SelectItem value="Open">Open</SelectItem>
+                        <SelectItem value="Resolved">Resolved</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-1.5 z-[60] relative">
+                    <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Date Range</label>
+                    <CustomDateRangePicker 
                       value={filterParams.dateRange}
-                      onChange={(val) => setFilterParams({ ...filterParams, dateRange: val as any })}
+                      onChange={(val: any) => setFilterParams({ ...filterParams, dateRange: val })}
                       placeholder="Select date range"
                     />
                   </div>
                   
-                  <div className="flex gap-2">
-                    <button onClick={clearFilters} className="flex-1 py-2 bg-slate-50 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-100 transition-colors">Clear</button>
-                    <button onClick={() => setShowFilter(false)} className="flex-1 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors">Apply Filter</button>
+                  <div className="flex items-end">
+                    <button onClick={clearFilters} className="px-4 py-2 bg-white text-slate-600 border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors w-full">Clear Filters</button>
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Exception List */}

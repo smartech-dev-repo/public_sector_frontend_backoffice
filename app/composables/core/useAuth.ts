@@ -22,6 +22,9 @@ export const useAuth = () => {
       const response = await auth_api.login(payload);
       setToken(response.data);
       setUser(response.data);
+      if (payload?.email && typeof window !== 'undefined') {
+        localStorage.setItem('public_sector_user_email', payload.email);
+      }
       setIsAuthenticated(true);
       return response.data;
     } catch (err: any) {
@@ -39,6 +42,9 @@ export const useAuth = () => {
       const response = await auth_api.adminLogin(payload);
       setToken(response.data);
       setUser(response.data);
+      if (payload?.email && typeof window !== 'undefined') {
+        localStorage.setItem('public_sector_user_email', payload.email);
+      }
       setIsAuthenticated(true);
       return response.data;
     } catch (err: any) {
@@ -153,17 +159,6 @@ export const useAuth = () => {
     }
   };
 
-  const refreshSession = async () => {
-    try {
-      const response = await auth_api.refresh();
-      setToken(response.data);
-      return response.data;
-    } catch (err: any) {
-      console.error('Session refresh failed', err);
-      throw err;
-    }
-  };
-
   const logout = async () => {
     try {
       await auth_api.logout();
@@ -200,7 +195,6 @@ export const useAuth = () => {
     agentLogin,
     clientOtpRequest,
     clientOtpVerify,
-    refreshSession,
     logout,
     logoutAll
   };
