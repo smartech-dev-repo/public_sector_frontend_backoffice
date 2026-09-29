@@ -7,11 +7,19 @@ import { useToast } from '@/app/composables/useToast';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { useConfirm } from '@/app/composables/useConfirm';
+import TableDropdown from '@/app/components/ui/TableDropdown';
+import Pagination from '@/app/components/ui/Pagination';
+import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 
 export default function RolesTab() {
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(25);
+  const [showFilter, setShowFilter] = useState(false);
+  const [search, setSearch] = useState('');
+  const [dateRange, setDateRange] = useState('');
   const { confirm } = useConfirm();
 
-  const { loading, error, roles, fetchRoles, deleteRole, createRole, updateRole, assignBulkPermissions } = useRoles();
+  const { loading, error, roles, fetchRoles, deleteRole, createRole, updateRole, assignBulkPermissions, meta } = useRoles();
   const { permissions: availablePermissions, fetchPermissions } = usePermissions();
   const { addToast } = useToast();
 
@@ -25,9 +33,22 @@ export default function RolesTab() {
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
 
   useEffect(() => {
-    fetchRoles();
+    const params: any = { page, limit };
+    if (search.trim()) params.search = search.trim();
+    if (dateRange) {
+      const [from, to] = dateRange.split(' to ');
+      if (from) params.from = from;
+      if (to) params.to = to;
+    }
+    fetchRoles(params);
     fetchPermissions();
-  }, [fetchRoles, fetchPermissions]);
+  }, [fetchRoles, fetchPermissions, page, limit, search, dateRange]);
+
+  const clearFilters = () => {
+    setSearch('');
+    setDateRange('');
+    setPage(1);
+  };
 
   const openCreateModal = () => {
     setIsEditing(false);
@@ -77,7 +98,7 @@ export default function RolesTab() {
         addToast('Role created successfully!', 'success');
       }
       setShowCreateRole(false);
-      fetchRoles();
+      fetchRoles({ page, limit });
     } catch (e: any) {
       addToast(e?.response?.data?.message || 'Failed to save role', 'error');
     } finally {
@@ -91,7 +112,7 @@ export default function RolesTab() {
       try {
         await deleteRole(id);
         addToast('Role deleted successfully', 'success');
-        fetchRoles();
+        fetchRoles({ page, limit });
       } catch (e: any) {
         addToast(e?.response?.data?.message || 'Failed to delete role', 'error');
       }
@@ -100,11 +121,53 @@ export default function RolesTab() {
 
   return (
     <main className="w-full">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-2xl font-semibold text-slate-800">Role Management</h1>
-        <button onClick={openCreateModal} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium">
-          Create Role
-        </button>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setShowFilter(!showFilter)}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-full text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+            Filters
+            <svg className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+          </button>
+          <button onClick={openCreateModal} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium shadow-sm">
+            Create Role
+          </button>
+        </div>
+      </div>
+
+      <div className="mb-6 space-y-4">
+        {showFilter && (
+          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Search</label>
+                <input 
+                  type="text"
+                  placeholder="Search role name..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full px-4 py-2 border rounded-lg text-sm bg-white border-slate-200 outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400"
+                />
+              </div>
+              <div className="space-y-1.5 z-[70] relative">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Date Created</label>
+                <CustomDateRangePicker 
+                  value={dateRange} 
+                  onChange={setDateRange} 
+                  placeholder="Created Date" 
+                />
+              </div>
+              <div className="flex items-end">
+                <button onClick={clearFilters} className="px-4 py-2 bg-white text-slate-600 border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors w-full">
+                  Clear Filters
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {loading && <PulseLoader />}
@@ -113,7 +176,7 @@ export default function RolesTab() {
       {!loading && !error && (
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
           <div className="overflow-x-auto">
-<table className="min-w-full divide-y divide-slate-200">
+<table className="w-full min-w-full divide-y divide-slate-200">
             <thead className="bg-[#E9F4EE]">
                   <tr>
                 <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Created</th>
@@ -121,7 +184,7 @@ export default function RolesTab() {
                 <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Description</th>
                 <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Permissions</th>
                 <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Updated At</th>
-                <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
+                <th className="px-4 py-4 text-right text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -150,16 +213,29 @@ export default function RolesTab() {
                   <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-500">
                     {new Date(role.updatedAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                    <button onClick={() => openViewPermissionsModal(role)} className="text-emerald-600 hover:text-emerald-800 font-medium transition-colors">View</button>
-                    <button onClick={() => openEditModal(role)} className="text-blue-600 hover:text-blue-800 font-medium transition-colors">Edit</button>
-                    <button onClick={() => handleDelete(role.id)} className="text-rose-600 hover:text-rose-800 font-medium transition-colors">Delete</button>
+                  <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium relative">
+                    <TableDropdown>
+                      <button onClick={() => openViewPermissionsModal(role)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">View Permissions</button>
+                      <button onClick={() => openEditModal(role)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">Edit</button>
+                      <button onClick={() => handleDelete(role.id)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 hover:text-rose-800 transition-colors">Delete</button>
+                    </TableDropdown>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
 </div>
+          {meta && roles.length > 0 && (
+            <div className="border-t border-slate-100 pt-4 mt-4 pb-4">
+              <Pagination
+                totalItems={meta.total || 0}
+                currentPage={page || 1}
+                itemsPerPage={limit || 25}
+                onPageChange={setPage}
+                onItemsPerPageChange={setLimit}
+              />
+            </div>
+          )}
           {roles.length === 0 && <EmptyState title="No roles found." />}
         </div>
       )}
@@ -184,7 +260,7 @@ export default function RolesTab() {
                   type="text" 
                   placeholder="e.g. SUPER_ADMIN" 
                   required 
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all" 
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 outline-none transition-all" 
                 />
               </div>
               <div>
@@ -194,7 +270,7 @@ export default function RolesTab() {
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                   type="text" 
                   placeholder="What does this role do?" 
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all" 
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 outline-none transition-all" 
                 />
                             </div>
               <div className="pt-2">
@@ -241,7 +317,7 @@ export default function RolesTab() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center">
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setShowViewPermissions(false)}></div>
           <div className="relative bg-white rounded-2xl p-6 w-full max-w-2xl mx-4 shadow-2xl max-h-[90vh] flex flex-col">
-            <div className="flex items-start justify-between mb-6 shrink-0">
+            <div className="flex items-start justify-between mb-3 shrink-0">
               <div>
                 <h3 className="text-xl font-bold text-slate-900">Role Permissions</h3>
                 <p className="text-sm text-slate-500 mt-1">Viewing permissions for <span className="font-semibold text-emerald-700">{viewingRole.name}</span></p>

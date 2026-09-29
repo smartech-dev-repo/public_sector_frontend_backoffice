@@ -13,6 +13,7 @@ import Pagination from '@/app/components/ui/Pagination';
 export default function DepartmentsTab() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(25);
+  const [q, setQ] = useState('');
   const { confirm } = useConfirm();
 
   const { loading, error, departments, meta, fetchDepartments, createDepartment, updateDepartment, deleteDepartment } = useDepartments();
@@ -23,10 +24,18 @@ export default function DepartmentsTab() {
   const [submitting, setSubmitting] = useState(false);
   
   const [form, setForm] = useState({ name: '', description: '' });
+  const [showFilter, setShowFilter] = useState(false);
 
   useEffect(() => {
-    fetchDepartments({ page, limit });
-  }, [fetchDepartments, page, limit]);
+    const params: any = { page, limit };
+    if (q.trim()) params.q = q.trim();
+    fetchDepartments(params);
+  }, [fetchDepartments, page, limit, q]);
+
+  const clearFilters = () => {
+    setQ('');
+    setPage(1);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,8 +86,8 @@ export default function DepartmentsTab() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-3">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
         <h1 className="text-2xl font-semibold text-foreground">Departments</h1>
         <button 
           onClick={() => {
@@ -86,10 +95,20 @@ export default function DepartmentsTab() {
             setForm({ name: '', description: '' });
             setShowModal(true);
           }}
-          className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+          className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors whitespace-nowrap"
         >
           Add Department
         </button>
+      </div>
+
+      <div className="flex items-center gap-3 mb-6 bg-slate-50 p-3 rounded-xl border border-slate-100">
+        <input 
+          type="text"
+          placeholder="Search departments..."
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          className="px-4 py-2 border rounded-lg text-sm bg-white border-slate-200 outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 min-w-[250px]"
+        />
       </div>
 
       {loading && departments.length === 0 ? (
@@ -115,7 +134,7 @@ export default function DepartmentsTab() {
                   <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Name</th>
                   <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Description</th>
                   <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Updated At</th>
-                  <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
+                  <th className="px-4 py-4 text-right text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">

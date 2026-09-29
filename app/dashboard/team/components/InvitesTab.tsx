@@ -8,23 +8,47 @@ import { useConfirm } from '@/app/composables/useConfirm';
 import { createPortal } from 'react-dom';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
+import TableDropdown from '@/app/components/ui/TableDropdown';
+import Pagination from '@/app/components/ui/Pagination';
+import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 
 export default function InvitesTab() {
-  const { loading, error, invites, fetchInvites, resendInvite, deleteInvite, createInvite } = useInvites();
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(25);
+  const { loading, error, invites, fetchInvites, resendInvite, deleteInvite, createInvite, meta } = useInvites();
   const { roles, fetchRoles } = useRoles();
   const { addToast } = useToast();
   const { confirm } = useConfirm();
 
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showFilter, setShowFilter] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [inviteForm, setInviteForm] = useState({ email: '', roleId: '' });
   const [roleSearch, setRoleSearch] = useState('');
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [q, setQ] = useState('');
+  const [createdRange, setCreatedRange] = useState('');
+  const [expiresRange, setExpiresRange] = useState('');
 
   useEffect(() => {
-    fetchInvites();
+    const params: any = { page, limit };
+    if (statusFilter && statusFilter !== 'none') params.status = statusFilter;
+    if (q.trim()) params.q = q.trim();
+    if (createdRange) {
+      const [from, to] = createdRange.split(' to ');
+      if (from) params.createdFrom = from;
+      if (to) params.createdTo = to;
+    }
+    if (expiresRange) {
+      const [from, to] = expiresRange.split(' to ');
+      if (from) params.expiresFrom = from;
+      if (to) params.expiresTo = to;
+    }
+    fetchInvites(params);
     fetchRoles();
-  }, [fetchInvites, fetchRoles]);
+  }, [fetchInvites, fetchRoles, page, limit, statusFilter, q, createdRange, expiresRange]);
 
   const handleCreateInvite = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +62,7 @@ export default function InvitesTab() {
       addToast('Invite sent successfully!', 'success');
       setShowInviteModal(false);
       setInviteForm({ email: '', roleId: '' });
-      fetchInvites();
+      fetchInvites({ page, limit });
     } catch (e: any) {
       addToast(e?.response?.data?.message || 'Failed to send invite', 'error');
     } finally {
@@ -71,7 +95,7 @@ export default function InvitesTab() {
     try {
       await deleteInvite(id);
       addToast('Invite deleted successfully', 'success');
-      fetchInvites();
+      fetchInvites({ page, limit });
     } catch (e: any) {
       addToast(e?.response?.data?.message || 'Failed to delete invite', 'error');
     }
@@ -79,11 +103,69 @@ export default function InvitesTab() {
 
   return (
     <main className="w-full">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-2xl font-semibold text-slate-800">Pending Invites</h1>
-        <button onClick={() => setShowInviteModal(true)} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium">
-          Invite Admin
-        </button>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setShowFilter(!showFilter)}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-full text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+            Filters
+            <svg className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+          </button>
+          <button onClick={() => setShowInviteModal(true)} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium whitespace-nowrap shadow-sm">
+            Invite Admin
+          </button>
+        </div>
+      </div>
+
+      <div className="mb-6 space-y-4">
+        {showFilter && (
+          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Search Email</label>
+                <input 
+                  type="text"
+                  placeholder="Search email..."
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  className="w-full px-4 py-2 border rounded-lg text-sm bg-white border-slate-200 outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Status</label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full bg-white"><SelectValue placeholder="All Statuses" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">All Statuses</SelectItem>
+                    <SelectItem value="PENDING">PENDING</SelectItem>
+                    <SelectItem value="ACCEPTED">ACCEPTED</SelectItem>
+                    <SelectItem value="EXPIRED">EXPIRED</SelectItem>
+                    <SelectItem value="REVOKED">REVOKED</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5 z-[70] relative">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Date Created</label>
+                <CustomDateRangePicker 
+                  value={createdRange} 
+                  onChange={setCreatedRange} 
+                  placeholder="Created Date" 
+                />
+              </div>
+              <div className="space-y-1.5 z-[60] relative">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Date Expires</label>
+                <CustomDateRangePicker 
+                  value={expiresRange} 
+                  onChange={setExpiresRange} 
+                  placeholder="Expiry Date" 
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {loading && <PulseLoader />}
@@ -92,14 +174,14 @@ export default function InvitesTab() {
       {!loading && !error && (
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
           <div className="overflow-x-auto">
-<table className="min-w-full divide-y divide-slate-200">
+<table className="w-full min-w-full divide-y divide-slate-200">
             <thead className="bg-[#E9F4EE]">
                   <tr>
                 <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Email</th>
                 <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Role</th>
                 <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
                 <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Invited At</th>
-                <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
+                <th className="px-4 py-4 text-right text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -113,15 +195,28 @@ export default function InvitesTab() {
                     </span>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-600">{new Date(invite.createdAt).toLocaleDateString()}</td>
-                  <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                    <button onClick={() => handleResend(invite.id, invite.email)} className="text-emerald-600 hover:text-emerald-800 font-medium transition-colors">Resend</button>
-                    <button onClick={() => handleDelete(invite.id, invite.email)} className="text-rose-600 hover:text-rose-800 font-medium transition-colors">Delete</button>
+                  <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium relative">
+                    <TableDropdown>
+                      <button onClick={() => handleResend(invite.id, invite.email)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 hover:text-emerald-800 transition-colors">Resend</button>
+                      <button onClick={() => handleDelete(invite.id, invite.email)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 hover:text-rose-800 transition-colors">Delete</button>
+                    </TableDropdown>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
 </div>
+          {meta && invites.length > 0 && (
+            <div className="border-t border-slate-100 pt-4 mt-4 pb-4">
+              <Pagination
+                totalItems={meta.total || 0}
+                currentPage={page || 1}
+                itemsPerPage={limit || 25}
+                onPageChange={setPage}
+                onItemsPerPageChange={setLimit}
+              />
+            </div>
+          )}
           {invites.length === 0 && <EmptyState title="No pending invites." />}
         </div>
       )}
@@ -146,14 +241,14 @@ export default function InvitesTab() {
                   type="email" 
                   placeholder="admin@example.com" 
                   required 
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all" 
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 outline-none transition-all" 
                 />
               </div>
               <div className="relative">
                 <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
                 <div className="relative">
                   <div 
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm bg-white cursor-pointer flex justify-between items-center focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm bg-white cursor-pointer flex justify-between items-center focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 outline-none transition-all"
                     onClick={() => setShowRoleDropdown(!showRoleDropdown)}
                     tabIndex={0}
                     onBlur={(e) => {

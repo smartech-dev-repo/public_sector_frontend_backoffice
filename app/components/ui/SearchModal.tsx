@@ -2,6 +2,8 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useRouter } from 'next/navigation';
+import { User, Folder, Settings, UserPlus, Users, UserCog, ClipboardList, Scale, ShieldCheck, LineChart } from 'lucide-react';
 
 export interface SearchModalProps {
   isOpen: boolean;
@@ -12,6 +14,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [mounted, setMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
@@ -68,13 +71,41 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
         {/* Search Results Body */}
         <div className="max-h-[60vh] overflow-y-auto p-4 bg-slate-50/50">
           
-          {/* Empty State */}
+          {/* Empty State / Quick Links */}
           {!searchQuery ? (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-4 px-2">Quick Navigation</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+                  {[
+                    { name: 'Customer Management', href: '/dashboard/clients', description: 'View and manage all customer profiles.', icon: User },
+                    { name: 'Broadsheet & Repayment', href: '/dashboard/broadsheet', description: 'Monitor loan broadsheets and repayments.', icon: Folder },
+                    { name: 'Loan Configurations', href: '/dashboard/loan-terms', description: 'Configure loan terms and conditions.', icon: Settings },
+                    { name: 'Agent Recruitment', href: '/dashboard/invites', description: 'Manage new agent recruitment and invites.', icon: UserPlus },
+                    { name: 'Agent Management', href: '/dashboard/agent-management', description: 'Monitor and manage existing agents.', icon: Users },
+                    { name: 'Role Management', href: '/dashboard/team', description: 'Configure system roles and permissions.', icon: UserCog },
+                    { name: 'Maker/Checker Queue', href: '/dashboard/maker-checker', description: 'Review and approve pending actions.', icon: ClipboardList },
+                    { name: 'Finance Reconciliation', href: '/dashboard/reconciliation', description: 'Reconcile financial records and transactions.', icon: Scale },
+                    { name: 'Audit Trail Log', href: '/dashboard/audit-logs', description: 'Review system activity and audit logs.', icon: ShieldCheck },
+                    { name: 'Reports', href: '/dashboard/reports', description: 'Generate and view system reports.', icon: LineChart }
+                  ].map((route) => (
+                    <button 
+                      key={route.name}
+                      onClick={() => { router.push(route.href); onClose(); }}
+                      className="w-full flex items-center gap-4 p-3 hover:bg-slate-100/80 rounded-xl group transition-all text-left border border-transparent hover:border-slate-200"
+                    >
+                      <div className="p-2.5 bg-slate-100 rounded-lg group-hover:bg-white group-hover:shadow-sm border border-transparent group-hover:border-slate-200 transition-all text-slate-500 group-hover:text-[#018752] shrink-0">
+                        <route.icon className="w-5 h-5" strokeWidth={2} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-slate-800 group-hover:text-[#018752] text-sm font-semibold mb-0.5 transition-colors">{route.name}</div>
+                        <div className="text-xs text-slate-500 truncate">{route.description}</div>
+                      </div>
+                      <svg className="w-4 h-4 text-slate-300 group-hover:text-[#018752] shrink-0 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                  ))}
+                </div>
               </div>
-              <p className="text-slate-500 font-medium">Type to start searching across the portal.</p>
             </div>
           ) : (
             /* Mock Results */

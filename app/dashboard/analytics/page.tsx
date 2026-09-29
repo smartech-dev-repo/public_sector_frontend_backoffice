@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import { useMockData } from '@/app/composables/modules/useMockData';
 import { useToast } from '@/app/composables/useToast';
-import Select from '@/app/components/ui/Select';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 
 export default function AnalyticsPage() {
   const [isLoading, setIsLoading] = useState(true);
@@ -50,14 +50,14 @@ export default function AnalyticsPage() {
 
   if (isLoading) {
     return (
-      <div className="py-20 space-y-6">
+      <div className="py-10 space-y-3">
         <PulseLoader />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <p className="text-sm text-slate-500">View platform performance metrics and download segmented data for analysis.</p>
@@ -66,14 +66,16 @@ export default function AnalyticsPage() {
         <div className="flex flex-wrap items-center gap-3">
           <div className="w-48">
             <Select 
-              options={[
-                {label: 'Last 30 Days', value: '30d'}, 
-                {label: 'This Quarter', value: 'Q'}, 
-                {label: 'Year to Date', value: 'YTD'}
-              ]} 
               value={period}
-              onChange={(val) => setPeriod(val as string)}
-            />
+              onValueChange={setPeriod}
+            >
+              <SelectTrigger className="w-full bg-white"><SelectValue placeholder="Last 30 Days" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="30d">Last 30 Days</SelectItem>
+                <SelectItem value="Q">This Quarter</SelectItem>
+                <SelectItem value="YTD">Year to Date</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <button onClick={downloadReport} className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 py-2 px-4 rounded-lg flex items-center gap-2 transition-colors border border-emerald-200">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -121,8 +123,8 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Agent Performance Mock Chart */}
         <div className="bg-white rounded-2xl p-8 border border-slate-200">
-          <h3 className="text-lg text-slate-800 mb-6">Top Performing Sectors</h3>
-          <div className="space-y-6">
+          <h3 className="text-lg text-slate-800 mb-3">Top Performing Sectors</h3>
+          <div className="space-y-3">
             <div>
               <div className="flex justify-between text-sm mb-2">
                 <span className="text-slate-700">Nigerian Police Force</span>
@@ -164,7 +166,7 @@ export default function AnalyticsPage() {
 
         {/* Compliance Overview */}
         <div className="bg-white rounded-2xl p-8 border border-slate-200">
-          <h3 className="text-lg text-slate-800 mb-6">Compliance & Onboarding Health</h3>
+          <h3 className="text-lg text-slate-800 mb-3">Compliance & Onboarding Health</h3>
           
           <div className="grid grid-cols-2 gap-6">
             <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 text-center">

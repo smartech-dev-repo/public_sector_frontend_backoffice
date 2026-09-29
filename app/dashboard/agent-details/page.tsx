@@ -67,7 +67,7 @@ export default function AgentDetailsPage() {
   }, [filteredLoans, currentPage, itemsPerPage]);
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-3 pb-12">
       {/* Breadcrumb */}
       <div className="text-sm">
         <Link href="/dashboard/agent-management" className="text-slate-400 hover:text-slate-600 transition-colors">Agent management</Link>
@@ -189,7 +189,7 @@ export default function AgentDetailsPage() {
                 <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Sector</th>
                 <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Loan Amt</th>
                 <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date</th>
-                <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Action</th>
+                <th className="px-4 py-4 text-right text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">

@@ -3,8 +3,9 @@
 import { useEffect, useState, useMemo } from 'react';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import Pagination from '@/app/components/ui/Pagination';
-import Select from '@/app/components/ui/Select';
-import DatePicker from '@/app/components/ui/DatePicker';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
+import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
+import { MonthPicker } from '@/app/components/ui/MonthPicker';
 import TableDropdown from '@/app/components/ui/TableDropdown';
 import { useReconciliation } from '@/app/composables/modules/useReconciliation';
 import { useToast } from '@/app/composables/useToast';
@@ -20,16 +21,22 @@ export default function ReconciliationPage() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [showFilter, setShowFilter] = useState(false);
   const [filterParams, setFilterParams] = useState({
-    search: '',
+    agency: '',
     matchStatus: '',
-    dateRange: ''
+    period: '',
+    generatedRange: ''
   });
 
   useEffect(() => {
     const params: any = { page: currentPage, limit: itemsPerPage };
-    if (filterParams.search) params.search = filterParams.search;
+    if (filterParams.agency) params.agency = filterParams.agency;
     if (filterParams.matchStatus) params.status = filterParams.matchStatus;
-    if (filterParams.dateRange) params.dateRange = filterParams.dateRange;
+    if (filterParams.period) params.period = filterParams.period;
+    if (filterParams.generatedRange) {
+      const [from, to] = filterParams.generatedRange.split(' to ');
+      if (from) params.generatedFrom = from;
+      if (to) params.generatedTo = to;
+    }
 
     fetchReconciliation(params).then((data) => {
       setRecordsList(data || []);
@@ -38,7 +45,7 @@ export default function ReconciliationPage() {
   }, [fetchReconciliation, currentPage, itemsPerPage, filterParams]);
 
   const clearFilters = () => {
-    setFilterParams({ search: '', matchStatus: '', dateRange: '' });
+    setFilterParams({ agency: '', matchStatus: '', period: '', generatedRange: '' });
   };
 
   const filteredRecords = useMemo(() => {
@@ -70,21 +77,31 @@ export default function ReconciliationPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {isLoading ? (
-        <div className="py-20">
+        <div className="py-10">
           <PulseLoader />
         </div>
       ) : (
-        <div className="space-y-6">
-          <div className="flex justify-between items-end">
+        <div className="space-y-3">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <p className="text-sm text-slate-500 mt-1">Match approved portal loans against CBA disbursement records.</p>
             </div>
-            <button onClick={uploadExtract} className="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl text-sm transition-colors flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-              Upload CBA Extract
-            </button>
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => setShowFilter(!showFilter)}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-full text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                Filters
+                <svg className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+              </button>
+              <button onClick={uploadExtract} className="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl text-sm transition-colors flex items-center gap-2 shadow-sm">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                Upload CBA Extract
+              </button>
+            </div>
           </div>
 
           {/* KPI Cards */}
@@ -107,65 +124,71 @@ export default function ReconciliationPage() {
             </div>
           </div>
           
-          {/* Actions & Filters */}
+          {/* Filters */}
+          <div className="mb-6 space-y-4">
+            {showFilter && (
+              <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Agency</label>
+                    <input 
+                      value={filterParams.agency} 
+                      onChange={e => setFilterParams({...filterParams, agency: e.target.value})} 
+                      type="text" 
+                      placeholder="Agency (e.g. NSCDC)..." 
+                      className="w-full px-4 py-2 border rounded-lg text-sm bg-white border-slate-200 outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400" 
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Match Status</label>
+                    <Select 
+                      value={filterParams.matchStatus}
+                      onValueChange={(val: any) => setFilterParams({...filterParams, matchStatus: val === 'none' ? '' : val})}
+                    >
+                      <SelectTrigger className="w-full bg-white"><SelectValue placeholder="All Match Statuses" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">All Match Statuses</SelectItem>
+                        <SelectItem value="MATCHED">Matched</SelectItem>
+                        <SelectItem value="UNDER_PAID">Under Paid</SelectItem>
+                        <SelectItem value="OVER_PAID">Over Paid</SelectItem>
+                        <SelectItem value="NO_DEDUCTION_FOUND">No Deduction Found</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5 z-[60] relative">
+                    <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Period</label>
+                    <MonthPicker 
+                      value={filterParams.period}
+                      onChange={val => setFilterParams({...filterParams, period: val})}
+                      placeholder="Pick a month"
+                    />
+                  </div>
+                  <div className="space-y-1.5 z-[60] relative">
+                    <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Generated Date</label>
+                    <CustomDateRangePicker 
+                      value={filterParams.generatedRange}
+                      onChange={(val: any) => setFilterParams({...filterParams, generatedRange: val})}
+                      placeholder="Generated Date Range"
+                    />
+                  </div>
+                  <div className="flex items-end">
+                    <button onClick={clearFilters} className="px-4 py-2 bg-white text-slate-600 border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors w-full">Clear Filters</button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          
           <div className="flex items-center justify-between gap-4 mb-4">
             <div className="flex-1 max-w-md">
               <span className="text-sm text-slate-400">Total {meta?.total || 0} records found</span>
-            </div>
-            
-            <div className="flex items-center gap-3 relative">
-              <button onClick={() => setShowFilter(!showFilter)} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors shadow-sm">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="8" x2="20" y2="8"></line><circle cx="9" cy="8" r="2"></circle><line x1="4" y1="16" x2="20" y2="16"></line><circle cx="15" cy="16" r="2"></circle></svg>
-                Filter
-              </button>
-              
-              {/* Filter Dropdown */}
-              {showFilter && (
-                <div className="absolute top-12 right-0 w-80 bg-white rounded-xl shadow-xl border border-slate-100 p-4 z-50">
-                  <h3 className="text-sm font-semibold text-slate-900 mb-3">Filter Records</h3>
-                  
-                  <div className="space-y-3 mb-4">
-                    <input 
-                      value={filterParams.search} 
-                      onChange={e => setFilterParams({...filterParams, search: e.target.value})} 
-                      type="text" 
-                      placeholder="Search customer or ref..." 
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500" 
-                    />
-                    
-                    <Select 
-                      value={filterParams.matchStatus}
-                      onChange={(val: any) => setFilterParams({...filterParams, matchStatus: val})}
-                      placeholder="All Match Statuses"
-                      options={[
-                        {label: 'All Match Statuses', value: ''}, 
-                        {label: 'Matched', value: 'MATCHED'}, 
-                        {label: 'Under Paid', value: 'UNDER_PAID'}, 
-                        {label: 'Over Paid', value: 'OVER_PAID'},
-                        {label: 'No Deduction Found', value: 'NO_DEDUCTION_FOUND'}
-                      ]} 
-                    />
-                    
-                    <DatePicker 
-                      value={filterParams.dateRange}
-                      onChange={(val: any) => setFilterParams({...filterParams, dateRange: val})}
-                      placeholder="Select date range"
-                    />
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <button onClick={clearFilters} className="flex-1 py-2 bg-slate-50 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-100 transition-colors">Clear</button>
-                    <button onClick={() => setShowFilter(false)} className="flex-1 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors">Apply Filter</button>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 
           {/* Data Table */}
           <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden mt-6">
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+              <table className="w-full min-w-full text-left border-collapse">
                 <thead className="bg-[#E9F4EE]">
                   <tr>
                     <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Ref ID</th>
@@ -174,7 +197,7 @@ export default function ReconciliationPage() {
                     <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actual Amount</th>
                     <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Variance</th>
                     <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
-                    <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Action</th>
+                    <th className="px-4 py-4 text-right text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-sm">
@@ -235,7 +258,7 @@ export default function ReconciliationPage() {
       {showDetailsModal && selectedRecord && (
         <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-xl">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center mb-3">
               <h3 className="text-lg font-bold text-slate-900">Reconciliation Details</h3>
               <button onClick={() => setShowDetailsModal(false)} className="p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-full transition-colors">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>

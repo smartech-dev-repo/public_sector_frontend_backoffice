@@ -96,7 +96,7 @@ export default function TableDropdown({ children }: TableDropdownProps) {
         ref={buttonRef} 
         onClick={toggle} 
         type="button" 
-        className="inline-flex items-center justify-center p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors bg-white border border-slate-200 shadow-sm"
+        className="inline-flex items-center justify-center p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
       >
         <span className="sr-only">Open actions</span>
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
