@@ -13,8 +13,8 @@ export const clients_api = {
   approveClient: (id: string) => {
     return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/clients/${id}/approve`);
   },
-  getClientWallet: (id: string) => {
-    return GATEWAY_ENDPOINT_WITH_AUTH.get(`/admin/clients/${id}/wallet`);
+  getClientWallet: (id: string, params?: any) => {
+    return GATEWAY_ENDPOINT_WITH_AUTH.get(`/admin/clients/${id}/wallet`, { params });
   },
   creditClientWallet: (id: string, payload: any) => {
     return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/clients/${id}/wallet/credit`, payload);

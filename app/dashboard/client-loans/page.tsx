@@ -1,29 +1,80 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useLoans } from '@/app/composables/modules/useLoans';
 import { useToast } from '@/app/composables/useToast';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { createPortal } from 'react-dom';
 import Pagination from '@/app/components/ui/Pagination';
+import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 
 export default function ClientLoansPage() {
+  return (
+    <Suspense fallback={<PulseLoader />}>
+      <ClientLoansContent />
+    </Suspense>
+  );
+}
+
+function ClientLoansContent() {
+  const searchParams = useSearchParams();
   const { loading, error, clientLoans, fetchClientLoans, getClientLoanRepaymentPlan, meta } = useLoans();
   const { addToast } = useToast();
 
-  const [clientIdFilter, setClientIdFilter] = useState('');
+  const [clientIdFilter, setClientIdFilter] = useState(searchParams.get('clientId') || '');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [agencyFilter, setAgencyFilter] = useState('');
+  const [disbursedRange, setDisbursedRange] = useState('');
+  const [showFilter, setShowFilter] = useState(false);
+
   const [repaymentPlan, setRepaymentPlan] = useState<any>(null);
   const [showRepaymentModal, setShowRepaymentModal] = useState(false);
   const [repaymentLoading, setRepaymentLoading] = useState(false);
   const [selectedLoan, setSelectedLoan] = useState<any>(null);
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(25);
+
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScroll = () => {
+    if (tableContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = tableContainerRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(Math.ceil(scrollLeft + clientWidth) < scrollWidth);
+    }
+  };
 
   useEffect(() => {
-    const params: any = { page };
-    if (clientIdFilter.trim()) params.clientId = clientIdFilter.trim();
+    checkScroll();
+    window.addEventListener('resize', checkScroll);
+    return () => window.removeEventListener('resize', checkScroll);
+  }, [clientLoans]);
+
+  const clearFilters = () => {
+    setClientIdFilter('');
+    setStatusFilter('');
+    setAgencyFilter('');
+    setDisbursedRange('');
+    setPage(1);
+  };
+
+  useEffect(() => {
+    if (!clientIdFilter.trim()) return;
+    const params: any = { page, limit, clientId: clientIdFilter.trim() };
+    if (statusFilter && statusFilter !== 'none') params.status = statusFilter;
+    if (agencyFilter) params.agency = agencyFilter;
+    if (disbursedRange) {
+      const [from, to] = disbursedRange.split(' to ');
+      if (from) params.disbursedFrom = from;
+      if (to) params.disbursedTo = to;
+    }
     fetchClientLoans(params);
-  }, [fetchClientLoans, page, clientIdFilter]);
+  }, [fetchClientLoans, page, limit, clientIdFilter, statusFilter, agencyFilter, disbursedRange]);
 
   const handleViewRepayment = async (loan: any) => {
     setSelectedLoan(loan);
@@ -60,29 +111,101 @@ export default function ClientLoansPage() {
 
   return (
     <main className="w-full">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
         <h1 className="text-2xl font-semibold text-slate-800">Client Loans</h1>
         <div className="flex items-center gap-3">
-          <input
-            value={clientIdFilter}
-            onChange={(e) => { setClientIdFilter(e.target.value); setPage(1); }}
-            type="text"
-            placeholder="Filter by Client ID..."
-            className="px-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all w-64"
-          />
+          <button 
+            onClick={() => setShowFilter(!showFilter)}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-full text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+            Filters
+            <svg className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+          </button>
         </div>
+      </div>
+
+      <div className="mb-6 space-y-4">
+        {showFilter && (
+          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Client ID</label>
+                <input
+                  value={clientIdFilter}
+                  onChange={(e) => { setClientIdFilter(e.target.value); setPage(1); }}
+                  type="text"
+                  placeholder="Client ID (Required)..."
+                  className="w-full px-4 py-2 border rounded-lg text-sm bg-white border-slate-200 outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Status</label>
+                <Select value={statusFilter} onValueChange={(val) => { setStatusFilter(val === 'none' ? '' : val); setPage(1); }}>
+                  <SelectTrigger className="w-full bg-white"><SelectValue placeholder="All Statuses" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">All Statuses</SelectItem>
+                    <SelectItem value="ACTIVE">ACTIVE</SelectItem>
+                    <SelectItem value="COMPLETED">COMPLETED</SelectItem>
+                    <SelectItem value="DEFAULTED">DEFAULTED</SelectItem>
+                    <SelectItem value="PENDING">PENDING</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Agency</label>
+                <input 
+                  type="text"
+                  placeholder="Agency (e.g. NPF)..."
+                  value={agencyFilter}
+                  onChange={(e) => { setAgencyFilter(e.target.value); setPage(1); }}
+                  className="w-full px-4 py-2 border rounded-lg text-sm bg-white border-slate-200 outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400"
+                />
+              </div>
+              <div className="space-y-1.5 w-full z-[60] relative">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Disbursed Date</label>
+                <CustomDateRangePicker 
+                  value={disbursedRange}
+                  onChange={(val: any) => { setDisbursedRange(val); setPage(1); }}
+                  placeholder="Disbursed Date"
+                />
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end">
+              <button onClick={clearFilters} className="px-5 py-2 bg-white border border-slate-200 rounded-full text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">Clear Filters</button>
+            </div>
+          </div>
+        )}
       </div>
 
       {loading && <PulseLoader />}
       {!loading && error && <div className="text-red-500 py-12 text-center">{error}</div>}
 
       {!loading && !error && (
-        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-          {clientLoans.length === 0 && <EmptyState title="No client loans found." />}
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden relative w-full max-w-full shadow-sm">
+          {clientLoans.length === 0 && (
+            <EmptyState 
+              title={!clientIdFilter.trim() ? "Search for Client Loans" : "No client loans found."}
+              description={!clientIdFilter.trim() ? "Enter a Client ID in the filter above to view their loans." : undefined}
+            />
+          )}
           {clientLoans.length > 0 && (
             <>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-slate-200">
+              {canScrollLeft && (
+                <button
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if(tableContainerRef.current) tableContainerRef.current.scrollTo({ left: 0, behavior: 'smooth' }); }}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white border border-slate-200 flex items-center justify-center z-10 text-slate-400 hover:text-slate-600 shadow-sm"
+                  type="button"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+              )}
+              <div 
+                ref={tableContainerRef}
+                onScroll={checkScroll}
+                className="overflow-x-auto w-full"
+              >
+                <table className="min-w-full divide-y divide-slate-200 min-w-[1000px]">
                   <thead className="bg-[#E9F4EE]">
                     <tr>
                       <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Loan ID</th>
@@ -92,7 +215,7 @@ export default function ClientLoansPage() {
                       <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Tenor</th>
                       <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
                       <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Disbursed At</th>
-                      <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
+                      <th className="px-4 py-4 text-right text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -127,6 +250,15 @@ export default function ClientLoansPage() {
                   </tbody>
                 </table>
               </div>
+              {canScrollRight && (
+                <button
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if(tableContainerRef.current) tableContainerRef.current.scrollTo({ left: tableContainerRef.current.scrollWidth, behavior: 'smooth' }); }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white border border-slate-200 flex items-center justify-center z-10 text-slate-400 hover:text-slate-600 shadow-sm"
+                  type="button"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+              )}
               {meta.total > 0 && (
                 <Pagination
                   totalItems={meta.total}
@@ -161,7 +293,7 @@ export default function ClientLoansPage() {
               <div>
                 {/* Summary */}
                 {(repaymentPlan.totalRepayment || repaymentPlan.monthlyRepayment) && (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-3">
                     {repaymentPlan.totalRepayment && (
                       <div className="bg-slate-50 p-3 rounded-lg">
                         <p className="text-xs text-slate-500">Total Repayment</p>

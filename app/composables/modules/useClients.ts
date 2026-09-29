@@ -62,10 +62,10 @@ export const useClients = () => {
     }
   }, []);
 
-  const getClientWallet = useCallback(async (id: string) => {
+  const getClientWallet = useCallback(async (id: string, params?: any) => {
     setLoading(true);
     try {
-      const res = await clients_api.getClientWallet(id);
+      const res = await clients_api.getClientWallet(id, params);
       return res.data;
     } catch (err: any) {
       setError(err.message);

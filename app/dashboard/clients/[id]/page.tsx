@@ -190,7 +190,7 @@ export default function ClientWalletPage() {
 
   return (
     <main className="w-full">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-3">
         <div className="flex items-center gap-4">
           <Link href="/dashboard/clients" className="text-slate-500 hover:text-slate-800 transition-colors">
             &larr; Back to Clients
@@ -205,7 +205,7 @@ export default function ClientWalletPage() {
       {!loading && client && (
         <>
           {/* Tabs */}
-          <div className="flex gap-1 mb-6 bg-slate-100 p-1 rounded-xl w-fit">
+          <div className="flex gap-1 mb-3 bg-slate-100 p-1 rounded-xl w-fit">
             {tabs.map((tab) => (
               <button
                 key={tab.key}
@@ -239,7 +239,7 @@ export default function ClientWalletPage() {
             <div className="bg-white p-6 rounded-2xl border border-slate-200">
               <h2 className="text-lg font-semibold text-slate-800 mb-4">Wallet</h2>
               {wallet ? (
-                <div className="space-y-6">
+                <div className="space-y-3">
                   <div>
                     <p className="text-slate-500 text-sm font-medium mb-1">Available Balance</p>
                     <p className="text-3xl font-bold text-slate-800">₦{wallet.balance?.toLocaleString() || 0}</p>
@@ -275,7 +275,7 @@ export default function ClientWalletPage() {
                         <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Tenor</th>
                         <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
                         <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Disbursed At</th>
-                        <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
+                        <th className="px-4 py-4 text-right text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -381,7 +381,7 @@ export default function ClientWalletPage() {
                     <thead className="bg-[#E9F4EE]">
                       <tr>
                         <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date</th>
-                        <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Action</th>
+                        <th className="px-4 py-4 text-right text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
                         <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Description</th>
                         <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
                       </tr>
@@ -426,7 +426,7 @@ export default function ClientWalletPage() {
                   value={amount} 
                   onChange={(e) => setAmount(e.target.value)} 
                   type="number" 
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all" 
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 outline-none transition-all" 
                   placeholder="Enter amount..."
                 />
               </div>

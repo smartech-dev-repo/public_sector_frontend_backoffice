@@ -86,7 +86,7 @@ export default function RolesPage() {
 
   return (
     <main className="w-full">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-3">
         <h1 className="text-2xl font-semibold text-slate-800">Role Management</h1>
         <button onClick={openCreateModal} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium">
           Create Role
@@ -106,7 +106,7 @@ export default function RolesPage() {
                 <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Name</th>
                 <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Description</th>
                 <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Permissions</th>
-                <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
+                <th className="px-4 py-4 text-right text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -166,7 +166,7 @@ export default function RolesPage() {
                   type="text" 
                   placeholder="e.g. SUPER_ADMIN" 
                   required 
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all" 
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 outline-none transition-all" 
                 />
               </div>
               <div>
@@ -176,7 +176,7 @@ export default function RolesPage() {
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                   type="text" 
                   placeholder="What does this role do?" 
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all" 
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 outline-none transition-all" 
                 />
               </div>
               <div className="flex items-center gap-3 justify-end mt-6">
@@ -195,7 +195,7 @@ export default function RolesPage() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center">
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setShowViewPermissions(false)}></div>
           <div className="relative bg-white rounded-2xl p-6 w-full max-w-2xl mx-4 shadow-2xl max-h-[90vh] flex flex-col">
-            <div className="flex items-start justify-between mb-6 shrink-0">
+            <div className="flex items-start justify-between mb-3 shrink-0">
               <div>
                 <h3 className="text-xl font-bold text-slate-900">Role Permissions</h3>
                 <p className="text-sm text-slate-500 mt-1">Viewing permissions for <span className="font-semibold text-emerald-700">{viewingRole.name}</span></p>

@@ -6,12 +6,19 @@ import { useToast } from '@/app/composables/useToast';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { createPortal } from 'react-dom';
+import TableDropdown from '@/app/components/ui/TableDropdown';
+import Pagination from '@/app/components/ui/Pagination';
+import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 import { useConfirm } from '@/app/composables/useConfirm';
 
 export default function LoanRequestsPage() {
+  const [showFilter, setShowFilter] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(25);
   const { confirm } = useConfirm();
 
-  const { loading, error, loanRequests, fetchLoanRequests, approveLoanRequest, rejectLoanRequest, disburseLoanRequest } = useLoans();
+  const { loading, error, loanRequests, fetchLoanRequests, approveLoanRequest, rejectLoanRequest, disburseLoanRequest, meta } = useLoans();
   const { addToast } = useToast();
 
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -19,10 +26,28 @@ export default function LoanRequestsPage() {
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
+  const [clientIdFilter, setClientIdFilter] = useState('');
+  const [createdRange, setCreatedRange] = useState('');
+  const [disbursedRange, setDisbursedRange] = useState('');
 
   useEffect(() => {
-    fetchLoanRequests(statusFilter ? { status: statusFilter } : {});
-  }, [fetchLoanRequests, statusFilter]);
+    const params: any = { page, limit };
+    if (statusFilter && statusFilter !== 'none') params.status = statusFilter;
+    if (typeFilter && typeFilter !== 'none') params.type = typeFilter;
+    if (clientIdFilter.trim()) params.clientId = clientIdFilter.trim();
+    if (createdRange) {
+      const [from, to] = createdRange.split(' to ');
+      if (from) params.createdFrom = from;
+      if (to) params.createdTo = to;
+    }
+    if (disbursedRange) {
+      const [from, to] = disbursedRange.split(' to ');
+      if (from) params.disbursedFrom = from;
+      if (to) params.disbursedTo = to;
+    }
+    fetchLoanRequests(params);
+  }, [fetchLoanRequests, statusFilter, typeFilter, clientIdFilter, createdRange, disbursedRange, page, limit]);
 
   const handleApprove = async (id: string) => {
     const confirmed = await confirm({ message: 'Are you sure you want to approve this loan request?' });
@@ -74,19 +99,77 @@ export default function LoanRequestsPage() {
 
   return (
     <main className="w-full">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
         <h1 className="text-2xl font-semibold text-slate-800">Loan Requests</h1>
-        <select 
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2 border rounded-lg"
-        >
-          <option value="">All Statuses</option>
-          <option value="CONFIRMED">CONFIRMED</option>
-          <option value="APPROVED">APPROVED</option>
-          <option value="REJECTED">REJECTED</option>
-          <option value="DISBURSED">DISBURSED</option>
-        </select>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setShowFilter(!showFilter)}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-full text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+            Filters
+            <svg className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+          </button>
+        </div>
+      </div>
+
+      <div className="mb-6 space-y-4">
+        {showFilter && (
+          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Client ID</label>
+                <input 
+                  type="text"
+                  placeholder="Client ID..."
+                  value={clientIdFilter}
+                  onChange={(e) => setClientIdFilter(e.target.value)}
+                  className="w-full px-4 py-2 border rounded-lg text-sm bg-white border-slate-200 outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Status</label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full bg-white"><SelectValue placeholder="All Statuses" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">All Statuses</SelectItem>
+                    <SelectItem value="CONFIRMED">CONFIRMED</SelectItem>
+                    <SelectItem value="APPROVED">APPROVED</SelectItem>
+                    <SelectItem value="REJECTED">REJECTED</SelectItem>
+                    <SelectItem value="DISBURSED">DISBURSED</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Type</label>
+                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                  <SelectTrigger className="w-full bg-white"><SelectValue placeholder="All Types" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">All Types</SelectItem>
+                    <SelectItem value="ORIGINATION">ORIGINATION</SelectItem>
+                    <SelectItem value="TOPUP">TOPUP</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5 z-[60] relative">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Created Date</label>
+                <CustomDateRangePicker 
+                  value={createdRange}
+                  onChange={setCreatedRange}
+                  placeholder="Created Date"
+                />
+              </div>
+              <div className="space-y-1.5 z-[60] relative">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Disbursed Date</label>
+                <CustomDateRangePicker 
+                  value={disbursedRange}
+                  onChange={setDisbursedRange}
+                  placeholder="Disbursed Date"
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {loading && <PulseLoader />}
@@ -104,7 +187,7 @@ export default function LoanRequestsPage() {
                     <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Client</th>
                     <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Amount</th>
                     <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
-                    <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
+                    <th className="px-4 py-4 text-right text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -116,21 +199,37 @@ export default function LoanRequestsPage() {
                       <td className="px-4 py-4 whitespace-nowrap text-sm">
                         <span className="px-2 py-1 bg-slate-100 rounded text-xs font-medium">{req.status}</span>
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                        {req.status === 'CONFIRMED' && (
-                          <>
-                            <button onClick={() => handleApprove(req.id)} className="text-emerald-600 hover:text-emerald-800 transition-colors">Approve</button>
-                            <button onClick={() => openRejectModal(req)} className="text-rose-600 hover:text-rose-800 transition-colors">Reject</button>
-                          </>
-                        )}
-                        {req.status === 'APPROVED' && (
-                          <button onClick={() => handleDisburse(req.id)} className="text-blue-600 hover:text-blue-800 transition-colors">Disburse</button>
-                        )}
+                      <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium relative">
+                        <TableDropdown>
+                          {req.status === 'CONFIRMED' && (
+                            <>
+                              <button onClick={() => handleApprove(req.id)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 transition-colors">Approve</button>
+                              <button onClick={() => openRejectModal(req)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-700 hover:bg-rose-50 transition-colors">Reject</button>
+                            </>
+                          )}
+                          {req.status === 'APPROVED' && (
+                            <button onClick={() => handleDisburse(req.id)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-blue-700 hover:bg-blue-50 transition-colors">Disburse</button>
+                          )}
+                          {req.status !== 'CONFIRMED' && req.status !== 'APPROVED' && (
+                            <span className="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-400">No actions</span>
+                          )}
+                        </TableDropdown>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+          {meta && loanRequests.length > 0 && (
+            <div className="border-t border-slate-100 pt-4 mt-4 pb-4">
+              <Pagination
+                totalItems={meta.total || 0}
+                currentPage={page || 1}
+                itemsPerPage={limit || 25}
+                onPageChange={setPage}
+                onItemsPerPageChange={setLimit}
+              />
             </div>
           )}
         </div>

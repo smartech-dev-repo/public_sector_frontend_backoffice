@@ -43,9 +43,6 @@ export const auth_api = {
   clientOtpVerify: (payload: any) => {
     return GATEWAY_ENDPOINT.post('/auth/client/otp/verify', payload);
   },
-  refresh: () => {
-    return GATEWAY_ENDPOINT_WITH_AUTH.post('/auth/refresh');
-  },
   getSessions: () => {
     return GATEWAY_ENDPOINT_WITH_AUTH.get('/auth/sessions');
   },
