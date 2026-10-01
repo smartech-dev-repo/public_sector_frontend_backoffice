@@ -1,18 +1,21 @@
 "use client";
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useLoans } from '@/app/composables/modules/useLoans';
 import { DataTable } from '@/components/data-display/data-table';
-import { EmptyState } from '@/components/feedback/empty-state';
+import EmptyState from '@/app/components/ui/EmptyState';
 import { Badge } from '@/components/ui/badge';
 
 export default function MakerCheckerPage() {
-  const { loading, error, loanRequests, fetchLoanRequests } = useLoans();
+  const { loading, error, loanRequests, fetchLoanRequests, meta } = useLoans();
+
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(25);
 
   useEffect(() => {
-    fetchLoanRequests({ status: 'CONFIRMED' }); // Typically, maker-checker reviews confirmed requests or pending
-  }, [fetchLoanRequests]);
+    fetchLoanRequests({ status: 'CONFIRMED', page, limit }); 
+  }, [fetchLoanRequests, page, limit]);
 
   const pendingCount = useMemo(() => loanRequests.filter((lr: any) => lr.status === 'CONFIRMED' || lr.status === 'PENDING').length, [loanRequests]);
   const approvedCount = useMemo(() => loanRequests.filter((lr: any) => lr.status === 'APPROVED').length, [loanRequests]);
@@ -21,27 +24,27 @@ export default function MakerCheckerPage() {
     {
       accessorKey: 'id',
       header: 'Application Ref (ID)',
-      cell: ({ row }: any) => <span className="font-mono text-slate-600">{row.original.id}</span>
+      cell: ({ row }: any) => <span className="font-mono text-muted-foreground">{row.original.id}</span>
     },
     {
       accessorKey: 'customerName',
       header: 'Customer Name',
-      cell: ({ row }: any) => <span className="font-medium text-slate-800">{row.original.client?.firstName} {row.original.client?.lastName}</span>
+      cell: ({ row }: any) => <span className="font-medium text-foreground">{row.original.client?.firstName} {row.original.client?.lastName}</span>
     },
     {
       accessorKey: 'amount',
       header: 'Amount',
-      cell: ({ row }: any) => <span className="font-medium text-slate-800">₦{Number(row.original.amount || 0).toLocaleString()}</span>
+      cell: ({ row }: any) => <span className="font-medium text-foreground">₦{Number(row.original.amount || 0).toLocaleString()}</span>
     },
     {
       accessorKey: 'tenor',
       header: 'Tenor (Months)',
-      cell: ({ row }: any) => <span className="text-slate-600">{row.original.tenor}</span>
+      cell: ({ row }: any) => <span className="text-muted-foreground">{row.original.tenor}</span>
     },
     {
       accessorKey: 'createdAt',
       header: 'Date Submitted',
-      cell: ({ row }: any) => <span className="text-slate-600">{new Date(row.original.createdAt).toLocaleDateString()}</span>
+      cell: ({ row }: any) => <span className="text-muted-foreground">{new Date(row.original.createdAt).toLocaleDateString()}</span>
     },
     {
       accessorKey: 'status',
@@ -86,7 +89,7 @@ export default function MakerCheckerPage() {
         </div>
         <div className="bg-card p-6 rounded-2xl border border-border shadow-sm">
           <div className="text-sm text-muted-foreground uppercase tracking-wider mb-2">Total Requests</div>
-          <div className="text-3xl text-success font-semibold">{loanRequests.length}</div>
+          <div className="text-3xl text-success font-semibold">{meta?.total || loanRequests.length}</div>
         </div>
       </div>
       
@@ -103,6 +106,12 @@ export default function MakerCheckerPage() {
           loading={loading}
           filterColumnId="customerName"
           filterPlaceholder="Search by name..."
+          manualPagination={true}
+          pageCount={meta?.totalPages || 1}
+          pageIndex={page - 1}
+          pageSize={limit}
+          onPageChange={(p) => setPage(p + 1)}
+          onPageSizeChange={(s) => { setLimit(s); setPage(1); }}
         />
       )}
     </div>

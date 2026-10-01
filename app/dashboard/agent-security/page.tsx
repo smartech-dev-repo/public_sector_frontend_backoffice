@@ -46,14 +46,14 @@ export default function AgentSecurityPage() {
   return (
     <div className="space-y-3">
       {loading ? (
-        <div className="py-10 text-center text-slate-500">
+        <div className="py-10 text-center text-muted-foreground">
           Loading agents...
         </div>
       ) : (
         <div className="space-y-3">
           <div className="flex justify-between items-end">
             <div>
-              <p className="text-sm text-slate-500 mt-1">Monitor agent activity and enforce immediate session revocation for flagged agents.</p>
+              <p className="text-sm text-muted-foreground mt-1">Monitor agent activity and enforce immediate session revocation for flagged agents.</p>
             </div>
           </div>
 
@@ -67,10 +67,10 @@ export default function AgentSecurityPage() {
           </div>
 
           {/* Agent List */}
-          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+          <div className="bg-card rounded-2xl border border-border overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
-                <thead className="bg-[#E9F4EE]">
+                <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
                   <tr>
                     <th scope="col" className="px-4 py-4 tracking-wider">Agent Details</th>
                     <th scope="col" className="px-4 py-4 tracking-wider">Status</th>
@@ -80,19 +80,19 @@ export default function AgentSecurityPage() {
                 <tbody className="divide-y divide-slate-100">
                   {approvedAgents.length === 0 && (
                     <tr>
-                      <td colSpan={3} className="px-6 py-8 text-center text-slate-500">No active agents found.</td>
+                      <td colSpan={3} className="px-6 py-8 text-center text-muted-foreground">No active agents found.</td>
                     </tr>
                   )}
                   {approvedAgents.map((agent: any) => (
-                    <tr key={agent.id} className="hover:bg-slate-50/50 transition-colors">
+                    <tr key={agent.id} className="hover:bg-muted/30/50 transition-colors">
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-medium">
                             {agent.firstName?.charAt(0) || 'A'}
                           </div>
                           <div>
-                            <div className="text-slate-800 font-medium">{agent.firstName} {agent.lastName}</div>
-                            <div className="text-xs font-mono text-slate-500 mt-0.5">{agent.id}</div>
+                            <div className="text-foreground font-medium">{agent.firstName} {agent.lastName}</div>
+                            <div className="text-xs font-mono text-muted-foreground mt-0.5">{agent.id}</div>
                           </div>
                         </div>
                       </td>
@@ -115,7 +115,7 @@ export default function AgentSecurityPage() {
             </div>
           </div>
           {meta && agents.length > 0 && (
-            <div className="border-t border-slate-100 pt-4 mt-4 pb-4">
+            <div className="border-t border-border/50 pt-4 mt-4 pb-4">
               <Pagination
                 totalItems={meta.total || 0}
                 currentPage={page || 1}

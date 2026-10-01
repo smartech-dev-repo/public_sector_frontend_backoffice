@@ -4,9 +4,9 @@ import Link from 'next/link';
 
 export default function PasswordResetSuccessPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-50">
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-muted/30">
       <div className="max-w-[400px] w-full">
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 text-center">
+        <div className="bg-card p-8 rounded-2xl shadow-sm border border-border/50 text-center">
           {/* Success Icon with pseudo confetti */}
           <div className="relative w-20 h-20 mx-auto mb-6">
             <div className="absolute inset-0 bg-emerald-500 rounded-full flex items-center justify-center z-10">
@@ -21,8 +21,8 @@ export default function PasswordResetSuccessPage() {
             <div className="absolute w-2 h-2 bg-emerald-400 rounded-sm bottom-0 -right-2 rotate-45"></div>
           </div>
           
-          <h2 className="text-xl font-semibold text-slate-900">Password reset successfully</h2>
-          <p className="mt-2 text-[13.5px] text-slate-500 mb-8">
+          <h2 className="text-xl font-semibold text-foreground">Password reset successfully</h2>
+          <p className="mt-2 text-[13.5px] text-muted-foreground mb-8">
             Your password has been updated. You can now sign in with your new password.
           </p>
 

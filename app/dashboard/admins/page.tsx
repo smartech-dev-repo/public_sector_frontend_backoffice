@@ -83,45 +83,45 @@ export default function AdminsPage() {
   return (
     <main className="w-full">
       <div className="flex justify-between items-center mb-3">
-        <h1 className="text-2xl font-semibold text-slate-800">Admin Users</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Admin Users</h1>
       </div>
 
       {loading && <PulseLoader />}
       {!loading && error && <div className="text-red-500 py-12 text-center">{error}</div>}
       
       {!loading && !error && (
-        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div className="bg-card rounded-2xl border border-border overflow-hidden">
           {admins.length === 0 && <EmptyState title="No admins found." />}
           {admins.length > 0 && (
             <>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-slate-200">
-                  <thead className="bg-[#E9F4EE]">
+                  <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
                     <tr>
-                    <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Created</th>
-                    <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Email</th>
-                    <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Name</th>
-                    <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Role</th>
-                    <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Department</th>
-                    <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
-                    <th className="px-4 py-4 text-right text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Date Created</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Email</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Name</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Role</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Department</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Status</th>
+                    <th className="px-4 py-4 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {admins.map((admin: any) => (
-                    <tr key={admin.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-800 font-mono">{new Date(admin.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-800">{admin.email}</td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-600">{admin.fullName}</td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-600">
+                    <tr key={admin.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground font-mono">{new Date(admin.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground">{admin.email}</td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{admin.fullName}</td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">
                         {admin.role ? (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                             {admin.role.name}
                           </span>
-                        ) : <span className="text-slate-400">No Role</span>}
+                        ) : <span className="text-muted-foreground/70">No Role</span>}
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-600">
-                        {admin.department?.name || <span className="text-slate-400">-</span>}
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                        {admin.department?.name || <span className="text-muted-foreground/70">-</span>}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${admin.isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
@@ -130,18 +130,18 @@ export default function AdminsPage() {
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium relative">
                         <TableDropdown>
-                          <button onClick={() => { openAssignRoleModal(admin); }} className="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors flex items-center gap-2">
+                          <button onClick={() => { openAssignRoleModal(admin); }} className="w-full text-left px-4 py-2.5 text-sm font-medium text-foreground/90 hover:bg-emerald-50 hover:text-emerald-700 transition-colors flex items-center gap-2">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
                             Assign Role
                           </button>
-                          <div className="h-px bg-slate-100 my-1.5"></div>
+                          <div className="h-px bg-muted/50 my-1.5"></div>
                           {admin.isActive ? (
-                            <button onClick={() => { handleSuspend(admin); }} className="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-amber-50 hover:text-amber-700 transition-colors flex items-center gap-2">
+                            <button onClick={() => { handleSuspend(admin); }} className="w-full text-left px-4 py-2.5 text-sm font-medium text-foreground/90 hover:bg-amber-50 hover:text-amber-700 transition-colors flex items-center gap-2">
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
                               Suspend
                             </button>
                           ) : (
-                            <button onClick={() => { handleUnsuspend(admin); }} className="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors flex items-center gap-2">
+                            <button onClick={() => { handleUnsuspend(admin); }} className="w-full text-left px-4 py-2.5 text-sm font-medium text-foreground/90 hover:bg-blue-50 hover:text-blue-700 transition-colors flex items-center gap-2">
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                               Unsuspend
                             </button>
@@ -171,28 +171,28 @@ export default function AdminsPage() {
       {/* Assign Role Modal */}
       {showAssignModal && typeof document !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center">
-          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setShowAssignModal(false)}></div>
-          <div className="relative bg-white rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+          <div className="fixed inset-0 bg-slate-900 dark:bg-slate-800/50 backdrop-blur-sm" onClick={() => setShowAssignModal(false)}></div>
+          <div className="relative bg-card rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-start justify-between mb-4">
-              <h3 className="text-lg font-semibold text-slate-800">Assign Role to {selectedAdmin?.email}</h3>
-              <button onClick={() => setShowAssignModal(false)} className="text-slate-400 hover:text-slate-600">
+              <h3 className="text-lg font-semibold text-foreground">Assign Role to {selectedAdmin?.email}</h3>
+              <button onClick={() => setShowAssignModal(false)} className="text-muted-foreground/70 hover:text-muted-foreground">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
               </button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Role ID</label>
+                <label className="block text-sm font-medium text-foreground/90 mb-1">Role ID</label>
                 <input 
                   value={assignRoleForm.roleId}
                   onChange={(e) => setAssignRoleForm({ ...assignRoleForm, roleId: e.target.value })}
                   type="text" 
                   placeholder="Enter role ID" 
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 outline-none transition-all" 
+                  className="w-full px-4 py-2.5 border border-border rounded-lg text-sm focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 outline-none transition-all" 
                 />
               </div>
             </div>
             <div className="flex items-center gap-3 justify-end mt-6">
-              <button onClick={() => setShowAssignModal(false)} className="px-5 py-2.5 rounded-lg text-sm text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors">Cancel</button>
+              <button onClick={() => setShowAssignModal(false)} className="px-5 py-2.5 rounded-lg text-sm text-foreground/90 bg-muted/50 hover:bg-slate-200 transition-colors">Cancel</button>
               <button onClick={handleAssignRole} disabled={submitting} className="px-5 py-2.5 rounded-lg text-sm text-white bg-emerald-600 hover:bg-emerald-700 transition-colors disabled:opacity-50">
                 {submitting ? 'Assigning...' : 'Assign Role'}
               </button>
