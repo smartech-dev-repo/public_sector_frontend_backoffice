@@ -104,14 +104,14 @@ export function DatePickerWithRange({
           <div className="flex flex-col min-w-[550px]">
             {/* Header section matching the design */}
             <div className="flex items-center justify-between px-3 md:px-6 py-4 border-b bg-muted/20">
-              <div className="flex-1 text-center font-medium text-sm text-slate-800">
+              <div className="flex-1 text-center font-medium text-sm text-foreground">
                 {tempDate?.from ? format(tempDate.from, "MMM dd, yyyy") : "Start Date"}
               </div>
               <div className="flex flex-col items-center justify-center text-muted-foreground px-4">
                 <ArrowRight className="h-4 w-4 mb-1" />
                 <span className="text-xs">{diffDays !== null ? `${diffDays} Days` : "-"}</span>
               </div>
-              <div className="flex-1 text-center font-medium text-sm text-slate-800">
+              <div className="flex-1 text-center font-medium text-sm text-foreground">
                 {tempDate?.to ? format(tempDate.to, "MMM dd, yyyy") : "End Date"}
               </div>
             </div>

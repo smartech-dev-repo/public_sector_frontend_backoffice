@@ -34,18 +34,18 @@ function InviteForm() {
   };
 
   return (
-    <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 text-center">
+    <div className="bg-card p-8 rounded-2xl shadow-sm border border-border/50 text-center">
       {/* Logo placeholder */}
       <div className="mx-auto rounded-lg flex items-center justify-center mb-6">
         <img src="/logo.png" className="h-8 w-auto" alt="Logo" />
       </div>
       
-      <h2 className="text-xl text-center font-semibold text-slate-900 text-left">You&apos;ve been invited.</h2>
-      <p className="mt-2 text-center text-sm text-slate-500 text-left mb-6">John has invited you to join Moneyfield Public Sector Admin Portal.</p>
+      <h2 className="text-xl text-center font-semibold text-foreground text-left">You&apos;ve been invited.</h2>
+      <p className="mt-2 text-center text-sm text-muted-foreground text-left mb-6">John has invited you to join Moneyfield Public Sector Admin Portal.</p>
 
       <form className="space-y-4 text-left" onSubmit={handleAccept}>
         {/* Readonly email input using standard input style to match screenshot */}
-        <div className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[15px] font-medium text-slate-700">
+        <div className="bg-muted/30 border border-border rounded-xl px-4 py-3 text-[15px] font-medium text-foreground/90">
           {email}
         </div>
         
@@ -54,7 +54,7 @@ function InviteForm() {
         </button>
       </form>
 
-      <div className="mt-6 text-sm text-slate-600">
+      <div className="mt-6 text-sm text-muted-foreground">
         Not interested in joining? <button onClick={handleDecline} className="text-red-500 hover:underline font-medium">Decline invitation</button>
       </div>
     </div>
@@ -63,7 +63,7 @@ function InviteForm() {
 
 export default function InvitePage() {
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-50">
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-muted/30">
       <div className="max-w-[400px] w-full">
         <Suspense fallback={<div className="text-center p-8">Loading...</div>}>
           <InviteForm />

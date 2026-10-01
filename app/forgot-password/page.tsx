@@ -15,16 +15,16 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-50">
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-muted/30">
       <div className="max-w-[400px] w-full">
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 text-center">
+        <div className="bg-card p-8 rounded-2xl shadow-sm border border-border/50 text-center">
           {/* Logo placeholder */}
           <div className="mx-auto rounded-lg flex items-center justify-center mb-6">
             <img src="/logo.png" className="h-8 w-auto" alt="Logo" />
           </div>
           
-          <h2 className="text-2xl font-semibold text-slate-900 text-left">Forgot password</h2>
-          <p className="mt-2 text-sm text-slate-500 text-left mb-6">Enter your email address and we&apos;ll send you a link to reset your password.</p>
+          <h2 className="text-2xl font-semibold text-foreground text-left">Forgot password</h2>
+          <p className="mt-2 text-sm text-muted-foreground text-left mb-6">Enter your email address and we&apos;ll send you a link to reset your password.</p>
 
           <form className="space-y-4 text-left" onSubmit={handleReset}>
             <AuthInput
@@ -41,7 +41,7 @@ export default function ForgotPasswordPage() {
             </button>
           </form>
 
-          <div className="mt-6 text-sm text-slate-600">
+          <div className="mt-6 text-sm text-muted-foreground">
             <Link href="/login" className="text-emerald-600 hover:underline font-medium">Back to sign in</Link>
           </div>
         </div>

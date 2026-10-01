@@ -47,7 +47,7 @@ export default function DisbursementSummaryPage() {
   return (
     <main className="w-full">
       <div className="flex justify-between items-center mb-3">
-        <h1 className="text-2xl font-semibold text-slate-800">Disbursement Summary</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Disbursement Summary</h1>
         <div className="flex items-center gap-3">
           <MonthPicker 
             value={month} 
@@ -68,19 +68,19 @@ export default function DisbursementSummaryPage() {
       
       {!loading && !error && disbursementSummary && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-2xl border border-slate-200">
-            <p className="text-sm font-medium text-slate-500 mb-1">Total Disbursed</p>
-            <p className="text-3xl font-bold text-slate-800">₦{disbursementSummary.totalAmount?.toLocaleString() || 0}</p>
+          <div className="bg-card p-6 rounded-2xl border border-border">
+            <p className="text-sm font-medium text-muted-foreground mb-1">Total Disbursed</p>
+            <p className="text-3xl font-bold text-foreground">₦{disbursementSummary.totalAmount?.toLocaleString() || 0}</p>
           </div>
-          <div className="bg-white p-6 rounded-2xl border border-slate-200">
-            <p className="text-sm font-medium text-slate-500 mb-1">Total Loans</p>
-            <p className="text-3xl font-bold text-slate-800">{disbursementSummary.totalCount || 0}</p>
+          <div className="bg-card p-6 rounded-2xl border border-border">
+            <p className="text-sm font-medium text-muted-foreground mb-1">Total Loans</p>
+            <p className="text-3xl font-bold text-foreground">{disbursementSummary.totalCount || 0}</p>
           </div>
         </div>
       )}
 
       {!loading && !error && (!disbursementSummary || disbursementSummary.totalCount === 0) && (
-        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div className="bg-card rounded-2xl border border-border overflow-hidden">
           <EmptyState title="No disbursement data for this month." />
         </div>
       )}

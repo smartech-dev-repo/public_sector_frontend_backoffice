@@ -13,20 +13,20 @@ export default function CheckEmailPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-50">
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-muted/30">
       <Toast />
       <div className="max-w-[400px] w-full">
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 text-center">
+        <div className="bg-card p-8 rounded-2xl shadow-sm border border-border/50 text-center">
           {/* Logo placeholder */}
           <div className="mx-auto rounded-lg flex items-center justify-center mb-6">
             <img src="/logo.png" className="h-8 w-auto" alt="Logo" />
           </div>
           
-          <h2 className="text-xl font-semibold text-slate-900 text-left">Check your email</h2>
-          <p className="mt-2 text-[13px] text-slate-500 text-left">
+          <h2 className="text-xl font-semibold text-foreground text-left">Check your email</h2>
+          <p className="mt-2 text-[13px] text-muted-foreground text-left">
             You&apos;ve been sent a password reset link to <Link href="/reset-password" className="text-emerald-600 font-medium">name@moneyfieldmfb.com</Link>.
           </p>
-          <p className="mt-1 text-[13px] text-slate-500 text-left mb-6">
+          <p className="mt-1 text-[13px] text-muted-foreground text-left mb-6">
             Follow the link in the email to reset your password.
           </p>
 
@@ -34,7 +34,7 @@ export default function CheckEmailPage() {
             Back to sign in
           </Link>
 
-          <div className="mt-6 text-[13px] text-slate-600">
+          <div className="mt-6 text-[13px] text-muted-foreground">
             Didn&apos;t get the email? <button onClick={handleResend} className="text-emerald-600 hover:underline font-medium">Resend link</button>
           </div>
         </div>
