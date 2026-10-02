@@ -19,6 +19,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     loans: true,
     agents: true,
+    catalog: true,
     system: false
   });
 
@@ -153,7 +154,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
             <div className="space-y-1">
               <button
                 onClick={() => !isSidebarMinimized && toggleGroup('loans')}
-                className={`relative ${isSidebarMinimized ? 'justify-center px-2' : 'justify-between px-4'} w-full flex items-center  py-2 text-sm font-semibold text-slate-500 uppercase tracking-wider hover:bg-slate-50 rounded-lg transition-colors group`}
+                className={`relative ${isSidebarMinimized ? 'justify-center px-2' : 'justify-between px-4'} w-full flex items-center  py-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider hover:bg-muted/30 rounded-lg transition-colors group`}
               >
 <span className={`flex items-center gap-3 ${isSidebarMinimized ? 'hidden' : ''}`}>Loans</span>
                 {!isSidebarMinimized && (
@@ -198,11 +199,60 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
               </div>
             </div>
 
+            {/* CATALOG GROUP */}
+            <div className="space-y-1 mt-4">
+              <button
+                onClick={() => !isSidebarMinimized && toggleGroup('catalog')}
+                className={`relative ${isSidebarMinimized ? 'justify-center px-2' : 'justify-between px-4'} w-full flex items-center  py-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider hover:bg-muted/30 rounded-lg transition-colors group`}
+              >
+<span className={`flex items-center gap-3 ${isSidebarMinimized ? 'hidden' : ''}`}>Data Catalog</span>
+                {!isSidebarMinimized && (
+                  <ChevronDown className={`w-4 h-4 transition-transform ${openGroups.catalog ? 'rotate-180' : ''}`} />
+                )}
+                {isSidebarMinimized && <Folder className="w-5 h-5 shrink-0 transition-colors" />}
+                {isSidebarMinimized && (
+                  <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded shadow-md whitespace-nowrap z-50">
+                    Data Catalog
+                  </div>
+                )}
+              </button>
+              
+              <div className={`space-y-1 ${!isSidebarMinimized && !openGroups.catalog ? 'hidden' : ''}`}>
+                <Link href="/dashboard/catalog/loans"
+                  className={`flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-4'} ${
+                    pathname.startsWith('/dashboard/catalog/loans') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  }`}
+                >
+<Banknote className="w-5 h-5 shrink-0 transition-colors" />
+                  {!isSidebarMinimized && <span className="whitespace-nowrap">Loans Catalog</span>}
+                  {isSidebarMinimized && (
+                    <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded shadow-md whitespace-nowrap z-50">
+                      Loans Catalog
+                    </div>
+                  )}
+                </Link>
+
+                <Link href="/dashboard/catalog/ippis"
+                  className={`flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-4'} ${
+                    pathname.startsWith('/dashboard/catalog/ippis') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  }`}
+                >
+<Users className="w-5 h-5 shrink-0 transition-colors" />
+                  {!isSidebarMinimized && <span className="whitespace-nowrap">IPPIS Records</span>}
+                  {isSidebarMinimized && (
+                    <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded shadow-md whitespace-nowrap z-50">
+                      IPPIS Records
+                    </div>
+                  )}
+                </Link>
+              </div>
+            </div>
+
             {/* AGENTS GROUP */}
             <div className="space-y-1 mt-4">
               <button
                 onClick={() => !isSidebarMinimized && toggleGroup('agents')}
-                className={`relative ${isSidebarMinimized ? 'justify-center px-2' : 'justify-between px-4'} w-full flex items-center  py-2 text-sm font-semibold text-slate-500 uppercase tracking-wider hover:bg-slate-50 rounded-lg transition-colors group`}
+                className={`relative ${isSidebarMinimized ? 'justify-center px-2' : 'justify-between px-4'} w-full flex items-center  py-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider hover:bg-muted/30 rounded-lg transition-colors group`}
               >
 <span className={`flex items-center gap-3 ${isSidebarMinimized ? 'hidden' : ''}`}>Agents</span>
                 {!isSidebarMinimized && (
@@ -223,10 +273,10 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
                   }`}
                 >
 <UserPlus className="w-5 h-5 shrink-0 transition-colors" />
-                  {!isSidebarMinimized && <span className="whitespace-nowrap">Agent Recruitment</span>}
+                  {!isSidebarMinimized && <span className="whitespace-nowrap">Admin Invites</span>}
                   {isSidebarMinimized && (
                     <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded shadow-md whitespace-nowrap z-50">
-                      Agent Recruitment
+                      Admin Invites
                     </div>
                   )}
                 </Link>
@@ -280,7 +330,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
             <div className="space-y-1">
               <button
                 onClick={() => !isSidebarMinimized && toggleGroup('system')}
-                className={`relative ${isSidebarMinimized ? 'justify-center px-2' : 'justify-between px-4'} w-full flex items-center  py-2 text-sm font-semibold text-slate-500 uppercase tracking-wider hover:bg-slate-50 rounded-lg transition-colors group`}
+                className={`relative ${isSidebarMinimized ? 'justify-center px-2' : 'justify-between px-4'} w-full flex items-center  py-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider hover:bg-muted/30 rounded-lg transition-colors group`}
               >
 <span className={`flex items-center gap-3 ${isSidebarMinimized ? 'hidden' : ''}`}>System & Admin</span>
                 {!isSidebarMinimized && (
@@ -301,10 +351,23 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
                   }`}
                 >
 <UserCog className="w-5 h-5 shrink-0 transition-colors" />
-                  {!isSidebarMinimized && <span className="whitespace-nowrap">Role Management</span>}
+                  {!isSidebarMinimized && <span className="whitespace-nowrap">User Management</span>}
                   {isSidebarMinimized && (
                     <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded shadow-md whitespace-nowrap z-50">
-                      Role management
+                      User Management
+                    </div>
+                  )}
+                </Link>
+                <Link href="/dashboard/permissions"
+                  className={`flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-4'} ${
+                    pathname.startsWith('/dashboard/permissions') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  }`}
+                >
+<ShieldCheck className="w-5 h-5 shrink-0 transition-colors" />
+                  {!isSidebarMinimized && <span className="whitespace-nowrap">Permissions</span>}
+                  {isSidebarMinimized && (
+                    <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded shadow-md whitespace-nowrap z-50">
+                      Permissions
                     </div>
                   )}
                 </Link>

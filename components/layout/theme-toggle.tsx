@@ -8,13 +8,26 @@ import { IconButton } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/layout/tooltip';
 
 export function ThemeToggle() {
+  const [mounted, setMounted] = React.useState(false);
   const { theme, setTheme } = useTheme();
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const cycle = React.useCallback(() => {
     const order = ['light', 'dark', 'system'];
     const i = order.indexOf(theme || 'system');
     setTheme(order[(i + 1) % order.length]!);
   }, [theme, setTheme]);
+
+  if (!mounted) {
+    return (
+      <IconButton type="button" variant="ghost" aria-label="Loading theme..." disabled>
+        <span className="size-4" />
+      </IconButton>
+    );
+  }
 
   const icon =
     theme === 'dark' ? <Moon className="size-4" /> : theme === 'light' ? <Sun className="size-4" /> : <Monitor className="size-4" />;

@@ -101,14 +101,19 @@ export default function DepartmentsTab() {
         </button>
       </div>
 
-      <div className="flex items-center gap-3 mb-6 bg-slate-50 p-3 rounded-xl border border-slate-100">
-        <input 
-          type="text"
-          placeholder="Search departments..."
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          className="px-4 py-2 border rounded-lg text-sm bg-white border-slate-200 outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 min-w-[250px]"
-        />
+      <div className="mb-6 space-y-4">
+        <div className="flex bg-card p-2 rounded-2xl border border-border shadow-sm">
+          <div className="flex items-center pl-3 pr-2 text-muted-foreground/70">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          </div>
+          <input 
+            type="text"
+            placeholder="Search departments..."
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            className="w-full px-2 py-1.5 bg-transparent border-none outline-none text-sm text-foreground placeholder-slate-400"
+          />
+        </div>
       </div>
 
       {loading && departments.length === 0 ? (
@@ -128,20 +133,20 @@ export default function DepartmentsTab() {
         <div className="bg-card rounded-lg border border-border overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
-              <thead className="bg-[#E9F4EE]">
+              <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
                   <tr>
-                  <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Created</th>
-                  <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Name</th>
-                  <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Description</th>
-                  <th className="px-4 py-4 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Updated At</th>
-                  <th className="px-4 py-4 text-right text-xs font-medium text-[#018752] uppercase tracking-wider">Actions</th>
+                  <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Date Created</th>
+                  <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Name</th>
+                  <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Description</th>
+                  <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Updated At</th>
+                  <th className="px-4 py-4 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {departments.map((department: any) => (
                   <tr key={department.id} className="hover:bg-accent/50 transition-colors">
                     <td className="px-4 py-4">
-                      <div className="font-medium text-slate-800 font-mono">{new Date(department.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                      <div className="font-medium text-foreground font-mono">{new Date(department.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
                     </td>
                     <td className="px-4 py-4">
                       <div className="font-medium text-foreground">{department.name}</div>
@@ -150,11 +155,11 @@ export default function DepartmentsTab() {
                       <div className="text-muted-foreground">{department.description || 'N/A'}</div>
                     </td>
                     <td className="px-4 py-4">
-                      <div className="text-slate-500 text-sm">{new Date(department.updatedAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                      <div className="text-muted-foreground text-sm">{new Date(department.updatedAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
                     </td>
                     <td className="px-4 py-4 text-right">
                       <TableDropdown>
-                        <button onClick={() => handleEdit(department)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">Edit</button>
+                        <button onClick={() => handleEdit(department)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-foreground/90 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">Edit</button>
                         <button onClick={() => handleDelete(department.id)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-colors">Delete</button>
                       </TableDropdown>
                     </td>

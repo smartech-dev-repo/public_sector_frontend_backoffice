@@ -22,7 +22,7 @@ export default function ResetPasswordPage() {
     if (isValid) {
       return 'px-2.5 py-1 bg-emerald-50 text-emerald-700 text-[11px] font-medium rounded-full transition-colors';
     }
-    return 'px-2.5 py-1 bg-slate-50 text-slate-500 text-[11px] font-medium rounded-full transition-colors';
+    return 'px-2.5 py-1 bg-muted/30 text-muted-foreground text-[11px] font-medium rounded-full transition-colors';
   };
 
   const handleReset = (e: React.FormEvent) => {
@@ -35,16 +35,16 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-50">
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-muted/30">
       <div className="max-w-[420px] w-full">
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 text-center">
+        <div className="bg-card p-8 rounded-2xl shadow-sm border border-border/50 text-center">
           {/* Logo placeholder */}
           <div className="mx-auto rounded-lg flex items-center justify-center mb-6">
             <img src="/logo.png" className="h-8 w-auto" alt="Logo" />
           </div>
           
-          <h2 className="text-2xl font-semibold text-slate-900 text-left">Create a new password</h2>
-          <p className="mt-2 text-sm text-slate-500 text-left mb-6">Choose a new password for name@moneyfieldmfb.com</p>
+          <h2 className="text-2xl font-semibold text-foreground text-left">Create a new password</h2>
+          <p className="mt-2 text-sm text-muted-foreground text-left mb-6">Choose a new password for name@moneyfieldmfb.com</p>
 
           <form className="space-y-4 text-left" onSubmit={handleReset}>
             <AuthInput

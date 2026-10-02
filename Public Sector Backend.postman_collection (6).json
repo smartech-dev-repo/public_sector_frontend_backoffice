@@ -1626,137 +1626,6 @@
                   "body": "{\n  \"statusCode\": 401,\n  \"message\": \"Invalid verification code\",\n  \"error\": \"Unauthorized\"\n}"
                 }
               ]
-            },
-            {
-              "name": "POST /auth/login (Generic)",
-              "request": {
-                "method": "POST",
-                "header": [],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"email\": \"\",\n  \"password\": \"\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                },
-                "url": {
-                  "raw": "{{base_url}}/auth/login",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "auth",
-                    "login"
-                  ]
-                }
-              }
-            },
-            {
-              "name": "POST /auth/agent/login",
-              "request": {
-                "method": "POST",
-                "header": [],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"email\": \"\",\n  \"password\": \"\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                },
-                "url": {
-                  "raw": "{{base_url}}/auth/agent/login",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "auth",
-                    "agent",
-                    "login"
-                  ]
-                }
-              }
-            },
-            {
-              "name": "POST /auth/client/otp/request",
-              "request": {
-                "method": "POST",
-                "header": [],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"phone\": \"\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                },
-                "url": {
-                  "raw": "{{base_url}}/auth/client/otp/request",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "auth",
-                    "client",
-                    "otp",
-                    "request"
-                  ]
-                }
-              }
-            },
-            {
-              "name": "POST /auth/client/otp/verify",
-              "request": {
-                "method": "POST",
-                "header": [],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"phone\": \"\",\n  \"code\": \"\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                },
-                "url": {
-                  "raw": "{{base_url}}/auth/client/otp/verify",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "auth",
-                    "client",
-                    "otp",
-                    "verify"
-                  ]
-                }
-              }
-            },
-            {
-              "name": "GET /auth/profile",
-              "request": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{admin_access_token}}"
-                  }
-                ],
-                "url": {
-                  "raw": "{{base_url}}/auth/profile",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "auth",
-                    "profile"
-                  ]
-                }
-              }
             }
           ]
         },
@@ -3406,30 +3275,6 @@
                   "body": "{\n  \"statusCode\": 404,\n  \"message\": \"Invite not found or not pending\",\n  \"error\": \"Not Found\"\n}"
                 }
               ]
-            },
-            {
-              "name": "POST /admin/invites/:id/revoke - Success",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{admin_access_token}}"
-                  }
-                ],
-                "url": {
-                  "raw": "{{base_url}}/admin/invites/{{invite_id}}/revoke",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "admin",
-                    "invites",
-                    "{{invite_id}}",
-                    "revoke"
-                  ]
-                }
-              }
             }
           ]
         },
@@ -13257,33 +13102,6 @@
                   "body": "{\n  \"statusCode\": 409,\n  \"message\": \"Credentials have already been used and can no longer be resent\",\n  \"error\": \"Conflict\"\n}"
                 }
               ]
-            }
-          ]
-        },
-        {
-          "name": "Reports",
-          "item": [
-            {
-              "name": "GET /admin/reports - Success",
-              "request": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{admin_access_token}}"
-                  }
-                ],
-                "url": {
-                  "raw": "{{base_url}}/admin/reports",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "admin",
-                    "reports"
-                  ]
-                }
-              }
             }
           ]
         }

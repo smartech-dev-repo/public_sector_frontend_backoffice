@@ -68,12 +68,12 @@ export function MonthPicker({ value, onChange, placeholder = 'Select period' }: 
       </PopoverTrigger>
       <PopoverContent className="w-[280px] p-4" align="start">
         <div className="flex flex-col space-y-4">
-          <div className="flex items-center justify-between bg-slate-900 text-slate-50 p-2 rounded-md">
-            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-slate-800 hover:text-slate-50 text-slate-400" onClick={() => setCurrentYear(y => y - 1)}>
+          <div className="flex items-center justify-between bg-slate-900 dark:bg-slate-800 text-slate-50 p-2 rounded-md">
+            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-slate-800 hover:text-slate-50 text-muted-foreground/70" onClick={() => setCurrentYear(y => y - 1)}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <span className="font-medium text-sm">{currentYear}</span>
-            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-slate-800 hover:text-slate-50 text-slate-400" onClick={() => setCurrentYear(y => y + 1)}>
+            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-slate-800 hover:text-slate-50 text-muted-foreground/70" onClick={() => setCurrentYear(y => y + 1)}>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -86,7 +86,7 @@ export function MonthPicker({ value, onChange, placeholder = 'Select period' }: 
                   key={m}
                   variant="ghost"
                   className={cn(
-                    "h-10 w-full font-medium text-sm hover:bg-slate-100",
+                    "h-10 w-full font-medium text-sm hover:bg-muted/50",
                     isSelected && "bg-emerald-50 text-emerald-900 hover:bg-emerald-100"
                   )}
                   onClick={() => handleMonthSelect(i)}
