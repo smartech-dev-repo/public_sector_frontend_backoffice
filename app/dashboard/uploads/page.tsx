@@ -64,106 +64,106 @@ export default function UploadsPage() {
   };
 
   return (
-    <main className="p-6 space-y-6">
+    <main className="px-4 py-6 space-y-3">
       {isLoading ? (
-        <div className="py-20 text-center text-slate-500">
+        <div className="py-10 text-center text-muted-foreground">
           Loading...
         </div>
       ) : (
         <div className="space-y-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-semibold text-slate-800">Document Uploads</h1>
-              <p className="text-sm text-slate-500 mt-1 max-w-xl">Upload monthly employer broadsheets, disbursed loans, or repayment schedules.</p>
+              <h1 className="text-2xl font-semibold text-foreground">Document Uploads</h1>
+              <p className="text-sm text-muted-foreground mt-1 max-w-xl">Upload monthly employer broadsheets, disbursed loans, or repayment schedules.</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Broadsheet Upload */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 flex flex-col">
+            <div className="bg-card rounded-2xl border border-border p-6 flex flex-col">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 </div>
                 <div>
-                  <h3 className="text-slate-800 font-medium text-sm">IPPIS Broadsheet</h3>
-                  <p className="text-xs text-slate-500">.csv, .xlsx</p>
+                  <h3 className="text-foreground font-medium text-sm">IPPIS Broadsheet</h3>
+                  <p className="text-xs text-muted-foreground">.csv, .xlsx</p>
                 </div>
               </div>
-              <div className="mt-auto border-2 border-dashed border-slate-300 rounded-xl p-4 text-center hover:border-emerald-500 transition-colors cursor-pointer" onClick={() => triggerFileSelect('broadsheet')}>
-                <div className="text-xs text-slate-600 font-medium">Select File</div>
+              <div className="mt-auto border-2 border-dashed border-border rounded-xl p-4 text-center hover:border-emerald-500 transition-colors cursor-pointer" onClick={() => triggerFileSelect('broadsheet')}>
+                <div className="text-xs text-muted-foreground font-medium">Select File</div>
               </div>
               <input type="file" ref={broadsheetInput} className="hidden" onChange={(e) => handleFileUpload(e, 'broadsheet')} accept=".csv,.xlsx" />
             </div>
 
             {/* Disbursed Loans Upload */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 flex flex-col">
+            <div className="bg-card rounded-2xl border border-border p-6 flex flex-col">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </div>
                 <div>
-                  <h3 className="text-slate-800 font-medium text-sm">Disbursed Loans</h3>
-                  <p className="text-xs text-slate-500">.csv, .xlsx</p>
+                  <h3 className="text-foreground font-medium text-sm">Disbursed Loans</h3>
+                  <p className="text-xs text-muted-foreground">.csv, .xlsx</p>
                 </div>
               </div>
-              <div className="mt-auto border-2 border-dashed border-slate-300 rounded-xl p-4 text-center hover:border-purple-500 transition-colors cursor-pointer" onClick={() => triggerFileSelect('disbursed')}>
-                <div className="text-xs text-slate-600 font-medium">Select File</div>
+              <div className="mt-auto border-2 border-dashed border-border rounded-xl p-4 text-center hover:border-purple-500 transition-colors cursor-pointer" onClick={() => triggerFileSelect('disbursed')}>
+                <div className="text-xs text-muted-foreground font-medium">Select File</div>
               </div>
               <input type="file" ref={disbursedInput} className="hidden" onChange={(e) => handleFileUpload(e, 'disbursed')} accept=".csv,.xlsx" />
             </div>
 
             {/* Repayment Schedule Upload */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 flex flex-col">
+            <div className="bg-card rounded-2xl border border-border p-6 flex flex-col">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 </div>
                 <div>
-                  <h3 className="text-slate-800 font-medium text-sm">Repayment Schedule</h3>
-                  <p className="text-xs text-slate-500">.csv, .xlsx</p>
+                  <h3 className="text-foreground font-medium text-sm">Repayment Schedule</h3>
+                  <p className="text-xs text-muted-foreground">.csv, .xlsx</p>
                 </div>
               </div>
-              <div className="mt-auto border-2 border-dashed border-slate-300 rounded-xl p-4 text-center hover:border-amber-500 transition-colors cursor-pointer" onClick={() => triggerFileSelect('repayment')}>
-                <div className="text-xs text-slate-600 font-medium">Select File</div>
+              <div className="mt-auto border-2 border-dashed border-border rounded-xl p-4 text-center hover:border-amber-500 transition-colors cursor-pointer" onClick={() => triggerFileSelect('repayment')}>
+                <div className="text-xs text-muted-foreground font-medium">Select File</div>
               </div>
               <input type="file" ref={repaymentInput} className="hidden" onChange={(e) => handleFileUpload(e, 'repayment')} accept=".csv,.xlsx" />
             </div>
           </div>
 
           <div>
-            <h2 className="text-lg font-semibold text-slate-800 mb-4">Upload Batches</h2>
-            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+            <h2 className="text-lg font-semibold text-foreground mb-4">Upload Batches</h2>
+            <div className="bg-card rounded-2xl border border-border overflow-hidden">
               <div className="overflow-x-auto">
 <table className="min-w-full divide-y divide-slate-200">
-                <thead className="bg-[#E9F4EE]">
+                <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
                   <tr>
-                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Date Created</th>
-                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Type</th>
-                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Total Rows</th>
-                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Processed</th>
-                    <th className="px-6 py-2 text-left text-xs font-medium text-[#018752] uppercase tracking-wider">Updated At</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Date Created</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Type</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Status</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Total Rows</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Processed</th>
+                    <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Updated At</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {batches.map((batch: any) => (
-                    <tr key={batch.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-800 font-mono">{new Date(batch.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-                      <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-800">{batch.documentType}</td>
-                      <td className="px-6 py-2 whitespace-nowrap text-sm">
+                    <tr key={batch.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground font-mono">{new Date(batch.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground">{batch.documentType}</td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm">
                         <span className={`px-2.5 py-1 text-xs rounded-full font-medium ${statusClass(batch.status)}`}>
                           {batch.status}
                         </span>
                       </td>
-                      <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-600">{batch.totalRows || 0}</td>
-                      <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-600">{batch.processedRows || 0}</td>
-                      <td className="px-6 py-2 whitespace-nowrap text-sm text-slate-500">{new Date(batch.updatedAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{batch.totalRows || 0}</td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{batch.processedRows || 0}</td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{new Date(batch.updatedAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                     </tr>
                   ))}
                   {batches.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="p-8 text-center text-slate-400">No batches found.</td>
+                      <td colSpan={6} className="p-8 text-center text-muted-foreground/70">No batches found.</td>
                     </tr>
                   )}
                 </tbody>

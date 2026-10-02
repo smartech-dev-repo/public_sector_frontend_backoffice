@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from 'react';
-import Select from '@/app/components/ui/Select';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import { useToast } from '@/app/composables/useToast';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { useIppis } from '@/app/composables/modules/useIppis';
+import Pagination from '@/app/components/ui/Pagination';
 
 export default function BroadsheetPage() {
   const { addToast } = useToast();
@@ -18,6 +19,9 @@ export default function BroadsheetPage() {
     status: '',
     dateRange: ''
   });
+
+  const [ippisLimit, setIppisLimit] = useState(10);
+  const [repaymentLimit, setRepaymentLimit] = useState(10);
 
   const clearFilters = () => {
     setFilterParams({ search: '', status: '', dateRange: '' });
@@ -123,6 +127,14 @@ export default function BroadsheetPage() {
     return filterData(repaymentData);
   }, [repaymentData, filterParams]);
 
+  const paginatedIppis = useMemo(() => {
+    return filteredIppis.slice(0, ippisLimit);
+  }, [filteredIppis, ippisLimit]);
+
+  const paginatedRepayment = useMemo(() => {
+    return filteredRepayment.slice(0, repaymentLimit);
+  }, [filteredRepayment, repaymentLimit]);
+
   const triggerIppisUpload = () => {
     ippisFileInput.current?.click();
   };
@@ -189,86 +201,105 @@ export default function BroadsheetPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Actions */}
-      <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3 relative">
-        <span className="text-xs sm:text-sm text-slate-400 mr-auto sm:mr-2">Showing {filteredIppis.length + filteredRepayment.length} uploads</span>
-        
-        {/* Filter Container */}
-        <div ref={filterContainerRef} className="relative">
-          {/* Filter Button */}
-          <button onClick={() => setShowFilter(!showFilter)} className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors shadow-sm">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="8" x2="20" y2="8"></line><circle cx="9" cy="8" r="2"></circle><line x1="4" y1="16" x2="20" y2="16"></line><circle cx="15" cy="16" r="2"></circle></svg>
-            Filter
+    <div className="space-y-3">
+      {/* Header Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <span className="text-xs sm:text-sm text-muted-foreground/70">Showing {filteredIppis.length + filteredRepayment.length} uploads</span>
+        <div className="flex flex-wrap items-center gap-3">
+          <button 
+            onClick={() => setShowFilter(!showFilter)}
+            className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-full text-sm font-medium text-foreground/90 hover:bg-muted/30 transition-colors shadow-sm"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+            Filters
+            <svg className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
           </button>
+          <button onClick={handleExportExcel} className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-full text-sm font-medium text-muted-foreground hover:bg-muted/30 transition-colors shadow-sm"><svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path><path d="M12 12v9"></path><path d="m16 16-4-4-4 4"></path></svg> Export as Excel (.xlsx)</button>
+        </div>
+      </div>
 
-          {/* Filter Dropdown */}
-          {showFilter && (
-            <div className="absolute top-12 right-0 w-[calc(100vw-2rem)] sm:w-80 max-w-[320px] bg-white rounded-xl shadow-xl border border-slate-100 p-4 z-50 animate-in fade-in zoom-in-95 duration-100">
-              <h3 className="text-sm font-semibold text-slate-900 mb-3">Filter Uploads</h3>
-              
-              <div className="space-y-3 mb-4">
+      {/* Filters Area */}
+      <div className="mb-6 space-y-4">
+        {showFilter && (
+          <div className="bg-card p-6 rounded-2xl border border-border/50 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Search</label>
                 <input 
                   value={filterParams.search}
                   onChange={(e) => setFilterParams({ ...filterParams, search: e.target.value })}
                   type="text" 
                   placeholder="Search by month or user..." 
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500" 
+                  className="w-full px-4 py-2 border rounded-lg text-sm bg-card border-border outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400" 
                 />
-                
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Status</label>
                 <Select 
                   value={filterParams.status}
-                  onChange={(val) => setFilterParams({ ...filterParams, status: val as any })}
-                  placeholder="All Statuses"
-                  options={[{label: 'All Statuses', value: ''}, {label: 'Validated', value: 'Validated'}, {label: 'Pending', value: 'Pending'}]} 
-                />
-                
+                  onValueChange={(val: any) => setFilterParams({ ...filterParams, status: val === 'none' ? '' : val })}
+                >
+                  <SelectTrigger className="w-full bg-card"><SelectValue placeholder="All Statuses" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">All Statuses</SelectItem>
+                    <SelectItem value="Validated">Validated</SelectItem>
+                    <SelectItem value="Pending">Pending</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5 w-full z-[60] relative">
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Date Range</label>
                 <CustomDateRangePicker 
                   value={filterParams.dateRange}
-                  onChange={(val) => setFilterParams({ ...filterParams, dateRange: val as any })}
+                  onChange={(val: any) => setFilterParams({ ...filterParams, dateRange: val })}
                   placeholder="Select date range"
                 />
               </div>
-              
-              <div className="flex gap-2">
-                <button onClick={clearFilters} className="flex-1 py-2 bg-slate-50 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-100 transition-colors">Clear</button>
-                <button onClick={() => setShowFilter(false)} className="flex-1 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors">Apply Filter</button>
-              </div>
             </div>
-          )}
-        </div>
-
-        {/* Export Button */}
-        <button onClick={handleExportExcel} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors shadow-sm"><svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path><path d="M12 12v9"></path><path d="m16 16-4-4-4 4"></path></svg> Export as Excel (.xlsx)</button>
+            <div className="mt-6 flex justify-end">
+              <button onClick={clearFilters} className="px-5 py-2 bg-card border border-border rounded-full text-sm font-medium text-foreground/90 hover:bg-muted/30 transition-colors">Clear Filters</button>
+            </div>
+          </div>
+        )}
       </div>
 
       {loading && batches.length === 0 ? (
-        <div className="flex justify-center py-20"><PulseLoader /></div>
+        <div className="flex justify-center py-10"><PulseLoader /></div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
           {/* IPPIS Broadsheet Column */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex flex-col gap-6">
-            <h2 className="text-lg font-semibold text-slate-900">IPPIS Broadsheet</h2>
+          <div className="bg-card rounded-xl shadow-sm border border-border/50 p-6 flex flex-col gap-6">
+            <h2 className="text-lg font-semibold text-foreground">IPPIS Broadsheet</h2>
             
             {/* Upload Box */}
             <div onClick={triggerIppisUpload} className="border border-dashed border-emerald-300 rounded-xl p-8 flex flex-col items-center justify-center text-center bg-emerald-50/30 hover:bg-emerald-50/50 transition-colors cursor-pointer relative overflow-hidden group">
               <input type="file" ref={ippisFileInput} className="hidden" onChange={handleIppisUpload} accept=".csv, .xlsx" />
-              <svg className="w-6 h-6 text-slate-400 mb-3 group-hover:text-emerald-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-              <p className="text-sm text-slate-400">Drag and drop or <span className="text-emerald-600 font-medium">choose file</span> to upload</p>
-              <p className="text-xs text-slate-400 mt-1">.xlsx or .csv</p>
+              <svg className="w-6 h-6 text-muted-foreground/70 mb-3 group-hover:text-emerald-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+              <p className="text-sm text-muted-foreground/70">Drag and drop or <span className="text-emerald-600 font-medium">choose file</span> to upload</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">.xlsx or .csv</p>
             </div>
 
             {/* List */}
-            <div className="space-y-4">
+            <div 
+              className="space-y-4 max-h-[500px] overflow-y-auto pr-2"
+              onScroll={(e) => {
+                const target = e.target as HTMLDivElement;
+                if (target.scrollHeight - target.scrollTop <= target.clientHeight + 50) {
+                  if (ippisLimit < filteredIppis.length) {
+                    setIppisLimit(prev => prev + 10);
+                  }
+                }
+              }}
+            >
               {filteredIppis.length === 0 && <EmptyState title="No IPPIS uploads found." />}
-              {filteredIppis.map((item) => (
-                <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 border-b border-slate-50 pb-4 last:border-0 hover:bg-slate-50/30 -mx-2 px-2 rounded-lg transition-colors">
+              {paginatedIppis.map((item) => (
+                <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 border-b border-slate-50 pb-4 last:border-0 hover:bg-muted/30/30 px-2 rounded-lg transition-colors">
                   <div>
                     <div className="flex items-center gap-3 mb-1">
-                      <span className="font-semibold text-slate-800">{item.month}</span>
+                      <span className="font-semibold text-foreground">{item.month}</span>
                       <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-medium border border-emerald-100/50">{item.status}</span>
                     </div>
-                    <p className="text-[12px] text-slate-400">{item.user} &bull; {item.date}</p>
+                    <p className="text-[12px] text-muted-foreground/70">{item.user} &bull; {item.date}</p>
                   </div>
                   <button onClick={() => handleDownload(item, 'IPPIS')} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white text-xs font-medium transition-colors shadow-sm">
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -280,28 +311,38 @@ export default function BroadsheetPage() {
           </div>
 
           {/* Repayment Schedule Column */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex flex-col gap-6">
-            <h2 className="text-lg font-semibold text-slate-900">Repayment Schedule</h2>
+          <div className="bg-card rounded-xl shadow-sm border border-border/50 p-6 flex flex-col gap-6">
+            <h2 className="text-lg font-semibold text-foreground">Repayment Schedule</h2>
             
             {/* Upload Box */}
             <div onClick={triggerRepaymentUpload} className="border border-dashed border-emerald-300 rounded-xl p-8 flex flex-col items-center justify-center text-center bg-emerald-50/30 hover:bg-emerald-50/50 transition-colors cursor-pointer relative overflow-hidden group">
               <input type="file" ref={repaymentFileInput} className="hidden" onChange={handleRepaymentUpload} accept=".csv, .xlsx" />
-              <svg className="w-6 h-6 text-slate-400 mb-3 group-hover:text-emerald-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-              <p className="text-sm text-slate-400">Drag and drop or <span className="text-emerald-600 font-medium">choose file</span> to upload</p>
-              <p className="text-xs text-slate-400 mt-1">.xlsx or .csv</p>
+              <svg className="w-6 h-6 text-muted-foreground/70 mb-3 group-hover:text-emerald-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+              <p className="text-sm text-muted-foreground/70">Drag and drop or <span className="text-emerald-600 font-medium">choose file</span> to upload</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">.xlsx or .csv</p>
             </div>
 
             {/* List */}
-            <div className="space-y-4">
+            <div 
+              className="space-y-4 max-h-[500px] overflow-y-auto pr-2"
+              onScroll={(e) => {
+                const target = e.target as HTMLDivElement;
+                if (target.scrollHeight - target.scrollTop <= target.clientHeight + 50) {
+                  if (repaymentLimit < filteredRepayment.length) {
+                    setRepaymentLimit(prev => prev + 10);
+                  }
+                }
+              }}
+            >
               {filteredRepayment.length === 0 && <EmptyState title="No repayment schedules found." />}
-              {filteredRepayment.map((item) => (
-                <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 border-b border-slate-50 pb-4 last:border-0 hover:bg-slate-50/30 -mx-2 px-2 rounded-lg transition-colors">
+              {paginatedRepayment.map((item) => (
+                <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 border-b border-slate-50 pb-4 last:border-0 hover:bg-muted/30/30 px-2 rounded-lg transition-colors">
                   <div>
                     <div className="flex items-center gap-3 mb-1">
-                      <span className="font-semibold text-slate-800">{item.month}</span>
+                      <span className="font-semibold text-foreground">{item.month}</span>
                       <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-medium border border-emerald-100/50">{item.status}</span>
                     </div>
-                    <p className="text-[12px] text-slate-400">{item.user} &bull; {item.date}</p>
+                    <p className="text-[12px] text-muted-foreground/70">{item.user} &bull; {item.date}</p>
                   </div>
                   <button onClick={() => handleDownload(item, 'Repayment')} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white text-xs font-medium transition-colors shadow-sm">
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>

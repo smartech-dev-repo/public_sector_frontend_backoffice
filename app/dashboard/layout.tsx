@@ -6,8 +6,9 @@ import { usePathname, useRouter } from 'next/navigation';
 import Toast from '@/app/components/ui/Toast';
 import Modal from '@/app/components/ui/Modal';
 import SearchModal from '@/app/components/ui/SearchModal';
+import SessionManager from '@/app/components/ui/SessionManager';
 import { useTheme } from 'next-themes';
-import { Monitor, Moon, Sun, Folder, UserPlus, Users, User, LineChart, UserCog, ClipboardList, Scale, ShieldCheck, Settings } from 'lucide-react';
+import { Monitor, Moon, Sun, Folder, UserPlus, Users, User, LineChart, UserCog, ClipboardList, Scale, ShieldCheck, Settings, Banknote, ChevronDown } from 'lucide-react';
 
 export default function CreditRiskLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -15,6 +16,16 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
+    loans: true,
+    agents: true,
+    catalog: true,
+    system: false
+  });
+
+  const toggleGroup = (group: string) => {
+    setOpenGroups(prev => ({ ...prev, [group]: !prev[group] }));
+  };
   const [isSidebarMinimized, setIsSidebarMinimized] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -60,6 +71,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
     if (pathname.includes('/dashboard/uploads')) return 'Credit Risk Uploads';
     if (pathname.includes('/dashboard/analytics')) return 'Analytics & Reports';
     if (pathname.includes('/dashboard/exceptions')) return 'Exception Queue';
+    if (pathname.includes('/dashboard/client-loans')) return 'Client Loans';
     if (pathname.includes('/dashboard/reconciliation')) return 'Finance Reconciliation';
     return 'Platform Overview';
   }, [pathname]);
@@ -86,6 +98,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
   return (
     <div className="h-screen overflow-hidden bg-background font-sans flex text-foreground">
       {/* Global Components */}
+      <SessionManager />
       <Toast />
       <SearchModal isOpen={showSearchModal} onClose={() => setShowSearchModal(false)} />
       <Modal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} onConfirm={confirmLogout} title="Confirm Logout">
@@ -104,7 +117,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
         bg-card border-r border-border text-foreground flex-shrink-0 flex flex-col z-40 transition-all duration-300
         fixed inset-y-0 left-0 md:relative md:translate-x-0
         ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        ${isSidebarMinimized ? 'w-20' : 'w-80'}
+        ${isSidebarMinimized ? 'w-20' : 'w-[275px]'}
       `}>
         {/* Sidebar Shrink Toggle */}
         <button 
@@ -128,115 +141,290 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
             <div className="flex items-center gap-3 overflow-hidden w-full">
               <div className="w-full flex items-center justify-center">
                   <Link href="/dashboard" className="flex items-center justify-center cursor-pointer w-full">
-                    <img src="/logo.png" className="h-9 w-auto dark:invert" alt="Logo" />
+                    <img src="/logo.png" className="h-7 w-auto dark:invert" alt="Logo" />
                   </Link>
               </div>
             </div>
           )}
         </div>
         
-        <div className="p-6 space-y-2 flex-1 overflow-y-auto overflow-x-hidden">
-          <nav className="space-y-2">
-            <Link href="/dashboard/broadsheet"
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all group ${
-                pathname.startsWith('/dashboard/broadsheet') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-              }`}
-              title={isSidebarMinimized ? 'Broadsheet and Repayment' : ''}
-            >
-              <Folder className="w-5 h-5 shrink-0 transition-colors" />
-              {!isSidebarMinimized && <span className="whitespace-nowrap">Broadsheet and Repayment</span>}
-            </Link>
-            <Link href="/dashboard/invites"
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all group ${
-                pathname.startsWith('/dashboard/invites') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-              }`}
-              title={isSidebarMinimized ? 'Agent Recruitment' : ''}
-            >
-              <UserPlus className="w-5 h-5 shrink-0 transition-colors" />
-              {!isSidebarMinimized && <span className="whitespace-nowrap">Agent Recruitment</span>}
-            </Link>
-            <Link href="/dashboard/agent-management"
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all group ${
-                pathname.startsWith('/dashboard/agent-management') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-              }`}
-              title={isSidebarMinimized ? 'Agent Management' : ''}
-            >
-              <Users className="w-5 h-5 shrink-0 transition-colors" />
-              {!isSidebarMinimized && <span className="whitespace-nowrap">Agent Management</span>}
-            </Link>
-            <Link href="/dashboard/clients"
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all group ${
-                pathname.startsWith('/dashboard/client') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-              }`}
-              title={isSidebarMinimized ? 'Customer Management' : ''}
-            >
-              <User className="w-5 h-5 shrink-0 transition-colors" />
-              {!isSidebarMinimized && <span className="whitespace-nowrap">Customer Management</span>}
-            </Link>
-            <Link href="/dashboard/reports"
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all group ${
-                pathname.startsWith('/dashboard/reports') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-              }`}
-              title={isSidebarMinimized ? 'Report' : ''}
-            >
-              <LineChart className="w-5 h-5 shrink-0 transition-colors" />
-              {!isSidebarMinimized && <span className="whitespace-nowrap">Report</span>}
-            </Link>
-            <Link href="/dashboard/team"
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all group ${
-                pathname.startsWith('/dashboard/team') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-              }`}
-              title={isSidebarMinimized ? 'Role management' : ''}
-            >
-              <UserCog className="w-5 h-5 shrink-0 transition-colors" />
-              {!isSidebarMinimized && <span className="whitespace-nowrap">Role management</span>}
-            </Link>
-            <Link href="/dashboard/maker-checker"
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all group ${
-                pathname.startsWith('/dashboard/maker-checker') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-              }`}
-              title={isSidebarMinimized ? 'Maker/Checker Queue' : ''}
-            >
-              <ClipboardList className="w-5 h-5 shrink-0 transition-colors" />
-              {!isSidebarMinimized && <span className="whitespace-nowrap">Maker/Checker Queue</span>}
-            </Link>
-            <Link href="/dashboard/reconciliation"
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all group ${
-                pathname.startsWith('/dashboard/reconciliation') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-              }`}
-              title={isSidebarMinimized ? 'Finance Reconciliation' : ''}
-            >
-              <Scale className="w-5 h-5 shrink-0 transition-colors" />
-              {!isSidebarMinimized && <span className="whitespace-nowrap">Finance Reconciliation</span>}
-            </Link>
-            <Link href="/dashboard/audit-logs"
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all group ${
-                pathname.startsWith('/dashboard/audit-logs') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-              }`}
-              title={isSidebarMinimized ? 'Audit Trail Log' : ''}
-            >
-              <ShieldCheck className="w-5 h-5 shrink-0 transition-colors" />
-              {!isSidebarMinimized && <span className="whitespace-nowrap">Audit Trail Log</span>}
-            </Link>
+        <div className="p-6 space-y-2 flex-1 overflow-y-auto overflow-x-visible">
+          <nav className="space-y-1">
+            {/* LOANS GROUP */}
+            <div className="space-y-1">
+              <button
+                onClick={() => !isSidebarMinimized && toggleGroup('loans')}
+                className={`relative ${isSidebarMinimized ? 'justify-center px-2' : 'justify-between px-4'} w-full flex items-center  py-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider hover:bg-muted/30 rounded-lg transition-colors group`}
+              >
+<span className={`flex items-center gap-3 ${isSidebarMinimized ? 'hidden' : ''}`}>Loans</span>
+                {!isSidebarMinimized && (
+                  <ChevronDown className={`w-4 h-4 transition-transform ${openGroups.loans ? 'rotate-180' : ''}`} />
+                )}
+                {isSidebarMinimized && <Banknote className="w-5 h-5 shrink-0 transition-colors" />}
+                {isSidebarMinimized && (
+                  <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded shadow-md whitespace-nowrap z-50">
+                    Loans
+                  </div>
+                )}
+              </button>
+              
+              <div className={`space-y-1 ${!isSidebarMinimized && !openGroups.loans ? 'hidden' : ''}`}>
+                <Link href="/dashboard/broadsheet"
+                  className={`flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-4'} ${
+                    pathname.startsWith('/dashboard/broadsheet') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  }`}
+                >
+<Folder className="w-5 h-5 shrink-0 transition-colors" />
+                  {!isSidebarMinimized && <span className="whitespace-nowrap">Broadsheet & Repayment</span>}
+                  {isSidebarMinimized && (
+                    <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded shadow-md whitespace-nowrap z-50">
+                      Broadsheet and Repayment
+                    </div>
+                  )}
+                </Link>
 
-            <Link href="/dashboard/loan-terms"
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all group ${
-                pathname.startsWith('/dashboard/loan-terms') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-              }`}
-              title={isSidebarMinimized ? 'Loan Configurations' : ''}
-            >
-              <Settings className="w-5 h-5 shrink-0 transition-colors" />
-              {!isSidebarMinimized && <span className="whitespace-nowrap">Loan Configurations</span>}
-            </Link>
+                <Link href="/dashboard/loan-terms"
+                  className={`flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-4'} ${
+                    pathname.startsWith('/dashboard/loan-terms') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  }`}
+                >
+<Settings className="w-5 h-5 shrink-0 transition-colors" />
+                  {!isSidebarMinimized && <span className="whitespace-nowrap">Loan Configurations</span>}
+                  {isSidebarMinimized && (
+                    <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded shadow-md whitespace-nowrap z-50">
+                      Loan Configurations
+                    </div>
+                  )}
+                </Link>
+              </div>
+            </div>
+
+            {/* CATALOG GROUP */}
+            <div className="space-y-1 mt-4">
+              <button
+                onClick={() => !isSidebarMinimized && toggleGroup('catalog')}
+                className={`relative ${isSidebarMinimized ? 'justify-center px-2' : 'justify-between px-4'} w-full flex items-center  py-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider hover:bg-muted/30 rounded-lg transition-colors group`}
+              >
+<span className={`flex items-center gap-3 ${isSidebarMinimized ? 'hidden' : ''}`}>Data Catalog</span>
+                {!isSidebarMinimized && (
+                  <ChevronDown className={`w-4 h-4 transition-transform ${openGroups.catalog ? 'rotate-180' : ''}`} />
+                )}
+                {isSidebarMinimized && <Folder className="w-5 h-5 shrink-0 transition-colors" />}
+                {isSidebarMinimized && (
+                  <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded shadow-md whitespace-nowrap z-50">
+                    Data Catalog
+                  </div>
+                )}
+              </button>
+              
+              <div className={`space-y-1 ${!isSidebarMinimized && !openGroups.catalog ? 'hidden' : ''}`}>
+                <Link href="/dashboard/catalog/loans"
+                  className={`flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-4'} ${
+                    pathname.startsWith('/dashboard/catalog/loans') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  }`}
+                >
+<Banknote className="w-5 h-5 shrink-0 transition-colors" />
+                  {!isSidebarMinimized && <span className="whitespace-nowrap">Loans Catalog</span>}
+                  {isSidebarMinimized && (
+                    <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded shadow-md whitespace-nowrap z-50">
+                      Loans Catalog
+                    </div>
+                  )}
+                </Link>
+
+                <Link href="/dashboard/catalog/ippis"
+                  className={`flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-4'} ${
+                    pathname.startsWith('/dashboard/catalog/ippis') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  }`}
+                >
+<Users className="w-5 h-5 shrink-0 transition-colors" />
+                  {!isSidebarMinimized && <span className="whitespace-nowrap">IPPIS Records</span>}
+                  {isSidebarMinimized && (
+                    <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded shadow-md whitespace-nowrap z-50">
+                      IPPIS Records
+                    </div>
+                  )}
+                </Link>
+              </div>
+            </div>
+
+            {/* AGENTS GROUP */}
+            <div className="space-y-1 mt-4">
+              <button
+                onClick={() => !isSidebarMinimized && toggleGroup('agents')}
+                className={`relative ${isSidebarMinimized ? 'justify-center px-2' : 'justify-between px-4'} w-full flex items-center  py-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider hover:bg-muted/30 rounded-lg transition-colors group`}
+              >
+<span className={`flex items-center gap-3 ${isSidebarMinimized ? 'hidden' : ''}`}>Agents</span>
+                {!isSidebarMinimized && (
+                  <ChevronDown className={`w-4 h-4 transition-transform ${openGroups.agents ? 'rotate-180' : ''}`} />
+                )}
+                {isSidebarMinimized && <Users className="w-5 h-5 shrink-0 transition-colors" />}
+                {isSidebarMinimized && (
+                  <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded shadow-md whitespace-nowrap z-50">
+                    Agents
+                  </div>
+                )}
+              </button>
+              
+              <div className={`space-y-1 ${!isSidebarMinimized && !openGroups.agents ? 'hidden' : ''}`}>
+                <Link href="/dashboard/invites"
+                  className={`flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-4'} ${
+                    pathname.startsWith('/dashboard/invites') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  }`}
+                >
+<UserPlus className="w-5 h-5 shrink-0 transition-colors" />
+                  {!isSidebarMinimized && <span className="whitespace-nowrap">Admin Invites</span>}
+                  {isSidebarMinimized && (
+                    <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded shadow-md whitespace-nowrap z-50">
+                      Admin Invites
+                    </div>
+                  )}
+                </Link>
+                <Link href="/dashboard/agent-management"
+                  className={`flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-4'} ${
+                    pathname.startsWith('/dashboard/agent-management') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  }`}
+                >
+<Users className="w-5 h-5 shrink-0 transition-colors" />
+                  {!isSidebarMinimized && <span className="whitespace-nowrap">Agent Management</span>}
+                  {isSidebarMinimized && (
+                    <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded shadow-md whitespace-nowrap z-50">
+                      Agent Management
+                    </div>
+                  )}
+                </Link>
+              </div>
+            </div>
+
+            {/* STANDALONE */}
+            <div className="pt-4 pb-2">
+              <Link href="/dashboard/clients"
+                  className={`flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-4'} ${
+                  pathname.startsWith('/dashboard/clients') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                }`}
+                >
+<User className="w-5 h-5 shrink-0 transition-colors" />
+                {!isSidebarMinimized && <span className="whitespace-nowrap">Customer Management</span>}
+                  {isSidebarMinimized && (
+                    <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded shadow-md whitespace-nowrap z-50">
+                      Customer Management
+                    </div>
+                  )}
+                </Link>
+              <Link href="/dashboard/reports"
+                  className={`flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-4'} ${
+                  pathname.startsWith('/dashboard/reports') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                }`}
+                >
+<LineChart className="w-5 h-5 shrink-0 transition-colors" />
+                {!isSidebarMinimized && <span className="whitespace-nowrap">Report</span>}
+                  {isSidebarMinimized && (
+                    <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded shadow-md whitespace-nowrap z-50">
+                      Report
+                    </div>
+                  )}
+                </Link>
+            </div>
+
+            {/* SYSTEM & ADMIN GROUP */}
+            <div className="space-y-1">
+              <button
+                onClick={() => !isSidebarMinimized && toggleGroup('system')}
+                className={`relative ${isSidebarMinimized ? 'justify-center px-2' : 'justify-between px-4'} w-full flex items-center  py-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider hover:bg-muted/30 rounded-lg transition-colors group`}
+              >
+<span className={`flex items-center gap-3 ${isSidebarMinimized ? 'hidden' : ''}`}>System & Admin</span>
+                {!isSidebarMinimized && (
+                  <ChevronDown className={`w-4 h-4 transition-transform ${openGroups.system ? 'rotate-180' : ''}`} />
+                )}
+                {isSidebarMinimized && <ShieldCheck className="w-5 h-5 shrink-0 transition-colors" />}
+                {isSidebarMinimized && (
+                  <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded shadow-md whitespace-nowrap z-50">
+                    System & Admin
+                  </div>
+                )}
+              </button>
+              
+              <div className={`space-y-1 ${!isSidebarMinimized && !openGroups.system ? 'hidden' : ''}`}>
+                <Link href="/dashboard/team"
+                  className={`flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-4'} ${
+                    pathname.startsWith('/dashboard/team') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  }`}
+                >
+<UserCog className="w-5 h-5 shrink-0 transition-colors" />
+                  {!isSidebarMinimized && <span className="whitespace-nowrap">User Management</span>}
+                  {isSidebarMinimized && (
+                    <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded shadow-md whitespace-nowrap z-50">
+                      User Management
+                    </div>
+                  )}
+                </Link>
+                <Link href="/dashboard/permissions"
+                  className={`flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-4'} ${
+                    pathname.startsWith('/dashboard/permissions') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  }`}
+                >
+<ShieldCheck className="w-5 h-5 shrink-0 transition-colors" />
+                  {!isSidebarMinimized && <span className="whitespace-nowrap">Permissions</span>}
+                  {isSidebarMinimized && (
+                    <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded shadow-md whitespace-nowrap z-50">
+                      Permissions
+                    </div>
+                  )}
+                </Link>
+                <Link href="/dashboard/maker-checker"
+                  className={`flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-4'} ${
+                    pathname.startsWith('/dashboard/maker-checker') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  }`}
+                >
+<ClipboardList className="w-5 h-5 shrink-0 transition-colors" />
+                  {!isSidebarMinimized && <span className="whitespace-nowrap">Maker/Checker Queue</span>}
+                  {isSidebarMinimized && (
+                    <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded shadow-md whitespace-nowrap z-50">
+                      Maker/Checker Queue
+                    </div>
+                  )}
+                </Link>
+                <Link href="/dashboard/reconciliation"
+                  className={`flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-4'} ${
+                    pathname.startsWith('/dashboard/reconciliation') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  }`}
+                >
+<Scale className="w-5 h-5 shrink-0 transition-colors" />
+                  {!isSidebarMinimized && <span className="whitespace-nowrap">Finance Reconciliation</span>}
+                  {isSidebarMinimized && (
+                    <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded shadow-md whitespace-nowrap z-50">
+                      Finance Reconciliation
+                    </div>
+                  )}
+                </Link>
+                <Link href="/dashboard/audit-logs"
+                  className={`flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-4'} ${
+                    pathname.startsWith('/dashboard/audit-logs') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  }`}
+                >
+<ShieldCheck className="w-5 h-5 shrink-0 transition-colors" />
+                  {!isSidebarMinimized && <span className="whitespace-nowrap">Audit Trail Log</span>}
+                  {isSidebarMinimized && (
+                    <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded shadow-md whitespace-nowrap z-50">
+                      Audit Trail Log
+                    </div>
+                  )}
+                </Link>
+              </div>
+            </div>
           </nav>
         </div>
 
         <div className="p-4 border-t border-border flex flex-col gap-2">
           <button 
             onClick={triggerLogout}
-            className="flex items-center gap-3 px-4 py-2.5 w-full rounded-lg text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all group"
-            title={isSidebarMinimized ? 'Logout' : ''}
-          >
+            className={`relative flex items-center gap-3 py-2.5 w-full rounded-lg text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all group ${isSidebarMinimized ? 'justify-center px-2' : 'px-4'}`}
+            >
+            {isSidebarMinimized && (
+              <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded shadow-md whitespace-nowrap z-50">
+                Logout
+              </div>
+            )}
             <svg className="w-5 h-5 shrink-0 text-muted-foreground group-hover:text-destructive transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
             </svg>
@@ -343,7 +531,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+        <main className="flex-1 p-4 md:px-4 py-6 overflow-y-auto overflow-x-hidden">
           <div className="max-w-7xl mx-auto">
             {children}
           </div>
