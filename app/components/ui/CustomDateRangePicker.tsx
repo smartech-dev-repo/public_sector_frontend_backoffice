@@ -1,204 +1,157 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Calendar as CalendarIcon, ChevronDown, X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { format, subDays, startOfWeek, endOfWeek, startOfMonth, subMonths, endOfMonth, startOfQuarter, subQuarters, endOfQuarter, isSameDay } from 'date-fns';
-import { DayPicker, DateRange } from 'react-day-picker';
-import 'react-day-picker/dist/style.css';
+"use client"
 
-interface CustomDateRangePickerProps {
-  value: string; // 'YYYY-MM-DD to YYYY-MM-DD'
-  onChange: (val: string) => void;
-  placeholder?: string;
+import * as React from "react"
+import { format, differenceInDays } from "date-fns"
+import { Calendar as CalendarIcon, ArrowRight, X } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Button } from "@/app/components/ui/button"
+import { CustomCalendar, type DateRange } from "@/app/components/ui/custom-calendar"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/app/components/ui/popover"
+
+interface DatePickerWithRangeProps {
+  className?: string;
+  from?: string;
+  to?: string;
+  onSelect?: (range: { from: string; to: string }) => void;
 }
 
-export default function CustomDateRangePicker({ value, onChange, placeholder = 'Select date range...' }: CustomDateRangePickerProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  
-  const [date, setDate] = useState<DateRange | undefined>(() => {
-    if (value) {
-      const parts = value.split(' to ');
-      if (parts.length === 2) {
-        return {
-          from: new Date(parts[0]),
-          to: new Date(parts[1])
-        };
-      }
-    }
-    return undefined;
+export function DatePickerWithRange({
+  className,
+  from,
+  to,
+  onSelect,
+}: DatePickerWithRangeProps) {
+  const [open, setOpen] = React.useState(false);
+  const [tempDate, setTempDate] = React.useState<DateRange | undefined>({
+    from: from ? new Date(from) : undefined,
+    to: to ? new Date(to) : undefined,
   });
 
-  useEffect(() => {
-    if (value) {
-      const parts = value.split(' to ');
-      if (parts.length === 2) {
-        setDate({
-          from: new Date(parts[0]),
-          to: new Date(parts[1])
-        });
-      }
-    } else {
-      setDate(undefined);
+  const committedDate = React.useMemo(() => {
+    return {
+      from: from ? new Date(from) : undefined,
+      to: to ? new Date(to) : undefined,
     }
-  }, [value]);
+  }, [from, to])
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handleSelect = (range: DateRange | undefined) => {
-    setDate(range);
-    if (range?.from && range?.to) {
-       onChange(`${format(range.from, 'yyyy-MM-dd')} to ${format(range.to, 'yyyy-MM-dd')}`);
-    } else if (range?.from) {
-       onChange(`${format(range.from, 'yyyy-MM-dd')} to ${format(range.from, 'yyyy-MM-dd')}`);
-    } else {
-       onChange('');
+  // Reset temp state when opening popover
+  React.useEffect(() => {
+    if (open) {
+      setTempDate(committedDate);
     }
+  }, [open, committedDate]);
+
+  const handleApply = () => {
+    if (onSelect) {
+      onSelect({
+        from: tempDate?.from ? format(tempDate.from, "yyyy-MM-dd") : "",
+        to: tempDate?.to ? format(tempDate.to, "yyyy-MM-dd") : "",
+      })
+    }
+    setOpen(false);
   };
 
-  const handleClear = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setDate(undefined);
-    onChange('');
+  const handleCancel = () => {
+    setOpen(false);
   };
 
-  const displayValue = date?.from ? (
-    date.to && !isSameDay(date.from, date.to) ? 
-      `${format(date.from, 'd MMM yy')} - ${format(date.to, 'd MMM yy')}` : 
-      format(date.from, 'd MMM yy')
-  ) : '';
-
-  const presets = [
-    { label: 'Today', getValue: () => ({ from: new Date(), to: new Date() }) },
-    { label: 'Yesterday', getValue: () => ({ from: subDays(new Date(), 1), to: subDays(new Date(), 1) }) },
-    { label: 'Last week', getValue: () => ({ from: startOfWeek(subDays(new Date(), 7)), to: endOfWeek(subDays(new Date(), 7)) }) },
-    { label: 'Last month', getValue: () => ({ from: startOfMonth(subMonths(new Date(), 1)), to: endOfMonth(subMonths(new Date(), 1)) }) },
-    { label: 'Last quarter', getValue: () => ({ from: startOfQuarter(subQuarters(new Date(), 1)), to: endOfQuarter(subQuarters(new Date(), 1)) }) },
-  ];
-
-  const handlePreset = (getValue: () => {from: Date, to: Date}) => {
-    const range = getValue();
-    handleSelect(range);
-    setIsOpen(false);
-  };
+  const diffDays = (tempDate?.from && tempDate?.to) ? differenceInDays(tempDate.to, tempDate.from) : null;
 
   return (
-    <div className="relative inline-block w-full" ref={containerRef}>
-      <div 
-        onClick={() => setIsOpen(!isOpen)}
-        className="px-3 py-2 bg-white border border-emerald-200 rounded-lg text-sm text-slate-700 hover:border-emerald-400 focus:outline-none transition-colors shadow-sm cursor-pointer flex items-center justify-between gap-2 group w-full"
-      >
-        <span className={displayValue ? 'text-slate-900 font-medium' : 'text-slate-400'}>
-          {displayValue || placeholder}
-        </span>
-        {value ? (
-          <button onClick={handleClear} className="text-slate-400 hover:text-slate-600 p-0.5 rounded-full hover:bg-slate-100 transition-colors shrink-0">
-            <X className="w-3.5 h-3.5" />
+    <div className={cn("grid gap-2", className)}>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button
+            id="date"
+            className={cn(
+              "flex h-11 w-full items-center justify-between rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#018752]/20 focus:border-[#018752] transition-colors",
+              !committedDate?.from && "text-muted-foreground"
+            )}
+          >
+            <span className="truncate text-base font-normal">
+              {committedDate?.from ? (
+                committedDate.to ? (
+                  `${format(committedDate.from, "M/d/yyyy")} - ${format(committedDate.to, "M/d/yyyy")}`
+                ) : (
+                  format(committedDate.from, "M/d/yyyy")
+                )
+              ) : (
+                "Pick a date range"
+              )}
+            </span>
+            {committedDate?.from ? (
+              <X 
+                className="h-4 w-4 opacity-50 hover:opacity-100 cursor-pointer" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  if (onSelect) {
+                    onSelect({ from: "", to: "" });
+                  }
+                }} 
+              />
+            ) : (
+              <CalendarIcon className="h-5 w-5 opacity-50" />
+            )}
           </button>
-        ) : (
-          <ChevronDown className="w-4 h-4 text-slate-400" />
-        )}
-      </div>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <div className="flex flex-col min-w-[550px]">
+            {/* Header section matching the design */}
+            <div className="flex items-center justify-between px-3 md:px-6 py-4 border-b bg-muted/20">
+              <div className="flex-1 text-center font-medium text-sm text-foreground">
+                {tempDate?.from ? format(tempDate.from, "MMM dd, yyyy") : "Start Date"}
+              </div>
+              <div className="flex flex-col items-center justify-center text-muted-foreground px-4">
+                <ArrowRight className="h-4 w-4 mb-1" />
+                <span className="text-xs">{diffDays !== null ? `${diffDays} Days` : "-"}</span>
+              </div>
+              <div className="flex-1 text-center font-medium text-sm text-foreground">
+                {tempDate?.to ? format(tempDate.to, "MMM dd, yyyy") : "End Date"}
+              </div>
+            </div>
 
-      {isOpen && (
-        <div className="absolute top-full left-0 mt-2 bg-white border border-slate-100 shadow-xl rounded-xl p-4 z-50 animate-in fade-in zoom-in-95 duration-100 flex flex-col sm:flex-row gap-4 sm:gap-6 w-[280px] sm:w-[500px]">
-          
-          {/* Sidebar */}
-          <div className="flex flex-col gap-1 pr-4 sm:border-r border-slate-100 w-full sm:w-40 shrink-0">
-            {presets.map(preset => (
-              <button 
-                key={preset.label}
-                onClick={() => handlePreset(preset.getValue)}
-                className="text-left px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-md transition-colors"
-              >
-                {preset.label}
-              </button>
-            ))}
-            <div className="flex-grow"></div>
-            <button 
-                onClick={handleClear}
-                className="text-left px-3 py-2 text-sm text-emerald-600 hover:text-emerald-700 font-medium transition-colors mt-4 sm:mt-0"
-              >
-                Reset
-            </button>
+            {/* Calendar section */}
+            <div className="border-b">
+              <CustomCalendar
+                mode="range"
+                defaultMonth={tempDate?.from || new Date()}
+                selected={tempDate}
+                onSelect={(range) => setTempDate(range)}
+                numberOfMonths={2}
+              />
+            </div>
+
+            {/* Footer section */}
+            <div className="flex justify-end items-center px-4 py-3 gap-2 bg-muted/10">
+              <Button variant="outline" onClick={handleCancel} className="rounded-xl">Cancel</Button>
+              <Button onClick={handleApply} disabled={!tempDate?.from || !tempDate?.to} className="bg-[#018752] hover:bg-[#016c41] text-white rounded-xl">Apply</Button>
+            </div>
           </div>
-
-          {/* Calendar */}
-          <div className="calendar-wrapper flex-grow flex justify-center">
-             <DayPicker
-              mode="range"
-              selected={date}
-              onSelect={handleSelect}
-              showOutsideDays
-              className="border-0 p-0 m-0"
-            />
-          </div>
-        </div>
-      )}
-
-      <style dangerouslySetInnerHTML={{__html: `
-        .calendar-wrapper .rdp {
-          --rdp-cell-size: 36px;
-          --rdp-accent-color: #10b981; /* emerald-500 */
-          --rdp-background-color: #d1fae5; /* emerald-100 */
-          margin: 0;
-        }
-        .calendar-wrapper .rdp-day_selected {
-          font-weight: bold;
-        }
-        .calendar-wrapper .rdp-day_range_start:not(.rdp-day_range_end) {
-          background-color: #10b981;
-          color: white;
-          border-radius: 50%;
-          position: relative;
-        }
-        .calendar-wrapper .rdp-day_range_start:not(.rdp-day_range_end)::after {
-          content: '';
-          position: absolute;
-          top: 0;
-          bottom: 0;
-          left: 50%;
-          right: -2px;
-          background-color: #d1fae5;
-          z-index: -1;
-        }
-        .calendar-wrapper .rdp-day_range_end:not(.rdp-day_range_start) {
-          background-color: #10b981;
-          color: white;
-          border-radius: 50%;
-          position: relative;
-        }
-        .calendar-wrapper .rdp-day_range_end:not(.rdp-day_range_start)::after {
-          content: '';
-          position: absolute;
-          top: 0;
-          bottom: 0;
-          right: 50%;
-          left: -2px;
-          background-color: #d1fae5;
-          z-index: -1;
-        }
-        .calendar-wrapper .rdp-day_range_middle {
-          background-color: #d1fae5;
-          color: #064e3b;
-          border-radius: 0;
-        }
-        .calendar-wrapper .rdp-caption_label {
-          font-weight: 600;
-          color: #1e293b;
-        }
-        .calendar-wrapper .rdp-head_cell {
-          color: #64748b;
-          font-weight: 400;
-          text-transform: capitalize;
-        }
-      `}} />
+        </PopoverContent>
+      </Popover>
     </div>
+  )
+}
+
+export default function CustomDateRangePicker({ value, onChange, placeholder }: { value: string, onChange: (val: string) => void, placeholder?: string }) {
+  const from = value ? value.split(' to ')[0] : undefined;
+  const to = value ? value.split(' to ')[1] : undefined;
+  
+  return (
+    <DatePickerWithRange 
+      from={from} 
+      to={to} 
+      onSelect={(range) => {
+        if (!range.from && !range.to) onChange("");
+        else if (range.from && !range.to) onChange(range.from);
+        else onChange(`${range.from} to ${range.to}`);
+      }} 
+    />
   );
 }

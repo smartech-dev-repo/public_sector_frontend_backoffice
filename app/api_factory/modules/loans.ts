@@ -50,5 +50,11 @@ export const loans_api = {
     const res = await GATEWAY_ENDPOINT_WITH_AUTH.get('/admin/client-loans/disbursement-summary', { params });
     if ((res as any).type === 'ERROR' && res.status === 404) return { data: { totalDisbursed: 0, count: 0 } };
     return res;
+  },
+  getClientLoans: (params?: any) => {
+    return GATEWAY_ENDPOINT_WITH_AUTH.get('/admin/client-loans', { params });
+  },
+  getClientLoanRepaymentPlan: (id: string) => {
+    return GATEWAY_ENDPOINT_WITH_AUTH.get(`/admin/client-loans/${id}/repayment-plan`);
   }
 };

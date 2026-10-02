@@ -62,10 +62,10 @@ export const useClients = () => {
     }
   }, []);
 
-  const getClientWallet = useCallback(async (id: string) => {
+  const getClientWallet = useCallback(async (id: string, params?: any) => {
     setLoading(true);
     try {
-      const res = await clients_api.getClientWallet(id);
+      const res = await clients_api.getClientWallet(id, params);
       return res.data;
     } catch (err: any) {
       setError(err.message);
@@ -101,5 +101,18 @@ export const useClients = () => {
     }
   }, []);
 
-  return { loading, error, clients, fetchClients, getClientById, retryClient, approveClient, getClientWallet, creditClientWallet, debitClientWallet, meta };
+  const getClientActivities = useCallback(async (id: string) => {
+    setLoading(true);
+    try {
+      const res = await clients_api.getClientActivities(id);
+      return res.data;
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { loading, error, clients, fetchClients, getClientById, retryClient, approveClient, getClientWallet, creditClientWallet, debitClientWallet, getClientActivities, meta };
 };

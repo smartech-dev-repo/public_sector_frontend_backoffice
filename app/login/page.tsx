@@ -24,16 +24,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-50">
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-muted/30">
       <div className="max-w-[400px] w-full">
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 text-center">
+        <div className="bg-card p-8 rounded-2xl shadow-sm border border-border/50 text-center">
           {/* Logo placeholder */}
           <div className="mx-auto rounded-lg flex items-center justify-center mb-6">
             <img src="/logo.png" className="h-6 w-auto" alt="Logo" />
           </div>
           
-          <h2 className="text-2xl font-semibold text-slate-900">Welcome back</h2>
-          <p className="mt-2 text-sm text-slate-500 mb-8">Enter your Login details to access your dashboard</p>
+          <h2 className="text-2xl font-semibold text-foreground">Welcome back</h2>
+          <p className="mt-2 text-sm text-muted-foreground mb-8">Enter your Login details to access your dashboard</p>
 
           <form className="space-y-4 text-left" onSubmit={handleLogin}>
             <AuthInput
@@ -68,7 +68,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-6 text-sm text-slate-600">
+          <div className="mt-6 text-sm text-muted-foreground">
             Forgot password? <Link href="/forgot-password" className="text-emerald-600 hover:underline font-medium">Reset password</Link>
           </div>
         </div>
