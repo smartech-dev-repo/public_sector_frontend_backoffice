@@ -73,6 +73,7 @@ export const useLoans = () => {
     try {
       const res = await loans_api.getLoanRequests(params);
       let dataList = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || res.data?.agents || res.data?.clients || res.data?.roles || res.data?.admins || res.data?.logs || res.data?.invites || res.data?.permissions || res.data?.batches || []);
+      if (res.data?.meta) setMeta(res.data.meta);
       dataList = Array.isArray(dataList) ? dataList : [];
       setLoanRequests(dataList);
       return dataList;

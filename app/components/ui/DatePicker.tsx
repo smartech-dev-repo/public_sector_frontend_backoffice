@@ -34,17 +34,17 @@ export default function DatePicker({
         value={value}
         onChange={(dates) => onChange?.(dates)}
         options={config as any}
-        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors shadow-sm cursor-pointer placeholder-slate-400 pl-9"
+        className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm text-foreground focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors shadow-sm cursor-pointer placeholder-slate-400 pl-9"
         placeholder={placeholder}
       />
-      <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+      <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground/70">
         <Calendar className="w-4 h-4" />
       </div>
       {/* Clear button */}
       {value && (Array.isArray(value) ? value.length > 0 : String(value).length > 0) && (
         <button 
           onClick={handleClear}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/70 hover:text-muted-foreground transition-colors"
           type="button"
         >
           <X className="w-4 h-4" />

@@ -36,15 +36,15 @@ export const AuthInput = forwardRef<HTMLInputElement, AuthInputProps>(({
 
   return (
     <div
-      className={`relative border rounded-xl px-4 py-2 bg-white transition-colors flex items-center justify-between ${
-        isFocused ? 'border-emerald-500 ring-1 ring-emerald-500' : 'border-slate-200'
+      className={`relative border rounded-xl px-4 py-2 bg-card transition-colors flex items-center justify-between ${
+        isFocused ? 'border-emerald-500 ring-1 ring-emerald-500' : 'border-border'
       } ${
-        disabled ? 'opacity-60 bg-slate-50' : 'hover:border-emerald-300'
+        disabled ? 'opacity-60 bg-muted/30' : 'hover:border-emerald-300'
       }`}
       onClick={focusInput}
     >
       <div className="flex-1 overflow-hidden">
-        <label htmlFor={id} className="block text-xs text-slate-500 mb-0.5 pointer-events-none whitespace-nowrap overflow-hidden text-ellipsis">
+        <label htmlFor={id} className="block text-xs text-muted-foreground mb-0.5 pointer-events-none whitespace-nowrap overflow-hidden text-ellipsis">
           {label}
         </label>
         <input
@@ -55,7 +55,7 @@ export const AuthInput = forwardRef<HTMLInputElement, AuthInputProps>(({
           placeholder={placeholder}
           readOnly={readOnly}
           disabled={disabled}
-          className="w-full bg-transparent text-[15px] font-medium text-slate-900 placeholder:text-slate-300 outline-none p-0"
+          className="w-full bg-transparent text-[15px] font-medium text-foreground placeholder:text-slate-300 outline-none p-0"
           onChange={onChange}
           onFocus={(e) => { setIsFocused(true); rest.onFocus?.(e); }}
           onBlur={(e) => { setIsFocused(false); rest.onBlur?.(e); }}
@@ -64,7 +64,7 @@ export const AuthInput = forwardRef<HTMLInputElement, AuthInputProps>(({
       </div>
       {type === 'password' && (
         <div 
-          className="ml-2 flex-shrink-0 cursor-pointer text-slate-400 hover:text-slate-600 transition-colors" 
+          className="ml-2 flex-shrink-0 cursor-pointer text-muted-foreground/70 hover:text-muted-foreground transition-colors" 
           onClick={(e) => { e.stopPropagation(); setShowPassword(!showPassword); }}
         >
           {!showPassword ? (

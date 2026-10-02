@@ -96,7 +96,7 @@ export default function TableDropdown({ children }: TableDropdownProps) {
         ref={buttonRef} 
         onClick={toggle} 
         type="button" 
-        className="inline-flex items-center justify-center p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
+        className="inline-flex items-center justify-center p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
       >
         <span className="sr-only">Open actions</span>
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -109,7 +109,7 @@ export default function TableDropdown({ children }: TableDropdownProps) {
           ref={menuRef} 
           onClick={() => setIsOpen(false)} 
           style={dropdownStyle} 
-          className="fixed z-[9999] w-48 bg-white border border-slate-100 rounded-xl shadow-xl overflow-hidden text-left flex flex-col py-1 animate-dropdown-in"
+          className="fixed z-[9999] w-48 bg-card border border-border/50 rounded-xl shadow-xl overflow-hidden text-left flex flex-col py-1 animate-dropdown-in"
         >
           {children}
         </div>,

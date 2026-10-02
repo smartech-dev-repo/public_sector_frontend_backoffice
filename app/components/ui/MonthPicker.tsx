@@ -58,7 +58,7 @@ export function MonthPicker({
         <Button
           variant={"outline"}
           className={cn(
-            "w-full justify-start text-left font-normal bg-white border-slate-200 h-10",
+            "w-full justify-start text-left font-normal bg-card border-border h-10",
             !value && "text-muted-foreground",
             className
           )}
@@ -95,7 +95,7 @@ export function MonthPicker({
                   variant={isSelected ? "primary" : "ghost"}
                   className={cn(
                     "h-9 w-full text-sm font-normal",
-                    isSelected ? "bg-emerald-600 text-white hover:bg-emerald-700" : "hover:bg-slate-100"
+                    isSelected ? "bg-emerald-600 text-white hover:bg-emerald-700" : "hover:bg-muted/50"
                   )}
                   onClick={() => handleMonthSelect(index)}
                 >
@@ -105,7 +105,7 @@ export function MonthPicker({
             })}
           </div>
           
-          <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
+          <div className="mt-4 flex items-center justify-between border-t border-border/50 pt-3">
             <Button
               variant="ghost"
               size="sm"
@@ -113,7 +113,7 @@ export function MonthPicker({
                 onChange('');
                 setOpen(false);
               }}
-              className="text-xs h-7 px-2 text-slate-500 hover:text-slate-800"
+              className="text-xs h-7 px-2 text-muted-foreground hover:text-foreground"
             >
               Clear
             </Button>
