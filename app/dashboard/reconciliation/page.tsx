@@ -11,313 +11,313 @@ import { useReconciliation } from '@/app/composables/modules/useReconciliation';
 import { useToast } from '@/app/composables/useToast';
 
 export default function ReconciliationPage() {
-  const [isLoading, setIsLoading] = useState(true);
+ const [isLoading, setIsLoading] = useState(true);
 
-  const { reconciliation, fetchReconciliation, meta } = useReconciliation();
-  const { addToast } = useToast();
+ const { reconciliation, fetchReconciliation, meta } = useReconciliation();
+ const { addToast } = useToast();
 
-  const [recordsList, setRecordsList] = useState([] as any[]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [showFilter, setShowFilter] = useState(false);
-  const [filterParams, setFilterParams] = useState({
-    agency: '',
-    matchStatus: '',
-    period: '',
-    generatedRange: ''
+ const [recordsList, setRecordsList] = useState([] as any[]);
+ const [currentPage, setCurrentPage] = useState(1);
+ const [itemsPerPage, setItemsPerPage] = useState(10);
+ const [showFilter, setShowFilter] = useState(false);
+ const [filterParams, setFilterParams] = useState({
+  agency: '',
+  matchStatus: '',
+  period: '',
+  generatedRange: ''
+ });
+
+ useEffect(() => {
+  const params: any = { page: currentPage, limit: itemsPerPage };
+  if (filterParams.agency) params.agency = filterParams.agency;
+  if (filterParams.matchStatus) params.status = filterParams.matchStatus;
+  if (filterParams.period) params.period = filterParams.period;
+  if (filterParams.generatedRange) {
+   const [from, to] = filterParams.generatedRange.split(' to ');
+   if (from) params.generatedFrom = from;
+   if (to) params.generatedTo = to;
+  }
+
+  fetchReconciliation(params).then((data) => {
+   setRecordsList(data || []);
+   setIsLoading(false);
   });
+ }, [fetchReconciliation, currentPage, itemsPerPage, filterParams]);
 
-  useEffect(() => {
-    const params: any = { page: currentPage, limit: itemsPerPage };
-    if (filterParams.agency) params.agency = filterParams.agency;
-    if (filterParams.matchStatus) params.status = filterParams.matchStatus;
-    if (filterParams.period) params.period = filterParams.period;
-    if (filterParams.generatedRange) {
-      const [from, to] = filterParams.generatedRange.split(' to ');
-      if (from) params.generatedFrom = from;
-      if (to) params.generatedTo = to;
-    }
+ const clearFilters = () => {
+  setFilterParams({ agency: '', matchStatus: '', period: '', generatedRange: '' });
+ };
 
-    fetchReconciliation(params).then((data) => {
-      setRecordsList(data || []);
-      setIsLoading(false);
-    });
-  }, [fetchReconciliation, currentPage, itemsPerPage, filterParams]);
+ const filteredRecords = useMemo(() => {
+  return recordsList;
+ }, [recordsList]);
 
-  const clearFilters = () => {
-    setFilterParams({ agency: '', matchStatus: '', period: '', generatedRange: '' });
-  };
+ const paginatedRecords = useMemo(() => {
+  return recordsList;
+ }, [recordsList]);
 
-  const filteredRecords = useMemo(() => {
-    return recordsList;
-  }, [recordsList]);
+ const uploadExtract = () => {
+  addToast('Uploading CBA extract. Please wait...', 'info');
+  setTimeout(() => {
+   addToast('CBA extract successfully uploaded and processed.', 'success');
+  }, 1500);
+ };
 
-  const paginatedRecords = useMemo(() => {
-    return recordsList;
-  }, [recordsList]);
+ const resolveRecord = (record: any) => {
+  setRecordsList(prev => prev.map(r => r.id === record.id ? { ...r, matchStatus: 'Matched' } : r));
+  addToast(`Record ${record.loanId} resolved manually.`, 'success');
+ };
 
-  const uploadExtract = () => {
-    addToast('Uploading CBA extract. Please wait...', 'info');
-    setTimeout(() => {
-      addToast('CBA extract successfully uploaded and processed.', 'success');
-    }, 1500);
-  };
+ const [selectedRecord, setSelectedRecord] = useState<any>(null);
+ const [showDetailsModal, setShowDetailsModal] = useState(false);
 
-  const resolveRecord = (record: any) => {
-    setRecordsList(prev => prev.map(r => r.id === record.id ? { ...r, matchStatus: 'Matched' } : r));
-    addToast(`Record ${record.loanId} resolved manually.`, 'success');
-  };
+ const viewRecordDetails = (record: any) => {
+  setSelectedRecord(record);
+  setShowDetailsModal(true);
+ };
 
-  const [selectedRecord, setSelectedRecord] = useState<any>(null);
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
-
-  const viewRecordDetails = (record: any) => {
-    setSelectedRecord(record);
-    setShowDetailsModal(true);
-  };
-
-  return (
-    <div className="space-y-3">
-      {isLoading ? (
-        <div className="py-10">
-          <PulseLoader />
-        </div>
-      ) : (
-        <div className="space-y-3">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground mt-1">Match approved portal loans against CBA disbursement records.</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <button 
-                onClick={() => setShowFilter(!showFilter)}
-                className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-full text-sm font-medium text-foreground/90 hover:bg-muted/30 transition-colors shadow-sm"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
-                Filters
-                <svg className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-              </button>
-              <button onClick={uploadExtract} className="bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl text-sm transition-colors flex items-center gap-2 shadow-sm">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                Upload CBA Extract
-              </button>
-            </div>
-          </div>
-
-          {/* KPI Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-card rounded-2xl p-5 border border-border">
-              <div className="text-xs text-muted-foreground/70 uppercase tracking-wider mb-1">Total Records</div>
-              <div className="text-2xl text-foreground">{recordsList.length}</div>
-            </div>
-            <div className="bg-emerald-50 rounded-2xl p-5 border border-emerald-100">
-              <div className="text-xs text-emerald-600 uppercase tracking-wider mb-1">Matched</div>
-              <div className="text-2xl text-emerald-700">{recordsList.filter(r => r.matchStatus === 'Matched').length}</div>
-            </div>
-            <div className="bg-rose-50 rounded-2xl p-5 border border-rose-100">
-              <div className="text-xs text-rose-600 uppercase tracking-wider mb-1">Unmatched</div>
-              <div className="text-2xl text-rose-700">{recordsList.filter(r => r.matchStatus === 'Unmatched').length}</div>
-            </div>
-            <div className="bg-amber-50 rounded-2xl p-5 border border-amber-100">
-              <div className="text-xs text-amber-600 uppercase tracking-wider mb-1">Reversed</div>
-              <div className="text-2xl text-amber-700">{recordsList.filter(r => r.matchStatus === 'Reversed').length}</div>
-            </div>
-          </div>
-          
-          {/* Filters */}
-          <div className="mb-6 space-y-4">
-            {showFilter && (
-              <div className="bg-card p-6 rounded-2xl border border-border/50 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
-                <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Agency</label>
-                    <input 
-                      value={filterParams.agency} 
-                      onChange={e => setFilterParams({...filterParams, agency: e.target.value})} 
-                      type="text" 
-                      placeholder="Agency (e.g. NSCDC)..." 
-                      className="w-full px-4 py-2 border rounded-lg text-sm bg-card border-border outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400" 
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Match Status</label>
-                    <Select 
-                      value={filterParams.matchStatus}
-                      onValueChange={(val: any) => setFilterParams({...filterParams, matchStatus: val === 'none' ? '' : val})}
-                    >
-                      <SelectTrigger className="w-full bg-card"><SelectValue placeholder="All Match Statuses" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">All Match Statuses</SelectItem>
-                        <SelectItem value="MATCHED">Matched</SelectItem>
-                        <SelectItem value="UNDER_PAID">Under Paid</SelectItem>
-                        <SelectItem value="OVER_PAID">Over Paid</SelectItem>
-                        <SelectItem value="NO_DEDUCTION_FOUND">No Deduction Found</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1.5 z-[60] relative">
-                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Period</label>
-                    <MonthPicker 
-                      value={filterParams.period}
-                      onChange={val => setFilterParams({...filterParams, period: val})}
-                      placeholder="Pick a month"
-                    />
-                  </div>
-                  <div className="space-y-1.5 z-[60] relative">
-                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Generated Date</label>
-                    <CustomDateRangePicker 
-                      value={filterParams.generatedRange}
-                      onChange={(val: any) => setFilterParams({...filterParams, generatedRange: val})}
-                      placeholder="Generated Date Range"
-                    />
-                  </div>
-                  <div className="flex items-end">
-                    <button onClick={clearFilters} className="px-4 py-2 bg-card text-muted-foreground border border-border rounded-lg text-sm font-medium hover:bg-muted/30 transition-colors w-full">Clear Filters</button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-          
-          <div className="flex items-center justify-between gap-4 mb-4">
-            <div className="flex-1 max-w-md">
-              <span className="text-sm text-muted-foreground/70">Total {meta?.total || 0} records found</span>
-            </div>
-          </div>
-
-          {/* Data Table */}
-          <div className="bg-card rounded-2xl border border-border overflow-hidden mt-6">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-full text-left border-collapse">
-                <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
-                  <tr>
-                    <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Ref ID</th>
-                    <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Customer</th>
-                    <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Expected Amount</th>
-                    <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actual Amount</th>
-                    <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Variance</th>
-                    <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Status</th>
-                    <th className="px-4 py-4 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-sm">
-                  {paginatedRecords.length === 0 && (
-                    <tr>
-                      <td colSpan={7} className="px-6 py-8 text-center text-muted-foreground">No records found.</td>
-                    </tr>
-                  )}
-                  {paginatedRecords.map(record => (
-                    <tr key={record.id} className="hover:bg-muted/30/50 transition-colors group">
-                      <td className="px-4 py-4 font-mono text-muted-foreground">{record.id?.split('-')[0]}</td>
-                      <td className="px-4 py-4 font-medium text-foreground">{record.loan?.customerName || 'Unknown'}</td>
-                      <td className="px-4 py-4 text-muted-foreground">₦{Number(record.expectedAmount || 0).toLocaleString()}</td>
-                      <td className="px-4 py-4 text-muted-foreground">₦{Number(record.actualAmount || 0).toLocaleString()}</td>
-                      <td className="px-4 py-4 text-muted-foreground">
-                        <span className={`px-2.5 py-1 rounded-md text-xs font-medium whitespace-nowrap ${Number(record.variance) < 0 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                          ₦{Number(record.variance || 0).toLocaleString()}
-                        </span>
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className={`inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full text-xs border whitespace-nowrap ${record.status === 'MATCHED' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-rose-50 border-rose-200 text-rose-700'}`}>
-                          {record.status?.replace(/_/g, ' ') || 'UNKNOWN'}
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 text-right">
-                        <div className="flex justify-end">
-                          <TableDropdown>
-                            <button onClick={() => viewRecordDetails(record)} className="w-full text-left px-4 py-2.5 text-sm text-foreground/90 hover:bg-muted/30 transition-colors">
-                              View Details
-                            </button>
-                            {record.status !== 'MATCHED' && (
-                              <button onClick={() => resolveRecord(record)} className="w-full text-left px-4 py-2.5 text-sm text-emerald-600 hover:bg-emerald-50 transition-colors">
-                                Resolve Record
-                              </button>
-                            )}
-                          </TableDropdown>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Pagination */}
-          <Pagination 
-            totalItems={meta?.total || 0} 
-            currentPage={currentPage}
-            itemsPerPage={itemsPerPage}
-            onPageChange={setCurrentPage}
-            onItemsPerPageChange={setItemsPerPage}
-          />
-        </div>
-      )}
-
-      {/* Details Modal */}
-      {showDetailsModal && selectedRecord && (
-        <div className="fixed inset-0 bg-slate-900 dark:bg-slate-800/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-2xl max-w-xl w-full p-6 shadow-xl">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-lg font-bold text-foreground">Reconciliation Details</h3>
-              <button onClick={() => setShowDetailsModal(false)} className="p-2 text-muted-foreground/70 hover:bg-muted/50 hover:text-muted-foreground rounded-full transition-colors">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-              </button>
-            </div>
-            
-            <div className="space-y-4 text-sm">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-muted-foreground mb-1 text-xs uppercase tracking-wider">Ref ID</p>
-                  <p className="font-medium text-foreground truncate" title={selectedRecord.id}>{selectedRecord.id?.split('-')[0]}...</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground mb-1 text-xs uppercase tracking-wider">Loan ID</p>
-                  <p className="font-medium text-foreground truncate" title={selectedRecord.loanId}>{selectedRecord.loanId?.split('-')[0]}...</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground mb-1 text-xs uppercase tracking-wider">Customer Name</p>
-                  <p className="font-medium text-foreground">{selectedRecord.loan?.customerName || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground mb-1 text-xs uppercase tracking-wider">Account Number</p>
-                  <p className="font-medium text-foreground">{selectedRecord.loan?.accountNumber || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground mb-1 text-xs uppercase tracking-wider">IPPIS Number</p>
-                  <p className="font-medium text-foreground">{selectedRecord.loan?.ippisNumber || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground mb-1 text-xs uppercase tracking-wider">Agency</p>
-                  <p className="font-medium text-foreground">{selectedRecord.loan?.agency || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground mb-1 text-xs uppercase tracking-wider">Product</p>
-                  <p className="font-medium text-foreground">{selectedRecord.loan?.product || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground mb-1 text-xs uppercase tracking-wider">Interest Rate</p>
-                  <p className="font-medium text-foreground">{selectedRecord.loan?.interestRatePercent ? `${selectedRecord.loan.interestRatePercent}%` : 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground mb-1 text-xs uppercase tracking-wider">Period</p>
-                  <p className="font-medium text-foreground">{selectedRecord.period || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground mb-1 text-xs uppercase tracking-wider">Disbursement Date</p>
-                  <p className="font-medium text-foreground">{selectedRecord.loan?.disbursementDate ? new Date(selectedRecord.loan.disbursementDate).toLocaleDateString() : 'N/A'}</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="mt-8 pt-6 border-t border-border/50 flex justify-end">
-              <button onClick={() => setShowDetailsModal(false)} className="px-5 py-2.5 bg-muted/50 hover:bg-slate-200 text-foreground/90 rounded-xl text-sm font-medium transition-colors">
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+ return (
+  <div className="space-y-3">
+   {isLoading ? (
+    <div className="py-10">
+     <PulseLoader />
     </div>
-  );
+   ) : (
+    <div className="space-y-3">
+     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div>
+       <p className="text-sm text-muted-foreground mt-1">Match approved portal loans against CBA disbursement records.</p>
+      </div>
+      <div className="flex items-center gap-3">
+       <button 
+        onClick={() => setShowFilter(!showFilter)}
+        className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-full text-sm font-medium text-foreground/90 hover:bg-muted/30 transition-colors "
+       >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+        Filters
+        <svg className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+       </button>
+       <button onClick={uploadExtract} className="bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl text-sm transition-colors flex items-center gap-2 ">
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+        Upload CBA Extract
+       </button>
+      </div>
+     </div>
+
+     {/* KPI Cards */}
+     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="bg-card rounded-2xl p-5 border border-border">
+       <div className="text-xs text-muted-foreground/70 uppercase tracking-wider mb-1">Total Records</div>
+       <div className="text-2xl text-foreground">{recordsList.length}</div>
+      </div>
+      <div className="bg-emerald-50 rounded-2xl p-5 border border-emerald-100">
+       <div className="text-xs text-emerald-600 uppercase tracking-wider mb-1">Matched</div>
+       <div className="text-2xl text-emerald-700">{recordsList.filter(r => r.matchStatus === 'Matched').length}</div>
+      </div>
+      <div className="bg-rose-50 rounded-2xl p-5 border border-rose-100">
+       <div className="text-xs text-rose-600 uppercase tracking-wider mb-1">Unmatched</div>
+       <div className="text-2xl text-rose-700">{recordsList.filter(r => r.matchStatus === 'Unmatched').length}</div>
+      </div>
+      <div className="bg-amber-50 rounded-2xl p-5 border border-amber-100">
+       <div className="text-xs text-amber-600 uppercase tracking-wider mb-1">Reversed</div>
+       <div className="text-2xl text-amber-700">{recordsList.filter(r => r.matchStatus === 'Reversed').length}</div>
+      </div>
+     </div>
+     
+     {/* Filters */}
+     <div className="mb-6 space-y-4">
+      {showFilter && (
+       <div className="bg-card p-6 rounded-2xl border border-border/50 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
+         <div className="space-y-1.5">
+          <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Agency</label>
+          <input 
+           value={filterParams.agency} 
+           onChange={e => setFilterParams({...filterParams, agency: e.target.value})} 
+           type="text" 
+           placeholder="Agency (e.g. NSCDC)..." 
+           className="w-full px-4 py-2 border rounded-lg text-sm bg-card border-border outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400" 
+          />
+         </div>
+         <div className="space-y-1.5">
+          <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Match Status</label>
+          <Select 
+           value={filterParams.matchStatus}
+           onValueChange={(val: any) => setFilterParams({...filterParams, matchStatus: val === 'none' ? '' : val})}
+          >
+           <SelectTrigger className="w-full bg-card"><SelectValue placeholder="All Match Statuses" /></SelectTrigger>
+           <SelectContent>
+            <SelectItem value="none">All Match Statuses</SelectItem>
+            <SelectItem value="MATCHED">Matched</SelectItem>
+            <SelectItem value="UNDER_PAID">Under Paid</SelectItem>
+            <SelectItem value="OVER_PAID">Over Paid</SelectItem>
+            <SelectItem value="NO_DEDUCTION_FOUND">No Deduction Found</SelectItem>
+           </SelectContent>
+          </Select>
+         </div>
+         <div className="space-y-1.5 z-[60] relative">
+          <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Period</label>
+          <MonthPicker 
+           value={filterParams.period}
+           onChange={val => setFilterParams({...filterParams, period: val})}
+           placeholder="Pick a month"
+          />
+         </div>
+         <div className="space-y-1.5 z-[60] relative">
+          <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Generated Date</label>
+          <CustomDateRangePicker 
+           value={filterParams.generatedRange}
+           onChange={(val: any) => setFilterParams({...filterParams, generatedRange: val})}
+           placeholder="Generated Date Range"
+          />
+         </div>
+         <div className="flex items-end">
+          <button onClick={clearFilters} className="px-4 py-2 bg-card text-muted-foreground border border-border rounded-lg text-sm font-medium hover:bg-muted/30 transition-colors w-full">Clear Filters</button>
+         </div>
+        </div>
+       </div>
+      )}
+     </div>
+     
+     <div className="flex items-center justify-between gap-4 mb-4">
+      <div className="flex-1 max-w-md">
+       <span className="text-sm text-muted-foreground/70">Total {meta?.total || 0} records found</span>
+      </div>
+     </div>
+
+     {/* Data Table */}
+     <div className="bg-card rounded-2xl border border-border overflow-hidden mt-6">
+      <div className="overflow-x-auto">
+       <table className="w-full min-w-full text-left border-collapse">
+        <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
+         <tr>
+          <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Ref ID</th>
+          <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Customer</th>
+          <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Expected Amount</th>
+          <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actual Amount</th>
+          <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Variance</th>
+          <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Status</th>
+          <th className="px-4 py-4 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
+         </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-100 text-sm">
+         {paginatedRecords.length === 0 && (
+          <tr>
+           <td colSpan={7} className="px-6 py-8 text-center text-muted-foreground">No records found.</td>
+          </tr>
+         )}
+         {paginatedRecords.map(record => (
+          <tr key={record.id} className="hover:bg-muted/30/50 transition-colors group">
+           <td className="px-4 py-4 font-mono text-muted-foreground">{record.id?.split('-')[0]}</td>
+           <td className="px-4 py-4 font-medium text-foreground">{record.loan?.customerName || 'Unknown'}</td>
+           <td className="px-4 py-4 text-muted-foreground">₦{Number(record.expectedAmount || 0).toLocaleString()}</td>
+           <td className="px-4 py-4 text-muted-foreground">₦{Number(record.actualAmount || 0).toLocaleString()}</td>
+           <td className="px-4 py-4 text-muted-foreground">
+            <span className={`px-2.5 py-1 rounded-md text-xs font-medium whitespace-nowrap ${Number(record.variance) < 0 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}`}>
+             ₦{Number(record.variance || 0).toLocaleString()}
+            </span>
+           </td>
+           <td className="px-4 py-4">
+            <div className={`inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full text-xs border whitespace-nowrap ${record.status === 'MATCHED' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-rose-50 border-rose-200 text-rose-700'}`}>
+             {record.status?.replace(/_/g, ' ') || 'UNKNOWN'}
+            </div>
+           </td>
+           <td className="px-4 py-4 text-right">
+            <div className="flex justify-end">
+             <TableDropdown>
+              <button onClick={() => viewRecordDetails(record)} className="w-full text-left px-4 py-2.5 text-sm text-foreground/90 hover:bg-muted/30 transition-colors">
+               View Details
+              </button>
+              {record.status !== 'MATCHED' && (
+               <button onClick={() => resolveRecord(record)} className="w-full text-left px-4 py-2.5 text-sm text-emerald-600 hover:bg-emerald-50 transition-colors">
+                Resolve Record
+               </button>
+              )}
+             </TableDropdown>
+            </div>
+           </td>
+          </tr>
+         ))}
+        </tbody>
+       </table>
+      </div>
+     </div>
+
+     {/* Pagination */}
+     <Pagination 
+      totalItems={meta?.total || 0} 
+      currentPage={currentPage}
+      itemsPerPage={itemsPerPage}
+      onPageChange={setCurrentPage}
+      onItemsPerPageChange={setItemsPerPage}
+     />
+    </div>
+   )}
+
+   {/* Details Modal */}
+   {showDetailsModal && selectedRecord && (
+    <div className="fixed inset-0 bg-slate-900 dark:bg-slate-800/50 flex items-center justify-center z-50 p-4">
+     <div className="bg-card rounded-2xl max-w-xl w-full p-6 ">
+      <div className="flex justify-between items-center mb-3">
+       <h3 className="text-lg font-bold text-foreground">Reconciliation Details</h3>
+       <button onClick={() => setShowDetailsModal(false)} className="p-2 text-muted-foreground/70 hover:bg-muted/50 hover:text-muted-foreground rounded-full transition-colors">
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+       </button>
+      </div>
+      
+      <div className="space-y-4 text-sm">
+       <div className="grid grid-cols-2 gap-4">
+        <div>
+         <p className="text-muted-foreground mb-1 text-xs uppercase tracking-wider">Ref ID</p>
+         <p className="font-medium text-foreground truncate" title={selectedRecord.id}>{selectedRecord.id?.split('-')[0]}...</p>
+        </div>
+        <div>
+         <p className="text-muted-foreground mb-1 text-xs uppercase tracking-wider">Loan ID</p>
+         <p className="font-medium text-foreground truncate" title={selectedRecord.loanId}>{selectedRecord.loanId?.split('-')[0]}...</p>
+        </div>
+        <div>
+         <p className="text-muted-foreground mb-1 text-xs uppercase tracking-wider">Customer Name</p>
+         <p className="font-medium text-foreground">{selectedRecord.loan?.customerName || 'N/A'}</p>
+        </div>
+        <div>
+         <p className="text-muted-foreground mb-1 text-xs uppercase tracking-wider">Account Number</p>
+         <p className="font-medium text-foreground">{selectedRecord.loan?.accountNumber || 'N/A'}</p>
+        </div>
+        <div>
+         <p className="text-muted-foreground mb-1 text-xs uppercase tracking-wider">IPPIS Number</p>
+         <p className="font-medium text-foreground">{selectedRecord.loan?.ippisNumber || 'N/A'}</p>
+        </div>
+        <div>
+         <p className="text-muted-foreground mb-1 text-xs uppercase tracking-wider">Agency</p>
+         <p className="font-medium text-foreground">{selectedRecord.loan?.agency || 'N/A'}</p>
+        </div>
+        <div>
+         <p className="text-muted-foreground mb-1 text-xs uppercase tracking-wider">Product</p>
+         <p className="font-medium text-foreground">{selectedRecord.loan?.product || 'N/A'}</p>
+        </div>
+        <div>
+         <p className="text-muted-foreground mb-1 text-xs uppercase tracking-wider">Interest Rate</p>
+         <p className="font-medium text-foreground">{selectedRecord.loan?.interestRatePercent ? `${selectedRecord.loan.interestRatePercent}%` : 'N/A'}</p>
+        </div>
+        <div>
+         <p className="text-muted-foreground mb-1 text-xs uppercase tracking-wider">Period</p>
+         <p className="font-medium text-foreground">{selectedRecord.period || 'N/A'}</p>
+        </div>
+        <div>
+         <p className="text-muted-foreground mb-1 text-xs uppercase tracking-wider">Disbursement Date</p>
+         <p className="font-medium text-foreground">{selectedRecord.loan?.disbursementDate ? new Date(selectedRecord.loan.disbursementDate).toLocaleDateString() : 'N/A'}</p>
+        </div>
+       </div>
+      </div>
+      
+      <div className="mt-8 pt-6 border-t border-border/50 flex justify-end">
+       <button onClick={() => setShowDetailsModal(false)} className="px-5 py-2.5 bg-muted/50 hover:bg-slate-200 text-foreground/90 rounded-xl text-sm font-medium transition-colors">
+        Close
+       </button>
+      </div>
+     </div>
+    </div>
+   )}
+  </div>
+ );
 }
