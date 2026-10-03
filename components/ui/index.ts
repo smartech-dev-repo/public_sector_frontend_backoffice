@@ -4,16 +4,16 @@ export { Label, type LabelProps } from './label';
 export { Textarea, textareaVariants, type TextareaProps } from './textarea';
 export * from "./money-input";
 export {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectScrollDownButton,
-  SelectScrollUpButton,
-  SelectSeparator,
-  SelectTrigger,
-  SelectValue,
+ Select,
+ SelectContent,
+ SelectGroup,
+ SelectItem,
+ SelectLabel,
+ SelectScrollDownButton,
+ SelectScrollUpButton,
+ SelectSeparator,
+ SelectTrigger,
+ SelectValue,
 } from './select';
 export { Checkbox, type CheckboxProps } from './checkbox';
 export { RadioGroup, RadioGroupItem, type RadioGroupItemProps } from './radio-group';
