@@ -6,46 +6,47 @@ import { useRouter } from 'next/navigation';
 import AuthInput from '@/app/components/Auth/Input';
 
 export default function ForgotPasswordPage() {
-  const router = useRouter();
-  const [email, setEmail] = useState('');
+ const router = useRouter();
+ const [email, setEmail] = useState('');
 
-  const handleReset = (e: React.FormEvent) => {
-    e.preventDefault();
-    router.push('/check-email');
-  };
+ const handleReset = (e: React.FormEvent) => {
+  e.preventDefault();
+  router.push('/check-email');
+ };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-muted/30">
-      <div className="max-w-[400px] w-full">
-        <div className="bg-card p-8 rounded-2xl shadow-sm border border-border/50 text-center">
-          {/* Logo placeholder */}
-          <div className="mx-auto rounded-lg flex items-center justify-center mb-6">
-            <img src="/logo.png" className="h-8 w-auto" alt="Logo" />
-          </div>
-          
-          <h2 className="text-2xl font-semibold text-foreground text-left">Forgot password</h2>
-          <p className="mt-2 text-sm text-muted-foreground text-left mb-6">Enter your email address and we&apos;ll send you a link to reset your password.</p>
-
-          <form className="space-y-4 text-left" onSubmit={handleReset}>
-            <AuthInput
-              value={email}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-              label="Enter your email"
-              type="email"
-              placeholder="example@mmfb.com"
-              required
-            />
-            
-            <button type="submit" className="w-full mt-2 py-3 px-4 rounded-xl text-white font-medium bg-emerald-500 hover:bg-emerald-600 transition-colors">
-              Reset password
-            </button>
-          </form>
-
-          <div className="mt-6 text-sm text-muted-foreground">
-            <Link href="/login" className="text-emerald-600 hover:underline font-medium">Back to sign in</Link>
-          </div>
-        </div>
+ return (
+  <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-muted/30">
+   <div className="max-w-[400px] w-full">
+    <div className="bg-card p-8 rounded-2xl border border-border/50 text-center">
+     {/* Logo placeholder */}
+     <div className='flex justify-start items-start flex-col'>
+      <div className="rounded-lg flex items-center justify-center mb-6">
+        <img src="/auth-logo.png" className="h-8 w-auto" alt="Logo" />
       </div>
+      <h2 className="text-2xl font-semibold text-foreground text-left">Forgot password</h2>
+      <p className="mt-2 text-sm text-muted-foreground text-left mb-6">Enter your email address and we&apos;ll send you a link to reset your password.</p>
+     </div>
+
+     <form className="space-y-4 text-left" onSubmit={handleReset}>
+      <AuthInput
+       value={email}
+       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+       label="Enter your email"
+       type="email"
+       placeholder="example@mmfb.com"
+       required
+      />
+      
+      <button type="submit" className="w-full mt-2 py-3 px-4 rounded-xl text-white font-medium bg-emerald-500 hover:bg-emerald-600 transition-colors">
+       Reset password
+      </button>
+     </form>
+
+     <div className="mt-6 text-sm text-muted-foreground">
+      <Link href="/login" className="text-emerald-600 hover:underline font-medium">Back to sign in</Link>
+     </div>
     </div>
-  );
+   </div>
+  </div>
+ );
 }

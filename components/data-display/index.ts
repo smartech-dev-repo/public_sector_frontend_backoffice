@@ -1,10 +1,10 @@
 export {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
+ Card,
+ CardContent,
+ CardDescription,
+ CardFooter,
+ CardHeader,
+ CardTitle,
 } from './card';
 export { StatsCard, type StatsCardProps } from './stats-card';
 export { DataTable, type DataTableProps } from './data-table';
