@@ -135,7 +135,7 @@ export default function AgentDetailsPage() {
    </div>
 
    {/* Table Actions */}
-   <div className="flex items-center justify-end gap-3 pt-4 relative">
+   <div className="flex gap-3 w-full pt-4 relative">
     <span className="text-sm text-muted-foreground/70 mr-2">Showing {filteredLoans.length} of {loansData.length}</span>
     
     {/* Filter Button */}

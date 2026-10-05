@@ -8,7 +8,7 @@ import Pagination from '@/app/components/ui/Pagination';
 import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 
-export default function LoansCatalogPage() {
+export default function LoansCatalogTab() {
  const { loading, error, loans, fetchLoans, meta } = useLoans();
  
  const [page, setPage] = useState(1);
@@ -37,7 +37,7 @@ export default function LoansCatalogPage() {
   <main className="w-full">
    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
     <div>
-     <h1 className="text-2xl font-semibold text-foreground">Loans Database</h1>
+     <h1 className="text-2xl font-semibold text-foreground hidden">Loans Database</h1>
      <p className="text-sm text-muted-foreground mt-1">View all ingested loans across agencies</p>
     </div>
     <div className="flex items-center gap-3">

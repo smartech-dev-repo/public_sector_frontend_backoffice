@@ -11,7 +11,7 @@ import Pagination from '@/app/components/ui/Pagination';
 import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 
-export default function ClientLoansPage() {
+export default function ClientLoansTab() {
  return (
   <Suspense fallback={<PulseLoader />}>
    <ClientLoansContent />
@@ -112,7 +112,7 @@ function ClientLoansContent() {
  return (
   <main className="w-full">
    <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
-    <h1 className="text-2xl font-semibold text-foreground">Client Loans</h1>
+    <h1 className="text-2xl font-semibold text-foreground hidden">Client Loans</h1>
     <div className="flex items-center gap-3">
      <button 
       onClick={() => setShowFilter(!showFilter)}
@@ -274,8 +274,8 @@ function ClientLoansContent() {
    {/* Repayment Plan Modal */}
    {showRepaymentModal && typeof document !== 'undefined' && createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
-     <div className="fixed inset-0 bg-slate-900 dark:bg-slate-800/50 backdrop-blur-sm" onClick={closeRepaymentModal}></div>
-     <div className="relative bg-card rounded-2xl p-6 w-full max-w-2xl mx-4 animate-in fade-in zoom-in-95 duration-200 max-h-[80vh] overflow-y-auto">
+     <div className="fixed inset-0 bg-white/30 dark:bg-white/10 backdrop-blur-md" onClick={closeRepaymentModal}></div>
+     <div className="relative bg-card rounded-2xl p-6 w-full max-w-2xl mx-4 animate-in fade-in zoom-in-95 duration-200 max-h-[80vh] overflow-y-auto border border-slate-200 dark:border-slate-800 shadow-2xl shadow-black/10">
       <div className="flex items-start justify-between mb-4">
        <h3 className="text-lg font-semibold text-foreground">
         Repayment Plan {selectedLoan?.id ? `(${selectedLoan.id.slice(0, 8)}...)` : ''}

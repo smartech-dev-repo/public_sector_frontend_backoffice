@@ -239,8 +239,8 @@ export default function AgentManagementPage() {
    {/* Reject Modal */}
    {showRejectModal && typeof document !== 'undefined' && createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
-     <div className="fixed inset-0 bg-slate-900 dark:bg-slate-800/50 backdrop-blur-sm" onClick={() => setShowRejectModal(false)}></div>
-     <div className="relative bg-card rounded-2xl p-6 w-full max-w-md mx-4 animate-in fade-in zoom-in-95 duration-200">
+     <div className="fixed inset-0 bg-white/30 dark:bg-white/10 backdrop-blur-md" onClick={() => setShowRejectModal(false)}></div>
+     <div className="relative bg-card rounded-2xl p-6 w-full max-w-md mx-4 animate-in fade-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-800 shadow-2xl shadow-black/10">
       <h3 className="text-lg font-semibold text-foreground mb-4">Reject Agent</h3>
       <div className="space-y-4">
        <div>
@@ -253,9 +253,9 @@ export default function AgentManagementPage() {
         />
        </div>
       </div>
-      <div className="flex justify-end gap-3 mt-6">
-       <button onClick={() => setShowRejectModal(false)} className="px-4 py-2 bg-muted/50 text-foreground/90 rounded-lg">Cancel</button>
-       <button onClick={handleReject} disabled={submitting} className="px-4 py-2 bg-rose-600 text-white rounded-lg disabled:opacity-50">
+      <div className="flex gap-3 mt-6 w-full">
+       <button onClick={() => setShowRejectModal(false)} className="flex-1 px-4 py-2 bg-muted/50 text-foreground/90 rounded-lg">Cancel</button>
+       <button onClick={handleReject} disabled={submitting} className="flex-1 px-4 py-2 bg-rose-600 text-white rounded-lg disabled:opacity-50">
         {submitting ? 'Rejecting...' : 'Confirm Reject'}
        </button>
       </div>
