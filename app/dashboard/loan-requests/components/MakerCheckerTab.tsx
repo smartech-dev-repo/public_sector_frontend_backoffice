@@ -7,7 +7,7 @@ import { DataTable } from '@/components/data-display/data-table';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { Badge } from '@/components/ui/badge';
 
-export default function MakerCheckerPage() {
+export default function MakerCheckerTab() {
  const { loading, error, loanRequests, fetchLoanRequests, meta } = useLoans();
 
  const [page, setPage] = useState(1);
@@ -74,7 +74,7 @@ export default function MakerCheckerPage() {
  return (
   <div className="space-y-3">
    <div className="flex items-center justify-between mb-8">
-    <h1 className="text-2xl font-semibold text-foreground">Loan Requests (Maker/Checker)</h1>
+    <h1 className="text-2xl font-semibold text-foreground hidden">Loan Requests (Maker/Checker)</h1>
    </div>
 
    {/* Stats */}

@@ -8,7 +8,7 @@ import EmptyState from '@/app/components/ui/EmptyState';
 import { MonthPicker } from '@/app/components/ui/MonthPicker';
 import { GATEWAY_ENDPOINT_WITH_AUTH } from '@/app/api_factory/axios.config';
 
-export default function DisbursementSummaryPage() {
+export default function DisbursementSummaryTab() {
  const { loading, error, disbursementSummary, fetchDisbursementSummary } = useLoans();
  const { addToast } = useToast();
 
@@ -47,7 +47,7 @@ export default function DisbursementSummaryPage() {
  return (
   <main className="w-full">
    <div className="flex justify-between items-center mb-3">
-    <h1 className="text-2xl font-semibold text-foreground">Disbursement Summary</h1>
+    <h1 className="text-2xl font-semibold text-foreground hidden">Disbursement Summary</h1>
     <div className="flex items-center gap-3">
      <MonthPicker 
       value={month} 

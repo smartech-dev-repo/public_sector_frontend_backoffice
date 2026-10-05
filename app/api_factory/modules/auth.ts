@@ -57,5 +57,8 @@ export const auth_api = {
  },
  getProfile: () => {
   return GATEWAY_ENDPOINT_WITH_AUTH.get('/auth/profile');
+ },
+ refreshToken: (payload: any) => {
+  return GATEWAY_ENDPOINT.post('/auth/refresh', payload);
  }
 };

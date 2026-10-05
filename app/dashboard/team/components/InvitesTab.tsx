@@ -104,7 +104,7 @@ export default function InvitesTab() {
  return (
   <main className="w-full">
    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-    <h1 className="text-2xl font-semibold text-foreground">Pending Invites</h1>
+    <h1 className="text-2xl font-semibold text-foreground hidden">Pending Invites</h1>
     <div className="flex items-center gap-3">
      <button 
       onClick={() => setShowFilter(!showFilter)}
@@ -226,8 +226,8 @@ export default function InvitesTab() {
    {/* Invite Admin Modal */}
    {showInviteModal && typeof document !== 'undefined' && createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
-     <div className="fixed inset-0 bg-slate-900 dark:bg-slate-800/50 backdrop-blur-sm" onClick={() => setShowInviteModal(false)}></div>
-     <div className="relative bg-card rounded-2xl p-6 w-full max-w-md mx-4 animate-in fade-in zoom-in-95 duration-200">
+     <div className="fixed inset-0 bg-white/30 dark:bg-white/10 backdrop-blur-md" onClick={() => setShowInviteModal(false)}></div>
+     <div className="relative bg-card rounded-2xl p-6 w-full max-w-md mx-4 animate-in fade-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-800 shadow-2xl shadow-black/10">
       <div className="flex items-start justify-between mb-4">
        <h3 className="text-lg font-semibold text-foreground">Invite New Admin</h3>
        <button onClick={() => setShowInviteModal(false)} className="text-muted-foreground/70 hover:text-muted-foreground">
@@ -317,9 +317,9 @@ export default function InvitesTab() {
          </div>
         </div>
        )}
-       <div className="flex items-center gap-3 justify-end mt-6">
-        <button type="button" onClick={() => setShowInviteModal(false)} className="px-5 py-2.5 rounded-lg text-sm text-foreground/90 bg-muted/50 hover:bg-slate-200 transition-colors">Cancel</button>
-        <button type="submit" disabled={submitting} className="px-5 py-2.5 rounded-lg text-sm text-white bg-emerald-600 hover:bg-emerald-700 transition-colors disabled:opacity-50">
+       <div className="flex gap-3 w-full mt-6">
+        <button type="button" onClick={() => setShowInviteModal(false)} className="flex-1 px-5 py-2.5 rounded-lg text-sm text-foreground/90 bg-muted/50 hover:bg-slate-200 transition-colors">Cancel</button>
+        <button type="submit" disabled={submitting} className="flex-1 px-5 py-2.5 rounded-lg text-sm text-white bg-emerald-600 hover:bg-emerald-700 transition-colors disabled:opacity-50">
          {submitting ? 'Sending...' : 'Send Invite'}
         </button>
        </div>

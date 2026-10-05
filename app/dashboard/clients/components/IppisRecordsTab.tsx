@@ -7,7 +7,7 @@ import EmptyState from '@/app/components/ui/EmptyState';
 import Pagination from '@/app/components/ui/Pagination';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 
-export default function IppisCatalogPage() {
+export default function IppisRecordsTab() {
  const { loading, error, ippisRecords, fetchIppisRecords, meta } = useIppis();
  
  const [page, setPage] = useState(1);
@@ -30,7 +30,7 @@ export default function IppisCatalogPage() {
   <main className="w-full">
    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
     <div>
-     <h1 className="text-2xl font-semibold text-foreground">IPPIS Records Catalog</h1>
+     <h1 className="text-2xl font-semibold text-foreground hidden">IPPIS Records Catalog</h1>
      <p className="text-sm text-muted-foreground mt-1">View all synced personnel records from IPPIS</p>
     </div>
     <div className="flex items-center gap-3">
