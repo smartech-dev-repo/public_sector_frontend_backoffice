@@ -114,5 +114,65 @@ export const useClients = () => {
   }
  }, []);
 
- return { loading, error, clients, fetchClients, getClientById, retryClient, approveClient, getClientWallet, creditClientWallet, debitClientWallet, getClientActivities, meta };
+ 
+
+  const ippisLookup = useCallback(async (payload: { ippisNumber: string }) => {
+    setLoading(true);
+    try {
+      const res = await clients_api.clientIppisLookup(payload);
+      return res.data;
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const identityVerification = useCallback(async (clientId: string, payload: { bvn: string, nin: string }) => {
+    setLoading(true);
+    try {
+      const res = await clients_api.submitClientIdentity(clientId, payload);
+      return res.data;
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const uploadDocument = useCallback(async (clientId: string, type: string, file: File) => {
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('document', file);
+      const res = await clients_api.uploadClientDocument(clientId, type, formData);
+      return res.data;
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const runFaceMatch = useCallback(async (clientId: string) => {
+    setLoading(true);
+    try {
+      const res = await clients_api.submitClientFaceMatch(clientId, {});
+      return res.data;
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+ return {
+  ippisLookup,
+  identityVerification,
+  uploadDocument,
+  runFaceMatch, loading, error, clients, fetchClients, getClientById, retryClient, approveClient, getClientWallet, creditClientWallet, debitClientWallet, getClientActivities, meta };
 };
