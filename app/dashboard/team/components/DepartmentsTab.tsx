@@ -88,7 +88,7 @@ export default function DepartmentsTab() {
  return (
   <div className="space-y-3">
    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-    <h1 className="text-2xl font-semibold text-foreground">Departments</h1>
+    <h1 className="text-2xl font-semibold text-foreground hidden">Departments</h1>
     <button 
      onClick={() => {
       setEditingDepartment(null);

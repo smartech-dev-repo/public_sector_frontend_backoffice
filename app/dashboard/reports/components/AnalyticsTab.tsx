@@ -6,7 +6,7 @@ import { useMockData } from '@/app/composables/modules/useMockData';
 import { useToast } from '@/app/composables/useToast';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 
-export default function AnalyticsPage() {
+export default function AnalyticsTab() {
  const [isLoading, setIsLoading] = useState(true);
  const [period, setPeriod] = useState('30d');
 

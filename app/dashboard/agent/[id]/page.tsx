@@ -147,11 +147,11 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
    )}
 
    {application.status === 'APPROVED' && (
-    <div className="flex justify-end gap-3 mb-4">
-      <button onClick={handleResendCredentials} className="px-4 py-2 bg-card border border-border text-foreground/90 hover:bg-muted/30 rounded-lg transition-colors text-sm font-medium">
+    <div className="flex gap-3 mb-4 w-full">
+      <button onClick={handleResendCredentials} className="flex-1 px-4 py-2 bg-card border border-border text-foreground/90 hover:bg-muted/30 rounded-lg transition-colors text-sm font-medium">
        Resend Credentials
       </button>
-      <button onClick={handleRevokeSessions} className="px-4 py-2 bg-card border border-rose-200 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors text-sm font-medium">
+      <button onClick={handleRevokeSessions} className="flex-1 px-4 py-2 bg-card border border-rose-200 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors text-sm font-medium">
        Revoke Sessions
       </button>
     </div>
@@ -219,7 +219,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
    </div>
 
    {/* Table Actions */}
-   <div className="flex items-center justify-end gap-3 pt-4 relative">
+   <div className="flex gap-3 w-full pt-4 relative">
     <span className="text-sm text-muted-foreground/70 mr-2">Showing {clientLoans.length} of {meta?.total || 0}</span>
     
     <button onClick={() => setShowFilter(!showFilter)} className="flex items-center gap-2 px-3 py-1.5 bg-card border border-border rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/30 transition-colors ">

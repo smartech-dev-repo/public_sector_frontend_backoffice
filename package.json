@@ -3,7 +3,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 4005",
     "build": "next build",
     "start": "node --env-file-if-exists=.env node_modules/next/dist/bin/next start",
     "preview": "next build && npm run start",
