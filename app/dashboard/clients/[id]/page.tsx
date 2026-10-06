@@ -416,8 +416,8 @@ export default function ClientWalletPage() {
    {/* Credit/Debit Modals */}
    {(showCreditModal || showDebitModal) && typeof document !== 'undefined' && createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
-     <div className="fixed inset-0 bg-slate-900 dark:bg-slate-800/50 backdrop-blur-sm" onClick={() => { setShowCreditModal(false); setShowDebitModal(false); }}></div>
-     <div className="relative bg-card rounded-2xl p-6 w-full max-w-md mx-4 animate-in fade-in zoom-in-95 duration-200">
+     <div className="fixed inset-0 bg-white/30 dark:bg-white/10 backdrop-blur-md" onClick={() => { setShowCreditModal(false); setShowDebitModal(false); }}></div>
+     <div className="relative bg-card rounded-2xl p-6 w-full max-w-md mx-4 animate-in fade-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-800 shadow-2xl shadow-black/10">
       <div className="flex items-start justify-between mb-4">
        <h3 className="text-lg font-semibold text-foreground">{showCreditModal ? 'Credit Wallet' : 'Debit Wallet'}</h3>
        <button onClick={() => { setShowCreditModal(false); setShowDebitModal(false); }} className="text-muted-foreground/70 hover:text-muted-foreground">
@@ -436,8 +436,8 @@ export default function ClientWalletPage() {
         />
        </div>
       </div>
-      <div className="flex justify-end gap-3 mt-6">
-       <button onClick={() => { setShowCreditModal(false); setShowDebitModal(false); }} className="px-5 py-2.5 rounded-lg text-sm text-foreground/90 bg-muted/50 hover:bg-slate-200 transition-colors">Cancel</button>
+      <div className="flex gap-3 mt-6 w-full">
+       <button onClick={() => { setShowCreditModal(false); setShowDebitModal(false); }} className="flex-1 px-5 py-2.5 rounded-lg text-sm text-foreground/90 bg-muted/50 hover:bg-slate-200 transition-colors">Cancel</button>
        <button onClick={showCreditModal ? handleCredit : handleDebit} disabled={submitting} className={`px-5 py-2.5 rounded-lg text-sm text-white disabled:opacity-50 transition-colors ${showCreditModal ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'}`}>
         {submitting ? 'Processing...' : 'Confirm'}
        </button>

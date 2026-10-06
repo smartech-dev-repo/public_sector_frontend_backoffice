@@ -18,9 +18,7 @@ export default function TeamManagementPage() {
 
  return (
   <div className="space-y-3">
-   <div className="flex justify-between items-center">
-    <h1 className="text-2xl font-bold text-foreground">User Management</h1>
-   </div>
+   
 
    <div className="border-b border-border">
     <nav className="-mb-px flex space-x-8" aria-label="Tabs">
