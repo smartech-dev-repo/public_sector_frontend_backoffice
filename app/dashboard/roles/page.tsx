@@ -151,8 +151,8 @@ export default function RolesPage() {
    {/* Create Role Modal */}
    {showCreateRole && (
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
-     <div className="fixed inset-0 bg-slate-900 dark:bg-slate-800/50 backdrop-blur-sm" onClick={() => setShowCreateRole(false)}></div>
-     <div className="relative bg-card rounded-2xl p-6 w-full max-w-md mx-4 ">
+     <div className="fixed inset-0 bg-white/30 dark:bg-white/10 backdrop-blur-md" onClick={() => setShowCreateRole(false)}></div>
+     <div className="relative bg-card rounded-2xl p-6 w-full max-w-md mx-4  border border-slate-200 dark:border-slate-800 shadow-2xl shadow-black/10">
       <div className="flex items-start justify-between mb-4">
        <h3 className="text-lg font-semibold text-foreground">{isEditing ? 'Edit Role' : 'Create New Role'}</h3>
        <button onClick={() => setShowCreateRole(false)} className="text-muted-foreground/70 hover:text-muted-foreground">
@@ -181,9 +181,9 @@ export default function RolesPage() {
          className="w-full px-4 py-2.5 border border-border rounded-lg text-sm focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 outline-none transition-all" 
         />
        </div>
-       <div className="flex items-center gap-3 justify-end mt-6">
-        <button type="button" onClick={() => setShowCreateRole(false)} className="px-5 py-2.5 rounded-lg text-sm text-foreground/90 bg-muted/50 hover:bg-slate-200 transition-colors">Cancel</button>
-        <button type="submit" disabled={submitting} className="px-5 py-2.5 rounded-lg text-sm text-white bg-emerald-600 hover:bg-emerald-700 transition-colors disabled:opacity-50">
+       <div className="flex gap-3 w-full mt-6">
+        <button type="button" onClick={() => setShowCreateRole(false)} className="flex-1 px-5 py-2.5 rounded-lg text-sm text-foreground/90 bg-muted/50 hover:bg-slate-200 transition-colors">Cancel</button>
+        <button type="submit" disabled={submitting} className="flex-1 px-5 py-2.5 rounded-lg text-sm text-white bg-emerald-600 hover:bg-emerald-700 transition-colors disabled:opacity-50">
          {submitting ? 'Saving...' : 'Save Role'}
         </button>
        </div>
@@ -195,8 +195,8 @@ export default function RolesPage() {
    {/* View Permissions Modal */}
    {showViewPermissions && viewingRole && (
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
-     <div className="fixed inset-0 bg-slate-900 dark:bg-slate-800/50 backdrop-blur-sm" onClick={() => setShowViewPermissions(false)}></div>
-     <div className="relative bg-card rounded-2xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] flex flex-col">
+     <div className="fixed inset-0 bg-white/30 dark:bg-white/10 backdrop-blur-md" onClick={() => setShowViewPermissions(false)}></div>
+     <div className="relative bg-card rounded-2xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] flex flex-col border border-slate-200 dark:border-slate-800 shadow-2xl shadow-black/10">
       <div className="flex items-start justify-between mb-3 shrink-0">
        <div>
         <h3 className="text-xl font-bold text-foreground">Role Permissions</h3>

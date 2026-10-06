@@ -24,5 +24,24 @@ export const clients_api = {
  },
  getClientActivities: (id: string) => {
   return GATEWAY_ENDPOINT_WITH_AUTH.get(`/admin/clients/${id}/activities`);
+ },
+ clientIppisLookup: (payload: any) => {
+  return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/clients/onboarding/ippis-lookup`, payload);
+ },
+ submitClientIdentity: (id: string, payload: any) => {
+  return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/clients/${id}/onboarding/identity`, payload);
+ },
+ uploadClientPassportPhoto: (id: string, payload: any) => {
+  return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/clients/${id}/onboarding/documents/PASSPORT_PHOTO`, payload, {
+   headers: { 'Content-Type': 'multipart/form-data' }
+  });
+ },
+ submitClientFaceMatch: (id: string, payload: any) => {
+  return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/clients/${id}/onboarding/face-match`, payload, {
+   headers: { 'Content-Type': 'multipart/form-data' }
+  });
+ },
+ getClientOnboardingStatus: (id: string) => {
+  return GATEWAY_ENDPOINT_WITH_AUTH.get(`/admin/clients/${id}/onboarding/status`);
  }
 };
