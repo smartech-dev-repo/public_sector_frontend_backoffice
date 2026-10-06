@@ -9,7 +9,7 @@ import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 import { useState } from 'react';
 
-export default function AuditLogsPage() {
+export default function AuditLogsTab() {
  const [showFilter, setShowFilter] = useState(false);
  const [page, setPage] = useState(1);
  const [limit, setLimit] = useState(25);
@@ -38,7 +38,7 @@ export default function AuditLogsPage() {
  return (
   <main className="w-full">
    <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
-    <h1 className="text-2xl font-semibold text-foreground">Audit Logs</h1>
+    <h1 className="text-2xl font-semibold text-foreground hidden">Audit Logs</h1>
     <div className="flex items-center gap-3">
      <button 
       onClick={() => setShowFilter(!showFilter)}

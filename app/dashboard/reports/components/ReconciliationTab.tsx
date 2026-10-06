@@ -10,7 +10,7 @@ import TableDropdown from '@/app/components/ui/TableDropdown';
 import { useReconciliation } from '@/app/composables/modules/useReconciliation';
 import { useToast } from '@/app/composables/useToast';
 
-export default function ReconciliationPage() {
+export default function ReconciliationTab() {
  const [isLoading, setIsLoading] = useState(true);
 
  const { reconciliation, fetchReconciliation, meta } = useReconciliation();
@@ -256,8 +256,8 @@ export default function ReconciliationPage() {
 
    {/* Details Modal */}
    {showDetailsModal && selectedRecord && (
-    <div className="fixed inset-0 bg-slate-900 dark:bg-slate-800/50 flex items-center justify-center z-50 p-4">
-     <div className="bg-card rounded-2xl max-w-xl w-full p-6 ">
+    <div className="fixed inset-0 bg-white/30 dark:bg-white/10 backdrop-blur-md flex items-center justify-center z-50 p-4">
+     <div className="bg-card rounded-2xl max-w-xl w-full p-6  border border-slate-200 dark:border-slate-800 shadow-2xl shadow-black/10">
       <div className="flex justify-between items-center mb-3">
        <h3 className="text-lg font-bold text-foreground">Reconciliation Details</h3>
        <button onClick={() => setShowDetailsModal(false)} className="p-2 text-muted-foreground/70 hover:bg-muted/50 hover:text-muted-foreground rounded-full transition-colors">
@@ -311,7 +311,7 @@ export default function ReconciliationPage() {
       </div>
       
       <div className="mt-8 pt-6 border-t border-border/50 flex justify-end">
-       <button onClick={() => setShowDetailsModal(false)} className="px-5 py-2.5 bg-muted/50 hover:bg-slate-200 text-foreground/90 rounded-xl text-sm font-medium transition-colors">
+       <button onClick={() => setShowDetailsModal(false)} className="flex-1 px-5 py-2.5 bg-muted/50 hover:bg-slate-200 text-foreground/90 rounded-xl text-sm font-medium transition-colors">
         Close
        </button>
       </div>
