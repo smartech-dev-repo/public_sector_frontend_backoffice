@@ -111,6 +111,23 @@ export const useAuth = () => {
   }
  };
 
+ const loginVerify2fa = async (payload: any) => {
+  setLoading(true);
+  setError(null);
+  try {
+   const response = await auth_api.loginVerify2fa(payload);
+   setToken(response.data);
+   setUser(response.data);
+   setIsAuthenticated(true);
+   return response.data;
+  } catch (err: any) {
+   setError(err.message);
+   throw err;
+  } finally {
+   setLoading(false);
+  }
+ };
+
  const agentLogin = async (payload: any) => {
   setLoading(true);
   setError(null);
@@ -196,6 +213,7 @@ export const useAuth = () => {
   clientOtpRequest,
   clientOtpVerify,
   logout,
-  logoutAll
+  logoutAll,
+  loginVerify2fa
  };
 };

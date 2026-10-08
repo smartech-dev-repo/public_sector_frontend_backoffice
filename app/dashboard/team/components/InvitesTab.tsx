@@ -16,7 +16,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 export default function InvitesTab() {
  const [page, setPage] = useState(1);
  const [limit, setLimit] = useState(25);
- const { loading, error, invites, fetchInvites, resendInvite, deleteInvite, createInvite, meta } = useInvites();
+ const { loading, error, invites, fetchInvites, resendInvite, deleteInvite, createInvite, revokeInvite, meta } = useInvites();
  const { roles, fetchRoles } = useRoles();
  const { addToast } = useToast();
  const { confirm } = useConfirm();
@@ -82,6 +82,22 @@ export default function InvitesTab() {
    addToast('Invite resent successfully', 'success');
   } catch (e: any) {
    addToast(e?.response?.data?.message || 'Failed to resend invite', 'error');
+  }
+ };
+
+ const handleRevoke = async (id: string, email: string) => {
+  const confirmed = await confirm({
+   title: 'Revoke Invite',
+   message: `Are you sure you want to revoke the invite for ${email}?`,
+   confirmText: 'Revoke',
+  });
+  if (!confirmed) return;
+  try {
+   await revokeInvite(id);
+   addToast('Invite revoked successfully', 'success');
+   fetchInvites({ page, limit });
+  } catch (e: any) {
+   addToast(e?.response?.data?.message || 'Failed to revoke invite', 'error');
   }
  };
 
@@ -200,6 +216,7 @@ export default function InvitesTab() {
          <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium relative">
           <TableDropdown>
            <button onClick={() => handleResend(invite.id, invite.email)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 hover:text-emerald-800 transition-colors">Resend</button>
+           <button onClick={() => handleRevoke(invite.id, invite.email)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-amber-600 hover:bg-amber-50 hover:text-amber-800 transition-colors">Revoke</button>
            <button onClick={() => handleDelete(invite.id, invite.email)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 hover:text-rose-800 transition-colors">Delete</button>
           </TableDropdown>
          </td>

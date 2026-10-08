@@ -114,7 +114,20 @@ export const useClients = () => {
   }
  }, []);
 
- 
+ const getClientOnboardingStatus = useCallback(async (id: string) => {
+  setLoading(true);
+  try {
+   const res = await clients_api.getClientOnboardingStatus(id);
+   return res.data;
+  } catch (err: any) {
+   setError(err.message);
+   throw err;
+  } finally {
+   setLoading(false);
+  }
+ }, []);
+
+
 
   const ippisLookup = useCallback(async (payload: { ippisNumber: string }) => {
     setLoading(true);
@@ -174,5 +187,5 @@ export const useClients = () => {
   ippisLookup,
   identityVerification,
   uploadDocument,
-  runFaceMatch, loading, error, clients, fetchClients, getClientById, retryClient, approveClient, getClientWallet, creditClientWallet, debitClientWallet, getClientActivities, meta };
+  runFaceMatch, getClientOnboardingStatus, loading, error, clients, fetchClients, getClientById, retryClient, approveClient, getClientWallet, creditClientWallet, debitClientWallet, getClientActivities, meta };
 };

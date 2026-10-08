@@ -15,17 +15,19 @@ export default function ClientWalletPage() {
  const { id } = useParams();
  const clientId = typeof id === 'string' ? id : '';
  
- const { loading, error, getClientById, getClientWallet, creditClientWallet, debitClientWallet, getClientActivities } = useClients();
+ const { loading, error, getClientById, getClientWallet, creditClientWallet, debitClientWallet, getClientActivities, getClientOnboardingStatus } = useClients();
  const { fetchClientLoans, clientLoans, getClientLoanRepaymentPlan } = useLoans();
  const { addToast } = useToast();
  const { confirm } = useConfirm();
 
  const [client, setClient] = useState<any>(null);
  const [wallet, setWallet] = useState<any>(null);
+ const [onboardingStatus, setOnboardingStatus] = useState<any>(null);
+ const [onboardingLoading, setOnboardingLoading] = useState(false);
  const [activities, setActivities] = useState<any[]>([]);
  const [activitiesLoading, setActivitiesLoading] = useState(false);
  const [loansLoading, setLoansLoading] = useState(false);
- const [activeTab, setActiveTab] = useState<'profile' | 'wallet' | 'loans' | 'activities'>('profile');
+ const [activeTab, setActiveTab] = useState<'profile' | 'onboarding' | 'wallet' | 'loans' | 'activities'>('profile');
  
  const [showCreditModal, setShowCreditModal] = useState(false);
  const [showDebitModal, setShowDebitModal] = useState(false);
@@ -79,13 +81,28 @@ export default function ClientWalletPage() {
   }
  };
 
- const handleTabChange = (tab: 'profile' | 'wallet' | 'loans' | 'activities') => {
+ const loadOnboardingStatus = async () => {
+  setOnboardingLoading(true);
+  try {
+   const data = await getClientOnboardingStatus(clientId);
+   setOnboardingStatus(data?.data || data);
+  } catch (e: any) {
+   addToast('Failed to load onboarding status', 'error');
+  } finally {
+   setOnboardingLoading(false);
+  }
+ };
+
+ const handleTabChange = (tab: 'profile' | 'onboarding' | 'wallet' | 'loans' | 'activities') => {
   setActiveTab(tab);
   if (tab === 'activities' && activities.length === 0) {
    loadActivities();
   }
   if (tab === 'loans' && clientLoans.length === 0) {
    loadClientLoans();
+  }
+  if (tab === 'onboarding' && !onboardingStatus) {
+   loadOnboardingStatus();
   }
  };
 
@@ -183,6 +200,7 @@ export default function ClientWalletPage() {
 
  const tabs = [
   { key: 'profile' as const, label: 'Profile' },
+  { key: 'onboarding' as const, label: 'Onboarding' },
   { key: 'wallet' as const, label: 'Wallet' },
   { key: 'loans' as const, label: 'Loans' },
   { key: 'activities' as const, label: 'Activities' },
@@ -231,6 +249,61 @@ export default function ClientWalletPage() {
         <p><span className="text-muted-foreground font-medium">Phone:</span> {client.phoneNumber}</p>
         <p><span className="text-muted-foreground font-medium">Status:</span> <span className="px-2 py-1 bg-muted/50 rounded text-xs font-medium">{client.status}</span></p>
        </div>
+      </div>
+     )}
+
+     {/* Onboarding Tab */}
+     {activeTab === 'onboarding' && (
+      <div className="bg-card p-6 rounded-2xl border border-border">
+       <h2 className="text-lg font-semibold text-foreground mb-4">Onboarding Status</h2>
+       {onboardingLoading ? (
+        <PulseLoader />
+       ) : onboardingStatus ? (
+        <div className="space-y-6">
+         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="p-4 bg-muted/30 rounded-xl border border-border/50">
+           <p className="text-xs text-muted-foreground mb-1">Email Verified</p>
+           <div className={`text-sm font-semibold ${onboardingStatus.isEmailVerified ? 'text-emerald-600' : 'text-rose-600'}`}>
+            {onboardingStatus.isEmailVerified ? 'Yes' : 'No'}
+           </div>
+          </div>
+          <div className="p-4 bg-muted/30 rounded-xl border border-border/50">
+           <p className="text-xs text-muted-foreground mb-1">Phone Verified</p>
+           <div className={`text-sm font-semibold ${onboardingStatus.isPhoneVerified ? 'text-emerald-600' : 'text-rose-600'}`}>
+            {onboardingStatus.isPhoneVerified ? 'Yes' : 'No'}
+           </div>
+          </div>
+          <div className="p-4 bg-muted/30 rounded-xl border border-border/50">
+           <p className="text-xs text-muted-foreground mb-1">BVN Verified</p>
+           <div className={`text-sm font-semibold ${onboardingStatus.isBvnVerified ? 'text-emerald-600' : 'text-rose-600'}`}>
+            {onboardingStatus.isBvnVerified ? 'Yes' : 'No'}
+           </div>
+          </div>
+          <div className="p-4 bg-muted/30 rounded-xl border border-border/50">
+           <p className="text-xs text-muted-foreground mb-1">Face Match</p>
+           <div className={`text-sm font-semibold ${onboardingStatus.isFaceMatched ? 'text-emerald-600' : 'text-rose-600'}`}>
+            {onboardingStatus.isFaceMatched ? 'Matched' : 'Pending'}
+           </div>
+          </div>
+         </div>
+         
+         <div className="p-4 bg-muted/30 rounded-xl border border-border/50 space-y-3">
+          <h3 className="font-medium text-foreground">Next Steps / Outstanding</h3>
+          {(!onboardingStatus.isEmailVerified || !onboardingStatus.isPhoneVerified || !onboardingStatus.isBvnVerified || !onboardingStatus.isFaceMatched) ? (
+           <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
+            {!onboardingStatus.isEmailVerified && <li>Client needs to verify their email address.</li>}
+            {!onboardingStatus.isPhoneVerified && <li>Client needs to verify their phone number.</li>}
+            {!onboardingStatus.isBvnVerified && <li>Client needs to complete BVN verification.</li>}
+            {!onboardingStatus.isFaceMatched && <li>Client needs to complete biometric face match.</li>}
+           </ul>
+          ) : (
+           <p className="text-sm text-emerald-600 font-medium">All onboarding steps have been successfully completed.</p>
+          )}
+         </div>
+        </div>
+       ) : (
+        <EmptyState title="No Onboarding Data" description="We couldn't retrieve onboarding status for this client." />
+       )}
       </div>
      )}
 
