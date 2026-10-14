@@ -62,5 +62,18 @@ export const useInvites = () => {
   }
  }, []);
 
- return { loading, error, invites, fetchInvites, createInvite, resendInvite, deleteInvite, meta };
+ const revokeInvite = useCallback(async (id: string) => {
+  setLoading(true);
+  try {
+   const res = await invites_api.revokeInvite(id);
+   return res.data;
+  } catch (err: any) {
+   setError(err.message);
+   throw err;
+  } finally {
+   setLoading(false);
+  }
+ }, []);
+
+ return { loading, error, invites, fetchInvites, createInvite, resendInvite, deleteInvite, revokeInvite, meta };
 };
