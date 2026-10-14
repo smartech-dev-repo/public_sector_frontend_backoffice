@@ -7,10 +7,11 @@ export function Toaster() {
    visibleToasts={1}
    richColors
    closeButton
-   style={{ zIndex: 999999 }}
+   className="!z-[99999]"
    toastOptions={{
+    className: '!z-[99999]',
     classNames: {
-     toast: 'border bg-background text-foreground',
+     toast: 'border bg-background text-foreground shadow-lg',
     },
    }}
   />

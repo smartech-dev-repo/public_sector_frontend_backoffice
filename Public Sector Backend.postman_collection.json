@@ -1,12 +1,4 @@
 {
-  "info": {
-    "_postman_id": "f0d689b0-017e-4f16-914a-dcc73a04d1b9",
-    "name": "Public Sector Backend",
-    "description": "Full API coverage for the public-sector-backend NestJS app: Phase 1 auth (Admin/Agent/Client), the Governance Bundle (sessions, invites, audit log), and Document Ingestion Infrastructure.\n\nOrganized into four top-level groups (Admin, Agent, IPPIS, Client) plus a standalone Health check. Each group is self-contained: it has its own Auth (where applicable) and its own Session sub-folder using that group's own tokens, so you can run a whole group top-to-bottom without reaching into another group. Admin's 'Force-Revoke Sessions' (which targets an Agent's or a Client's sessions) stays under Admin since it's an admin-performed action, even though its target is an Agent/Client — it does not change how Agent/Client manage their own sessions.\n\nEach endpoint has multiple requests: at least one success scenario and the meaningful failure scenarios (validation, auth, permission, not-found). Success requests have test scripts that capture tokens/ids into collection variables so later requests in the same folder (or run via Collection Runner) chain automatically.\n\nMAINTENANCE: this collection must be kept in sync with the codebase. See ../CLAUDE.md and postman/README.md for the standing rule — any change to a controller, DTO, or permission key must be reflected here in the same change.",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "53911891",
-    "_collection_link": "https://go.postman.co/collection/53911891-f0d689b0-017e-4f16-914a-dcc73a04d1b9?source=collection_link"
-  },
   "item": [
     {
       "name": "Admin",
