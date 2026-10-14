@@ -5,14 +5,21 @@ export const useAuth = () => {
  const [loading, setLoading] = useState(false);
  const [error, setError] = useState<string | null>(null);
  const [profile, setProfile] = useState<any>(null);
+ const [twoFactorSetupData, setTwoFactorSetupData] = useState<any>(null);
  const [qrCode, setQrCode] = useState<string | null>(null);
 
  const getProfile = useCallback(async () => {
   setLoading(true);
   try {
-   const res = await auth_api.getProfile();
-   setProfile(res.data?.data || res.data);
-   return res.data;
+   let res: any;
+   try {
+    res = await auth_api.getAdminProfile();
+   } catch {
+    res = await auth_api.getProfile();
+   }
+   const data = res.data?.data || res.data;
+   setProfile(data);
+   return data;
   } catch (err: any) {
    setError(err.message);
    throw err;
@@ -21,7 +28,7 @@ export const useAuth = () => {
   }
  }, []);
 
- const changePassword = useCallback(async (payload: any) => {
+ const changePassword = useCallback(async (payload: { currentPassword: string; newPassword: string }) => {
   setLoading(true);
   try {
    const res = await auth_api.changePassword(payload);
@@ -34,14 +41,19 @@ export const useAuth = () => {
   }
  }, []);
 
- const setup2fa = useCallback(async () => {
+ const setup2fa = useCallback(async (payload?: { method?: 'TOTP' | 'EMAIL' }) => {
   setLoading(true);
   try {
-   const res = await auth_api.setup2fa();
-   if (res.data?.qrCodeUrl || res.data?.data?.qrCodeUrl) {
-     setQrCode(res.data.qrCodeUrl || res.data.data.qrCodeUrl);
+   const res = await auth_api.setup2fa(payload);
+   const data = res.data?.data || res.data;
+   setTwoFactorSetupData(data);
+   if (data?.otpauthUrl) {
+    const qrUrl = data.qrCodeUrl || `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.otpauthUrl)}`;
+    setQrCode(qrUrl);
+   } else {
+    setQrCode(null);
    }
-   return res.data;
+   return data;
   } catch (err: any) {
    setError(err.message);
    throw err;
@@ -50,7 +62,7 @@ export const useAuth = () => {
   }
  }, []);
 
- const confirm2fa = useCallback(async (payload: { token: string }) => {
+ const confirm2fa = useCallback(async (payload: { code: string }) => {
   setLoading(true);
   try {
    const res = await auth_api.confirm2fa(payload);
@@ -63,7 +75,7 @@ export const useAuth = () => {
   }
  }, []);
 
- const disable2fa = useCallback(async (payload: { token: string }) => {
+ const disable2fa = useCallback(async (payload: { currentPassword: string }) => {
   setLoading(true);
   try {
    const res = await auth_api.disable2fa(payload);
@@ -81,6 +93,7 @@ export const useAuth = () => {
   error, 
   profile, 
   qrCode, 
+  twoFactorSetupData,
   getProfile, 
   changePassword, 
   setup2fa, 

@@ -98,9 +98,7 @@ export default function AgentManagementPage() {
 
  return (
   <main className="w-full">
-   <div className="flex justify-between items-center mb-4">
-    <h1 className="text-2xl font-semibold text-foreground">Agent Management</h1>
-   </div>
+   <h1 className="sr-only">Agent Management</h1>
 
    {/* Filters Area */}
    <div className="mb-6 space-y-4">

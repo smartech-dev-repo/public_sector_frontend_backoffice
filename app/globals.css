@@ -93,3 +93,15 @@
     font-family: 'Clash Display', ui-sans-serif, system-ui, -apple-system, sans-serif;
   }
 }
+
+/* Aggressively ensure ALL toasts float above backdrops, modals, drawers and overlays */
+[data-sonner-toaster],
+[data-sonner-toaster] *,
+[data-sonner-toast],
+.toaster,
+#toast-root,
+[data-toast-container],
+.toast-container {
+  z-index: 999999 !important;
+}
+

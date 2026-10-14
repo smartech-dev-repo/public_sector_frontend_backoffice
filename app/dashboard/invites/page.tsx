@@ -124,8 +124,8 @@ export default function InvitesPage() {
 
  return (
   <main className="w-full">
-   <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
-    <h1 className="text-2xl font-semibold text-foreground">Pending Invites</h1>
+   <div className="flex justify-end items-center mb-6">
+    <h1 className="sr-only">Pending Invites</h1>
     <div className="flex items-center gap-3">
      <button 
       onClick={() => setShowFilter(!showFilter)}

@@ -6,6 +6,8 @@ import { useToast } from '@/app/composables/useToast';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { useConfirm } from '@/app/composables/useConfirm';
+import TableDropdown from '@/app/components/ui/TableDropdown';
+import { Eye, Pencil, Trash2 } from 'lucide-react';
 
 export default function RolesPage() {
  const { confirm } = useConfirm();
@@ -86,8 +88,8 @@ export default function RolesPage() {
 
  return (
   <main className="w-full">
-   <div className="flex justify-between items-center mb-3">
-    <h1 className="text-2xl font-semibold text-foreground">Role Management</h1>
+   <div className="flex justify-end items-center mb-4">
+    <h1 className="sr-only">Role Management</h1>
     <button onClick={openCreateModal} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium">
      Create Role
     </button>
@@ -134,10 +136,34 @@ export default function RolesPage() {
            )}
           </div>
          </td>
-         <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-          <button onClick={() => openViewPermissionsModal(role)} className="text-emerald-600 hover:text-emerald-800 font-medium transition-colors">View</button>
-          <button onClick={() => openEditModal(role)} className="text-blue-600 hover:text-blue-800 font-medium transition-colors">Edit</button>
-          <button onClick={() => handleDelete(role.id)} className="text-rose-600 hover:text-rose-800 font-medium transition-colors">Delete</button>
+         <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium relative">
+          <TableDropdown>
+           <button 
+            type="button"
+            onClick={() => openViewPermissionsModal(role)} 
+            className="w-full text-left px-4 py-2.5 text-xs font-medium text-foreground hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 transition-colors flex items-center gap-2.5"
+           >
+            <Eye className="w-4 h-4 text-emerald-600 shrink-0" />
+            View Permissions
+           </button>
+           <button 
+            type="button"
+            onClick={() => openEditModal(role)} 
+            className="w-full text-left px-4 py-2.5 text-xs font-medium text-foreground hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-950/30 transition-colors flex items-center gap-2.5"
+           >
+            <Pencil className="w-4 h-4 text-blue-600 shrink-0" />
+            Edit Role
+           </button>
+           <div className="h-px bg-border/60 my-1"></div>
+           <button 
+            type="button"
+            onClick={() => handleDelete(role.id)} 
+            className="w-full text-left px-4 py-2.5 text-xs font-medium text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/30 transition-colors flex items-center gap-2.5"
+           >
+            <Trash2 className="w-4 h-4 text-rose-600 shrink-0" />
+            Delete
+           </button>
+          </TableDropdown>
          </td>
         </tr>
        )))}

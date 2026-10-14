@@ -7,6 +7,9 @@ export const useLoans = () => {
  const [error, setError] = useState(null);
  const [loans, setLoans] = useState([] as any[]);
  const [loanTerms, setLoanTerms] = useState([] as any[]);
+ const [loanProducts, setLoanProducts] = useState([] as any[]);
+ const [loanProductSectors, setLoanProductSectors] = useState([] as string[]);
+ const [loanSettings, setLoanSettings] = useState(null as any);
  const [loanRequests, setLoanRequests] = useState([] as any[]);
  const [disbursementSummary, setDisbursementSummary] = useState(null as any);
  const [clientLoans, setClientLoans] = useState([] as any[]);
@@ -59,6 +62,85 @@ export const useLoans = () => {
   setLoading(true);
   try {
    const res = await loans_api.updateLoanTerm(id, data);
+   return res.data;
+  } catch (err: any) {
+   setError(err.message);
+   throw err;
+  } finally {
+   setLoading(false);
+  }
+ }, []);
+
+ const fetchLoanProducts = useCallback(async (params?: any) => {
+  setLoading(true);
+  try {
+   const res = await loans_api.getLoanProducts(params);
+   let dataList = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || []);
+   if (res.data?.meta) setMeta(res.data.meta);
+   dataList = Array.isArray(dataList) ? dataList : [];
+   setLoanProducts(dataList);
+   return dataList;
+  } catch (err: any) {
+   setError(err.message);
+  } finally {
+   setLoading(false);
+  }
+ }, []);
+
+ const createLoanProduct = useCallback(async (data: any) => {
+  setLoading(true);
+  try {
+   const res = await loans_api.createLoanProduct(data);
+   return res.data;
+  } catch (err: any) {
+   setError(err.message);
+   throw err;
+  } finally {
+   setLoading(false);
+  }
+ }, []);
+
+ const updateLoanProduct = useCallback(async (id: string, data: any) => {
+  setLoading(true);
+  try {
+   const res = await loans_api.updateLoanProduct(id, data);
+   return res.data;
+  } catch (err: any) {
+   setError(err.message);
+   throw err;
+  } finally {
+   setLoading(false);
+  }
+ }, []);
+
+ const fetchLoanProductSectors = useCallback(async () => {
+  try {
+   const res = await loans_api.getLoanProductSectors();
+   const sectors = Array.isArray(res.data?.sectors) ? res.data.sectors : (Array.isArray(res.data) ? res.data : []);
+   setLoanProductSectors(sectors);
+   return sectors;
+  } catch (err: any) {
+   console.error('Failed to fetch sectors', err);
+   return [];
+  }
+ }, []);
+
+ const fetchLoanSettings = useCallback(async () => {
+  try {
+   const res = await loans_api.getLoanSettings();
+   setLoanSettings(res.data);
+   return res.data;
+  } catch (err: any) {
+   console.error('Failed to fetch loan settings', err);
+   return null;
+  }
+ }, []);
+
+ const updateLoanSettings = useCallback(async (data: any) => {
+  setLoading(true);
+  try {
+   const res = await loans_api.updateLoanSettings(data);
+   setLoanSettings(res.data);
    return res.data;
   } catch (err: any) {
    setError(err.message);
@@ -166,9 +248,11 @@ export const useLoans = () => {
  }, []);
 
  return { 
-  loading, error, loans, loanTerms, loanRequests, disbursementSummary, clientLoans, meta,
-  fetchLoans, fetchLoanTerms, createLoanTerm, updateLoanTerm, fetchLoanRequests,
-  approveLoanRequest, rejectLoanRequest, disburseLoanRequest, fetchDisbursementSummary,
+  loading, error, loans, loanTerms, loanProducts, loanProductSectors, loanSettings, loanRequests, disbursementSummary, clientLoans, meta,
+  fetchLoans, fetchLoanTerms, createLoanTerm, updateLoanTerm,
+  fetchLoanProducts, createLoanProduct, updateLoanProduct, fetchLoanProductSectors,
+  fetchLoanSettings, updateLoanSettings,
+  fetchLoanRequests, approveLoanRequest, rejectLoanRequest, disburseLoanRequest, fetchDisbursementSummary,
   fetchClientLoans, getClientLoanRepaymentPlan
  };
 };
