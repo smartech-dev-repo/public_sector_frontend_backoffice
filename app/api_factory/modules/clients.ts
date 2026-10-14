@@ -31,15 +31,13 @@ export const clients_api = {
  submitClientIdentity: (id: string, payload: any) => {
   return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/clients/${id}/onboarding/identity`, payload);
  },
- uploadClientPassportPhoto: (id: string, payload: any) => {
-  return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/clients/${id}/onboarding/documents/PASSPORT_PHOTO`, payload, {
+ uploadClientDocument: (id: string, type: string, payload: any) => {
+  return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/clients/${id}/onboarding/documents/${type}`, payload, {
    headers: { 'Content-Type': 'multipart/form-data' }
   });
  },
- submitClientFaceMatch: (id: string, payload: any) => {
-  return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/clients/${id}/onboarding/face-match`, payload, {
-   headers: { 'Content-Type': 'multipart/form-data' }
-  });
+ submitClientFaceMatch: (id: string, payload?: any) => {
+  return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/clients/${id}/onboarding/face-match`, payload);
  },
  getClientOnboardingStatus: (id: string) => {
   return GATEWAY_ENDPOINT_WITH_AUTH.get(`/admin/clients/${id}/onboarding/status`);

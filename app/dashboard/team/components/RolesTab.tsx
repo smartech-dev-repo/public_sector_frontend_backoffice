@@ -19,7 +19,7 @@ export default function RolesTab() {
  const [dateRange, setDateRange] = useState('');
  const { confirm } = useConfirm();
 
- const { loading, error, roles, fetchRoles, deleteRole, createRole, updateRole, assignBulkPermissions, meta } = useRoles();
+ const { loading, error, roles, fetchRoles, deleteRole, createRole, updateRole, assignBulkPermissions, removePermission, meta } = useRoles();
  const { permissions: availablePermissions, fetchPermissions } = usePermissions();
  const { addToast } = useToast();
 
@@ -115,6 +115,20 @@ export default function RolesTab() {
     fetchRoles({ page, limit });
    } catch (e: any) {
     addToast(e?.response?.data?.message || 'Failed to delete role', 'error');
+   }
+  }
+ };
+
+ const handleRemovePermission = async (roleId: string, permissionId: string) => {
+  const confirmed = await confirm({ message: 'Are you sure you want to remove this permission from the role?' });
+  if (confirmed) {
+   try {
+    await removePermission(roleId, permissionId);
+    addToast('Permission removed successfully', 'success');
+    fetchRoles({ page, limit });
+    setViewingRole((prev: any) => ({ ...prev, permissions: prev.permissions.filter((p: any) => p.permission.id !== permissionId) }));
+   } catch (e: any) {
+    addToast(e?.response?.data?.message || 'Failed to remove permission', 'error');
    }
   }
  };
