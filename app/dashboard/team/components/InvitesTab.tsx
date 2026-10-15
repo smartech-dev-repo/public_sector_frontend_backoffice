@@ -171,7 +171,7 @@ export default function InvitesTab() {
          placeholder="Created Date" 
         />
        </div>
-       <div className="space-y-1.5 z-[60] relative">
+       <div className="space-y-1.5 relative">
         <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Date Expires</label>
         <CustomDateRangePicker 
          value={expiresRange} 

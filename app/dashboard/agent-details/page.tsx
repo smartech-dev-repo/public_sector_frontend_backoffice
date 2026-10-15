@@ -111,8 +111,8 @@ export default function AgentDetailsPage() {
        WA
       </div>
       <div className="flex flex-col pr-4">
-       <span className="text-[13px] font-medium text-foreground leading-tight">Fawwaz Ali-Balogun</span>
-       <span className="text-[10px] text-muted-foreground">f.bakare@moneyfield.ng &nbsp;&bull;&nbsp; 07012345678</span>
+       <span className="text-[13px] font-medium text-foreground leading-tight">Admin Officer</span>
+       <span className="text-[10px] text-muted-foreground">admin@mmfb.com &nbsp;&bull;&nbsp; 07012345678</span>
       </div>
      </div>
     </div>

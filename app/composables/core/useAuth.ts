@@ -39,15 +39,21 @@ export const useAuth = () => {
   setLoading(true);
   setError(null);
   try {
-   const response = await auth_api.adminLogin(payload);
-   if (response.data?.twoFactorRequired) {
-    return response.data;
-   }
-   setToken(response.data);
-   setUser(response.data);
    if (payload?.email && typeof window !== 'undefined') {
     localStorage.setItem('public_sector_user_email', payload.email);
    }
+   const response = await auth_api.adminLogin(payload);
+   if (response.data?.twoFactorRequired) {
+    if (typeof window !== 'undefined') {
+     localStorage.setItem('admin_2fa_enabled', 'true');
+    }
+    return response.data;
+   }
+   if (typeof window !== 'undefined') {
+    localStorage.setItem('admin_2fa_enabled', 'false');
+   }
+   setToken(response.data);
+   setUser(response.data);
    setIsAuthenticated(true);
    return response.data;
   } catch (err: any) {
