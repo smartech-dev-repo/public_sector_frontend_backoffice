@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useAgents } from '@/app/composables/modules/useAgents';
+import { useClients } from '@/app/composables/modules/useClients';
+import { agents_api } from '@/app/api_factory/modules/agents';
 import { useToast } from '@/app/composables/useToast';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
+import ButtonLoader from '@/app/components/ui/ButtonLoader';
 import { createPortal } from 'react-dom';
 import { useConfirm } from '@/app/composables/useConfirm';
 import TableDropdown from '@/app/components/ui/TableDropdown';
@@ -12,12 +15,60 @@ import Pagination from '@/app/components/ui/Pagination';
 import Link from 'next/link';
 import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
+import { Users, UserCheck, Clock, ShieldCheck, UserX } from 'lucide-react';
 
 export default function AgentManagementPage() {
  const { confirm } = useConfirm();
 
- const { loading, error, agents, fetchAgents, approveAgent, rejectAgent, resendCredentials, meta } = useAgents();
+ const { 
+  loading, 
+  error, 
+  agents, 
+  fetchAgents, 
+  approveAgent, 
+  rejectAgent, 
+  resendCredentials, 
+  updateOnboardingAccess, 
+  revokeSessions, 
+  meta 
+ } = useAgents();
+ const { analytics, fetchClientAnalytics } = useClients();
  const { addToast } = useToast();
+
+ const [overallStats, setOverallStats] = useState<{
+  total: number;
+  approved: number;
+  pending: number;
+  onboardingAccess: number;
+  rejected: number;
+ } | null>(null);
+
+ const fetchOverallStats = useCallback(async () => {
+  try {
+   const res = await agents_api.getAgents({ limit: 100 });
+   const list = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+   const total = res.data?.meta?.total || list.length;
+   const approved = list.filter((a: any) => a.status === 'APPROVED').length;
+   const pending = list.filter((a: any) => a.status === 'PENDING_REVIEW').length;
+   const onboardingAccess = list.filter((a: any) => a.canOnboardClients === true).length;
+   const rejected = list.filter((a: any) => a.status === 'REJECTED' || a.status === 'BLOCKED').length;
+   setOverallStats({ total, approved, pending, onboardingAccess, rejected });
+  } catch {
+   // graceful fallback
+  }
+ }, []);
+
+ useEffect(() => {
+  fetchOverallStats();
+  fetchClientAnalytics();
+ }, [fetchOverallStats, fetchClientAnalytics]);
+
+ const totalAgentsCount = overallStats?.total ?? (meta?.total || agents.length);
+ const activeApprovedCount = overallStats?.approved ?? agents.filter(a => a.status === 'APPROVED').length;
+ const pendingReviewCount = overallStats?.pending ?? agents.filter(a => a.status === 'PENDING_REVIEW').length;
+ const onboardingAccessCount = overallStats?.onboardingAccess ?? agents.filter(a => a.canOnboardClients === true).length;
+ const agentOnboardedClients = analytics?.bySource?.AGENT ?? 0;
+ const topAgent = analytics?.agentLeaderboard?.[0];
 
  const [showRejectModal, setShowRejectModal] = useState(false);
  const [selectedAgent, setSelectedAgent] = useState<any>(null);
@@ -56,6 +107,7 @@ export default function AgentManagementPage() {
    await approveAgent(id);
    addToast('Agent approved successfully', 'success');
    fetchAgents();
+   fetchOverallStats();
   } catch (e: any) {
    addToast(e?.response?.data?.message || 'Failed to approve agent', 'error');
   }
@@ -69,6 +121,40 @@ export default function AgentManagementPage() {
    addToast('Credentials resent successfully', 'success');
   } catch (e: any) {
    addToast(e?.response?.data?.message || 'Failed to resend credentials', 'error');
+  }
+ };
+
+ const handleToggleOnboardingAccess = async (agent: any) => {
+  const currentStatus = agent.canOnboardClients ?? true;
+  const newStatus = !currentStatus;
+  const confirmed = await confirm({
+   title: 'Update Onboarding Access',
+   message: `Are you sure you want to ${newStatus ? 'grant' : 'restrict'} client onboarding access for ${agent.fullName || agent.firstName || 'this agent'}?`,
+   confirmText: newStatus ? 'Grant Access' : 'Restrict Access'
+  });
+  if (!confirmed) return;
+  try {
+   await updateOnboardingAccess(agent.id, { canOnboardClients: newStatus });
+   addToast(`Onboarding access ${newStatus ? 'granted' : 'restricted'} successfully`, 'success');
+   fetchAgents({ page: currentPage, limit: itemsPerPage });
+   fetchOverallStats();
+  } catch (e: any) {
+   addToast(e?.response?.data?.message || 'Failed to update onboarding access', 'error');
+  }
+ };
+
+ const handleRevokeAgentSessions = async (agentId: string) => {
+  const confirmed = await confirm({
+   title: 'Revoke Agent Sessions',
+   message: 'Are you sure you want to force sign-out this agent across all active devices?',
+   confirmText: 'Revoke Sessions'
+  });
+  if (!confirmed) return;
+  try {
+   await revokeSessions(agentId);
+   addToast('All active sessions for this agent have been revoked', 'success');
+  } catch (e: any) {
+   addToast(e?.response?.data?.message || 'Failed to revoke sessions', 'error');
   }
  };
 
@@ -89,6 +175,7 @@ export default function AgentManagementPage() {
    addToast('Agent rejected', 'success');
    setShowRejectModal(false);
    fetchAgents();
+   fetchOverallStats();
   } catch (e: any) {
    addToast(e?.response?.data?.message || 'Failed to reject agent', 'error');
   } finally {
@@ -99,6 +186,83 @@ export default function AgentManagementPage() {
  return (
   <main className="w-full">
    <h1 className="sr-only">Agent Management</h1>
+
+   {/* ================= STATS SECTION ================= */}
+   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    {/* Total Agents */}
+    <div className="bg-card rounded-2xl border border-border/70 p-5 shadow-xs transition-all hover:border-[#018752]/40">
+     <div className="flex items-center justify-between mb-2">
+      <span className="text-xs sm:text-[13px] font-medium text-muted-foreground">
+       Total Agents
+      </span>
+      <div className="w-8 h-8 rounded-xl bg-[#E8F5EE] text-[#018752] flex items-center justify-center">
+       <Users className="w-4 h-4" />
+      </div>
+     </div>
+     <span className="block text-3xl font-bold text-foreground tracking-tight mb-1">
+      {totalAgentsCount}
+     </span>
+     <span className="block text-[11px] text-muted-foreground/70">
+      {activeApprovedCount} approved in field network
+     </span>
+    </div>
+
+    {/* Approved Agents */}
+    <div className="bg-card rounded-2xl border border-border/70 p-5 shadow-xs transition-all hover:border-[#018752]/40">
+     <div className="flex items-center justify-between mb-2">
+      <span className="text-xs sm:text-[13px] font-medium text-muted-foreground">
+       Approved Agents
+      </span>
+      <div className="w-8 h-8 rounded-xl bg-[#E8F5EE] text-[#018752] flex items-center justify-center">
+       <UserCheck className="w-4 h-4" />
+      </div>
+     </div>
+     <span className="block text-3xl font-bold text-[#018752] tracking-tight mb-1">
+      {activeApprovedCount}
+     </span>
+     <span className="block text-[11px] text-muted-foreground/70">
+      {onboardingAccessCount} with client onboarding access
+     </span>
+    </div>
+
+    {/* Pending Review */}
+    <div className="bg-card rounded-2xl border border-border/70 p-5 shadow-xs transition-all hover:border-amber-500/40">
+     <div className="flex items-center justify-between mb-2">
+      <span className="text-xs sm:text-[13px] font-medium text-muted-foreground">
+       Pending Review
+      </span>
+      <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 flex items-center justify-center">
+       <Clock className="w-4 h-4" />
+      </div>
+     </div>
+     <span className="block text-3xl font-bold text-amber-600 dark:text-amber-500 tracking-tight mb-1">
+      {pendingReviewCount}
+     </span>
+     <span className="block text-[11px] text-muted-foreground/70">
+      requires credential & identity review
+     </span>
+    </div>
+
+    {/* Clients Recruited by Agents */}
+    <div className="bg-card rounded-2xl border border-border/70 p-5 shadow-xs transition-all hover:border-blue-500/40">
+     <div className="flex items-center justify-between mb-2">
+      <span className="text-xs sm:text-[13px] font-medium text-muted-foreground">
+       Clients Recruited by Agents
+      </span>
+      <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 flex items-center justify-center">
+       <ShieldCheck className="w-4 h-4" />
+      </div>
+     </div>
+     <span className="block text-3xl font-bold text-blue-600 dark:text-blue-400 tracking-tight mb-1">
+      {agentOnboardedClients}
+     </span>
+     <span className="block text-[11px] text-muted-foreground/70 truncate">
+      {topAgent 
+       ? `Top: ${topAgent.agentName} (${topAgent.totalOnboarded} onboarded)` 
+       : 'across active field agents'}
+     </span>
+    </div>
+   </div>
 
    {/* Filters Area */}
    <div className="mb-6 space-y-4">
@@ -139,7 +303,7 @@ export default function AgentManagementPage() {
          </SelectContent>
         </Select>
        </div>
-       <div className="space-y-1.5 w-full z-[60] relative">
+       <div className="space-y-1.5 w-full relative">
         <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Created Date</label>
         <CustomDateRangePicker 
          value={createdRange}
@@ -214,6 +378,16 @@ export default function AgentManagementPage() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
               View Details
              </Link>
+             {agent.status === 'APPROVED' && (
+              <button onClick={() => handleToggleOnboardingAccess(agent)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-amber-700 hover:bg-amber-50 transition-colors flex items-center gap-2">
+               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+               {agent.canOnboardClients === false ? 'Grant Onboarding' : 'Restrict Onboarding'}
+              </button>
+             )}
+             <button onClick={() => handleRevokeAgentSessions(agent.id)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-700 hover:bg-rose-50 transition-colors flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+              Revoke Sessions
+             </button>
             </TableDropdown>
            </td>
           </tr>
@@ -253,8 +427,8 @@ export default function AgentManagementPage() {
       </div>
       <div className="flex gap-3 mt-6 w-full">
        <button onClick={() => setShowRejectModal(false)} className="flex-1 px-4 py-2 bg-muted/50 text-foreground/90 rounded-lg">Cancel</button>
-       <button onClick={handleReject} disabled={submitting} className="flex-1 px-4 py-2 bg-rose-600 text-white rounded-lg disabled:opacity-50">
-        {submitting ? 'Rejecting...' : 'Confirm Reject'}
+       <button onClick={handleReject} disabled={submitting} className="flex-1 px-4 py-2 bg-rose-600 text-white rounded-lg disabled:opacity-50 flex items-center justify-center">
+        <ButtonLoader loading={submitting} loadingText="Rejecting...">Confirm Reject</ButtonLoader>
        </button>
       </div>
      </div>

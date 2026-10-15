@@ -6,6 +6,7 @@ import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { useAuth } from '@/app/composables/core/useAuth';
 import AuthInput from '@/app/components/Auth/Input';
+import OtpInput from '@/app/components/ui/OtpInput';
 import { Mail, ShieldCheck, ArrowLeft, KeyRound } from 'lucide-react';
 
 export default function LoginPage() {
@@ -41,6 +42,8 @@ export default function LoginPage() {
     setTwoFactorMethod(data.method === 'EMAIL' ? 'EMAIL' : 'TOTP');
     setPendingToken(data.pendingToken || '');
     setShow2fa(true);
+   } else {
+    setVerifyError(err?.response?.data?.message || 'Invalid email or password. Please try again.');
    }
   }
  };
@@ -50,6 +53,9 @@ export default function LoginPage() {
   setVerifyError(null);
   try {
    await loginVerify2fa({ pendingToken, code: token2fa });
+   if (typeof window !== 'undefined') {
+    localStorage.setItem('admin_2fa_enabled', 'true');
+   }
    setTheme('light');
    router.push('/dashboard/broadsheet');
   } catch (err: any) {
@@ -136,15 +142,16 @@ export default function LoginPage() {
         </div>
        )}
 
-       <AuthInput
-        value={token2fa}
-        onChange={(e) => setToken2fa(e.target.value.replace(/\D/g, ''))}
-        label={twoFactorMethod === 'EMAIL' ? 'Enter 6-Digit Email Code' : 'Enter 6-Digit Authenticator Code'}
-        type="text"
-        placeholder="000000"
-        maxLength={6}
-        required
-       />
+       <div className="space-y-2.5 pt-1">
+        <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider text-center">
+         {twoFactorMethod === 'EMAIL' ? 'Enter 6-Digit Email Code' : 'Enter 6-Digit Authenticator Code'}
+        </label>
+        <OtpInput
+         value={token2fa}
+         onChange={setToken2fa}
+         autoFocus
+        />
+       </div>
 
        <button 
         disabled={loading || token2fa.length < 6} 

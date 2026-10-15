@@ -165,6 +165,9 @@ export default function BroadsheetPage() {
    try {
     const formData = new FormData();
     formData.append('file', file);
+    const now = new Date();
+    const defaultPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    formData.append('period', defaultPeriod);
     await uploadRepaymentSchedule(formData);
     addToast(`Successfully uploaded ${file.name}`, 'success');
     fetchBatches();
@@ -247,7 +250,7 @@ export default function BroadsheetPage() {
          </SelectContent>
         </Select>
        </div>
-       <div className="space-y-1.5 w-full z-[60] relative">
+       <div className="space-y-1.5 w-full relative">
         <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Date Range</label>
         <CustomDateRangePicker 
          value={filterParams.dateRange}
