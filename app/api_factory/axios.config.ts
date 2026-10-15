@@ -112,17 +112,18 @@ instanceArray.forEach((instance) => {
  ...err.response,
  };
  } else if (statusCodeStartsWith(err.response.status, 4)) {
- if (err.response.data.message) {
- addToast(
- err?.response?.data?.message || err?.response?.data?.error || "An error occured",
- "error",
- 3000
- );
- }
- return {
- type: "ERROR",
- ...err.response,
- };
+  const shouldSkipToast = (err.config as any)?.skipToast || ((err.config as any)?.skipToastOn404 && err.response.status === 404);
+  if (err.response.data.message && !shouldSkipToast) {
+   addToast(
+    err?.response?.data?.message || err?.response?.data?.error || "An error occured",
+    "error",
+    3000
+   );
+  }
+  return {
+   type: "ERROR",
+   ...err.response,
+  };
  } else if (err.response.status === 500) {
  addToast(
  err?.response?.data?.message || err?.response?.data?.error || "An error occured",

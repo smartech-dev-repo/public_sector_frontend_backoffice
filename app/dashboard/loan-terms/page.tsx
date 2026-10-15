@@ -8,7 +8,7 @@ export default function LoanProductsPage() {
  const [activeTab, setActiveTab] = useState<'configs' | 'catalog'>('configs');
 
  const tabs = [
-  { id: 'configs', label: 'Configurations' },
+  { id: 'configs', label: 'Loan Products' },
   { id: 'catalog', label: 'Loans Catalog' },
  ] as const;
 

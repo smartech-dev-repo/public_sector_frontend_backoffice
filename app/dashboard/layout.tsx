@@ -3,10 +3,10 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import Toast from '@/app/components/ui/Toast';
 import Modal from '@/app/components/ui/Modal';
 import SearchModal from '@/app/components/ui/SearchModal';
 import SessionManager from '@/app/components/ui/SessionManager';
+import ProfileDropdown from '@/app/components/ui/ProfileDropdown';
 import { useTheme } from 'next-themes';
 import { Monitor, Moon, Sun, Folder, UserPlus, Users, User, LineChart, UserCog, ClipboardList, Scale, ShieldCheck, Settings, Banknote, ChevronDown } from 'lucide-react';
 
@@ -89,6 +89,10 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
 
  const confirmLogout = () => {
   setShowLogoutModal(false);
+  if (typeof window !== 'undefined') {
+   document.cookie = 'public_sector_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+   localStorage.removeItem('token');
+  }
   router.push('/login');
  };
 
@@ -106,7 +110,6 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
   <div className="h-screen overflow-hidden bg-background font-sans flex text-foreground">
    {/* Global Components */}
    <SessionManager />
-   <Toast />
    <SearchModal isOpen={showSearchModal} onClose={() => setShowSearchModal(false)} />
    <Modal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} onConfirm={confirmLogout} title="Confirm Logout">
     Are you sure you want to securely log out of the Admin Portal?
@@ -155,14 +158,14 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
      )}
     </div>
     
-    <div className="p-6 space-y-2 flex-1 overflow-y-auto overflow-x-visible">
+    <div className="px-3.5 py-4 space-y-2 flex-1 overflow-y-auto overflow-x-visible">
           <nav className="space-y-1">
        <Link href="/dashboard/broadsheet"
-        className={`flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-4'} ${
+        className={`flex items-center gap-3 py-2.5 rounded-xl text-[13px] font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-3'} ${
          pathname.startsWith('/dashboard/broadsheet') || pathname.startsWith('/dashboard/uploads') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
         }`}
        >
-        <Folder className="w-5 h-5 shrink-0 transition-colors" />
+        <Folder className="w-[18px] h-[18px] shrink-0 transition-colors" />
         {!isSidebarMinimized && <span className="whitespace-nowrap">Broadsheet and Repayment</span>}
         {isSidebarMinimized && (
          <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded whitespace-nowrap z-50">
@@ -172,11 +175,11 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
        </Link>
 
        <Link href="/dashboard/loan-terms"
-        className={`flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-4'} ${
-         pathname.startsWith('/dashboard/loan-terms') || pathname.startsWith('/dashboard/catalog/loans') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+        className={`flex items-center gap-3 py-2.5 rounded-xl text-[13px] font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-3'} ${
+         pathname.startsWith('/dashboard/loan-terms') || pathname.startsWith('/dashboard/catalog/loans') || pathname.startsWith('/dashboard/loan-products') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
         }`}
        >
-        <Settings className="w-5 h-5 shrink-0 transition-colors" />
+        <Settings className="w-[18px] h-[18px] shrink-0 transition-colors" />
         {!isSidebarMinimized && <span className="whitespace-nowrap">Loan Products</span>}
         {isSidebarMinimized && (
          <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded whitespace-nowrap z-50">
@@ -186,11 +189,11 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
        </Link>
 
        <Link href="/dashboard/invites"
-        className={`flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-4'} ${
+        className={`flex items-center gap-3 py-2.5 rounded-xl text-[13px] font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-3'} ${
          pathname.startsWith('/dashboard/invites') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
         }`}
        >
-        <UserPlus className="w-5 h-5 shrink-0 transition-colors" />
+        <UserPlus className="w-[18px] h-[18px] shrink-0 transition-colors" />
         {!isSidebarMinimized && <span className="whitespace-nowrap">Agent Recruitment</span>}
         {isSidebarMinimized && (
          <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded whitespace-nowrap z-50">
@@ -200,11 +203,11 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
        </Link>
 
        <Link href="/dashboard/agent-management"
-        className={`flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-4'} ${
+        className={`flex items-center gap-3 py-2.5 rounded-xl text-[13px] font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-3'} ${
          pathname.startsWith('/dashboard/agent-management') || pathname.startsWith('/dashboard/agent/') || pathname.startsWith('/dashboard/agent-details') || pathname.startsWith('/dashboard/agent-security') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
         }`}
        >
-        <Users className="w-5 h-5 shrink-0 transition-colors" />
+        <Users className="w-[18px] h-[18px] shrink-0 transition-colors" />
         {!isSidebarMinimized && <span className="whitespace-nowrap">Agent Management</span>}
         {isSidebarMinimized && (
          <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded whitespace-nowrap z-50">
@@ -214,11 +217,11 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
        </Link>
 
        <Link href="/dashboard/loan-requests"
-        className={`flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-4'} ${
+        className={`flex items-center gap-3 py-2.5 rounded-xl text-[13px] font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-3'} ${
          pathname.startsWith('/dashboard/loan-requests') || pathname.startsWith('/dashboard/client-loans') || pathname.startsWith('/dashboard/disbursement-summary') || pathname.startsWith('/dashboard/maker-checker') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
         }`}
        >
-        <Banknote className="w-5 h-5 shrink-0 transition-colors" />
+        <Banknote className="w-[18px] h-[18px] shrink-0 transition-colors" />
         {!isSidebarMinimized && <span className="whitespace-nowrap">Loan Request</span>}
         {isSidebarMinimized && (
          <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded whitespace-nowrap z-50">
@@ -228,11 +231,11 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
        </Link>
 
        <Link href="/dashboard/clients"
-        className={`flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-4'} ${
+        className={`flex items-center gap-3 py-2.5 rounded-xl text-[13px] font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-3'} ${
          pathname.startsWith('/dashboard/clients') || pathname.startsWith('/dashboard/customer-details') || pathname.startsWith('/dashboard/catalog/ippis') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
         }`}
        >
-        <User className="w-5 h-5 shrink-0 transition-colors" />
+        <User className="w-[18px] h-[18px] shrink-0 transition-colors" />
         {!isSidebarMinimized && <span className="whitespace-nowrap">Customer Management</span>}
         {isSidebarMinimized && (
          <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded whitespace-nowrap z-50">
@@ -242,11 +245,11 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
        </Link>
 
        <Link href="/dashboard/reports"
-        className={`flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-4'} ${
+        className={`flex items-center gap-3 py-2.5 rounded-xl text-[13px] font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-3'} ${
          pathname.startsWith('/dashboard/reports') || pathname.startsWith('/dashboard/analytics') || pathname.startsWith('/dashboard/reconciliation') || pathname.startsWith('/dashboard/audit-logs') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
         }`}
        >
-        <LineChart className="w-5 h-5 shrink-0 transition-colors" />
+        <LineChart className="w-[18px] h-[18px] shrink-0 transition-colors" />
         {!isSidebarMinimized && <span className="whitespace-nowrap">Report</span>}
         {isSidebarMinimized && (
          <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded whitespace-nowrap z-50">
@@ -256,11 +259,11 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
        </Link>
 
        <Link href="/dashboard/team"
-        className={`flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-4'} ${
+        className={`flex items-center gap-3 py-2.5 rounded-xl text-[13px] font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-3'} ${
          pathname.startsWith('/dashboard/team') || pathname.startsWith('/dashboard/roles') || pathname.startsWith('/dashboard/admins') || pathname.startsWith('/dashboard/permissions') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
         }`}
        >
-        <ShieldCheck className="w-5 h-5 shrink-0 transition-colors" />
+        <ShieldCheck className="w-[18px] h-[18px] shrink-0 transition-colors" />
         {!isSidebarMinimized && <span className="whitespace-nowrap">Role Management</span>}
         {isSidebarMinimized && (
          <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded whitespace-nowrap z-50">
@@ -271,10 +274,10 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
       </nav>
     </div>
 
-    <div className="p-4 border-t border-border flex flex-col gap-2">
+    <div className="p-3 border-t border-border flex flex-col gap-2">
      <button 
       onClick={triggerLogout}
-      className={`relative flex items-center gap-3 py-2.5 w-full rounded-lg text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all group ${isSidebarMinimized ? 'justify-center px-2' : 'px-4'}`}
+      className={`relative flex items-center gap-3 py-2.5 w-full rounded-xl text-[13px] font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all group ${isSidebarMinimized ? 'justify-center px-2' : 'px-3'}`}
       >
       {isSidebarMinimized && (
        <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded whitespace-nowrap z-50">
@@ -350,44 +353,33 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
        )}
       </div>
 
-      <div ref={profileDropdownRef}>
+      <div className="relative">
        <button 
         onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)} 
-        className="flex items-center gap-2 sm:gap-3 border-l border-border pl-3 sm:pl-4 hover:bg-accent py-1.5 rounded-lg transition-colors cursor-pointer text-left"
+        className="flex items-center gap-2 sm:gap-3 border-l border-border pl-3 sm:pl-4 hover:bg-accent py-1.5 rounded-xl transition-colors cursor-pointer text-left"
        >
-        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-muted overflow-hidden border-2 border-card shrink-0">
-         <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah" alt="User" className="w-full h-full object-cover" />
+        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#018752] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-sm border border-emerald-600">
+         FA
         </div>
         <div className="hidden sm:block">
-          <div className="text-sm text-foreground font-medium">Sarah Admin</div>
-          <div className="text-xs text-muted-foreground">Internal Control</div>
+          <div className="text-sm text-foreground font-semibold leading-tight">Fawwaz alli-Balogun</div>
+          <div className="text-xs text-muted-foreground">Credit and Risk department</div>
         </div>
         <div className="text-muted-foreground hover:text-foreground transition-colors ml-1">
-         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+         <ChevronDown className={`w-4 h-4 transition-transform ${isProfileDropdownOpen ? 'rotate-180' : ''}`} />
         </div>
        </button>
        
-       {isProfileDropdownOpen && (
-        <div className="absolute top-full right-0 mt-2 w-48 bg-popover rounded-xl border border-border py-1 z-50">
-         <div className="px-4 py-2 border-b border-border mb-1">
-          <div className="text-sm font-medium text-popover-foreground">Sarah Admin</div>
-          <div className="text-xs text-muted-foreground">sarah@example.com</div>
-         </div>
-         <Link href="/dashboard/settings" onClick={() => setIsProfileDropdownOpen(false)} className="w-full text-left px-4 py-2 text-sm text-popover-foreground hover:bg-accent hover:text-primary transition-colors flex items-center gap-2">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-          Profile Settings
-         </Link>
-         <button onClick={triggerLogout} className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors flex items-center gap-2">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-          Sign out
-         </button>
-        </div>
-       )}
+       <ProfileDropdown 
+        isOpen={isProfileDropdownOpen}
+        onClose={() => setIsProfileDropdownOpen(false)}
+        onLogout={triggerLogout}
+       />
       </div>
      </div>
     </header>
 
-    <main className="flex-1 p-4 md:px-4 py-6 overflow-y-auto overflow-x-hidden">
+    <main className="flex-1 py-6 overflow-y-auto overflow-x-hidden">
      <div className="container mx-auto">
       {children}
      </div>

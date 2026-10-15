@@ -244,10 +244,13 @@ export default function ClientWalletPage() {
       <div className="bg-card p-6 rounded-2xl border border-border">
        <h2 className="text-lg font-semibold text-foreground mb-4">Profile</h2>
        <div className="space-y-3">
-        <p><span className="text-muted-foreground font-medium">Name:</span> {client.firstName} {client.lastName}</p>
-        <p><span className="text-muted-foreground font-medium">Email:</span> {client.email}</p>
-        <p><span className="text-muted-foreground font-medium">Phone:</span> {client.phoneNumber}</p>
-        <p><span className="text-muted-foreground font-medium">Status:</span> <span className="px-2 py-1 bg-muted/50 rounded text-xs font-medium">{client.status}</span></p>
+        <p><span className="text-muted-foreground font-medium">Name:</span> {client.onboarding?.employeeName || [client.firstName, client.lastName].filter(Boolean).join(' ') || client.name || 'Unnamed Client'}</p>
+        <p><span className="text-muted-foreground font-medium">Email:</span> {client.email || '--'}</p>
+        <p><span className="text-muted-foreground font-medium">Phone:</span> {client.phone || client.phoneNumber || client.onboarding?.identityPhoneNumber || '--'}</p>
+        <p><span className="text-muted-foreground font-medium">Status:</span> <span className="px-2.5 py-1 bg-muted/50 rounded-full text-xs font-semibold">{client.status}</span></p>
+        {client.onboarding?.agency && (
+         <p><span className="text-muted-foreground font-medium">Agency:</span> {client.onboarding.agency}</p>
+        )}
        </div>
       </div>
      )}
@@ -335,7 +338,7 @@ export default function ClientWalletPage() {
         <h2 className="text-lg font-semibold text-foreground">Client Loans</h2>
         <button onClick={loadClientLoans} className="text-sm text-emerald-600 hover:text-emerald-800 font-medium transition-colors">Refresh</button>
        </div>
-       {loansLoading && <div className="p-6"><PulseLoader /></div>}
+       {loansLoading && <PulseLoader />}
        
        {!loansLoading && (
 
@@ -449,7 +452,7 @@ export default function ClientWalletPage() {
         <h2 className="text-lg font-semibold text-foreground">Activity History</h2>
         <button onClick={loadActivities} className="text-sm text-emerald-600 hover:text-emerald-800 font-medium transition-colors">Refresh</button>
        </div>
-       {activitiesLoading && <div className="p-6"><PulseLoader /></div>}
+       {activitiesLoading && <PulseLoader />}
        
        {!activitiesLoading && (
 

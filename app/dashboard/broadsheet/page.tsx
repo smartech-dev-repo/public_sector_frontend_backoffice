@@ -264,7 +264,7 @@ export default function BroadsheetPage() {
    </div>
 
    {loading && batches.length === 0 ? (
-    <div className="flex justify-center py-10"><PulseLoader /></div>
+    <div className="w-full py-4"><PulseLoader /></div>
    ) : (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
      {/* IPPIS Broadsheet Column */}
