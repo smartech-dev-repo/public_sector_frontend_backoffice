@@ -105,3 +105,19 @@
   z-index: 999999 !important;
 }
 
+/* Aggressively ensure modal overlays and dialogs float above all standard page filters and content */
+[data-radix-dialog-overlay] {
+  z-index: 100 !important;
+}
+[data-radix-dialog-content] {
+  z-index: 100 !important;
+}
+
+/* Aggressively ensure dropdowns, selects and popovers opened inside/outside modals stack on top */
+[data-radix-popper-content-wrapper],
+[data-radix-select-content],
+[data-radix-dropdown-menu-content],
+[data-radix-popover-content] {
+  z-index: 110 !important;
+}
+

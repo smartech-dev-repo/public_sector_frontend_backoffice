@@ -162,7 +162,7 @@ function ClientLoansContent() {
          className="w-full px-4 py-2 border rounded-lg text-sm bg-card border-border outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400"
         />
        </div>
-       <div className="space-y-1.5 w-full z-[60] relative">
+       <div className="space-y-1.5 w-full relative">
         <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Disbursed Date</label>
         <CustomDateRangePicker 
          value={disbursedRange}

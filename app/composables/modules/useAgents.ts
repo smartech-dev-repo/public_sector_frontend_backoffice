@@ -75,5 +75,35 @@ export const useAgents = () => {
   }
  }, []);
 
- return { loading, error, agents, fetchAgents, getAgentById, approveAgent, rejectAgent, resendCredentials, meta };
+ const updateOnboardingAccess = useCallback(async (id: string, payload: boolean | { canOnboardClients: boolean }) => {
+  setLoading(true);
+  try {
+   const canOnboard = typeof payload === 'boolean' ? payload : payload.canOnboardClients;
+   const res = await agents_api.updateOnboardingAccess(id, { canOnboardClients: canOnboard });
+   return res.data;
+  } catch (err: any) {
+   setError(err.message);
+   throw err;
+  } finally {
+   setLoading(false);
+  }
+ }, []);
+
+ const revokeAgentSessions = useCallback(async (id: string) => {
+  setLoading(true);
+  try {
+   const res = await agents_api.revokeSessions(id);
+   return res.data;
+  } catch (err: any) {
+   setError(err.message);
+   throw err;
+  } finally {
+   setLoading(false);
+  }
+ }, []);
+
+ return { 
+  loading, error, agents, fetchAgents, getAgentById, approveAgent, rejectAgent, 
+  resendCredentials, updateOnboardingAccess, revokeAgentSessions, revokeSessions: revokeAgentSessions, meta 
+ };
 };

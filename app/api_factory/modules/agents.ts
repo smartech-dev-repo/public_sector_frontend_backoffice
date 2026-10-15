@@ -36,5 +36,11 @@ export const agents_api = {
  },
  resendCredentials: (id: string) => {
   return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/agents/${id}/resend-credentials`);
+ },
+ updateOnboardingAccess: (id: string, payload: { canOnboardClients: boolean }) => {
+  return GATEWAY_ENDPOINT_WITH_AUTH.patch(`/admin/agents/${id}/onboarding-access`, payload);
+ },
+ revokeSessions: (id: string) => {
+  return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/agents/${id}/sessions/revoke-all`);
  }
 };

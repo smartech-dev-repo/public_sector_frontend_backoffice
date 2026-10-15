@@ -1,23 +1,57 @@
 "use client";
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useInvites } from '@/app/composables/modules/useInvites';
 import { useRoles } from '@/app/composables/modules/useRoles';
+import { invites_api } from '@/app/api_factory/modules/invites';
 import { useToast } from '@/app/composables/useToast';
 import { useConfirm } from '@/app/composables/useConfirm';
 import { createPortal } from 'react-dom';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
+import ButtonLoader from '@/app/components/ui/ButtonLoader';
 import Pagination from '@/app/components/ui/Pagination';
 import TableDropdown from '@/app/components/ui/TableDropdown';
 import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
+import { Mail, Clock, CheckCircle2, AlertCircle, UserPlus, Plus } from 'lucide-react';
 
 export default function InvitesPage() {
  const { loading, error, invites, fetchInvites, resendInvite, deleteInvite, createInvite, meta } = useInvites();
  const { roles, fetchRoles } = useRoles();
  const { addToast } = useToast();
  const { confirm } = useConfirm();
+
+ const [overallInviteStats, setOverallInviteStats] = useState<{
+  total: number;
+  pending: number;
+  accepted: number;
+  expired: number;
+ } | null>(null);
+
+ const fetchOverallInviteStats = useCallback(async () => {
+  try {
+   const res = await invites_api.getInvites({ limit: 100 });
+   const list = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+   const total = res.data?.meta?.total || list.length;
+   const pending = list.filter((i: any) => i.status === 'PENDING').length;
+   const accepted = list.filter((i: any) => i.status === 'ACCEPTED').length;
+   const expired = list.filter((i: any) => i.status === 'EXPIRED' || i.status === 'REVOKED').length;
+   setOverallInviteStats({ total, pending, accepted, expired });
+  } catch {
+   // graceful fallback
+  }
+ }, []);
+
+ useEffect(() => {
+  fetchOverallInviteStats();
+ }, [fetchOverallInviteStats]);
+
+ const totalInvitesCount = overallInviteStats?.total ?? (meta?.total || invites.length);
+ const pendingInvitesCount = overallInviteStats?.pending ?? invites.filter(i => i.status === 'PENDING').length;
+ const acceptedInvitesCount = overallInviteStats?.accepted ?? invites.filter(i => i.status === 'ACCEPTED').length;
+ const expiredInvitesCount = overallInviteStats?.expired ?? invites.filter(i => i.status === 'EXPIRED' || i.status === 'REVOKED').length;
+ const conversionRate = totalInvitesCount > 0 ? Math.round((acceptedInvitesCount / totalInvitesCount) * 100) : 0;
 
  const [showInviteModal, setShowInviteModal] = useState(false);
  const [submitting, setSubmitting] = useState(false);
@@ -84,6 +118,7 @@ export default function InvitesPage() {
    setShowInviteModal(false);
    setInviteForm({ email: '', roleId: '' });
    fetchInvites({ page: currentPage, limit: itemsPerPage });
+   fetchOverallInviteStats();
   } catch (e: any) {
    addToast(e?.response?.data?.message || 'Failed to send invite', 'error');
   } finally {
@@ -101,6 +136,7 @@ export default function InvitesPage() {
   try {
    await resendInvite(id);
    addToast('Invite resent successfully', 'success');
+   fetchOverallInviteStats();
   } catch (e: any) {
    addToast(e?.response?.data?.message || 'Failed to resend invite', 'error');
   }
@@ -117,6 +153,7 @@ export default function InvitesPage() {
    await deleteInvite(id);
    addToast('Invite deleted successfully', 'success');
    fetchInvites({ page: currentPage, limit: itemsPerPage });
+   fetchOverallInviteStats();
   } catch (e: any) {
    addToast(e?.response?.data?.message || 'Failed to delete invite', 'error');
   }
@@ -124,17 +161,104 @@ export default function InvitesPage() {
 
  return (
   <main className="w-full">
-   <div className="flex justify-end items-center mb-6">
-    <h1 className="sr-only">Pending Invites</h1>
-    <div className="flex items-center gap-3">
+   {/* ================= HEADER ================= */}
+   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+    <div>
+     <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Agent Recruitment</h1>
+     <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Manage recruitment invitations, track candidate onboarding progress and enrollment statuses.</p>
+    </div>
+    <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
      <button 
       onClick={() => setShowFilter(!showFilter)}
-      className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-full text-sm font-medium text-foreground/90 hover:bg-muted/30 transition-colors "
+      className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-full text-sm font-medium text-foreground/90 hover:bg-muted/30 transition-colors"
      >
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
       Filters
       <svg className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
      </button>
+
+     <button
+      onClick={() => setShowInviteModal(true)}
+      className="flex items-center gap-2 px-4 py-2 bg-[#018752] hover:bg-[#017044] text-white rounded-full text-sm font-medium transition-colors shadow-xs"
+     >
+      <UserPlus className="w-4 h-4" />
+      Invite Candidate
+     </button>
+    </div>
+   </div>
+
+   {/* ================= STATS SECTION ================= */}
+   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    {/* Total Invitations */}
+    <div className="bg-card rounded-2xl border border-border/70 p-5 shadow-xs transition-all hover:border-[#018752]/40">
+     <div className="flex items-center justify-between mb-2">
+      <span className="text-xs sm:text-[13px] font-medium text-muted-foreground">
+       Total Invitations
+      </span>
+      <div className="w-8 h-8 rounded-xl bg-[#E8F5EE] text-[#018752] flex items-center justify-center">
+       <Mail className="w-4 h-4" />
+      </div>
+     </div>
+     <span className="block text-3xl font-bold text-foreground tracking-tight mb-1">
+      {totalInvitesCount}
+     </span>
+     <span className="block text-[11px] text-muted-foreground/70">
+      {acceptedInvitesCount} accepted ({conversionRate}% conversion)
+     </span>
+    </div>
+
+    {/* Pending Acceptances */}
+    <div className="bg-card rounded-2xl border border-border/70 p-5 shadow-xs transition-all hover:border-amber-500/40">
+     <div className="flex items-center justify-between mb-2">
+      <span className="text-xs sm:text-[13px] font-medium text-muted-foreground">
+       Pending Acceptances
+      </span>
+      <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 flex items-center justify-center">
+       <Clock className="w-4 h-4" />
+      </div>
+     </div>
+     <span className="block text-3xl font-bold text-amber-600 dark:text-amber-500 tracking-tight mb-1">
+      {pendingInvitesCount}
+     </span>
+     <span className="block text-[11px] text-muted-foreground/70">
+      awaiting candidate registration
+     </span>
+    </div>
+
+    {/* Accepted & Enrolled */}
+    <div className="bg-card rounded-2xl border border-border/70 p-5 shadow-xs transition-all hover:border-[#018752]/40">
+     <div className="flex items-center justify-between mb-2">
+      <span className="text-xs sm:text-[13px] font-medium text-muted-foreground">
+       Accepted & Enrolled
+      </span>
+      <div className="w-8 h-8 rounded-xl bg-[#E8F5EE] text-[#018752] flex items-center justify-center">
+       <CheckCircle2 className="w-4 h-4" />
+      </div>
+     </div>
+     <span className="block text-3xl font-bold text-[#018752] tracking-tight mb-1">
+      {acceptedInvitesCount}
+     </span>
+     <span className="block text-[11px] text-muted-foreground/70">
+      {conversionRate}% candidate recruitment rate
+     </span>
+    </div>
+
+    {/* Expired or Revoked */}
+    <div className="bg-card rounded-2xl border border-border/70 p-5 shadow-xs transition-all hover:border-rose-500/40">
+     <div className="flex items-center justify-between mb-2">
+      <span className="text-xs sm:text-[13px] font-medium text-muted-foreground">
+       Expired / Revoked
+      </span>
+      <div className="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 flex items-center justify-center">
+       <AlertCircle className="w-4 h-4" />
+      </div>
+     </div>
+     <span className="block text-3xl font-bold text-rose-600 dark:text-rose-500 tracking-tight mb-1">
+      {expiredInvitesCount}
+     </span>
+     <span className="block text-[11px] text-muted-foreground/70">
+      unclaimed or cancelled invites
+     </span>
     </div>
    </div>
 
@@ -165,7 +289,7 @@ export default function InvitesPage() {
          </SelectContent>
         </Select>
        </div>
-       <div className="space-y-1.5 w-full z-[60] relative sm:col-span-2">
+       <div className="space-y-1.5 w-full relative sm:col-span-2">
         <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Date Range</label>
         <CustomDateRangePicker 
          value={dateRange}
@@ -268,7 +392,7 @@ export default function InvitesPage() {
      <div className="fixed inset-0 bg-white/30 dark:bg-white/10 backdrop-blur-md" onClick={() => setShowInviteModal(false)}></div>
      <div className="relative bg-card rounded-2xl p-6 w-full max-w-md mx-4 animate-in fade-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-800 shadow-2xl shadow-black/10">
       <div className="flex items-start justify-between mb-4">
-       <h3 className="text-lg font-semibold text-foreground">Invite New Admin</h3>
+       <h3 className="text-lg font-semibold text-foreground">Invite Candidate / Agent</h3>
        <button onClick={() => setShowInviteModal(false)} className="text-muted-foreground/70 hover:text-muted-foreground">
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
        </button>
@@ -358,8 +482,14 @@ export default function InvitesPage() {
        )}
        <div className="flex gap-3 w-full mt-6">
         <button type="button" onClick={() => setShowInviteModal(false)} className="flex-1 px-5 py-2.5 rounded-lg text-sm text-foreground/90 bg-muted/50 hover:bg-slate-200 transition-colors">Cancel</button>
-        <button type="submit" disabled={submitting} className="flex-1 px-5 py-2.5 rounded-lg text-sm text-white bg-emerald-600 hover:bg-emerald-700 transition-colors disabled:opacity-50">
-         {submitting ? 'Sending...' : 'Send Invite'}
+        <button
+         type="submit"
+         disabled={submitting}
+         className="flex-1 px-5 py-2.5 rounded-lg text-sm text-white bg-emerald-600 hover:bg-emerald-700 transition-colors disabled:opacity-50"
+        >
+         <ButtonLoader loading={submitting} loadingText="Sending...">
+          Send Invite
+         </ButtonLoader>
         </button>
        </div>
       </form>

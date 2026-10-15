@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/app/composables/modules/useAuth';
 import { useToast } from '@/app/composables/useToast';
+import OtpInput from '@/app/components/ui/OtpInput';
 import { 
   KeyRound, 
   Lock, 
@@ -42,11 +43,11 @@ export default function ProfileDropdown({ isOpen, onClose, onLogout }: ProfileDr
     disable2fa 
   } = useAuth();
 
-  // Admin user data with fallback to design screenshot
-  const [adminName, setAdminName] = useState('Fawwaz alli-Balogun');
-  const [adminEmail, setAdminEmail] = useState('allibwwaz@gmail.com');
-  const [adminDept, setAdminDept] = useState('Credit and Risk department');
-  const [is2faActive, setIs2faActive] = useState(true);
+  // Admin user data with clean defaults (no hardcoded name)
+  const [adminName, setAdminName] = useState('Admin');
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminDept, setAdminDept] = useState('Administrator');
+  const [is2faActive, setIs2faActive] = useState(false);
 
   // Modals inside dropdown
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -71,6 +72,13 @@ export default function ProfileDropdown({ isOpen, onClose, onLogout }: ProfileDr
   // Fetch admin profile on mount
   useEffect(() => {
     setMounted(true);
+    if (typeof window !== 'undefined') {
+      const storedEmail = localStorage.getItem('public_sector_user_email');
+      if (storedEmail) setAdminEmail(storedEmail);
+      const stored2fa = localStorage.getItem('admin_2fa_enabled');
+      if (stored2fa !== null) setIs2faActive(stored2fa === 'true');
+    }
+
     getProfile().then((data) => {
       if (data) {
         if (data.firstName || data.lastName) {
@@ -88,14 +96,13 @@ export default function ProfileDropdown({ isOpen, onClose, onLogout }: ProfileDr
         }
         if (typeof data.is2faEnabled === 'boolean') {
           setIs2faActive(data.is2faEnabled);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('admin_2fa_enabled', String(data.is2faEnabled));
+          }
         }
       }
     }).catch(() => {
-      // Check localStorage email if available
-      if (typeof window !== 'undefined') {
-        const storedEmail = localStorage.getItem('public_sector_user_email');
-        if (storedEmail) setAdminEmail(storedEmail);
-      }
+      // Graceful fallback for endpoints where admin profile isn't available
     });
   }, [getProfile]);
 
@@ -151,6 +158,9 @@ export default function ProfileDropdown({ isOpen, onClose, onLogout }: ProfileDr
       await confirm2fa({ code: verificationCode });
       addToast('Two-Factor Authentication successfully enabled!', 'success');
       setIs2faActive(true);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('admin_2fa_enabled', 'true');
+      }
       setShow2faModal(false);
       setVerificationCode('');
     } catch (err: any) {
@@ -170,6 +180,9 @@ export default function ProfileDropdown({ isOpen, onClose, onLogout }: ProfileDr
       await disable2fa({ currentPassword: disablePassword });
       addToast('Two-factor authentication has been disabled', 'success');
       setIs2faActive(false);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('admin_2fa_enabled', 'false');
+      }
       setShowDisable2faModal(false);
       setDisablePassword('');
     } catch (err: any) {
@@ -233,10 +246,10 @@ export default function ProfileDropdown({ isOpen, onClose, onLogout }: ProfileDr
           
           <div className="relative z-10 space-y-1">
             <h3 className="text-base font-bold tracking-tight text-white leading-tight">
-              {adminName}
+              {adminName || 'Admin'}
             </h3>
             <p className="text-xs text-white/80 font-normal">
-              {adminEmail}
+              {adminEmail || 'admin@mmfb.com'}
             </p>
             <div className="pt-2">
               <span className="inline-block px-3 py-1 bg-white/95 text-[#018752] text-[11px] font-semibold rounded-full shadow-sm">
@@ -522,17 +535,13 @@ export default function ProfileDropdown({ isOpen, onClose, onLogout }: ProfileDr
 
             <form onSubmit={handleConfirm2fa} className="space-y-4 pt-1">
               <div>
-                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 text-center">
                   Enter 6-Digit Code
                 </label>
-                <input
-                  type="text"
-                  maxLength={6}
-                  required
-                  placeholder="000000"
+                <OtpInput
                   value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
-                  className="w-full px-4 py-2.5 bg-muted/30 border border-border rounded-xl text-sm font-mono tracking-widest text-center text-lg font-bold outline-none focus:ring-2 focus:ring-[#018752]/20 focus:border-[#018752]"
+                  onChange={setVerificationCode}
+                  autoFocus
                 />
               </div>
 

@@ -5,9 +5,22 @@ export const useClients = () => {
  const [loading, setLoading] = useState(false);
  const [meta, setMeta] = useState({ total: 0, page: 1, limit: 25, totalPages: 1 });
  const [error, setError] = useState(null);
- const [clients, setClients] = useState([] as any[]);
+  const [clients, setClients] = useState([] as any[]);
+  const [analytics, setAnalytics] = useState<any>(null);
 
- const fetchClients = useCallback(async (params?: any) => {
+  const fetchClientAnalytics = useCallback(async () => {
+    try {
+      const res = await clients_api.getClientAnalytics();
+      const data = res.data?.data || res.data;
+      setAnalytics(data);
+      return data;
+    } catch {
+      // Graceful fallback if analytics endpoint fails
+      return null;
+    }
+  }, []);
+
+  const fetchClients = useCallback(async (params?: any) => {
   setLoading(true);
   try {
    const res = await clients_api.getClients(params);
@@ -36,10 +49,23 @@ export const useClients = () => {
   }
  }, []);
 
- const retryClient = useCallback(async (id: string) => {
+ const retryClient = useCallback(async (id: string, payload?: { note?: string }) => {
   setLoading(true);
   try {
-   const res = await clients_api.retryClient(id);
+   const res = await clients_api.retryClient(id, payload);
+   return res.data;
+  } catch (err: any) {
+   setError(err.message);
+   throw err;
+  } finally {
+   setLoading(false);
+  }
+ }, []);
+
+ const revokeClientSessions = useCallback(async (id: string) => {
+  setLoading(true);
+  try {
+   const res = await clients_api.revokeClientSessions(id);
    return res.data;
   } catch (err: any) {
    setError(err.message);
@@ -184,9 +210,26 @@ export const useClients = () => {
     }
   }, []);
 
- return {
-  ippisLookup,
-  identityVerification,
-  uploadDocument,
-  runFaceMatch, getClientOnboardingStatus, loading, error, clients, fetchClients, getClientById, retryClient, approveClient, getClientWallet, creditClientWallet, debitClientWallet, getClientActivities, meta };
+  return {
+    ippisLookup,
+    identityVerification,
+    uploadDocument,
+    runFaceMatch,
+    getClientOnboardingStatus,
+    loading,
+    error,
+    clients,
+    fetchClients,
+    analytics,
+    fetchClientAnalytics,
+    getClientById,
+    retryClient,
+    approveClient,
+    revokeClientSessions,
+    getClientWallet,
+    creditClientWallet,
+    debitClientWallet,
+    getClientActivities,
+    meta
+  };
 };

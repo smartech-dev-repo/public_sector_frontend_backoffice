@@ -18,7 +18,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
  const router = useRouter();
  const { id } = use(params);
  
- const { getAgentById, approveAgent, rejectAgent, resendCredentials } = useAgents();
+ const { getAgentById, approveAgent, rejectAgent, resendCredentials, updateOnboardingAccess } = useAgents();
  const { revokeAgentSessions } = useSessions();
  const { clientLoans, fetchClientLoans, meta, loading: loansLoading } = useLoans();
  const { addToast } = useToast();
@@ -111,6 +111,24 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
   }
  };
 
+ const handleToggleOnboarding = async () => {
+  const currentStatus = application.canOnboardClients ?? true;
+  const newStatus = !currentStatus;
+  const confirmed = await confirm({
+   title: 'Update Onboarding Access',
+   message: `Are you sure you want to ${newStatus ? 'grant' : 'restrict'} client onboarding access for this agent?`,
+   confirmText: newStatus ? 'Grant Access' : 'Restrict Access'
+  });
+  if (!confirmed) return;
+  try {
+   await updateOnboardingAccess(application.id, { canOnboardClients: newStatus });
+   addToast(`Onboarding access ${newStatus ? 'granted' : 'restricted'} successfully`, 'success');
+   await fetchAgentDetails();
+  } catch (err: any) {
+   addToast(err?.response?.data?.message || 'Failed to update onboarding access', 'error');
+  }
+ };
+
  if (loading) {
   return <PulseLoader />;
  }
@@ -147,11 +165,14 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
    )}
 
    {application.status === 'APPROVED' && (
-    <div className="flex gap-3 mb-4 w-full">
-      <button onClick={handleResendCredentials} className="flex-1 px-4 py-2 bg-card border border-border text-foreground/90 hover:bg-muted/30 rounded-lg transition-colors text-sm font-medium">
+    <div className="flex flex-wrap gap-3 mb-4 w-full">
+      <button onClick={handleResendCredentials} className="flex-1 min-w-[140px] px-4 py-2 bg-card border border-border text-foreground/90 hover:bg-muted/30 rounded-lg transition-colors text-sm font-medium">
        Resend Credentials
       </button>
-      <button onClick={handleRevokeSessions} className="flex-1 px-4 py-2 bg-card border border-rose-200 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors text-sm font-medium">
+      <button onClick={handleToggleOnboarding} className="flex-1 min-w-[160px] px-4 py-2 bg-card border border-amber-200 text-amber-700 hover:bg-amber-50 rounded-lg transition-colors text-sm font-medium">
+       {application.canOnboardClients === false ? 'Grant Onboarding Access' : 'Restrict Onboarding Access'}
+      </button>
+      <button onClick={handleRevokeSessions} className="flex-1 min-w-[140px] px-4 py-2 bg-card border border-rose-200 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors text-sm font-medium">
        Revoke Sessions
       </button>
     </div>
@@ -174,6 +195,18 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
     <div>
      <p className="text-[12px] text-muted-foreground/70 mb-1">Status</p>
      <p className="text-[16px] font-semibold text-foreground">{application.status || 'N/A'}</p>
+    </div>
+    <div>
+     <p className="text-[12px] text-muted-foreground/70 mb-1">Onboarding Access</p>
+     <p className="text-[16px] font-semibold text-foreground">
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+       application.canOnboardClients === false 
+        ? 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300' 
+        : 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300'
+      }`}>
+       {application.canOnboardClients === false ? 'Restricted' : 'Granted'}
+      </span>
+     </p>
     </div>
     <div>
      <p className="text-[12px] text-muted-foreground/70 mb-1">Created At</p>
