@@ -121,8 +121,10 @@ SelectScrollDownButton.displayName = SelectPrimitive.ScrollDownButton.displayNam
 
 const SelectContent = React.forwardRef<
  React.ElementRef<typeof SelectPrimitive.Content>,
- React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
->(({ className, children, position = 'popper', ...props }, ref) => {
+ React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content> & {
+  hideSearch?: boolean;
+ }
+>(({ className, children, position = 'popper', hideSearch = false, ...props }, ref) => {
  const { searchQuery, setSearchQuery } = React.useContext(SelectSearchContext);
 
  return (
@@ -130,7 +132,7 @@ const SelectContent = React.forwardRef<
    <SelectPrimitive.Content
     ref={ref}
     className={cn(
-     'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-[9999] max-h-[min(24rem,var(--radix-select-content-available-height))] min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border bg-popover text-popover-foreground data-[state=closed]:animate-out data-[state=open]:animate-in pointer-events-auto',
+     'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-[9999] max-h-[min(24rem,var(--radix-select-content-available-height))] min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-lg data-[state=closed]:animate-out data-[state=open]:animate-in pointer-events-auto',
      position === 'popper' &&
       'data-[side=left]:-translate-x-1 data-[side=top]:-translate-y-1 data-[side=right]:translate-x-1 data-[side=bottom]:translate-y-1',
      className,
@@ -140,28 +142,30 @@ const SelectContent = React.forwardRef<
    >
     <SelectScrollUpButton />
     
-    <div className="p-1.5 sticky top-0 z-10 bg-popover border-b border-border/50 backdrop-blur-md">
-     <div className="relative flex items-center">
-      <Search className="absolute left-2.5 size-3.5 text-muted-foreground opacity-50" />
-      <input
-       className="flex h-8 w-full rounded-md border border-input bg-transparent py-1 pl-8 pr-3 text-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
-       placeholder="Search items..."
-       value={searchQuery}
-       onChange={(e) => setSearchQuery(e.target.value)}
-       onPointerDown={(e) => e.stopPropagation()}
-       onClick={(e) => e.stopPropagation()}
-       onKeyDown={(e) => {
-        if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp' && e.key !== 'Enter' && e.key !== 'Escape') {
-         e.stopPropagation();
-        }
-       }}
-      />
+    {!hideSearch && (
+     <div className="p-1.5 sticky top-0 z-10 bg-popover border-b border-border/50 backdrop-blur-md">
+      <div className="relative flex items-center">
+       <Search className="absolute left-2.5 size-3.5 text-muted-foreground opacity-50" />
+       <input
+        className="flex h-8 w-full rounded-md border border-input bg-transparent py-1 pl-8 pr-3 text-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#018752] disabled:cursor-not-allowed disabled:opacity-50"
+        placeholder="Search..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => {
+         if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp' && e.key !== 'Enter' && e.key !== 'Escape') {
+          e.stopPropagation();
+         }
+        }}
+       />
+      </div>
      </div>
-    </div>
+    )}
 
     <SelectPrimitive.Viewport
      className={cn(
-      'p-1',
+      'p-1.5',
       position === 'popper' &&
        'w-full min-w-[var(--radix-select-trigger-width)]',
      )}
@@ -228,14 +232,14 @@ const SelectItem = React.forwardRef<
      if (props.onClick) props.onClick(e);
    }}
    className={cn(
-    'relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pr-8 pl-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent hover:text-accent-foreground transition-colors',
+    'relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pr-8 pl-3 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-[#E8F5EE] hover:text-[#018752] focus:bg-[#E8F5EE] focus:text-[#018752] dark:hover:bg-emerald-950/40 dark:focus:bg-emerald-950/40',
     className,
    )}
    {...props}
   >
-   <span className="absolute right-2 flex size-3.5 items-center justify-center">
+   <span className="absolute right-2.5 flex size-4 items-center justify-center text-[#018752]">
     <SelectPrimitive.ItemIndicator>
-     <Check className="size-4" />
+     <Check className="size-4 stroke-[2.5]" />
     </SelectPrimitive.ItemIndicator>
    </span>
    <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>

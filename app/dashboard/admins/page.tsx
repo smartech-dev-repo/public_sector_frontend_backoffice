@@ -82,9 +82,7 @@ export default function AdminsPage() {
 
  return (
   <main className="w-full">
-   <div className="flex justify-between items-center mb-3">
-    <h1 className="text-2xl font-semibold text-foreground">Admin Users</h1>
-   </div>
+   <h1 className="sr-only">Admin Users</h1>
 
    {loading && <PulseLoader />}
    {!loading && error && <div className="text-red-500 py-12 text-center">{error}</div>}

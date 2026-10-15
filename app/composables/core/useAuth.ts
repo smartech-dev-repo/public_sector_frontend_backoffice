@@ -40,6 +40,9 @@ export const useAuth = () => {
   setError(null);
   try {
    const response = await auth_api.adminLogin(payload);
+   if (response.data?.twoFactorRequired) {
+    return response.data;
+   }
    setToken(response.data);
    setUser(response.data);
    if (payload?.email && typeof window !== 'undefined') {

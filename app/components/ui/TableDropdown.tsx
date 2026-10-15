@@ -109,7 +109,7 @@ export default function TableDropdown({ children }: TableDropdownProps) {
      ref={menuRef} 
      onClick={() => setIsOpen(false)} 
      style={dropdownStyle} 
-     className="fixed z-[9999] w-48 bg-card border border-border/50 rounded-xl overflow-hidden text-left flex flex-col py-1 animate-dropdown-in"
+     className="fixed z-[9999] w-48 bg-card border border-border rounded-xl overflow-hidden text-left flex flex-col py-1 animate-dropdown-in shadow-xl shadow-black/10"
     >
      {children}
     </div>,

@@ -18,7 +18,7 @@ export default function CustomerManagementPage() {
   <div className="space-y-3">
    
 
-   <div className="border-b border-border flex justify-between items-center pr-4">
+   <div className="border-b border-border">
     <nav className="-mb-px flex space-x-8" aria-label="Tabs">
      {tabs.map((tab) => (
       <button
@@ -36,17 +36,11 @@ export default function CustomerManagementPage() {
       </button>
      ))}
     </nav>
-    <button 
-      onClick={() => setOnboardingOpen(true)}
-      className="px-4 py-2 bg-[#0F7642] text-white text-sm font-medium rounded-lg hover:bg-[#0F7642]/90 transition-colors"
-    >
-      + Onboard Client
-    </button>
    </div>
    <ClientOnboardingModal open={onboardingOpen} onOpenChange={setOnboardingOpen} />
 
    <div className="pt-1">
-    {activeTab === 'profiles' && <CustomerProfilesTab />}
+    {activeTab === 'profiles' && <CustomerProfilesTab onOpenOnboard={() => setOnboardingOpen(true)} />}
     {activeTab === 'ippis' && <IppisRecordsTab />}
    </div>
   </div>

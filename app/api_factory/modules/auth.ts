@@ -19,8 +19,8 @@ export const auth_api = {
  changePassword: (payload: any) => {
   return GATEWAY_ENDPOINT_WITH_AUTH.post('/auth/admin/change-password', payload);
  },
- setup2fa: () => {
-  return GATEWAY_ENDPOINT_WITH_AUTH.post('/auth/admin/2fa/setup');
+ setup2fa: (payload?: { method?: 'TOTP' | 'EMAIL' }) => {
+  return GATEWAY_ENDPOINT_WITH_AUTH.post('/auth/admin/2fa/setup', payload || { method: 'TOTP' });
  },
  confirm2fa: (payload: any) => {
   return GATEWAY_ENDPOINT_WITH_AUTH.post('/auth/admin/2fa/confirm', payload);
