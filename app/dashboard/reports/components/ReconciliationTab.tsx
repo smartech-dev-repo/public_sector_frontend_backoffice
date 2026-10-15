@@ -155,7 +155,7 @@ export default function ReconciliationTab() {
            </SelectContent>
           </Select>
          </div>
-         <div className="space-y-1.5 z-[60] relative">
+         <div className="space-y-1.5 relative">
           <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Period</label>
           <MonthPicker 
            value={filterParams.period}
@@ -163,7 +163,7 @@ export default function ReconciliationTab() {
            placeholder="Pick a month"
           />
          </div>
-         <div className="space-y-1.5 z-[60] relative">
+         <div className="space-y-1.5 relative">
           <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Generated Date</label>
           <CustomDateRangePicker 
            value={filterParams.generatedRange}
