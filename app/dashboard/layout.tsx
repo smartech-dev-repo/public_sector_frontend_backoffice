@@ -7,6 +7,7 @@ import Modal from '@/app/components/ui/Modal';
 import SearchModal from '@/app/components/ui/SearchModal';
 import SessionManager from '@/app/components/ui/SessionManager';
 import ProfileDropdown from '@/app/components/ui/ProfileDropdown';
+import { useProfile } from '@/app/composables/modules/useProfile';
 import { useTheme } from 'next-themes';
 import { Monitor, Moon, Sun, Folder, UserPlus, Users, User, LineChart, UserCog, ClipboardList, Scale, ShieldCheck, Settings, Banknote, ChevronDown } from 'lucide-react';
 
@@ -15,6 +16,34 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
  const router = useRouter();
  const { theme, setTheme, resolvedTheme } = useTheme();
  const [mounted, setMounted] = useState(false);
+ const { profile, fetchProfile } = useProfile();
+
+ useEffect(() => {
+  fetchProfile();
+ }, [fetchProfile]);
+
+ const displayName = useMemo(() => {
+  if (profile?.fullName) return profile.fullName;
+  if (profile?.firstName) return `${profile.firstName} ${profile.lastName || ''}`.trim();
+  return 'Admin';
+ }, [profile]);
+
+ const displayRole = useMemo(() => {
+  if (profile?.role?.name) return profile.role.name;
+  return 'Administrator';
+ }, [profile]);
+
+ const displayInitials = useMemo(() => {
+  if (profile?.firstName && profile?.lastName) {
+   return `${profile.firstName[0]}${profile.lastName[0]}`.toUpperCase();
+  }
+  if (profile?.fullName) {
+   const parts = profile.fullName.trim().split(/\s+/);
+   if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+   return parts[0].slice(0, 2).toUpperCase();
+  }
+  return 'AD';
+ }, [profile]);
 
  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
   loans: true,
@@ -358,12 +387,16 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
         onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)} 
         className="flex items-center gap-2 sm:gap-3 border-l border-border pl-3 sm:pl-4 hover:bg-accent py-1.5 rounded-xl transition-colors cursor-pointer text-left"
        >
-        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#018752] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-sm border border-emerald-600">
-         FA
+        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#018752] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-sm border border-emerald-600 overflow-hidden">
+         {profile?.profileImage ? (
+          <img src={profile.profileImage} alt={displayName} className="w-full h-full object-cover" />
+         ) : (
+          displayInitials
+         )}
         </div>
         <div className="hidden sm:block">
-          <div className="text-sm text-foreground font-semibold leading-tight">Fawwaz alli-Balogun</div>
-          <div className="text-xs text-muted-foreground">Credit and Risk department</div>
+          <div className="text-sm text-foreground font-semibold leading-tight">{displayName}</div>
+          <div className="text-xs text-muted-foreground">{displayRole}</div>
         </div>
         <div className="text-muted-foreground hover:text-foreground transition-colors ml-1">
          <ChevronDown className={`w-4 h-4 transition-transform ${isProfileDropdownOpen ? 'rotate-180' : ''}`} />

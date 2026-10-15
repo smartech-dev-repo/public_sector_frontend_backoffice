@@ -194,7 +194,7 @@ export default function GeneralReportsTab() {
          </SelectContent>
         </Select>
        </div>
-       <div className="space-y-1.5 w-full z-[60] relative">
+       <div className="space-y-1.5 w-full relative">
         <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Date Range</label>
         <CustomDateRangePicker 
          value={filterParams.dateRange}

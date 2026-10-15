@@ -77,6 +77,7 @@ export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> &
  VariantProps<typeof buttonVariants> & {
   asChild?: boolean;
   loading?: boolean;
+  loadingText?: string;
  };
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
@@ -88,6 +89,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
    visualState,
    asChild = false,
    loading = false,
+   loadingText,
    disabled,
    children,
    ...props
@@ -106,9 +108,9 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
    >
     {loading ? (
      <>
-      <Loader2 className="animate-spin" aria-hidden />
+      <Loader2 className="animate-spin shrink-0" aria-hidden />
       <span className="sr-only">Loading</span>
-      {children}
+      {loadingText || children}
      </>
     ) : (
      children
