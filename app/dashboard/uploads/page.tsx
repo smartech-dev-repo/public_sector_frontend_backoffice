@@ -73,7 +73,7 @@ export default function UploadsPage() {
     <div className="space-y-8">
      <div className="flex items-center justify-between">
       <div>
-       <h1 className="text-2xl font-semibold text-foreground">Document Uploads</h1>
+       <h1 className="sr-only">Document Uploads</h1>
        <p className="text-sm text-muted-foreground mt-1 max-w-xl">Upload monthly employer broadsheets, disbursed loans, or repayment schedules.</p>
       </div>
      </div>

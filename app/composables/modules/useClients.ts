@@ -159,6 +159,7 @@ export const useClients = () => {
     setLoading(true);
     try {
       const formData = new FormData();
+      formData.append('file', file);
       formData.append('document', file);
       const res = await clients_api.uploadClientDocument(clientId, type, formData);
       return res.data;
