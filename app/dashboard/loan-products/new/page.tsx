@@ -8,9 +8,16 @@ import { useToast } from '@/app/composables/useToast';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import { 
   ArrowLeft, 
+  ArrowRight,
   Check, 
-  Info 
+  Info,
+  Plus,
+  Trash2,
+  Sparkles,
+  Layers,
+  CalendarRange
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import {
   Select,
   SelectContent,
@@ -19,6 +26,13 @@ import {
   SelectValue,
 } from '@/app/components/ui/Select';
 import { MultiSelect } from '@/app/components/ui/MultiSelect';
+
+export interface InterestTierItem {
+  id: string;
+  minTenorMonths: number;
+  maxTenorMonths: number;
+  interestRatePercent: number;
+}
 
 const SECTOR_OPTIONS = [
   { code: 'NPF', name: 'Nigerian Police Force' },
@@ -55,20 +69,21 @@ function ProductFormContent() {
 
   const { addToast } = useToast();
 
-  // Clean, un-prefilled default state
+  // Clean, customizable default state with dynamic month ranges
   const [form, setForm] = useState({
     productName: '',
     productCode: '',
     sectors: [] as string[],
     minimumAmount: 0,
     maximumAmount: 0,
-    minimumTenorMonths: 6,
+    minimumTenorMonths: 1,
     maximumTenorMonths: 12,
-    // Interest rate tiers
-    tier1Rate: 0, // 6-12 months
-    tier2Rate: 0, // 13-18 months
-    tier3Rate: 0, // 19-24 months
-    tier4Rate: 0, // 25-30 months
+    // Dynamic Interest rate tiers
+    interestTiers: [
+      { id: '1', minTenorMonths: 1, maxTenorMonths: 3, interestRatePercent: 3.0 },
+      { id: '2', minTenorMonths: 4, maxTenorMonths: 6, interestRatePercent: 3.5 },
+      { id: '3', minTenorMonths: 7, maxTenorMonths: 12, interestRatePercent: 4.0 },
+    ] as InterestTierItem[],
     // Eligibility
     minimumServiceMonthsLeft: 24,
     maximumMonthsInService: 35,
@@ -93,11 +108,17 @@ function ProductFormContent() {
       fetchLoanProducts().then((products) => {
         const found = products?.find((p: any) => p.id === productId);
         if (found) {
-          const tiers = found.interestTiers || [];
-          const t1 = tiers[0]?.interestRatePercent ?? 0;
-          const t2 = tiers[1]?.interestRatePercent ?? t1;
-          const t3 = tiers[2]?.interestRatePercent ?? t1;
-          const t4 = tiers[3]?.interestRatePercent ?? t1;
+          const rawTiers = Array.isArray(found.interestTiers) && found.interestTiers.length > 0
+            ? found.interestTiers
+            : [
+                { minTenorMonths: found.minimumTenorMonths || 1, maxTenorMonths: found.maximumTenorMonths || 12, interestRatePercent: 3.5 }
+              ];
+          const mappedTiers: InterestTierItem[] = rawTiers.map((t: any, idx: number) => ({
+            id: String(t.id || idx + 1),
+            minTenorMonths: Number(t.minTenorMonths) || 1,
+            maxTenorMonths: Number(t.maxTenorMonths) || 12,
+            interestRatePercent: Number(t.interestRatePercent) || 0
+          }));
 
           setForm({
             productName: found.productName || '',
@@ -105,12 +126,9 @@ function ProductFormContent() {
             sectors: found.sectors || [],
             minimumAmount: Number(found.minimumAmount) || 0,
             maximumAmount: Number(found.maximumAmount) || 0,
-            minimumTenorMonths: Number(found.minimumTenorMonths) || 6,
+            minimumTenorMonths: Number(found.minimumTenorMonths) || 1,
             maximumTenorMonths: Number(found.maximumTenorMonths) || 12,
-            tier1Rate: t1,
-            tier2Rate: t2,
-            tier3Rate: t3,
-            tier4Rate: t4,
+            interestTiers: mappedTiers,
             minimumServiceMonthsLeft: found.minimumServiceMonthsLeft !== null ? Number(found.minimumServiceMonthsLeft) : 24,
             maximumMonthsInService: found.maximumMonthsInService !== null ? Number(found.maximumMonthsInService) : 35,
             managementChargeType: found.managementChargeType || 'PERCENTAGE',
@@ -156,6 +174,168 @@ function ProductFormContent() {
     return primaryLabel;
   }, [form.sectors, availableSectors]);
 
+  // Tier Handlers
+  const handleAddTier = () => {
+    const tiers = form.interestTiers;
+    const lastTier = tiers[tiers.length - 1];
+    const nextMin = lastTier ? Number(lastTier.maxTenorMonths) + 1 : 1;
+    const nextMax = nextMin + 2; // e.g. 3-month band
+    const nextRate = lastTier ? Number(lastTier.interestRatePercent) : 3.5;
+    const newTier: InterestTierItem = {
+      id: Math.random().toString(36).substring(2, 9),
+      minTenorMonths: nextMin,
+      maxTenorMonths: nextMax,
+      interestRatePercent: nextRate
+    };
+    const updated = [...tiers, newTier];
+    const highestMax = Math.max(...updated.map(t => Number(t.maxTenorMonths)));
+    setForm({
+      ...form,
+      interestTiers: updated,
+      maximumTenorMonths: Math.max(form.maximumTenorMonths, highestMax)
+    });
+  };
+
+  const handleUpdateTier = (id: string, field: 'minTenorMonths' | 'maxTenorMonths' | 'interestRatePercent', value: number) => {
+    const updated = form.interestTiers.map(t => {
+      if (t.id === id) {
+        return { ...t, [field]: value };
+      }
+      return t;
+    });
+    const highestMax = Math.max(...updated.map(t => Number(t.maxTenorMonths) || 1));
+    setForm({
+      ...form,
+      interestTiers: updated,
+      maximumTenorMonths: Math.max(form.maximumTenorMonths, highestMax)
+    });
+  };
+
+  const handleRemoveTier = (id: string) => {
+    if (form.interestTiers.length <= 1) {
+      return addToast('At least one month range is required', 'warning');
+    }
+    const updated = form.interestTiers.filter(t => t.id !== id);
+    setForm({
+      ...form,
+      interestTiers: updated
+    });
+  };
+
+  const handleAutoAlignTiers = () => {
+    const current = [...form.interestTiers];
+    if (current.length === 0) return;
+    let runningMin = Number(form.minimumTenorMonths) || 1;
+    const updated = current.map((t) => {
+      const span = Math.max(0, Number(t.maxTenorMonths) - Number(t.minTenorMonths));
+      const minT = runningMin;
+      const maxT = minT + span;
+      runningMin = maxT + 1;
+      return { ...t, minTenorMonths: minT, maxTenorMonths: maxT };
+    });
+    const highestMax = Math.max(...updated.map(t => Number(t.maxTenorMonths)));
+    setForm({
+      ...form,
+      interestTiers: updated,
+      maximumTenorMonths: Math.max(form.maximumTenorMonths, highestMax)
+    });
+    addToast('Tenor ranges aligned contiguously without gaps', 'success');
+  };
+
+  const coverageStatus = useMemo(() => {
+    const tiers = form.interestTiers;
+    if (!tiers || tiers.length === 0) {
+      return { isContiguous: false, text: 'No ranges defined' };
+    }
+    const minT = Number(form.minimumTenorMonths) || 1;
+    const maxT = Number(form.maximumTenorMonths) || 12;
+
+    if (Number(tiers[0].minTenorMonths) !== minT) {
+      return { isContiguous: false, text: `Starts at ${tiers[0].minTenorMonths}M (expected ${minT}M)` };
+    }
+
+    for (let i = 1; i < tiers.length; i++) {
+      const prevMax = Number(tiers[i - 1].maxTenorMonths);
+      const currMin = Number(tiers[i].minTenorMonths);
+      if (currMin > prevMax + 1) {
+        return { isContiguous: false, text: `Gap: Month ${prevMax + 1} to ${currMin - 1} unassigned` };
+      }
+      if (currMin <= prevMax) {
+        return { isContiguous: false, text: `Overlap between Band ${i} and Band ${i + 1}` };
+      }
+    }
+
+    const lastMax = Number(tiers[tiers.length - 1].maxTenorMonths);
+    if (lastMax < maxT) {
+      return { isContiguous: false, text: `Covers up to ${lastMax}M (${maxT}M max tenor)` };
+    }
+
+    return { isContiguous: true, text: `Continuous coverage: 1 to ${lastMax} months` };
+  }, [form.interestTiers, form.minimumTenorMonths, form.maximumTenorMonths]);
+
+  const nextSuggestedRange = useMemo(() => {
+    const lastTier = form.interestTiers[form.interestTiers.length - 1];
+    if (!lastTier) return { min: 1, max: 3 };
+    const min = Number(lastTier.maxTenorMonths) + 1;
+    const max = min + 2;
+    return { min, max };
+  }, [form.interestTiers]);
+
+  const applyPreset = (preset: 'short' | 'quarterly' | 'biannual' | 'flat') => {
+    if (preset === 'short') {
+      // 1-3, 4-6, 7-12
+      setForm({
+        ...form,
+        minimumTenorMonths: 1,
+        maximumTenorMonths: 12,
+        interestTiers: [
+          { id: '1', minTenorMonths: 1, maxTenorMonths: 3, interestRatePercent: 3.0 },
+          { id: '2', minTenorMonths: 4, maxTenorMonths: 6, interestRatePercent: 3.5 },
+          { id: '3', minTenorMonths: 7, maxTenorMonths: 12, interestRatePercent: 4.0 }
+        ]
+      });
+    } else if (preset === 'quarterly') {
+      // 1-3, 4-6, 7-9, 10-12
+      setForm({
+        ...form,
+        minimumTenorMonths: 1,
+        maximumTenorMonths: 12,
+        interestTiers: [
+          { id: '1', minTenorMonths: 1, maxTenorMonths: 3, interestRatePercent: 3.0 },
+          { id: '2', minTenorMonths: 4, maxTenorMonths: 6, interestRatePercent: 3.25 },
+          { id: '3', minTenorMonths: 7, maxTenorMonths: 9, interestRatePercent: 3.5 },
+          { id: '4', minTenorMonths: 10, maxTenorMonths: 12, interestRatePercent: 4.0 }
+        ]
+      });
+    } else if (preset === 'biannual') {
+      // 6-12, 13-18, 19-24, 25-30
+      setForm({
+        ...form,
+        minimumTenorMonths: 6,
+        maximumTenorMonths: 30,
+        interestTiers: [
+          { id: '1', minTenorMonths: 6, maxTenorMonths: 12, interestRatePercent: 3.5 },
+          { id: '2', minTenorMonths: 13, maxTenorMonths: 18, interestRatePercent: 3.5 },
+          { id: '3', minTenorMonths: 19, maxTenorMonths: 24, interestRatePercent: 3.5 },
+          { id: '4', minTenorMonths: 25, maxTenorMonths: 30, interestRatePercent: 3.5 }
+        ]
+      });
+    } else if (preset === 'flat') {
+      setForm({
+        ...form,
+        interestTiers: [
+          {
+            id: '1',
+            minTenorMonths: form.minimumTenorMonths || 1,
+            maxTenorMonths: form.maximumTenorMonths || 12,
+            interestRatePercent: form.interestTiers[0]?.interestRatePercent || 3.5
+          }
+        ]
+      });
+    }
+    addToast('Applied tenor month preset template', 'info');
+  };
+
   // Save handler
   const handleSaveProduct = async () => {
     if (!form.productName.trim()) {
@@ -177,16 +357,31 @@ function ProductFormContent() {
       return addToast('Maximum tenor must be greater than or equal to minimum tenor', 'error');
     }
 
+    if (!form.interestTiers || form.interestTiers.length === 0) {
+      return addToast('Please configure at least one tenor month range', 'error');
+    }
+
+    for (let i = 0; i < form.interestTiers.length; i++) {
+      const t = form.interestTiers[i];
+      if (t.minTenorMonths <= 0 || t.maxTenorMonths <= 0) {
+        return addToast(`Band ${i + 1} has an invalid month range`, 'error');
+      }
+      if (Number(t.maxTenorMonths) < Number(t.minTenorMonths)) {
+        return addToast(`Band ${i + 1}: max month (${t.maxTenorMonths}) cannot be less than min month (${t.minTenorMonths})`, 'error');
+      }
+      if (Number(t.interestRatePercent) < 0) {
+        return addToast(`Band ${i + 1}: interest rate cannot be negative`, 'error');
+      }
+    }
+
     const minT = Number(form.minimumTenorMonths);
     const maxT = Number(form.maximumTenorMonths);
     
-    const interestTiers = [
-      {
-        minTenorMonths: minT,
-        maxTenorMonths: maxT,
-        interestRatePercent: Number(form.tier1Rate) || 0
-      }
-    ];
+    const interestTiers = form.interestTiers.map(t => ({
+      minTenorMonths: Number(t.minTenorMonths),
+      maxTenorMonths: Number(t.maxTenorMonths),
+      interestRatePercent: Number(t.interestRatePercent) || 0
+    }));
 
     const payload = {
       productName: form.productName.trim(),
@@ -197,6 +392,7 @@ function ProductFormContent() {
       minimumTenorMonths: minT,
       maximumTenorMonths: maxT,
       interestTiers,
+      tier1Rate: interestTiers[0]?.interestRatePercent || 0,
       managementChargeType: form.managementChargeType,
       managementChargeValue: Number(form.managementChargeValue) || 0,
       managementChargeApplication: form.managementChargeApplication,
@@ -400,7 +596,7 @@ function ProductFormContent() {
                 </SelectTrigger>
                 <SelectContent hideSearch>
                   {[1, 3, 6, 9, 12, 18, 24].map(m => (
-                    <SelectItem key={m} value={String(m)}>{m} months</SelectItem>
+                    <SelectItem key={m} value={String(m)}>{m === 1 ? '1 month' : `${m} months`}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -419,80 +615,261 @@ function ProductFormContent() {
                 </SelectTrigger>
                 <SelectContent hideSearch>
                   {[6, 12, 18, 24, 30, 36, 48].map(m => (
-                    <SelectItem key={m} value={String(m)}>{m} months</SelectItem>
+                    <SelectItem key={m} value={String(m)}>{m === 1 ? '1 month' : `${m} months`}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          {/* Interest Rate Matrix */}
-          <div className="space-y-3 pt-2">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-foreground">Interest rate matrix</h3>
-              <span className="text-[11px] font-semibold text-[#018752] bg-[#E8F5EE] px-3 py-1 rounded-full">
-                {activeSectorName}
-              </span>
+          {/* Dynamic Interest Rate Matrix */}
+          <div className="space-y-4 pt-2">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-foreground">Interest Rate Matrix</h3>
+                  <span className="text-[11px] font-semibold text-[#018752] bg-[#E8F5EE] px-2.5 py-0.5 rounded-full">
+                    {activeSectorName}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Define contiguous month ranges and the monthly interest percentage applied to each tenor band.
+                </p>
+              </div>
+
+              {/* Quick Presets */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-xs text-muted-foreground font-medium flex items-center gap-1 mr-1">
+                  <Sparkles className="w-3.5 h-3.5 text-[#018752]" /> Presets:
+                </span>
+                <button
+                  type="button"
+                  onClick={() => applyPreset('short')}
+                  className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-muted/60 hover:bg-muted text-foreground border border-border/70 hover:border-[#018752]/50 transition-all cursor-pointer shadow-2xs"
+                >
+                  1-3M, 4-6M, 7-12M
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyPreset('quarterly')}
+                  className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-muted/60 hover:bg-muted text-foreground border border-border/70 hover:border-[#018752]/50 transition-all cursor-pointer shadow-2xs"
+                >
+                  Quarterly
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyPreset('biannual')}
+                  className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-muted/60 hover:bg-muted text-foreground border border-border/70 hover:border-[#018752]/50 transition-all cursor-pointer shadow-2xs"
+                >
+                  6-12M, 13-18M, 19-24M
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyPreset('flat')}
+                  className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-muted/60 hover:bg-muted text-foreground border border-border/70 hover:border-[#018752]/50 transition-all cursor-pointer shadow-2xs"
+                >
+                  Flat Rate
+                </button>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-              <div className="p-3 bg-muted/20 border border-border rounded-2xl space-y-1">
-                <span className="text-[11px] text-muted-foreground block font-medium">6-12 months</span>
-                <div className="flex items-center gap-1">
-                  <input
-                    type="number"
-                    step="0.05"
-                    value={form.tier1Rate || ''}
-                    onChange={(e) => setForm({ ...form, tier1Rate: Number(e.target.value) })}
-                    placeholder="0.0"
-                    className="w-full bg-transparent font-bold text-sm outline-none"
-                  />
-                  <span className="text-xs font-semibold text-muted-foreground">%</span>
+            {/* Enterprise Rate Schedule Card */}
+            <div className="border border-border/80 rounded-2xl bg-card shadow-xs overflow-hidden">
+              {/* Visual Tenor Ribbon */}
+              <div className="p-3.5 bg-muted/20 border-b border-border/60 space-y-2">
+                <div className="flex items-center justify-between text-xs flex-wrap gap-2">
+                  <span className="font-semibold text-foreground flex items-center gap-1.5">
+                    <CalendarRange className="w-3.5 h-3.5 text-[#018752]" />
+                    Tenor Continuum & Distribution
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">
+                      Product Range: <strong className="text-foreground">{form.minimumTenorMonths} – {form.maximumTenorMonths} months</strong>
+                    </span>
+                    {coverageStatus.isContiguous ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-300 px-2 py-0.5 rounded-full">
+                        <Check className="w-3 h-3" /> Fully Contiguous
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleAutoAlignTiers}
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 bg-amber-100 dark:bg-amber-950 dark:text-amber-300 px-2.5 py-0.5 rounded-full hover:bg-amber-200 transition-colors cursor-pointer"
+                        title="Click to automatically close gaps and align ranges"
+                      >
+                        <Sparkles className="w-3 h-3" /> {coverageStatus.text} • Click to Auto-align
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Segmented Timeline Bar */}
+                <div className="h-8 w-full bg-muted/60 rounded-xl overflow-hidden p-1 flex gap-1 border border-border/60">
+                  {form.interestTiers.map((tier, idx) => {
+                    const spanMonths = Math.max(1, Number(tier.maxTenorMonths) - Number(tier.minTenorMonths) + 1);
+                    const totalSpan = Math.max(
+                      Number(form.maximumTenorMonths) || 12,
+                      ...form.interestTiers.map(t => Number(t.maxTenorMonths) || 12)
+                    );
+                    const widthPercent = Math.max(8, (spanMonths / totalSpan) * 100);
+
+                    const palette = [
+                      'bg-[#018752] text-white',
+                      'bg-[#02975c] text-white',
+                      'bg-[#0aa668] text-white',
+                      'bg-[#12b575] text-white',
+                      'bg-[#1cc481] text-white',
+                    ];
+                    const colorClass = palette[idx % palette.length];
+
+                    return (
+                      <div
+                        key={tier.id || idx}
+                        style={{ flex: `${widthPercent} 1 0%` }}
+                        className={cn(
+                          'h-full rounded-lg flex items-center justify-between px-2 text-[11px] font-bold shadow-2xs transition-all relative overflow-hidden group min-w-[70px]',
+                          colorClass
+                        )}
+                        title={`Band ${idx + 1}: Months ${tier.minTenorMonths} to ${tier.maxTenorMonths} (${tier.interestRatePercent}%/mo)`}
+                      >
+                        <span className="truncate">
+                          Band {idx + 1}: {tier.minTenorMonths}–{tier.maxTenorMonths}M
+                        </span>
+                        <span className="text-[10px] font-mono opacity-90 shrink-0 ml-1 bg-black/15 px-1 rounded">
+                          {tier.interestRatePercent}%
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
-              <div className="p-3 bg-muted/20 border border-border rounded-2xl space-y-1">
-                <span className="text-[11px] text-muted-foreground block font-medium">13-18 months</span>
-                <div className="flex items-center gap-1">
-                  <input
-                    type="number"
-                    step="0.05"
-                    value={form.tier2Rate || ''}
-                    onChange={(e) => setForm({ ...form, tier2Rate: Number(e.target.value) })}
-                    placeholder="0.0"
-                    className="w-full bg-transparent font-bold text-sm outline-none"
-                  />
-                  <span className="text-xs font-semibold text-muted-foreground">%</span>
-                </div>
+              {/* Table of Tenor Bands */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm border-collapse">
+                  <thead>
+                    <tr className="bg-muted/40 border-b border-border/70 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                      <th className="py-3 px-3 w-20 whitespace-nowrap">Band</th>
+                      <th className="py-3 px-3 min-w-[220px]">Tenor Range</th>
+                      <th className="py-3 px-3 w-24">Duration</th>
+                      <th className="py-3 px-3 w-32">Monthly Rate</th>
+                      <th className="py-3 px-3 w-28 whitespace-nowrap">APR (p.a.)</th>
+                      <th className="py-3 px-3 text-right w-12"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/60 bg-card">
+                    {form.interestTiers.map((tier, idx) => {
+                      const spanMonths = Math.max(1, Number(tier.maxTenorMonths) - Number(tier.minTenorMonths) + 1);
+                      const apr = (Number(tier.interestRatePercent || 0) * 12).toFixed(1);
+
+                      return (
+                        <tr 
+                          key={tier.id || idx}
+                          className="hover:bg-muted/20 transition-colors group"
+                        >
+                          {/* Band Column */}
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            <div className="flex items-center gap-1.5 font-semibold text-xs text-foreground">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#018752] shrink-0" />
+                              <span>Band {idx + 1}</span>
+                            </div>
+                          </td>
+
+                          {/* Connected Range Inputs */}
+                          <td className="py-3 px-3">
+                            <div className="inline-flex items-center gap-1.5 bg-muted/20 hover:bg-muted/40 border border-border/80 focus-within:border-[#018752] focus-within:bg-background focus-within:ring-2 focus-within:ring-[#018752]/10 rounded-xl px-2.5 py-1 transition-all">
+                              <span className="text-[11px] text-muted-foreground font-medium">Month</span>
+                              <input
+                                type="number"
+                                min={1}
+                                value={tier.minTenorMonths}
+                                onChange={(e) => handleUpdateTier(tier.id, 'minTenorMonths', Math.max(1, Number(e.target.value)))}
+                                className="w-11 h-7 text-center font-bold text-xs bg-background border border-border/80 rounded-lg text-foreground outline-none focus:border-[#018752]"
+                              />
+
+                              <ArrowRight className="w-3 h-3 text-muted-foreground/60 shrink-0" />
+
+                              <span className="text-[11px] text-muted-foreground font-medium">Month</span>
+                              <input
+                                type="number"
+                                min={tier.minTenorMonths}
+                                value={tier.maxTenorMonths}
+                                onChange={(e) => handleUpdateTier(tier.id, 'maxTenorMonths', Math.max(Number(tier.minTenorMonths), Number(e.target.value)))}
+                                className="w-11 h-7 text-center font-bold text-xs bg-background border border-border/80 rounded-lg text-foreground outline-none focus:border-[#018752]"
+                              />
+                            </div>
+                          </td>
+
+                          {/* Span Duration */}
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-[#E8F5EE] text-[#018752] dark:bg-emerald-950/40 dark:text-emerald-300 border border-[#018752]/20">
+                              {spanMonths} {spanMonths === 1 ? 'mo' : 'mos'}
+                            </span>
+                          </td>
+
+                          {/* Rate Input */}
+                          <td className="py-3 px-3">
+                            <div className="inline-flex items-center gap-1 bg-muted/20 hover:bg-muted/40 border border-border/80 focus-within:border-[#018752] focus-within:bg-background focus-within:ring-2 focus-within:ring-[#018752]/10 rounded-xl px-2.5 py-1 transition-all w-28">
+                              <input
+                                type="number"
+                                step="0.05"
+                                min={0}
+                                value={tier.interestRatePercent}
+                                onChange={(e) => handleUpdateTier(tier.id, 'interestRatePercent', Number(e.target.value))}
+                                className="w-full text-right font-bold text-xs text-[#018752] bg-transparent outline-none"
+                              />
+                              <span className="text-[11px] font-bold text-muted-foreground shrink-0">% / mo</span>
+                            </div>
+                          </td>
+
+                          {/* Annualized APR */}
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            <span className="text-xs font-semibold text-muted-foreground font-mono">
+                              {apr}%
+                            </span>
+                          </td>
+
+                          {/* Action Button */}
+                          <td className="py-3 px-3 text-right">
+                            <button
+                              type="button"
+                              disabled={form.interestTiers.length <= 1}
+                              onClick={() => handleRemoveTier(tier.id)}
+                              className="p-1 text-muted-foreground/70 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors disabled:opacity-20 disabled:pointer-events-none cursor-pointer"
+                              title="Remove this band"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
 
-              <div className="p-3 bg-muted/20 border border-border rounded-2xl space-y-1">
-                <span className="text-[11px] text-muted-foreground block font-medium">19-24 months</span>
-                <div className="flex items-center gap-1">
-                  <input
-                    type="number"
-                    step="0.05"
-                    value={form.tier3Rate || ''}
-                    onChange={(e) => setForm({ ...form, tier3Rate: Number(e.target.value) })}
-                    placeholder="0.0"
-                    className="w-full bg-transparent font-bold text-sm outline-none"
-                  />
-                  <span className="text-xs font-semibold text-muted-foreground">%</span>
-                </div>
-              </div>
+              {/* Table Footer Actions */}
+              <div className="p-3 bg-muted/20 border-t border-border flex items-center justify-between flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={handleAddTier}
+                  className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-[#018752] hover:text-[#018752]/90 bg-[#E8F5EE] hover:bg-[#E8F5EE]/80 dark:bg-emerald-950/40 dark:text-emerald-300 rounded-xl transition-all cursor-pointer shadow-2xs"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Next Tenor Band ({nextSuggestedRange.min}–{nextSuggestedRange.max} mos)
+                </button>
 
-              <div className="p-3 bg-muted/20 border border-border rounded-2xl space-y-1">
-                <span className="text-[11px] text-muted-foreground block font-medium">25-30 months</span>
-                <div className="flex items-center gap-1">
-                  <input
-                    type="number"
-                    step="0.05"
-                    value={form.tier4Rate || ''}
-                    onChange={(e) => setForm({ ...form, tier4Rate: Number(e.target.value) })}
-                    placeholder="0.0"
-                    className="w-full bg-transparent font-bold text-sm outline-none"
-                  />
-                  <span className="text-xs font-semibold text-muted-foreground">%</span>
+                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                  <span>Total bands: <strong className="text-foreground">{form.interestTiers.length}</strong></span>
+                  {!coverageStatus.isContiguous && (
+                    <button
+                      type="button"
+                      onClick={handleAutoAlignTiers}
+                      className="inline-flex items-center gap-1 text-[#018752] hover:underline font-semibold cursor-pointer"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" /> Auto-align ranges
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -501,7 +878,7 @@ function ProductFormContent() {
             <div className="flex items-start gap-2.5 p-3.5 bg-[#E8F5EE]/70 dark:bg-emerald-950/20 border border-[#018752]/20 rounded-2xl">
               <Info className="w-4 h-4 text-[#018752] shrink-0 mt-0.5" />
               <p className="text-xs text-[#018752] dark:text-emerald-300 leading-relaxed font-medium">
-                Rate type is fixed for the life of the loan. Amounts or tenors outside every band are rejected at application.
+                Rate type is fixed for the life of the loan. Tenors outside the defined month bands are automatically rejected upon applicant submission.
               </p>
             </div>
           </div>
@@ -698,16 +1075,31 @@ function ProductFormContent() {
               </div>
 
               <div>
-                <div className="text-xs text-muted-foreground font-medium mb-1">Tenor</div>
+                <div className="text-xs text-muted-foreground font-medium mb-1">Tenor Range</div>
                 <div className="text-sm font-semibold text-foreground">
-                  {form.maximumTenorMonths ? `${form.maximumTenorMonths} months` : '—'}
+                  {form.minimumTenorMonths} – {form.maximumTenorMonths} months
                 </div>
               </div>
 
               <div>
-                <div className="text-xs text-muted-foreground font-medium mb-1">Interest rate (per month)</div>
-                <div className="text-sm font-bold text-[#018752]">
-                  {form.tier1Rate > 0 ? `${form.tier1Rate}%` : '—'}
+                <div className="text-xs text-muted-foreground font-medium mb-1.5 flex items-center justify-between">
+                  <span>Interest Rate Matrix</span>
+                  <span className="text-[10px] text-[#018752] font-semibold">{form.interestTiers.length} {form.interestTiers.length === 1 ? 'band' : 'bands'}</span>
+                </div>
+                <div className="space-y-1.5 max-h-44 overflow-y-auto pr-1">
+                  {form.interestTiers.map((t, idx) => (
+                    <div 
+                      key={t.id || idx}
+                      className="flex items-center justify-between px-3 py-1.5 bg-white/70 dark:bg-card/70 border border-[#018752]/20 rounded-xl text-xs"
+                    >
+                      <span className="font-medium text-foreground">
+                        {t.minTenorMonths === t.maxTenorMonths ? `${t.minTenorMonths} month` : `${t.minTenorMonths} – ${t.maxTenorMonths} months`}
+                      </span>
+                      <span className="font-bold text-[#018752]">
+                        {t.interestRatePercent}% / mo
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

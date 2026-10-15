@@ -98,7 +98,7 @@ export default function AuditLogsTab() {
          className="w-full px-4 py-2 border rounded-lg text-sm bg-card border-border outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400"
         />
        </div>
-       <div className="space-y-1.5 z-[60] relative">
+       <div className="space-y-1.5 relative">
         <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Date Created</label>
         <CustomDateRangePicker 
          value={createdRange} 
