@@ -3,7 +3,8 @@
 import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Eye } from 'lucide-react';
+import { Eye, X } from 'lucide-react';
+import { createPortal } from 'react-dom';
 import { useAgents } from '@/app/composables/modules/useAgents';
 import { useLoans } from '@/app/composables/modules/useLoans';
 import { useSessions } from '@/app/composables/modules/useSessions';
@@ -26,6 +27,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
  const [application, setApplication] = useState<any>(null);
  const [loading, setLoading] = useState(true);
  const [submitting, setSubmitting] = useState(false);
+ const [previewDoc, setPreviewDoc] = useState<{ url: string; title: string; subtitle?: string } | null>(null);
 
  // Filters for loans table
  const [showFilter, setShowFilter] = useState(false);
@@ -215,7 +217,20 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
     <div>
      <p className="text-[12px] text-muted-foreground/70 mb-1">Document</p>
      <p className="text-[16px] font-semibold text-blue-600">
-      {application.cvKey ? <a href={`/${application.cvKey}`} target="_blank" rel="noopener noreferrer" className="hover:underline">View Document</a> : 'N/A'}
+      {application.cvKey ? (
+       <button
+        type="button"
+        onClick={() => setPreviewDoc({
+         url: `/${application.cvKey}`,
+         title: `${application.fullName || 'Agent'} - Verification Document`,
+         subtitle: `Agent ID: ${application.id}`
+        })}
+        className="text-[#018752] hover:underline inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 cursor-pointer"
+       >
+        <Eye className="w-3.5 h-3.5" />
+        <span>View Document</span>
+       </button>
+      ) : 'N/A'}
      </p>
     </div>
     <div className="md:col-span-2">
@@ -343,6 +358,62 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
      />
     </div>
    )}
-  </div>
- );
-}
+    {/* Document Lightbox Modal */}
+    {previewDoc && typeof document !== 'undefined' && createPortal(
+     <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 sm:p-6">
+      <div 
+       className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity" 
+       onClick={() => setPreviewDoc(null)} 
+      />
+      <div className="relative bg-card rounded-2xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-border shadow-2xl z-10 animate-in fade-in zoom-in-95 duration-200">
+       <div className="flex items-center justify-between p-4 border-b border-border bg-muted/40 shrink-0">
+        <div className="min-w-0 pr-4">
+         <h4 className="text-sm sm:text-base font-bold text-foreground truncate">{previewDoc.title}</h4>
+         {previewDoc.subtitle && (
+          <p className="text-xs text-muted-foreground truncate mt-0.5">{previewDoc.subtitle}</p>
+         )}
+        </div>
+        <button
+         onClick={() => setPreviewDoc(null)}
+         className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+         title="Close viewer"
+        >
+         <X className="w-5 h-5" />
+        </button>
+       </div>
+
+       <div className="p-4 bg-muted/20 flex-1 overflow-auto flex items-center justify-center min-h-[320px] max-h-[72vh]">
+        {previewDoc.url.toLowerCase().includes('.pdf') ? (
+         <iframe
+          src={previewDoc.url}
+          title={previewDoc.title}
+          className="w-full h-[68vh] rounded-xl border border-border bg-white"
+         />
+        ) : (
+         <img
+          src={previewDoc.url}
+          alt={previewDoc.title}
+          className="max-h-[68vh] max-w-full w-auto object-contain rounded-xl shadow-md border border-border bg-slate-950/20"
+         />
+        )}
+       </div>
+
+       <div className="p-3.5 bg-muted/30 border-t border-border flex items-center justify-between text-xs text-muted-foreground shrink-0">
+        <span className="flex items-center gap-1.5 text-[11px]">
+         <span className="w-2 h-2 rounded-full bg-[#018752] inline-block"></span>
+         <span>Secure In-App Document Viewer</span>
+        </span>
+        <button
+         onClick={() => setPreviewDoc(null)}
+         className="px-4 py-1.5 bg-muted hover:bg-muted/80 text-foreground rounded-lg font-medium transition-colors"
+        >
+         Close
+        </button>
+       </div>
+      </div>
+     </div>,
+     document.body
+    )}
+   </div>
+  );
+ }
