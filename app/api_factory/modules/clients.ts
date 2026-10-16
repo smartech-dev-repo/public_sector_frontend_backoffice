@@ -47,7 +47,7 @@ export const clients_api = {
   getClientOnboardingStatus: (id: string) => {
     return GATEWAY_ENDPOINT_WITH_AUTH.get(`/admin/clients/${id}/onboarding/status`);
   },
-  getClientAnalytics: () => {
-    return GATEWAY_ENDPOINT_WITH_AUTH.get('/admin/clients/analytics');
+  getClientAnalytics: (params?: any) => {
+    return GATEWAY_ENDPOINT_WITH_AUTH.get('/admin/clients/analytics', { params });
   }
 };
