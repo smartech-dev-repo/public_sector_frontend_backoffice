@@ -6,6 +6,7 @@ import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import Pagination from '@/app/components/ui/Pagination';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
+import SensitiveValue from '@/app/components/ui/SensitiveValue';
 
 export default function IppisRecordsTab() {
  const { loading, error, ippisRecords, fetchIppisRecords, meta } = useIppis();
@@ -116,7 +117,9 @@ export default function IppisRecordsTab() {
          <tr key={record.id} className="hover:bg-muted/30 transition-colors">
           <td className="px-4 py-4 whitespace-nowrap">
            <div className="text-sm font-semibold text-foreground">{record.employeeName}</div>
-           <div className="text-xs text-muted-foreground font-mono mt-0.5">{record.staffId}</div>
+           <div className="text-xs text-muted-foreground font-mono mt-0.5">
+            <SensitiveValue value={record.staffId} allowCopy />
+           </div>
           </td>
           <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground/90 font-medium">{record.agency || 'N/A'}</td>
           <td className="px-4 py-4 whitespace-nowrap">
@@ -130,11 +133,17 @@ export default function IppisRecordsTab() {
            ₦{Number(record.salary || 0).toLocaleString()}
           </td>
           <td className="px-4 py-4 whitespace-nowrap text-right">
-           <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${
-            record.employeeStatus === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700' : 'bg-muted/50 text-muted-foreground'
-           }`}>
-            {record.employeeStatus === 'ACTIVE' ? 'Active Employee' : 'Ex Employee'}
-           </span>
+            {(() => {
+              const statusStr = String(record.employeeStatus || '').toUpperCase();
+              const isActive = statusStr.includes('ACTIVE');
+              return (
+                <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${
+                  isActive ? 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' : 'bg-muted/50 text-muted-foreground'
+                }`}>
+                  {record.employeeStatus || (isActive ? 'Active Employee' : 'Ex Employee')}
+                </span>
+              );
+            })()}
           </td>
          </tr>
         )))}

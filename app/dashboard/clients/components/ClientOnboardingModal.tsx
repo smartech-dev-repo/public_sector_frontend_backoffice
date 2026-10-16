@@ -36,8 +36,8 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
   const [ippisNumber, setIppisNumber] = useState('');
 
   // Step 3: Identity Verification (BVN & NIN)
-  const [bvn, setBvn] = useState('23598720984');
-  const [nin, setNin] = useState('23598720984');
+  const [bvn, setBvn] = useState('');
+  const [nin, setNin] = useState('');
 
   // Step 5: Upload customer documents
   const [docs, setDocs] = useState<{
@@ -63,8 +63,8 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
     setClientId(null);
     setEmployeeRecord(null);
     setIppisNumber('');
-    setBvn('23598720984');
-    setNin('23598720984');
+    setBvn('');
+    setNin('');
     setDocs({
       ninSlip: null,
       workId: null,
@@ -348,11 +348,11 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
             <div className="rounded-xl border border-border p-3 bg-background mb-4 max-w-sm mx-auto text-left text-xs space-y-1.5">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Client Name:</span>
-                <span className="font-bold text-foreground">{employeeRecord?.employeeName || 'Waaz Deke'}</span>
+                <span className="font-bold text-foreground">{employeeRecord?.employeeName || '—'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">IPPIS Number:</span>
-                <span className="font-mono font-semibold text-foreground">{ippisNumber || '23598720984'}</span>
+                <span className="font-mono font-semibold text-foreground">{ippisNumber || employeeRecord?.staffId || employeeRecord?.legacyId || '—'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Status:</span>
@@ -396,7 +396,7 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
                     type="text"
                     value={ippisNumber}
                     onChange={(e) => setIppisNumber(e.target.value)}
-                    placeholder="23598720984"
+                    placeholder="e.g. PF0122554556"
                     className="w-full text-base font-bold text-foreground bg-transparent outline-none placeholder:text-muted-foreground/30 font-mono tracking-wide"
                     autoFocus
                   />
@@ -445,7 +445,7 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
                 </h2>
 
                 <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mb-4">
-                  We retrieved verified civil service payroll data matching IPPIS number <span className="font-mono font-semibold text-foreground">{ippisNumber || '23598720984'}</span>.
+                  We retrieved verified civil service payroll data matching IPPIS number <span className="font-mono font-semibold text-foreground">{ippisNumber || employeeRecord?.staffId || employeeRecord?.legacyId || '—'}</span>.
                 </p>
 
                 {/* Verified Details Card */}
@@ -456,7 +456,7 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
                         Verified Employee Name
                       </span>
                       <span className="text-sm sm:text-base font-bold text-foreground">
-                        {employeeRecord?.employeeName || 'Waaz Deke'}
+                        {employeeRecord?.employeeName || '—'}
                       </span>
                     </div>
                     <span className="px-2 py-0.5 text-[11px] rounded-full font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -469,7 +469,7 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
                       <span className="text-muted-foreground block text-[10px] mb-0.5">Government Agency</span>
                       <span className="font-semibold text-foreground flex items-center gap-1">
                         <Building2 className="size-3 text-muted-foreground shrink-0" />
-                        <span className="truncate">{employeeRecord?.agency || 'Nigerian Police Force'}</span>
+                        <span className="truncate">{employeeRecord?.agency || '—'}</span>
                       </span>
                     </div>
                     <div>
@@ -532,7 +532,7 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
                     type="text"
                     value={bvn}
                     onChange={(e) => setBvn(e.target.value.replace(/\D/g, '').slice(0, 11))}
-                    placeholder="23598720984"
+                    placeholder="Enter 11-digit BVN"
                     maxLength={11}
                     className="w-full text-base font-bold text-foreground bg-transparent outline-none font-mono tracking-wide"
                     autoFocus
@@ -548,7 +548,7 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
                     type="text"
                     value={nin}
                     onChange={(e) => setNin(e.target.value.replace(/\D/g, '').slice(0, 11))}
-                    placeholder="23598720984"
+                    placeholder="Enter 11-digit NIN"
                     maxLength={11}
                     className="w-full text-base font-bold text-foreground bg-transparent outline-none font-mono tracking-wide"
                   />
@@ -606,7 +606,7 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
                       Full Name
                     </span>
                     <span className="text-sm font-bold text-foreground">
-                      {employeeRecord?.employeeName || 'Waaz Deke'}
+                      {employeeRecord?.employeeName || '—'}
                     </span>
                   </div>
 
@@ -617,7 +617,7 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
                         Bvn
                       </span>
                       <span className="text-xs sm:text-sm font-bold text-foreground font-mono tracking-wider">
-                        ••••••• {bvn ? bvn.slice(-4) : '4821'}
+                        {bvn ? `••••••• ${bvn.slice(-4)}` : '—'}
                       </span>
                     </div>
                     <div className="rounded-xl border border-border/80 p-2.5 bg-background">
@@ -625,7 +625,7 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
                         Nin
                       </span>
                       <span className="text-xs sm:text-sm font-bold text-foreground font-mono tracking-wider">
-                        ••••• {nin ? `${nin.slice(-4, -3)} ${nin.slice(-3)}` : '7 730'}
+                        {nin ? `••••• ${nin.slice(-4)}` : '—'}
                       </span>
                     </div>
                   </div>
@@ -637,7 +637,9 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
                         Date of birth
                       </span>
                       <span className="text-xs sm:text-sm font-bold text-foreground">
-                        {employeeRecord?.dob || employeeRecord?.dateOfBirth || '14/03/1992'}
+                        {employeeRecord?.identityDateOfBirth || employeeRecord?.dob || employeeRecord?.dateOfBirth 
+                          ? new Date(employeeRecord.identityDateOfBirth || employeeRecord.dob || employeeRecord.dateOfBirth).toLocaleDateString('en-GB') 
+                          : '—'}
                       </span>
                     </div>
                     <div className="rounded-xl border border-border/80 p-2.5 bg-background">
@@ -645,7 +647,7 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
                         Gender
                       </span>
                       <span className="text-xs sm:text-sm font-bold text-foreground">
-                        {employeeRecord?.gender || 'Male'}
+                        {employeeRecord?.identityGender || employeeRecord?.gender || '—'}
                       </span>
                     </div>
                   </div>
@@ -657,7 +659,7 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
                         Marital Status
                       </span>
                       <span className="text-xs sm:text-sm font-bold text-foreground">
-                        {employeeRecord?.maritalStatus || 'Married'}
+                        {employeeRecord?.maritalStatus || '—'}
                       </span>
                     </div>
                     <div className="rounded-xl border border-border/80 p-2.5 bg-background">
@@ -665,7 +667,7 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
                         Phone
                       </span>
                       <span className="text-xs sm:text-sm font-bold text-foreground font-mono">
-                        {employeeRecord?.phone ? `${employeeRecord.phone.slice(0, 4)}••••${employeeRecord.phone.slice(-3)}` : '0803••••821'}
+                        {employeeRecord?.identityPhoneNumber || employeeRecord?.phone || '—'}
                       </span>
                     </div>
                   </div>
@@ -677,7 +679,7 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
                         State of origin
                       </span>
                       <span className="text-xs sm:text-sm font-bold text-foreground">
-                        {employeeRecord?.stateOfOrigin || 'Anambra'}
+                        {employeeRecord?.stateOfOrigin || '—'}
                       </span>
                     </div>
                     <div className="rounded-xl border border-border/80 p-2.5 bg-background">
@@ -696,7 +698,7 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
                       Home address
                     </span>
                     <span className="text-xs sm:text-sm font-bold text-foreground">
-                      {employeeRecord?.address || '14 Bourdillon Rd. Ikoyi. Lagos'}
+                      {employeeRecord?.address ? `${employeeRecord.address}${employeeRecord.city ? `, ${employeeRecord.city}` : ''}` : '—'}
                     </span>
                   </div>
 
@@ -711,7 +713,7 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
                       Employer
                     </span>
                     <span className="text-xs sm:text-sm font-bold text-foreground">
-                      {employeeRecord?.agency || employeeRecord?.employer || 'Nigerian Police Force'}
+                      {employeeRecord?.agency || employeeRecord?.employer || '—'}
                     </span>
                   </div>
 
@@ -719,10 +721,10 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
                   <div className="grid grid-cols-2 gap-2">
                     <div className="rounded-xl border border-border/80 p-2.5 bg-background">
                       <span className="block text-[10px] font-medium text-muted-foreground mb-0.5">
-                        Command ID
+                        Staff ID / Command ID
                       </span>
                       <span className="text-xs sm:text-sm font-bold text-foreground font-mono">
-                        {employeeRecord?.commandId || employeeRecord?.legacyId || 'NPF-LAG-04'}
+                        {employeeRecord?.staffId || employeeRecord?.legacyId || employeeRecord?.commandId || ippisNumber || '—'}
                       </span>
                     </div>
                     <div className="rounded-xl border border-border/80 p-2.5 bg-background">
@@ -730,7 +732,9 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
                         Length of service
                       </span>
                       <span className="text-xs sm:text-sm font-bold text-foreground">
-                        {employeeRecord?.lengthOfService || '9 yrs 4 mo'}
+                        {employeeRecord?.lengthOfService 
+                          ? (typeof employeeRecord.lengthOfService === 'object' ? `${employeeRecord.lengthOfService.years} yrs ${employeeRecord.lengthOfService.months} mo` : employeeRecord.lengthOfService) 
+                          : (employeeRecord?.hireDate ? `${new Date().getFullYear() - new Date(employeeRecord.hireDate).getFullYear()} yrs` : '—')}
                       </span>
                     </div>
                   </div>

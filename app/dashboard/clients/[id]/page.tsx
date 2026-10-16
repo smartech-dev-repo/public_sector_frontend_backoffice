@@ -9,8 +9,30 @@ import { useConfirm } from '@/app/composables/useConfirm';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import ButtonLoader from '@/app/components/ui/ButtonLoader';
+import SensitiveValue from '@/app/components/ui/SensitiveValue';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
+import { 
+ Eye, 
+ EyeOff, 
+ Camera, 
+ CheckCircle2, 
+ Clock, 
+ AlertCircle, 
+ ShieldCheck, 
+ ExternalLink, 
+ Maximize2, 
+ X, 
+ FileText,
+ BadgeCheck,
+ Building2,
+ Calendar,
+ User,
+ Phone,
+ Mail,
+ MapPin,
+ CreditCard
+} from 'lucide-react';
 
 export default function ClientWalletPage() {
  const { id } = useParams();
@@ -53,6 +75,35 @@ export default function ClientWalletPage() {
  const [expandedLoanId, setExpandedLoanId] = useState<string | null>(null);
  const [repaymentPlan, setRepaymentPlan] = useState<any>(null);
  const [repaymentLoading, setRepaymentLoading] = useState(false);
+
+ // Sensitive info reveal/mask state & Lightbox preview state
+ const [revealAllSensitive, setRevealAllSensitive] = useState(false);
+ const [previewImage, setPreviewImage] = useState<{ url: string; title: string; subtitle?: string } | null>(null);
+
+ const formatDate = (dateStr?: string | null, includeTime = false) => {
+  if (!dateStr) return '—';
+  try {
+   const d = new Date(dateStr);
+   if (isNaN(d.getTime())) return dateStr;
+   const dateFormatted = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+   if (!includeTime) return dateFormatted;
+   const timeFormatted = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+   return `${dateFormatted}, ${timeFormatted}`;
+  } catch {
+   return dateStr;
+  }
+ };
+
+ const formatLengthOfService = (los?: any) => {
+  if (!los) return '—';
+  if (typeof los === 'string') return los;
+  const years = los.years ?? los.year ?? 0;
+  const months = los.months ?? los.month ?? 0;
+  const parts: string[] = [];
+  if (years) parts.push(`${years} ${years === 1 ? 'yr' : 'yrs'}`);
+  if (months) parts.push(`${months} ${months === 1 ? 'mo' : 'mos'}`);
+  return parts.length > 0 ? parts.join(', ') : '0 mos';
+ };
 
  useEffect(() => {
   if (clientId) {
@@ -289,6 +340,25 @@ export default function ClientWalletPage() {
     </div>
     {client && (
      <div className="flex flex-wrap items-center gap-2">
+      <button
+       type="button"
+       onClick={() => setRevealAllSensitive((prev) => !prev)}
+       className="px-3.5 py-1.5 bg-card hover:bg-muted/60 text-foreground border border-border rounded-lg text-xs font-semibold shadow-xs transition-colors flex items-center gap-1.5"
+       title={revealAllSensitive ? 'Mask all sensitive data' : 'Reveal all sensitive data'}
+      >
+       {revealAllSensitive ? (
+        <>
+         <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />
+         <span>Mask Sensitive</span>
+        </>
+       ) : (
+        <>
+         <Eye className="w-3.5 h-3.5 text-muted-foreground" />
+         <span>Reveal Sensitive</span>
+        </>
+       )}
+      </button>
+
       {client.status === 'MANUAL_REVIEW' && (
        <>
         <button
@@ -338,7 +408,7 @@ export default function ClientWalletPage() {
         onClick={() => handleTabChange(tab.key)}
         className={`px-5 py-2 text-sm font-medium rounded-lg transition-all ${
          activeTab === tab.key
-          ? 'bg-card text-emerald-700 '
+          ? 'bg-card text-emerald-700 shadow-xs'
           : 'text-muted-foreground hover:text-foreground/90'
         }`}
        >
@@ -349,72 +419,854 @@ export default function ClientWalletPage() {
 
      {/* Profile Tab */}
      {activeTab === 'profile' && (
-      <div className="bg-card p-6 rounded-2xl border border-border">
-       <h2 className="text-lg font-semibold text-foreground mb-4">Profile</h2>
-       <div className="space-y-3">
-        <p><span className="text-muted-foreground font-medium">Name:</span> {client.onboarding?.employeeName || [client.firstName, client.lastName].filter(Boolean).join(' ') || client.name || 'Unnamed Client'}</p>
-        <p><span className="text-muted-foreground font-medium">Email:</span> {client.email || '--'}</p>
-        <p><span className="text-muted-foreground font-medium">Phone:</span> {client.phone || client.phoneNumber || client.onboarding?.identityPhoneNumber || '--'}</p>
-        <p><span className="text-muted-foreground font-medium">Status:</span> <span className="px-2.5 py-1 bg-muted/50 rounded-full text-xs font-semibold">{client.status}</span></p>
-        {client.onboarding?.agency && (
-         <p><span className="text-muted-foreground font-medium">Agency:</span> {client.onboarding.agency}</p>
-        )}
+      <div className="space-y-6">
+       {/* Top Overview Banner */}
+       <div className="bg-card p-6 rounded-2xl border border-border shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+         <div>
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
+           Customer Profile
+          </span>
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground">
+           {client.onboarding?.employeeName || [client.firstName, client.lastName].filter(Boolean).join(' ') || client.name || 'Unnamed Customer'}
+          </h2>
+          <div className="flex items-center gap-3 mt-2 flex-wrap">
+           <span className="text-xs text-muted-foreground flex items-center gap-1.5">
+            IPPIS No: <SensitiveValue value={client.onboarding?.ippisRecord?.staffId || client.onboarding?.staffId || client.onboarding?.legacyId || client.staffId} forceRevealed={revealAllSensitive ? true : undefined} allowCopy />
+           </span>
+           <span className="text-muted-foreground/40">•</span>
+           <span className="text-xs text-muted-foreground">
+            Agency: <span className="font-semibold text-foreground">{client.onboarding?.agency || client.onboarding?.ippisRecord?.agency || '—'}</span>
+           </span>
+           <span className="text-muted-foreground/40">•</span>
+           <span className="text-xs text-muted-foreground">
+            Source: <span className="font-semibold text-foreground">{client.onboardingSource || 'SELF'}</span>
+           </span>
+           <span className="text-muted-foreground/40">•</span>
+           <span className="text-xs text-muted-foreground flex items-center gap-1.5">
+            Client ID: <SensitiveValue value={client.id} visibleCount={8} forceRevealed={revealAllSensitive ? true : undefined} allowCopy />
+           </span>
+          </div>
+         </div>
+
+         <div className="flex items-center gap-2">
+          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(client.status)}`}>
+           {client.status || 'PENDING_IPPIS'}
+          </span>
+         </div>
+        </div>
+       </div>
+
+       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* IPPIS Civil Service & Payroll */}
+        <div className="bg-card p-6 rounded-2xl border border-border shadow-xs">
+         <div className="flex items-center gap-2 mb-4 pb-2 border-b border-border/60">
+          <Building2 className="w-4 h-4 text-emerald-600" />
+          <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
+           IPPIS & Civil Service Payroll
+          </h3>
+         </div>
+         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">IPPIS Staff ID</span>
+           <SensitiveValue 
+            value={client.onboarding?.ippisRecord?.staffId || client.onboarding?.staffId || client.onboarding?.legacyId || client.staffId} 
+            forceRevealed={revealAllSensitive ? true : undefined}
+            allowCopy 
+           />
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Government Agency</span>
+           <span className="font-semibold text-foreground">{client.onboarding?.agency || client.onboarding?.ippisRecord?.agency || '—'}</span>
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Grade / Cadre</span>
+           <span className="font-semibold text-foreground">{client.onboarding?.ippisRecord?.grade || '—'}</span>
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Department</span>
+           <span className="font-semibold text-foreground">{client.onboarding?.ippisRecord?.department || client.onboarding?.department || '—'}</span>
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Employment Status</span>
+           {(() => {
+            const status = client.onboarding?.employeeStatus || client.onboarding?.ippisRecord?.employeeStatus;
+            if (!status) return <span className="text-muted-foreground font-sans">—</span>;
+            const isActive = String(status).toUpperCase().includes('ACTIVE');
+            return (
+             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+              isActive ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-muted/50 text-muted-foreground'
+             }`}>
+              {status}
+             </span>
+            );
+           })()}
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Hire Date</span>
+           <span className="font-semibold text-foreground">
+            {formatDate(client.onboarding?.ippisRecord?.hireDate)}
+           </span>
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Length of Service</span>
+           <span className="font-semibold text-foreground">
+            {formatLengthOfService(client.onboarding?.lengthOfService || onboardingStatus?.lengthOfService)}
+           </span>
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Salary Bank</span>
+           <span className="font-semibold text-foreground">{client.onboarding?.bankName || client.onboarding?.ippisRecord?.bankName || '—'}</span>
+          </div>
+          <div className="sm:col-span-2">
+           <span className="text-xs text-muted-foreground block mb-0.5">Salary Account Number</span>
+           <SensitiveValue 
+            value={client.onboarding?.accountNumber || client.onboarding?.ippisRecord?.accountNumber} 
+            forceRevealed={revealAllSensitive ? true : undefined}
+            allowCopy 
+           />
+          </div>
+         </div>
+        </div>
+
+        {/* Personal & Contact Details */}
+        <div className="bg-card p-6 rounded-2xl border border-border shadow-xs">
+         <div className="flex items-center gap-2 mb-4 pb-2 border-b border-border/60">
+          <User className="w-4 h-4 text-emerald-600" />
+          <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
+           Personal & Contact Details
+          </h3>
+         </div>
+         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Primary Contact Phone</span>
+           <SensitiveValue 
+            value={client.phone || client.phoneNumber} 
+            forceRevealed={revealAllSensitive ? true : undefined}
+            allowCopy 
+           />
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Identity Registered Phone</span>
+           <SensitiveValue 
+            value={client.onboarding?.identityPhoneNumber} 
+            forceRevealed={revealAllSensitive ? true : undefined}
+            allowCopy 
+           />
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Email</span>
+           <span className="font-semibold text-foreground">{client.email || '—'}</span>
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Date of Birth</span>
+           <span className="font-semibold text-foreground">
+            {formatDate(client.onboarding?.identityDateOfBirth)}
+           </span>
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Gender</span>
+           <span className="font-semibold text-foreground">{client.onboarding?.identityGender || '—'}</span>
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Marital Status</span>
+           <span className="font-semibold text-foreground">{client.onboarding?.maritalStatus || '—'}</span>
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">State & LGA of Origin</span>
+           <span className="font-semibold text-foreground">
+            {client.onboarding?.stateOfOrigin ? `${client.onboarding.stateOfOrigin}${client.onboarding.lgaOfOrigin ? `, ${client.onboarding.lgaOfOrigin}` : ''}` : '—'}
+           </span>
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">State & LGA of Residence</span>
+           <span className="font-semibold text-foreground">
+            {client.onboarding?.stateOfResidence ? `${client.onboarding.stateOfResidence}${client.onboarding.lgaOfResidence ? `, ${client.onboarding.lgaOfResidence}` : ''}` : '—'}
+           </span>
+          </div>
+          <div className="sm:col-span-2">
+           <span className="text-xs text-muted-foreground block mb-0.5">Residential Address & City</span>
+           <span className="font-semibold text-foreground">
+            {client.onboarding?.address ? `${client.onboarding.address}${client.onboarding.city ? `, ${client.onboarding.city}` : ''}${client.onboarding.stateOfResidence ? `, ${client.onboarding.stateOfResidence}` : ''}${client.onboarding.zipCode ? ` (Zip: ${client.onboarding.zipCode})` : ''}` : '—'}
+           </span>
+          </div>
+         </div>
+        </div>
+
+        {/* Identity & KYC Checks */}
+        <div className="bg-card p-6 rounded-2xl border border-border shadow-xs">
+         <div className="flex items-center gap-2 mb-4 pb-2 border-b border-border/60">
+          <ShieldCheck className="w-4 h-4 text-emerald-600" />
+          <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
+           Identity & KYC Checks
+          </h3>
+         </div>
+         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">BVN (Bank Verification Number)</span>
+           <SensitiveValue 
+            value={client.onboarding?.bvn} 
+            forceRevealed={revealAllSensitive ? true : undefined}
+            allowCopy 
+           />
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">NIN (National Identity Number)</span>
+           <SensitiveValue 
+            value={client.onboarding?.nin} 
+            forceRevealed={revealAllSensitive ? true : undefined}
+            allowCopy 
+           />
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Identity Verification</span>
+           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${client.onboarding?.identityVerified ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-800'}`}>
+            {client.onboarding?.identityVerified ? 'Verified' : 'Pending'}
+           </span>
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Face Match Biometrics</span>
+           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${client.onboarding?.faceMatchPassed === true ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' : client.onboarding?.faceMatchPassed === false ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'}`}>
+            {client.onboarding?.faceMatchPassed === true ? 'Passed' : client.onboarding?.faceMatchPassed === false ? 'Failed' : 'Pending'}
+           </span>
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">BVN Match Score</span>
+           <span className="font-semibold text-foreground">
+            {client.onboarding?.faceMatchBvnScore != null ? `${Math.round(client.onboarding.faceMatchBvnScore * 100)}%` : '—'}
+           </span>
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">NIN Match Score</span>
+           <span className="font-semibold text-foreground">
+            {client.onboarding?.faceMatchNinScore != null ? `${Math.round(client.onboarding.faceMatchNinScore * 100)}%` : '—'}
+           </span>
+          </div>
+         </div>
+        </div>
+
+        {/* Onboarding Metadata */}
+        <div className="bg-card p-6 rounded-2xl border border-border shadow-xs">
+         <div className="flex items-center gap-2 mb-4 pb-2 border-b border-border/60">
+          <FileText className="w-4 h-4 text-emerald-600" />
+          <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
+           Onboarding Audit & Attribution
+          </h3>
+         </div>
+         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Onboarding Channel</span>
+           <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+            {client.onboardingSource || 'SELF'}
+           </span>
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Onboarded / Created By</span>
+           <div className="font-semibold text-foreground">
+            {client.onboarding?.onboardedByAdmin?.fullName || client.createdByAdmin?.fullName || client.onboarding?.onboardedByAgent?.fullName || (client.onboardingSource === 'SELF' ? 'Self' : '—')}
+           </div>
+           {(client.onboarding?.onboardedByAdmin?.email || client.createdByAdmin?.email) && (
+            <div className="text-xs text-muted-foreground mt-0.5 font-mono">
+             {client.onboarding?.onboardedByAdmin?.email || client.createdByAdmin?.email}
+            </div>
+           )}
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Current Journey Step</span>
+           <span className="font-mono text-xs font-semibold text-foreground">{client.onboarding?.step || 'IPPIS_LINKED'}</span>
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Registered At</span>
+           <span className="font-semibold text-foreground">
+            {formatDate(client.createdAt, true)}
+           </span>
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Last Profile Update</span>
+           <span className="font-semibold text-foreground">
+            {formatDate(client.updatedAt || client.onboarding?.updatedAt, true)}
+           </span>
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Review Note</span>
+           <span className="text-foreground">{client.onboarding?.reviewNote || '—'}</span>
+          </div>
+         </div>
+        </div>
+
+        {/* Biometric & Identity Photos (KYC Verification) */}
+        <div className="bg-card p-6 rounded-2xl border border-border shadow-xs md:col-span-2">
+         <div className="flex items-center justify-between mb-4 pb-2 border-b border-border/60 flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+           <Camera className="w-4 h-4 text-emerald-600" />
+           <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
+            Biometric & Identity Photos (KYC Verification)
+           </h3>
+          </div>
+          <span className="text-xs text-muted-foreground">Click any photo to zoom</span>
+         </div>
+
+         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          {/* BVN Photo */}
+          <div className="bg-muted/20 border border-border/60 rounded-xl p-3.5 flex flex-col justify-between">
+           <div>
+            <div className="flex items-center justify-between mb-2.5">
+             <span className="text-xs font-semibold text-foreground">BVN Photo (NIBSS)</span>
+             <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
+              Verified
+             </span>
+            </div>
+            {client.onboarding?.bvnSelfieUrl ? (
+             <div 
+              onClick={() => setPreviewImage({
+               url: client.onboarding.bvnSelfieUrl,
+               title: 'BVN Biometric Photo',
+               subtitle: 'Verified NIBSS Identity Photo'
+              })}
+              className="relative group cursor-pointer aspect-square rounded-lg overflow-hidden bg-slate-900 border border-border flex items-center justify-center"
+             >
+              <img 
+               src={client.onboarding.bvnSelfieUrl} 
+               alt="BVN Selfie" 
+               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-xs font-medium">
+               <Maximize2 className="w-4 h-4" />
+               <span>Click to zoom</span>
+              </div>
+             </div>
+            ) : (
+             <div className="aspect-square rounded-lg border border-dashed border-border/80 flex flex-col items-center justify-center text-muted-foreground p-4 text-center">
+              <Camera className="w-8 h-8 mb-1.5 opacity-40" />
+              <span className="text-xs">No BVN Photo</span>
+             </div>
+            )}
+           </div>
+           <p className="text-[11px] text-muted-foreground mt-2.5 truncate font-mono">
+            {client.onboarding?.bvnSelfie || 'NIBSS Database Record'}
+           </p>
+          </div>
+
+          {/* NIN Photo */}
+          <div className="bg-muted/20 border border-border/60 rounded-xl p-3.5 flex flex-col justify-between">
+           <div>
+            <div className="flex items-center justify-between mb-2.5">
+             <span className="text-xs font-semibold text-foreground">NIN Photo (NIMC)</span>
+             <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
+              Verified
+             </span>
+            </div>
+            {client.onboarding?.ninSelfieUrl ? (
+             <div 
+              onClick={() => setPreviewImage({
+               url: client.onboarding.ninSelfieUrl,
+               title: 'NIN Biometric Photo',
+               subtitle: 'Verified NIMC Identity Record'
+              })}
+              className="relative group cursor-pointer aspect-square rounded-lg overflow-hidden bg-slate-900 border border-border flex items-center justify-center"
+             >
+              <img 
+               src={client.onboarding.ninSelfieUrl} 
+               alt="NIN Selfie" 
+               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-xs font-medium">
+               <Maximize2 className="w-4 h-4" />
+               <span>Click to zoom</span>
+              </div>
+             </div>
+            ) : (
+             <div className="aspect-square rounded-lg border border-dashed border-border/80 flex flex-col items-center justify-center text-muted-foreground p-4 text-center">
+              <Camera className="w-8 h-8 mb-1.5 opacity-40" />
+              <span className="text-xs">No NIN Photo</span>
+             </div>
+            )}
+           </div>
+           <p className="text-[11px] text-muted-foreground mt-2.5 truncate font-mono">
+            {client.onboarding?.ninSelfie || 'NIMC Database Record'}
+           </p>
+          </div>
+
+          {/* Live Facial Capture */}
+          <div className="bg-muted/20 border border-border/60 rounded-xl p-3.5 flex flex-col justify-between">
+           <div>
+            <div className="flex items-center justify-between mb-2.5">
+             <span className="text-xs font-semibold text-foreground">Live Facial Capture</span>
+             <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+              client.onboarding?.liveSelfieUrl ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+             }`}>
+              {client.onboarding?.liveSelfieUrl ? 'Captured' : 'Pending Capture'}
+             </span>
+            </div>
+            {client.onboarding?.liveSelfieUrl ? (
+             <div 
+              onClick={() => setPreviewImage({
+               url: client.onboarding.liveSelfieUrl,
+               title: 'Live Selfie Capture',
+               subtitle: 'Active Liveness Verification'
+              })}
+              className="relative group cursor-pointer aspect-square rounded-lg overflow-hidden bg-slate-900 border border-border flex items-center justify-center"
+             >
+              <img 
+               src={client.onboarding.liveSelfieUrl} 
+               alt="Live Selfie" 
+               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-xs font-medium">
+               <Maximize2 className="w-4 h-4" />
+               <span>Click to zoom</span>
+              </div>
+             </div>
+            ) : (
+             <div className="aspect-square rounded-lg border border-dashed border-border/80 flex flex-col items-center justify-center text-muted-foreground p-4 text-center bg-card/50">
+              <Camera className="w-8 h-8 mb-2 opacity-30 text-amber-500" />
+              <span className="text-xs font-medium text-foreground/80">Pending Live Selfie</span>
+              <span className="text-[10px] text-muted-foreground mt-1">Awaiting client liveness check</span>
+             </div>
+            )}
+           </div>
+           <p className="text-[11px] text-muted-foreground mt-2.5 truncate font-mono">
+            {client.onboarding?.liveSelfieKey || 'Liveness check pending'}
+           </p>
+          </div>
+         </div>
+        </div>
        </div>
       </div>
      )}
 
      {/* Onboarding Tab */}
      {activeTab === 'onboarding' && (
-      <div className="bg-card p-6 rounded-2xl border border-border">
-       <h2 className="text-lg font-semibold text-foreground mb-4">Onboarding Status</h2>
-       {onboardingLoading ? (
-        <PulseLoader />
-       ) : onboardingStatus ? (
-        <div className="space-y-6">
-         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="p-4 bg-muted/30 rounded-xl border border-border/50">
-           <p className="text-xs text-muted-foreground mb-1">Email Verified</p>
-           <div className={`text-sm font-semibold ${onboardingStatus.isEmailVerified ? 'text-emerald-600' : 'text-rose-600'}`}>
-            {onboardingStatus.isEmailVerified ? 'Yes' : 'No'}
-           </div>
+      <div className="space-y-6">
+       {/* Visual Journey Stepper */}
+       <div className="bg-card p-6 rounded-2xl border border-border shadow-xs">
+        <h2 className="text-lg font-bold text-foreground mb-1">Customer Onboarding Journey</h2>
+        <p className="text-xs text-muted-foreground mb-6">Real-time verification progress across payroll, identity, and biometric checkpoints</p>
+
+        {/* Stepper Timeline */}
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+         {/* Step 1: Phone */}
+         <div className="p-3.5 rounded-xl border bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800 flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-2">
+           <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">Step 1</span>
+           <CheckCircle2 className="w-4 h-4 text-emerald-600" />
           </div>
-          <div className="p-4 bg-muted/30 rounded-xl border border-border/50">
-           <p className="text-xs text-muted-foreground mb-1">Phone Verified</p>
-           <div className={`text-sm font-semibold ${onboardingStatus.isPhoneVerified ? 'text-emerald-600' : 'text-rose-600'}`}>
-            {onboardingStatus.isPhoneVerified ? 'Yes' : 'No'}
-           </div>
-          </div>
-          <div className="p-4 bg-muted/30 rounded-xl border border-border/50">
-           <p className="text-xs text-muted-foreground mb-1">BVN Verified</p>
-           <div className={`text-sm font-semibold ${onboardingStatus.isBvnVerified ? 'text-emerald-600' : 'text-rose-600'}`}>
-            {onboardingStatus.isBvnVerified ? 'Yes' : 'No'}
-           </div>
-          </div>
-          <div className="p-4 bg-muted/30 rounded-xl border border-border/50">
-           <p className="text-xs text-muted-foreground mb-1">Face Match</p>
-           <div className={`text-sm font-semibold ${onboardingStatus.isFaceMatched ? 'text-emerald-600' : 'text-rose-600'}`}>
-            {onboardingStatus.isFaceMatched ? 'Matched' : 'Pending'}
+          <div>
+           <div className="text-xs font-semibold text-foreground">Phone Verified</div>
+           <div className="text-[11px] text-muted-foreground mt-0.5">
+            <SensitiveValue value={client.phone} forceRevealed={revealAllSensitive ? true : undefined} allowCopy />
            </div>
           </div>
          </div>
-         
-         <div className="p-4 bg-muted/30 rounded-xl border border-border/50 space-y-3">
-          <h3 className="font-medium text-foreground">Next Steps / Outstanding</h3>
-          {(!onboardingStatus.isEmailVerified || !onboardingStatus.isPhoneVerified || !onboardingStatus.isBvnVerified || !onboardingStatus.isFaceMatched) ? (
-           <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
-            {!onboardingStatus.isEmailVerified && <li>Client needs to verify their email address.</li>}
-            {!onboardingStatus.isPhoneVerified && <li>Client needs to verify their phone number.</li>}
-            {!onboardingStatus.isBvnVerified && <li>Client needs to complete BVN verification.</li>}
-            {!onboardingStatus.isFaceMatched && <li>Client needs to complete biometric face match.</li>}
-           </ul>
-          ) : (
-           <p className="text-sm text-emerald-600 font-medium">All onboarding steps have been successfully completed.</p>
-          )}
+
+         {/* Step 2: IPPIS */}
+         <div className="p-3.5 rounded-xl border bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800 flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-2">
+           <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">Step 2</span>
+           <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+          </div>
+          <div>
+           <div className="text-xs font-semibold text-foreground">IPPIS Linked</div>
+           <div className="text-[11px] text-muted-foreground mt-0.5">
+            {client.onboarding?.agency || client.onboarding?.ippisRecord?.agency || 'Civil Service'}
+           </div>
+          </div>
+         </div>
+
+         {/* Step 3: Identity */}
+         <div className="p-3.5 rounded-xl border bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800 flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-2">
+           <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">Step 3</span>
+           <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+          </div>
+          <div>
+           <div className="text-xs font-semibold text-foreground">Identity Submitted</div>
+           <div className="text-[11px] text-muted-foreground mt-0.5">NIN & BVN matched</div>
+          </div>
+         </div>
+
+         {/* Step 4: Biometrics */}
+         <div className={`p-3.5 rounded-xl border flex flex-col justify-between ${
+          client.onboarding?.faceMatchPassed === true
+           ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800'
+           : client.onboarding?.faceMatchPassed === false
+           ? 'bg-rose-50/60 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800'
+           : 'bg-amber-50/60 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800'
+         }`}>
+          <div className="flex items-center justify-between mb-2">
+           <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Step 4</span>
+           {client.onboarding?.faceMatchPassed === true ? (
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+           ) : (
+            <Clock className="w-4 h-4 text-amber-600" />
+           )}
+          </div>
+          <div>
+           <div className="text-xs font-semibold text-foreground">Facial Match</div>
+           <div className="text-[11px] text-muted-foreground mt-0.5">
+            {client.onboarding?.faceMatchPassed === true ? 'Verified' : 'Pending Capture'}
+           </div>
+          </div>
+         </div>
+
+         {/* Step 5: Activation */}
+         <div className={`p-3.5 rounded-xl border flex flex-col justify-between ${
+          client.status === 'VERIFIED'
+           ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800'
+           : 'bg-muted/30 border-border/60'
+         }`}>
+          <div className="flex items-center justify-between mb-2">
+           <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Step 5</span>
+           {client.status === 'VERIFIED' ? (
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+           ) : (
+            <span className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-700" />
+           )}
+          </div>
+          <div>
+           <div className="text-xs font-semibold text-foreground">Activation</div>
+           <div className="text-[11px] text-muted-foreground mt-0.5">
+            {client.status === 'VERIFIED' ? 'Active Client' : 'Pending IPPIS'}
+           </div>
+          </div>
          </div>
         </div>
-       ) : (
-        <EmptyState title="No Onboarding Data" description="We couldn't retrieve onboarding status for this client." />
-       )}
+
+        {/* Current status explanation callout */}
+        <div className="mt-5 p-4 rounded-xl border border-border/60 bg-muted/20 flex items-start gap-3">
+         <div className="p-2 rounded-lg bg-card border border-border shrink-0 mt-0.5">
+          <Clock className="w-4 h-4 text-amber-600" />
+         </div>
+         <div>
+          <div className="flex items-center gap-2 flex-wrap">
+           <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
+            Current Stage: {client.onboarding?.step || onboardingStatus?.step || 'IDENTITY_SUBMITTED'}
+           </h4>
+           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${getStatusColor(client.status)}`}>
+            {client.status || 'PENDING_IPPIS'}
+           </span>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+           Identity and government registry records have been validated. Civil service payroll records from IPPIS are linked with active employment status ({client.onboarding?.agency || 'NPF'}).
+          </p>
+         </div>
+        </div>
+       </div>
+
+       {/* Detailed Cards Grid */}
+       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Civil Service Qualification & Payroll Details */}
+        <div className="bg-card p-6 rounded-2xl border border-border shadow-xs">
+         <div className="flex items-center gap-2 mb-4 pb-2 border-b border-border/60">
+          <Building2 className="w-4 h-4 text-emerald-600" />
+          <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
+           IPPIS Payroll Record & Service Tenure
+          </h3>
+         </div>
+         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Government Agency</span>
+           <span className="font-semibold text-foreground">{client.onboarding?.agency || client.onboarding?.ippisRecord?.agency || '—'}</span>
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">IPPIS Staff ID</span>
+           <SensitiveValue 
+            value={client.onboarding?.ippisRecord?.staffId || client.onboarding?.staffId} 
+            forceRevealed={revealAllSensitive ? true : undefined}
+            allowCopy 
+           />
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Grade / Cadre</span>
+           <span className="font-semibold text-foreground">{client.onboarding?.ippisRecord?.grade || '—'}</span>
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Employment Status</span>
+           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
+            {client.onboarding?.employeeStatus || client.onboarding?.ippisRecord?.employeeStatus || 'Active Employee'}
+           </span>
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Hire Date</span>
+           <span className="font-semibold text-foreground">
+            {formatDate(client.onboarding?.ippisRecord?.hireDate)}
+           </span>
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Length of Service</span>
+           <span className="font-semibold text-foreground">
+            {formatLengthOfService(client.onboarding?.lengthOfService || onboardingStatus?.lengthOfService)}
+           </span>
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Salary Bank</span>
+           <span className="font-semibold text-foreground">{client.onboarding?.bankName || client.onboarding?.ippisRecord?.bankName || '—'}</span>
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Salary Account Number</span>
+           <SensitiveValue 
+            value={client.onboarding?.accountNumber || client.onboarding?.ippisRecord?.accountNumber} 
+            forceRevealed={revealAllSensitive ? true : undefined}
+            allowCopy 
+           />
+          </div>
+         </div>
+        </div>
+
+        {/* Identity & KYC Verification Records */}
+        <div className="bg-card p-6 rounded-2xl border border-border shadow-xs">
+         <div className="flex items-center gap-2 mb-4 pb-2 border-b border-border/60">
+          <ShieldCheck className="w-4 h-4 text-emerald-600" />
+          <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
+           Identity Verification & Demographics
+          </h3>
+         </div>
+         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Full Employee Name</span>
+           <span className="font-semibold text-foreground">{client.onboarding?.employeeName || '—'}</span>
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Identity Phone (NIN/BVN)</span>
+           <SensitiveValue 
+            value={client.onboarding?.identityPhoneNumber} 
+            forceRevealed={revealAllSensitive ? true : undefined}
+            allowCopy 
+           />
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">BVN (Bank Verification Number)</span>
+           <SensitiveValue 
+            value={client.onboarding?.bvn} 
+            forceRevealed={revealAllSensitive ? true : undefined}
+            allowCopy 
+           />
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">NIN (National Identity Number)</span>
+           <SensitiveValue 
+            value={client.onboarding?.nin} 
+            forceRevealed={revealAllSensitive ? true : undefined}
+            allowCopy 
+           />
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Date of Birth</span>
+           <span className="font-semibold text-foreground">{formatDate(client.onboarding?.identityDateOfBirth)}</span>
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Gender & Marital Status</span>
+           <span className="font-semibold text-foreground">
+            {client.onboarding?.identityGender || '—'} • {client.onboarding?.maritalStatus || '—'}
+           </span>
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Origin (State / LGA)</span>
+           <span className="font-semibold text-foreground">
+            {client.onboarding?.stateOfOrigin ? `${client.onboarding.stateOfOrigin}, ${client.onboarding.lgaOfOrigin || ''}` : '—'}
+           </span>
+          </div>
+          <div>
+           <span className="text-xs text-muted-foreground block mb-0.5">Residence (State / LGA)</span>
+           <span className="font-semibold text-foreground">
+            {client.onboarding?.stateOfResidence ? `${client.onboarding.stateOfResidence}, ${client.onboarding.lgaOfResidence || ''}` : '—'}
+           </span>
+          </div>
+          <div className="sm:col-span-2">
+           <span className="text-xs text-muted-foreground block mb-0.5">Residential Street Address</span>
+           <span className="font-semibold text-foreground">
+            {client.onboarding?.address ? `${client.onboarding.address}${client.onboarding.city ? `, ${client.onboarding.city}` : ''}` : '—'}
+           </span>
+          </div>
+         </div>
+        </div>
+
+        {/* Biometric KYC Photos */}
+        <div className="bg-card p-6 rounded-2xl border border-border shadow-xs md:col-span-2">
+         <div className="flex items-center justify-between mb-4 pb-2 border-b border-border/60 flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+           <Camera className="w-4 h-4 text-emerald-600" />
+           <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
+            Biometric KYC Face Match Gallery
+           </h3>
+          </div>
+          <span className="text-xs text-muted-foreground">Click any photo to preview full size</span>
+         </div>
+
+         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          {/* BVN Photo */}
+          <div className="bg-muted/20 border border-border/60 rounded-xl p-3.5 flex flex-col justify-between">
+           <div>
+            <div className="flex items-center justify-between mb-2.5">
+             <span className="text-xs font-semibold text-foreground">BVN Biometric (NIBSS)</span>
+             <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
+              Verified
+             </span>
+            </div>
+            {client.onboarding?.bvnSelfieUrl ? (
+             <div 
+              onClick={() => setPreviewImage({
+               url: client.onboarding.bvnSelfieUrl,
+               title: 'BVN Biometric Photo',
+               subtitle: 'Verified NIBSS Identity Photo'
+              })}
+              className="relative group cursor-pointer aspect-square rounded-lg overflow-hidden bg-slate-900 border border-border flex items-center justify-center"
+             >
+              <img 
+               src={client.onboarding.bvnSelfieUrl} 
+               alt="BVN Selfie" 
+               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-xs font-medium">
+               <Maximize2 className="w-4 h-4" />
+               <span>Click to zoom</span>
+              </div>
+             </div>
+            ) : (
+             <div className="aspect-square rounded-lg border border-dashed border-border/80 flex flex-col items-center justify-center text-muted-foreground p-4 text-center">
+              <Camera className="w-8 h-8 mb-1.5 opacity-40" />
+              <span className="text-xs">No BVN Photo</span>
+             </div>
+            )}
+           </div>
+           <p className="text-[11px] text-muted-foreground mt-2.5 truncate font-mono">
+            {client.onboarding?.bvnSelfie || 'NIBSS Database Record'}
+           </p>
+          </div>
+
+          {/* NIN Photo */}
+          <div className="bg-muted/20 border border-border/60 rounded-xl p-3.5 flex flex-col justify-between">
+           <div>
+            <div className="flex items-center justify-between mb-2.5">
+             <span className="text-xs font-semibold text-foreground">NIN Biometric (NIMC)</span>
+             <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
+              Verified
+             </span>
+            </div>
+            {client.onboarding?.ninSelfieUrl ? (
+             <div 
+              onClick={() => setPreviewImage({
+               url: client.onboarding.ninSelfieUrl,
+               title: 'NIN Biometric Photo',
+               subtitle: 'Verified NIMC Identity Record'
+              })}
+              className="relative group cursor-pointer aspect-square rounded-lg overflow-hidden bg-slate-900 border border-border flex items-center justify-center"
+             >
+              <img 
+               src={client.onboarding.ninSelfieUrl} 
+               alt="NIN Selfie" 
+               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-xs font-medium">
+               <Maximize2 className="w-4 h-4" />
+               <span>Click to zoom</span>
+              </div>
+             </div>
+            ) : (
+             <div className="aspect-square rounded-lg border border-dashed border-border/80 flex flex-col items-center justify-center text-muted-foreground p-4 text-center">
+              <Camera className="w-8 h-8 mb-1.5 opacity-40" />
+              <span className="text-xs">No NIN Photo</span>
+             </div>
+            )}
+           </div>
+           <p className="text-[11px] text-muted-foreground mt-2.5 truncate font-mono">
+            {client.onboarding?.ninSelfie || 'NIMC Database Record'}
+           </p>
+          </div>
+
+          {/* Live Selfie */}
+          <div className="bg-muted/20 border border-border/60 rounded-xl p-3.5 flex flex-col justify-between">
+           <div>
+            <div className="flex items-center justify-between mb-2.5">
+             <span className="text-xs font-semibold text-foreground">Live Facial Capture</span>
+             <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+              client.onboarding?.liveSelfieUrl ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+             }`}>
+              {client.onboarding?.liveSelfieUrl ? 'Captured' : 'Pending Capture'}
+             </span>
+            </div>
+            {client.onboarding?.liveSelfieUrl ? (
+             <div 
+              onClick={() => setPreviewImage({
+               url: client.onboarding.liveSelfieUrl,
+               title: 'Live Selfie Capture',
+               subtitle: 'Active Liveness Verification'
+              })}
+              className="relative group cursor-pointer aspect-square rounded-lg overflow-hidden bg-slate-900 border border-border flex items-center justify-center"
+             >
+              <img 
+               src={client.onboarding.liveSelfieUrl} 
+               alt="Live Selfie" 
+               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-xs font-medium">
+               <Maximize2 className="w-4 h-4" />
+               <span>Click to zoom</span>
+              </div>
+             </div>
+            ) : (
+             <div className="aspect-square rounded-lg border border-dashed border-border/80 flex flex-col items-center justify-center text-muted-foreground p-4 text-center bg-card/50">
+              <Camera className="w-8 h-8 mb-2 opacity-30 text-amber-500" />
+              <span className="text-xs font-medium text-foreground/80">Pending Live Selfie</span>
+              <span className="text-[10px] text-muted-foreground mt-1">Awaiting client liveness check</span>
+             </div>
+            )}
+           </div>
+           <p className="text-[11px] text-muted-foreground mt-2.5 truncate font-mono">
+            {client.onboarding?.liveSelfieKey || 'Liveness check pending'}
+           </p>
+          </div>
+         </div>
+        </div>
+
+        {/* Uploaded Documents if any */}
+        {Array.isArray(client.onboarding?.documents) && client.onboarding.documents.length > 0 && (
+         <div className="bg-card p-6 rounded-2xl border border-border shadow-xs md:col-span-2">
+          <h3 className="font-semibold text-foreground text-sm uppercase tracking-wider mb-4 pb-2 border-b border-border/60">
+           Uploaded Verification Documents
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+           {client.onboarding.documents.map((doc: any, idx: number) => {
+            const docTitle = doc.documentType?.replace(/_/g, ' ') || 'Verification Document';
+            const isPdf = typeof doc.url === 'string' && doc.url.toLowerCase().includes('.pdf');
+            return (
+             <div key={idx} className="p-3.5 bg-muted/20 border border-border rounded-xl text-xs flex flex-col justify-between hover:border-emerald-600/40 transition-colors">
+              <div>
+               <div className="flex items-center justify-between mb-1.5">
+                <span className="font-semibold block text-foreground text-xs uppercase tracking-wider">{docTitle}</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 font-medium">
+                 {isPdf ? 'PDF' : 'IMAGE'}
+                </span>
+               </div>
+               {doc.uploadedAt && (
+                <p className="text-[10px] text-muted-foreground mb-2">
+                 {new Date(doc.uploadedAt).toLocaleDateString()}
+                </p>
+               )}
+              </div>
+              {doc.url ? (
+               <button
+                type="button"
+                onClick={() => setPreviewImage({
+                 url: doc.url,
+                 title: docTitle,
+                 subtitle: `Uploaded Document • ${doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleString() : 'Verification file'}`
+                })}
+                className="mt-2 py-1.5 px-3 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors border border-emerald-200/60 dark:border-emerald-800/40 cursor-pointer"
+               >
+                <Eye className="w-3.5 h-3.5" />
+                <span>View Document</span>
+               </button>
+              ) : (
+               <span className="text-muted-foreground text-xs mt-2 block">Document Uploaded</span>
+              )}
+             </div>
+            );
+           })}
+          </div>
+         </div>
+        )}
+       </div>
       </div>
      )}
 
@@ -694,6 +1546,74 @@ export default function ClientWalletPage() {
         </button>
        </div>
       </form>
+     </div>
+    </div>,
+    document.body
+   )}
+
+   {/* Document & Image Lightbox Modal */}
+   {previewImage && typeof document !== 'undefined' && createPortal(
+    <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 sm:p-6">
+     <div 
+      className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity" 
+      onClick={() => setPreviewImage(null)} 
+     />
+     <div className="relative bg-card rounded-2xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-border shadow-2xl z-10 animate-in fade-in zoom-in-95 duration-200">
+      <div className="flex items-center justify-between p-4 border-b border-border bg-muted/40 shrink-0">
+       <div className="min-w-0 pr-4">
+        <h4 className="text-sm sm:text-base font-bold text-foreground truncate">{previewImage.title}</h4>
+        {previewImage.subtitle && (
+         <p className="text-xs text-muted-foreground truncate mt-0.5">{previewImage.subtitle}</p>
+        )}
+       </div>
+       <div className="flex items-center gap-1.5 shrink-0">
+        <a
+         href={previewImage.url}
+         target="_blank"
+         rel="noopener noreferrer"
+         className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+         title="Open file in separate tab if needed"
+        >
+         <ExternalLink className="w-4 h-4" />
+        </a>
+        <button
+         onClick={() => setPreviewImage(null)}
+         className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+         title="Close viewer"
+        >
+         <X className="w-5 h-5" />
+        </button>
+       </div>
+      </div>
+
+      <div className="p-4 bg-muted/20 flex-1 overflow-auto flex items-center justify-center min-h-[320px] max-h-[72vh]">
+       {typeof previewImage.url === 'string' && previewImage.url.toLowerCase().includes('.pdf') ? (
+        <iframe
+         src={previewImage.url}
+         title={previewImage.title}
+         className="w-full h-[68vh] rounded-xl border border-border bg-white"
+        />
+       ) : (
+        <img
+         src={previewImage.url}
+         alt={previewImage.title}
+         className="max-h-[68vh] max-w-full w-auto object-contain rounded-xl shadow-md border border-border bg-slate-950/20"
+        />
+       )}
+      </div>
+
+      <div className="p-3.5 bg-muted/30 border-t border-border flex items-center justify-between text-xs text-muted-foreground shrink-0">
+       <span className="flex items-center gap-1.5 text-[11px]">
+        <span className="w-2 h-2 rounded-full bg-[#018752] inline-block"></span>
+        <span>Secure In-App Document Viewer</span>
+       </span>
+       <button
+        onClick={() => setPreviewImage(null)}
+        className="px-4 py-1.5 bg-muted hover:bg-muted/80 text-foreground rounded-lg font-medium transition-colors"
+       >
+        Close
+       </button>
+      </div>
      </div>
     </div>,
     document.body
