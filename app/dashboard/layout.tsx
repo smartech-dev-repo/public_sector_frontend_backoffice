@@ -106,7 +106,6 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
   if (pathname.includes('/dashboard/audit-logs')) return 'Audit Trail Log';
   if (pathname.includes('/dashboard/uploads')) return 'Credit Risk Uploads';
   if (pathname.includes('/dashboard/analytics')) return 'Analytics & Reports';
-  if (pathname.includes('/dashboard/exceptions')) return 'Exception Queue';
   if (pathname.includes('/dashboard/client-loans')) return 'Client Loans';
   if (pathname.includes('/dashboard/reconciliation')) return 'Finance Reconciliation';
   return 'Platform Overview';
@@ -233,7 +232,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
 
        <Link href="/dashboard/agent-management"
         className={`flex items-center gap-3 py-2.5 rounded-xl text-[13px] font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-3'} ${
-         pathname.startsWith('/dashboard/agent-management') || pathname.startsWith('/dashboard/agent/') || pathname.startsWith('/dashboard/agent-details') || pathname.startsWith('/dashboard/agent-security') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+         pathname.startsWith('/dashboard/agent-management') || pathname.startsWith('/dashboard/agent/') || pathname.startsWith('/dashboard/agent-security') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
         }`}
        >
         <Users className="w-[18px] h-[18px] shrink-0 transition-colors" />
@@ -261,7 +260,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
 
        <Link href="/dashboard/clients"
         className={`flex items-center gap-3 py-2.5 rounded-xl text-[13px] font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-3'} ${
-         pathname.startsWith('/dashboard/clients') || pathname.startsWith('/dashboard/customer-details') || pathname.startsWith('/dashboard/catalog/ippis') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+         pathname.startsWith('/dashboard/clients') || pathname.startsWith('/dashboard/catalog/ippis') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
         }`}
        >
         <User className="w-[18px] h-[18px] shrink-0 transition-colors" />

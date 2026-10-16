@@ -13,6 +13,7 @@ import { useConfirm } from '@/app/composables/useConfirm';
 import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import Pagination from '@/app/components/ui/Pagination';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
+import SensitiveValue from '@/app/components/ui/SensitiveValue';
 import TableDropdown from '@/app/components/ui/TableDropdown';
 import { 
   CreditCard, 
@@ -231,10 +232,90 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
   const getClientName = (client: any) => {
     if (client?.onboarding?.employeeName) return client.onboarding.employeeName;
     if (client?.employeeName) return client.employeeName;
+    if (client?.onboarding?.ippisRecord?.employeeName) return client.onboarding.ippisRecord.employeeName;
+    if (client?.ippisRecord?.employeeName) return client.ippisRecord.employeeName;
     const combined = [client?.firstName, client?.lastName].filter(Boolean).join(' ').trim();
     if (combined) return combined;
     if (client?.name) return client.name;
-    return 'Adaeze Nwosu';
+    return client?.phone || client?.onboarding?.identityPhoneNumber || 'Unnamed Customer';
+  };
+
+  const getIppisNumber = (client: any) => {
+    return (
+      client?.onboarding?.ippisRecord?.staffId ||
+      client?.ippisRecord?.staffId ||
+      client?.onboarding?.staffId ||
+      client?.staffId ||
+      client?.onboarding?.ippisNumber ||
+      client?.ippisNumber ||
+      client?.onboarding?.legacyId ||
+      client?.legacyId ||
+      '—'
+    );
+  };
+
+  const getAgentName = (client: any) => {
+    if (client?.onboarding?.onboardedByAgent?.fullName) {
+      return client.onboarding.onboardedByAgent.fullName;
+    }
+    if (client?.onboardedByAgent?.fullName) {
+      return client.onboardedByAgent.fullName;
+    }
+    if (client?.agent?.fullName) {
+      return client.agent.fullName;
+    }
+    if (client?.onboardedBy?.name) {
+      return client.onboardedBy.name;
+    }
+    if (client?.agentName) {
+      return client.agentName;
+    }
+    if (client?.onboarding?.onboardedByAdmin?.fullName) {
+      return `${client.onboarding.onboardedByAdmin.fullName} (Admin)`;
+    }
+    if (client?.createdByAdmin?.fullName) {
+      return `${client.createdByAdmin.fullName} (Admin)`;
+    }
+    if (client?.onboardingSource === 'ADMIN') {
+      return 'Admin';
+    }
+    if (client?.onboardingSource === 'SELF') {
+      return 'Self';
+    }
+    return '—';
+  };
+
+  const getSector = (client: any) => {
+    return (
+      client?.onboarding?.agency ||
+      client?.onboarding?.ippisRecord?.agency ||
+      client?.ippisRecord?.agency ||
+      client?.sector ||
+      client?.agency ||
+      '—'
+    );
+  };
+
+  const getLoanAmount = (client: any) => {
+    const amount = 
+      client?.totalLoanAmount ?? 
+      client?.loanAmount ?? 
+      client?.activeLoan?.disbursedAmount ?? 
+      client?.activeLoan?.principalAmount;
+    
+    if (amount !== undefined && amount !== null && Number(amount) > 0) {
+      return `₦${Number(amount).toLocaleString()}`;
+    }
+    return '—';
+  };
+
+  const getDate = (client: any) => {
+    if (!client?.createdAt) return '—';
+    try {
+      return new Date(client.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    } catch {
+      return '—';
+    }
   };
 
   const renderStatusBadge = (status?: string) => {
@@ -284,12 +365,12 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
     try {
       const dataToExport = clients.map((c: any) => ({
         'NAME': getClientName(c),
-        'IPPIS NO.': c.onboarding?.ippisNumber || c.ippisNumber || '23598720984',
-        'AGENT': c.onboardedBy?.name || c.agent?.fullName || c.agentName || 'Ibrahim Sani',
-        'SECTOR': c.onboarding?.agency || c.sector || 'Fed. Min. Agric',
-        'LOAN AMT': c.totalLoanAmount ? `₦${Number(c.totalLoanAmount).toLocaleString()}` : (c.loanAmount ? `₦${Number(c.loanAmount).toLocaleString()}` : '₦2,000,000'),
-        'DATE': new Date(c.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
-        'STATUS': c.status || 'ACTIVE'
+        'IPPIS NO.': getIppisNumber(c),
+        'AGENT': getAgentName(c),
+        'SECTOR': getSector(c),
+        'LOAN AMT': getLoanAmount(c),
+        'DATE': getDate(c),
+        'STATUS': c.status || 'PENDING_IPPIS'
       }));
 
       const worksheet = xlsx.utils.json_to_sheet(dataToExport);
@@ -352,8 +433,8 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
           </span>
           <span className="block text-[11px] text-muted-foreground/70">
             {analytics?.bySource
-              ? `${analytics.bySource.SELF || 0} Self · ${analytics.bySource.AGENT || 0} Agent assisted`
-              : 'across all sectors'}
+              ? `${analytics.bySource.SELF || 0} Self · ${analytics.bySource.AGENT || 0} Agent assisted${analytics.bySource.ADMIN ? ` · ${analytics.bySource.ADMIN} Admin` : ''}`
+              : `${clients.filter(c => c.onboardingSource === 'SELF').length} Self · ${clients.filter(c => c.onboardingSource === 'AGENT').length} Agent assisted${clients.filter(c => c.onboardingSource === 'ADMIN').length ? ` · ${clients.filter(c => c.onboardingSource === 'ADMIN').length} Admin` : ''}`}
           </span>
         </div>
 
@@ -405,6 +486,7 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
                 <SelectContent>
                   <SelectItem value="none">All Statuses</SelectItem>
                   <SelectItem value="ACTIVE">Active</SelectItem>
+                  <SelectItem value="VERIFIED">Verified</SelectItem>
                   <SelectItem value="PENDING_IPPIS">Pending IPPIS</SelectItem>
                   <SelectItem value="MANUAL_REVIEW">Manual Review</SelectItem>
                   <SelectItem value="FAILED">Failed</SelectItem>
@@ -474,13 +556,11 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40">
                 {clients.map((client: any) => {
                   const clientName = getClientName(client);
-                  const ippisNo = client.onboarding?.ippisNumber || client.ippisNumber || '23598720984';
-                  const agentName = client.onboardedBy?.name || client.agent?.fullName || client.agentName || 'Ibrahim Sani';
-                  const sector = client.onboarding?.agency || client.sector || 'Fed. Min. Agric';
-                  const loanAmt = client.totalLoanAmount 
-                    ? `₦${Number(client.totalLoanAmount).toLocaleString()}` 
-                    : (client.loanAmount ? `₦${Number(client.loanAmount).toLocaleString()}` : '₦2,000,000');
-                  const dateStr = new Date(client.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+                  const ippisNo = getIppisNumber(client);
+                  const agentName = getAgentName(client);
+                  const sector = getSector(client);
+                  const loanAmt = getLoanAmount(client);
+                  const dateStr = getDate(client);
 
                   return (
                     <tr key={client.id} className="hover:bg-muted/30 transition-colors">
@@ -493,16 +573,29 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
                         </Link>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-foreground">
-                        {ippisNo}
+                        <SensitiveValue value={ippisNo} allowCopy />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                        {agentName}
+                        {agentName === 'Self' ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                            Self
+                          </span>
+                        ) : agentName.includes('(Admin)') ? (
+                          <span className="inline-flex items-center gap-1.5 text-sm text-foreground">
+                            <span>{agentName.replace(' (Admin)', '')}</span>
+                            <span className="text-[10px] uppercase font-semibold text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded">Admin</span>
+                          </span>
+                        ) : agentName === '—' ? (
+                          <span className="text-muted-foreground">—</span>
+                        ) : (
+                          agentName
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                        {sector}
+                        {sector === '—' ? <span className="text-muted-foreground">—</span> : sector}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-mono font-medium text-foreground">
-                        {loanAmt}
+                        {loanAmt === '—' ? <span className="text-muted-foreground font-sans font-normal">—</span> : loanAmt}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                         {dateStr}
