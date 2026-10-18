@@ -30,45 +30,41 @@ export default function AgentManagementPage() {
   resendCredentials, 
   updateOnboardingAccess, 
   revokeSessions, 
-  meta 
+  meta,
+  agentAnalytics,
+  analyticsLoading,
+  fetchAgentAnalytics
  } = useAgents();
  const { analytics, fetchClientAnalytics } = useClients();
  const { addToast } = useToast();
 
- const [overallStats, setOverallStats] = useState<{
-  total: number;
-  approved: number;
-  pending: number;
-  onboardingAccess: number;
-  rejected: number;
- } | null>(null);
+ const [createdRange, setCreatedRange] = useState('');
+ const [reviewedRange, setReviewedRange] = useState('');
+ const [showLeaderboard, setShowLeaderboard] = useState(false);
 
  const fetchOverallStats = useCallback(async () => {
-  try {
-   const res = await agents_api.getAgents({ limit: 100 });
-   const list = Array.isArray(res.data) ? res.data : (res.data?.data || []);
-   const total = res.data?.meta?.total || list.length;
-   const approved = list.filter((a: any) => a.status === 'APPROVED').length;
-   const pending = list.filter((a: any) => a.status === 'PENDING_REVIEW').length;
-   const onboardingAccess = list.filter((a: any) => a.canOnboardClients === true).length;
-   const rejected = list.filter((a: any) => a.status === 'REJECTED' || a.status === 'BLOCKED').length;
-   setOverallStats({ total, approved, pending, onboardingAccess, rejected });
-  } catch {
-   // graceful fallback
+  let params: any = undefined;
+  if (createdRange) {
+   const [from, to] = createdRange.split(' to ');
+   if (from && to) params = { createdFrom: from, createdTo: to };
   }
- }, []);
+  await fetchAgentAnalytics(params);
+ }, [fetchAgentAnalytics, createdRange]);
 
  useEffect(() => {
   fetchOverallStats();
   fetchClientAnalytics();
  }, [fetchOverallStats, fetchClientAnalytics]);
 
- const totalAgentsCount = overallStats?.total ?? (meta?.total || agents.length);
- const activeApprovedCount = overallStats?.approved ?? agents.filter(a => a.status === 'APPROVED').length;
- const pendingReviewCount = overallStats?.pending ?? agents.filter(a => a.status === 'PENDING_REVIEW').length;
- const onboardingAccessCount = overallStats?.onboardingAccess ?? agents.filter(a => a.canOnboardClients === true).length;
+ const totalAgentsCount = agentAnalytics?.totalApplications ?? (meta?.total || agents.length);
+ const activeApprovedCount = agentAnalytics?.byStatus?.APPROVED ?? agents.filter(a => a.status === 'APPROVED').length;
+ const pendingReviewCount = agentAnalytics?.byStatus?.PENDING_REVIEW ?? agents.filter(a => a.status === 'PENDING_REVIEW').length;
+ const rejectedCount = agentAnalytics?.byStatus?.REJECTED ?? agents.filter(a => a.status === 'REJECTED' || a.status === 'BLOCKED').length;
+ const averageReviewHours = agentAnalytics?.activity?.averageReviewTimeHours;
+ const onboardingAccessCount = agents.filter(a => a.canOnboardClients === true).length;
  const agentOnboardedClients = analytics?.bySource?.AGENT ?? 0;
  const topAgent = analytics?.agentLeaderboard?.[0];
+ const reviewers = agentAnalytics?.reviewerLeaderboard || [];
 
  const [showRejectModal, setShowRejectModal] = useState(false);
  const [selectedAgent, setSelectedAgent] = useState<any>(null);
@@ -78,8 +74,6 @@ export default function AgentManagementPage() {
  
  const [statusFilter, setStatusFilter] = useState('');
  const [qFilter, setQFilter] = useState('');
- const [createdRange, setCreatedRange] = useState('');
- const [reviewedRange, setReviewedRange] = useState('');
  const [currentPage, setCurrentPage] = useState(1);
  const [itemsPerPage, setItemsPerPage] = useState(25);
 
@@ -185,7 +179,62 @@ export default function AgentManagementPage() {
 
  return (
   <main className="w-full">
-   <h1 className="sr-only">Agent Management</h1>
+   {/* Page Header */}
+   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+    <div>
+     <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Agent Management</h1>
+     <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+      Manage registered field agents, credential distribution, and review submissions.
+     </p>
+    </div>
+    <div className="flex items-center gap-3">
+     <Link 
+      href="/dashboard/invites"
+      className="flex items-center gap-2 px-4 py-2 bg-card border border-border hover:bg-muted/30 text-foreground rounded-full text-xs sm:text-sm font-medium transition-colors shadow-xs"
+     >
+      <Users className="w-4 h-4 text-[#018752]" />
+      <span>Recruitment Applications</span>
+     </Link>
+     {reviewers.length > 0 && (
+      <button
+       type="button"
+       onClick={() => setShowLeaderboard(!showLeaderboard)}
+       className="flex items-center gap-1.5 px-3.5 py-2 bg-[#E8F5EE] hover:bg-[#d8efe2] text-[#018752] rounded-full text-xs sm:text-sm font-semibold transition-colors"
+      >
+       <ShieldCheck className="w-4 h-4" />
+       <span>{showLeaderboard ? 'Hide Reviewers' : 'Reviewer Leaderboard'}</span>
+      </button>
+     )}
+    </div>
+   </div>
+
+   {/* ================= REVIEWER LEADERBOARD COLLAPSIBLE ================= */}
+   {showLeaderboard && reviewers.length > 0 && (
+    <div className="bg-card rounded-2xl border border-border/70 p-5 mb-6 shadow-xs animate-in fade-in slide-in-from-top-2 duration-200">
+     <div className="flex items-center justify-between mb-3 border-b border-border/40 pb-3">
+      <div>
+       <h3 className="text-sm font-bold text-foreground">Reviewer Admin Leaderboard</h3>
+       <p className="text-xs text-muted-foreground">Activity breakdown of admin reviewers processing agent onboarding</p>
+      </div>
+      <span className="text-xs font-mono bg-muted/60 px-2.5 py-1 rounded-full text-muted-foreground">
+       {reviewers.length} Reviewers
+      </span>
+     </div>
+     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+      {reviewers.map((rev: any, idx: number) => (
+       <div key={rev.adminId || idx} className="p-3.5 bg-muted/20 border border-border/50 rounded-xl">
+        <div className="text-xs font-semibold text-foreground truncate">{rev.adminName || 'Admin'}</div>
+        <div className="text-[10px] font-mono text-muted-foreground truncate">{rev.adminId}</div>
+        <div className="flex items-center gap-3 mt-2 text-xs font-medium">
+         <span className="text-emerald-600 font-semibold">{rev.approvedCount} Approved</span>
+         <span className="text-muted-foreground">•</span>
+         <span className="text-rose-600 font-semibold">{rev.rejectedCount} Rejected</span>
+        </div>
+       </div>
+      ))}
+     </div>
+    </div>
+   )}
 
    {/* ================= STATS SECTION ================= */}
    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -193,7 +242,7 @@ export default function AgentManagementPage() {
     <div className="bg-card rounded-2xl border border-border/70 p-5 shadow-xs transition-all hover:border-[#018752]/40">
      <div className="flex items-center justify-between mb-2">
       <span className="text-xs sm:text-[13px] font-medium text-muted-foreground">
-       Total Agents
+       Total Applications
       </span>
       <div className="w-8 h-8 rounded-xl bg-[#E8F5EE] text-[#018752] flex items-center justify-center">
        <Users className="w-4 h-4" />
@@ -377,6 +426,10 @@ export default function AgentManagementPage() {
              <Link href={`/dashboard/agent/${agent.id}`} className="w-full text-left px-4 py-2.5 text-sm font-medium text-foreground/90 hover:bg-muted/30 transition-colors flex items-center gap-2">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
               View Details
+             </Link>
+             <Link href={`/dashboard/clients?agentId=${agent.id}&agentName=${encodeURIComponent(agent.fullName || agent.email || '')}`} className="w-full text-left px-4 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 transition-colors flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+              Onboarded Clients
              </Link>
              {agent.status === 'APPROVED' && (
               <button onClick={() => handleToggleOnboardingAccess(agent)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-amber-700 hover:bg-amber-50 transition-colors flex items-center gap-2">

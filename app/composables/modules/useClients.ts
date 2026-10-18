@@ -36,11 +36,36 @@ export const useClients = () => {
   }
  }, []);
 
+  const unwrapResponse = (res: any, defaultErrMsg = 'Operation failed') => {
+    if (!res) {
+      throw new Error(defaultErrMsg);
+    }
+    if (
+      res.type === 'ERROR' ||
+      (typeof res.status === 'number' && res.status >= 400) ||
+      (typeof res.statusCode === 'number' && res.statusCode >= 400) ||
+      (res.data && typeof res.data.statusCode === 'number' && res.data.statusCode >= 400)
+    ) {
+      const errorMsg =
+        res.data?.message ||
+        res.message ||
+        res.data?.error ||
+        res.error ||
+        defaultErrMsg;
+      const formatted = Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg;
+      const err: any = new Error(formatted);
+      err.response = res;
+      err.statusCode = res.status || res.data?.statusCode || res.statusCode;
+      throw err;
+    }
+    return res.data;
+  };
+
  const getClientById = useCallback(async (id: string) => {
   setLoading(true);
   try {
    const res = await clients_api.getClientById(id);
-   return res.data;
+   return unwrapResponse(res, 'Failed to fetch client');
   } catch (err: any) {
    setError(err.message);
    throw err;
@@ -144,7 +169,7 @@ export const useClients = () => {
   setLoading(true);
   try {
    const res = await clients_api.getClientOnboardingStatus(id);
-   return res.data;
+   return unwrapResponse(res, 'Failed to fetch onboarding status');
   } catch (err: any) {
    setError(err.message);
    throw err;
@@ -153,13 +178,11 @@ export const useClients = () => {
   }
  }, []);
 
-
-
   const ippisLookup = useCallback(async (payload: { ippisNumber: string }) => {
     setLoading(true);
     try {
       const res = await clients_api.clientIppisLookup(payload);
-      return res.data;
+      return unwrapResponse(res, 'IPPIS lookup failed');
     } catch (err: any) {
       setError(err.message);
       throw err;
@@ -172,7 +195,7 @@ export const useClients = () => {
     setLoading(true);
     try {
       const res = await clients_api.submitClientIdentity(clientId, payload);
-      return res.data;
+      return unwrapResponse(res, 'Identity verification failed');
     } catch (err: any) {
       setError(err.message);
       throw err;
@@ -186,9 +209,8 @@ export const useClients = () => {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('document', file);
       const res = await clients_api.uploadClientDocument(clientId, type, formData);
-      return res.data;
+      return unwrapResponse(res, `Failed to upload ${type}`);
     } catch (err: any) {
       setError(err.message);
       throw err;
@@ -201,7 +223,7 @@ export const useClients = () => {
     setLoading(true);
     try {
       const res = await clients_api.submitClientFaceMatch(clientId, {});
-      return res.data;
+      return unwrapResponse(res, 'Biometric cross-check failed');
     } catch (err: any) {
       setError(err.message);
       throw err;

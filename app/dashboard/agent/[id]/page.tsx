@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useState, use } from 'react';
+import { useEffect, useState, useCallback, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, X } from 'lucide-react';
+import { Eye, X, Users, Banknote, ExternalLink } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { useAgents } from '@/app/composables/modules/useAgents';
 import { useLoans } from '@/app/composables/modules/useLoans';
 import { useSessions } from '@/app/composables/modules/useSessions';
 import { useToast } from '@/app/composables/useToast';
+import { clients_api } from '@/app/api_factory/modules/clients';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import Pagination from '@/app/components/ui/Pagination';
 import DatePicker from '@/app/components/ui/DatePicker';
@@ -34,6 +35,32 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
  const [filterParams, setFilterParams] = useState({ search: '', dateRange: '' });
  const [page, setPage] = useState(1);
  const [limit, setLimit] = useState(10);
+
+ // Onboarded clients state
+ const [onboardedClients, setOnboardedClients] = useState<any[]>([]);
+ const [clientsMeta, setClientsMeta] = useState<any>(null);
+ const [clientsLoading, setClientsLoading] = useState(false);
+ const [activeTab, setActiveTab] = useState<'loans' | 'clients'>('loans');
+ const [clientsPage, setClientsPage] = useState(1);
+ const [clientsLimit, setClientsLimit] = useState(10);
+
+ const fetchAgentClients = useCallback(async () => {
+  setClientsLoading(true);
+  try {
+   const res = await clients_api.getClients({ agentId: id, page: clientsPage, limit: clientsLimit });
+   const list = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+   setOnboardedClients(list);
+   if (res.data?.meta) setClientsMeta(res.data.meta);
+  } catch {
+   // graceful fallback
+  } finally {
+   setClientsLoading(false);
+  }
+ }, [id, clientsPage, clientsLimit]);
+
+ useEffect(() => {
+  fetchAgentClients();
+ }, [fetchAgentClients]);
 
  const fetchAgentDetails = async () => {
   setLoading(true);
@@ -252,111 +279,271 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
 
    {/* Summary Cards */}
    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
-    <div className="bg-muted/30 rounded-xl p-5 border border-border/50">
-     <h3 className="text-[13px] text-muted-foreground font-medium mb-2">Total Loans Originated</h3>
+    <div 
+     onClick={() => setActiveTab('loans')}
+     className={`rounded-xl p-5 border transition-all cursor-pointer ${
+      activeTab === 'loans' 
+       ? 'bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-500/50 shadow-xs ring-1 ring-emerald-500/30' 
+       : 'bg-muted/30 border-border/50 hover:border-emerald-500/30'
+     }`}
+    >
+     <div className="flex items-center justify-between mb-2">
+      <h3 className="text-[13px] text-muted-foreground font-medium">Total Loans Originated</h3>
+      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${activeTab === 'loans' ? 'bg-emerald-600 text-white' : 'bg-muted text-muted-foreground'}`}>Active Tab</span>
+     </div>
      <div className="text-3xl font-bold text-emerald-600 mb-1">{meta?.total || 0}</div>
+     <span className="text-[11px] text-muted-foreground">originated via agent code</span>
     </div>
-    <div className="bg-muted/30 rounded-xl p-5 border border-border/50">
-     <h3 className="text-[13px] text-muted-foreground font-medium mb-2">Customers onboarded</h3>
-     <div className="text-3xl font-bold text-emerald-600 mb-1">{meta?.total || 0}</div>
+
+    <div 
+     onClick={() => setActiveTab('clients')}
+     className={`rounded-xl p-5 border transition-all cursor-pointer ${
+      activeTab === 'clients' 
+       ? 'bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-500/50 shadow-xs ring-1 ring-emerald-500/30' 
+       : 'bg-muted/30 border-border/50 hover:border-emerald-500/30'
+     }`}
+    >
+     <div className="flex items-center justify-between mb-2">
+      <h3 className="text-[13px] text-muted-foreground font-medium">Customers Onboarded</h3>
+      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${activeTab === 'clients' ? 'bg-emerald-600 text-white' : 'bg-muted text-muted-foreground'}`}>Active Tab</span>
+     </div>
+     <div className="text-3xl font-bold text-emerald-600 mb-1">{clientsMeta?.total ?? onboardedClients.length}</div>
+     <span className="text-[11px] text-muted-foreground">onboarded by this agent</span>
     </div>
+
     <div className="bg-muted/30 rounded-xl p-5 border border-border/50">
      <h3 className="text-[13px] text-muted-foreground font-medium mb-2">Agent Status</h3>
      <div className="text-3xl font-bold text-emerald-600 mb-1 capitalize">{application.status?.toLowerCase() || 'N/A'}</div>
+     <span className="text-[11px] text-muted-foreground">{application.canOnboardClients === false ? 'Onboarding restricted' : 'Authorized for onboarding'}</span>
     </div>
    </div>
 
-   {/* Table Actions */}
-   <div className="flex gap-3 w-full pt-4 relative">
-    <span className="text-sm text-muted-foreground/70 mr-2">Showing {clientLoans.length} of {meta?.total || 0}</span>
-    
-    <button onClick={() => setShowFilter(!showFilter)} className="flex items-center gap-2 px-3 py-1.5 bg-card border border-border rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/30 transition-colors ">
-     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="8" x2="20" y2="8"></line><circle cx="9" cy="8" r="2"></circle><line x1="4" y1="16" x2="20" y2="16"></line><circle cx="15" cy="16" r="2"></circle></svg>
-     Filter
-    </button>
+   {/* View Tabs Selector */}
+   <div className="flex items-center justify-between border-b border-border/60 pt-4">
+    <div className="flex items-center gap-6">
+     <button
+      type="button"
+      onClick={() => setActiveTab('loans')}
+      className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${
+       activeTab === 'loans'
+        ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400'
+        : 'border-transparent text-muted-foreground hover:text-foreground'
+      }`}
+     >
+      <Banknote className="w-4 h-4" />
+      <span>Originated Loans</span>
+      <span className="px-2 py-0.5 rounded-full text-xs font-mono bg-muted/60 text-muted-foreground">
+       {meta?.total || 0}
+      </span>
+     </button>
 
-    {showFilter && (
-     <div className="absolute top-10 right-40 w-80 bg-card rounded-xl border border-border/50 p-4 z-50">
-      <h3 className="text-sm font-semibold text-foreground mb-3">Filter Loans</h3>
-      <div className="space-y-3 mb-4">
-       <input 
-        value={filterParams.search}
-        onChange={(e) => setFilterParams({ ...filterParams, search: e.target.value })}
-        type="text" 
-        placeholder="Search..." 
-        className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:border-emerald-500" 
-       />
-       <DatePicker 
-        value={filterParams.dateRange}
-        onChange={(val) => setFilterParams({ ...filterParams, dateRange: val as any })}
-        placeholder="Select date range"
-       />
-      </div>
-      <div className="flex gap-2">
-       <button onClick={clearFilters} className="flex-1 py-2 bg-muted/30 text-muted-foreground rounded-lg text-sm font-medium hover:bg-muted/50 transition-colors">Clear</button>
-       <button onClick={() => setShowFilter(false)} className="flex-1 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors">Close</button>
+     <button
+      type="button"
+      onClick={() => setActiveTab('clients')}
+      className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${
+       activeTab === 'clients'
+        ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400'
+        : 'border-transparent text-muted-foreground hover:text-foreground'
+      }`}
+     >
+      <Users className="w-4 h-4" />
+      <span>Onboarded Customers</span>
+      <span className="px-2 py-0.5 rounded-full text-xs font-mono bg-muted/60 text-muted-foreground">
+       {clientsMeta?.total ?? onboardedClients.length}
+      </span>
+     </button>
+    </div>
+
+    {activeTab === 'clients' && (
+     <Link
+      href={`/dashboard/clients?agentId=${id}&agentName=${encodeURIComponent(application.fullName || application.email || '')}`}
+      className="pb-3 text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:underline flex items-center gap-1.5"
+     >
+      <span>Open in Customer Directory</span>
+      <ExternalLink className="w-3.5 h-3.5" />
+     </Link>
+    )}
+   </div>
+
+   {/* TAB 1: LOANS TABLE */}
+   {activeTab === 'loans' && (
+    <>
+     {/* Table Actions */}
+     <div className="flex gap-3 w-full pt-4 relative">
+      <span className="text-sm text-muted-foreground/70 mr-2">Showing {clientLoans.length} of {meta?.total || 0} Loans</span>
+      
+      <button onClick={() => setShowFilter(!showFilter)} className="flex items-center gap-2 px-3 py-1.5 bg-card border border-border rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/30 transition-colors ">
+       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="8" x2="20" y2="8"></line><circle cx="9" cy="8" r="2"></circle><line x1="4" y1="16" x2="20" y2="16"></line><circle cx="15" cy="16" r="2"></circle></svg>
+       Filter
+      </button>
+
+      {showFilter && (
+       <div className="absolute top-10 right-40 w-80 bg-card rounded-xl border border-border/50 p-4 z-50">
+        <h3 className="text-sm font-semibold text-foreground mb-3">Filter Loans</h3>
+        <div className="space-y-3 mb-4">
+         <input 
+          value={filterParams.search}
+          onChange={(e) => setFilterParams({ ...filterParams, search: e.target.value })}
+          type="text" 
+          placeholder="Search..." 
+          className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:border-emerald-500" 
+         />
+         <DatePicker 
+          value={filterParams.dateRange}
+          onChange={(val) => setFilterParams({ ...filterParams, dateRange: val as any })}
+          placeholder="Select date range"
+         />
+        </div>
+        <div className="flex gap-2">
+         <button onClick={clearFilters} className="flex-1 py-2 bg-muted/30 text-muted-foreground rounded-lg text-sm font-medium hover:bg-muted/50 transition-colors">Clear</button>
+         <button onClick={() => setShowFilter(false)} className="flex-1 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors">Close</button>
+        </div>
+       </div>
+      )}
+      <button className="flex items-center gap-2 px-3 py-1.5 bg-card border border-border rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/30 transition-colors ">
+       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+       Export as .xlsx
+      </button>
+     </div>
+
+     {/* Loans Data Table */}
+     <div className="bg-card rounded-xl border border-border/50 overflow-hidden mt-4">
+      <div className="overflow-x-auto">
+       <table className="w-full text-left text-sm">
+        <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
+         <tr>
+          <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Customer Name</th>
+          <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">IPPIS NO.</th>
+          <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Status</th>
+          <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Loan Amt</th>
+          <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Date</th>
+          <th className="px-4 py-4 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
+         </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-50">
+         {loansLoading ? (
+          <tr><td colSpan={6} className="text-center py-8 text-muted-foreground">Loading loans...</td></tr>
+         ) : clientLoans.length === 0 ? (
+          <tr>
+           <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">No loans found for this agent.</td>
+          </tr>
+         ) : (
+          clientLoans.map((loan: any) => (
+           <tr key={loan.id} className="hover:bg-muted/30/50 transition-colors group">
+            <td className="px-4 py-4 font-medium text-foreground">{loan.client?.firstName} {loan.client?.lastName}</td>
+            <td className="px-4 py-4 text-muted-foreground">{loan.client?.ippisNumber || 'N/A'}</td>
+            <td className="px-4 py-4 text-muted-foreground">{loan.status}</td>
+            <td className="px-4 py-4 font-semibold text-foreground">₦{Number(loan.amount || 0).toLocaleString()}</td>
+            <td className="px-4 py-4 text-muted-foreground">{new Date(loan.createdAt).toLocaleDateString()}</td>
+            <td className="px-4 py-4 text-right">
+             <button className="font-medium text-muted-foreground/70 hover:text-emerald-600 transition-colors" title="View Details">
+              <Eye className="w-5 h-5 ml-auto" />
+             </button>
+            </td>
+           </tr>
+          ))
+         )}
+        </tbody>
+       </table>
       </div>
      </div>
-    )}
-    <button className="flex items-center gap-2 px-3 py-1.5 bg-card border border-border rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/30 transition-colors ">
-     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-     Export as .xlsx
-    </button>
-   </div>
+     
+     {/* Pagination */}
+     {meta && meta.total > 0 && (
+      <div className="pt-4">
+       <Pagination 
+        totalItems={meta.total} 
+        currentPage={page}
+        itemsPerPage={limit}
+        onPageChange={setPage}
+        onItemsPerPageChange={setLimit}
+       />
+      </div>
+     )}
+    </>
+   )}
 
-   {/* Data Table */}
-   <div className="bg-card rounded-xl border border-border/50 overflow-hidden mt-4">
-    <div className="overflow-x-auto">
-     <table className="w-full text-left text-sm">
-      <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
-       <tr>
-        <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Customer Name</th>
-        <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">IPPIS NO.</th>
-        <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Status</th>
-        <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Loan Amt</th>
-        <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Date</th>
-        <th className="px-4 py-4 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
-       </tr>
-      </thead>
-      <tbody className="divide-y divide-slate-50">
-       {loansLoading ? (
-        <tr><td colSpan={6} className="text-center py-8 text-muted-foreground">Loading loans...</td></tr>
-       ) : clientLoans.length === 0 ? (
-        <tr>
-         <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">No loans found for this agent.</td>
-        </tr>
-       ) : (
-        clientLoans.map((loan: any) => (
-         <tr key={loan.id} className="hover:bg-muted/30/50 transition-colors group">
-          <td className="px-4 py-4 font-medium text-foreground">{loan.client?.firstName} {loan.client?.lastName}</td>
-          <td className="px-4 py-4 text-muted-foreground">{loan.client?.ippisNumber || 'N/A'}</td>
-          <td className="px-4 py-4 text-muted-foreground">{loan.status}</td>
-          <td className="px-4 py-4 font-semibold text-foreground">₦{Number(loan.amount || 0).toLocaleString()}</td>
-          <td className="px-4 py-4 text-muted-foreground">{new Date(loan.createdAt).toLocaleDateString()}</td>
-          <td className="px-4 py-4 text-right">
-           <button className="font-medium text-muted-foreground/70 hover:text-emerald-600 transition-colors" title="View Details">
-            <Eye className="w-5 h-5 ml-auto" />
-           </button>
-          </td>
+   {/* TAB 2: ONBOARDED CUSTOMERS TABLE */}
+   {activeTab === 'clients' && (
+    <>
+     <div className="pt-4 flex items-center justify-between">
+      <span className="text-sm text-muted-foreground/70">
+       Showing {onboardedClients.length} of {clientsMeta?.total || onboardedClients.length} Customers onboarded by {application.fullName || 'this agent'}
+      </span>
+     </div>
+
+     <div className="bg-card rounded-xl border border-border/50 overflow-hidden mt-4">
+      <div className="overflow-x-auto">
+       <table className="w-full text-left text-sm">
+        <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
+         <tr>
+          <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Customer Name</th>
+          <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">IPPIS NO.</th>
+          <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Agency / Sector</th>
+          <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Status</th>
+          <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Onboarded Date</th>
+          <th className="px-4 py-4 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
          </tr>
-        ))
-       )}
-      </tbody>
-     </table>
-    </div>
-   </div>
-   
-   {/* Pagination */}
-   {meta && meta.total > 0 && (
-    <div className="pt-4">
-     <Pagination 
-      totalItems={meta.total} 
-      currentPage={page}
-      itemsPerPage={limit}
-      onPageChange={setPage}
-      onItemsPerPageChange={setLimit}
-     />
-    </div>
+        </thead>
+        <tbody className="divide-y divide-slate-50">
+         {clientsLoading ? (
+          <tr><td colSpan={6} className="text-center py-8 text-muted-foreground">Loading onboarded clients...</td></tr>
+         ) : onboardedClients.length === 0 ? (
+          <tr>
+           <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">No customers onboarded by this agent yet.</td>
+          </tr>
+         ) : (
+          onboardedClients.map((client: any) => {
+           const name = client?.onboarding?.employeeName || client?.employeeName || [client?.firstName, client?.lastName].filter(Boolean).join(' ') || client?.phone || 'Unnamed Customer';
+           const ippis = client?.onboarding?.ippisRecord?.staffId || client?.ippisRecord?.staffId || client?.staffId || '—';
+           const sector = client?.onboarding?.agency || client?.agency || '—';
+           return (
+            <tr key={client.id} className="hover:bg-muted/30 transition-colors group">
+             <td className="px-4 py-4 font-semibold text-foreground">
+              <Link href={`/dashboard/clients/${client.id}`} className="hover:text-emerald-600 transition-colors">
+               {name}
+              </Link>
+             </td>
+             <td className="px-4 py-4 font-mono text-muted-foreground">{ippis}</td>
+             <td className="px-4 py-4 text-muted-foreground">{sector}</td>
+             <td className="px-4 py-4">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50">
+               {client.status || 'VERIFIED'}
+              </span>
+             </td>
+             <td className="px-4 py-4 text-muted-foreground">
+              {client.createdAt ? new Date(client.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+             </td>
+             <td className="px-4 py-4 text-right">
+              <Link 
+               href={`/dashboard/clients/${client.id}`}
+               className="inline-flex items-center gap-1 font-medium text-xs text-emerald-700 dark:text-emerald-400 hover:underline"
+              >
+               <Eye className="w-4 h-4" />
+               <span>Details</span>
+              </Link>
+             </td>
+            </tr>
+           );
+          })
+         )}
+        </tbody>
+       </table>
+      </div>
+     </div>
+
+     {clientsMeta && clientsMeta.total > 0 && (
+      <div className="pt-4">
+       <Pagination 
+        totalItems={clientsMeta.total} 
+        currentPage={clientsPage}
+        itemsPerPage={clientsLimit}
+        onPageChange={setClientsPage}
+        onItemsPerPageChange={setClientsLimit}
+       />
+      </div>
+     )}
+    </>
    )}
     {/* Document Lightbox Modal */}
     {previewDoc && typeof document !== 'undefined' && createPortal(
