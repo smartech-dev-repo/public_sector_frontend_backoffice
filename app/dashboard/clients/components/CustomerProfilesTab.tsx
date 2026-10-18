@@ -24,9 +24,12 @@ import {
   User, 
   SlidersHorizontal, 
   FileSpreadsheet, 
-  Plus 
+  Plus,
+  Users,
+  X
 } from 'lucide-react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
 interface Props {
   onOpenOnboard?: () => void;
@@ -63,6 +66,19 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
   const [note, setNote] = useState('');
   const { revokeClientSessions } = useSessions();
   const { addToast } = useToast();
+  const searchParams = useSearchParams();
+  const urlAgentId = searchParams?.get('agentId') || '';
+  const urlAgentName = searchParams?.get('agentName') || '';
+
+  const [agentIdFilter, setAgentIdFilter] = useState(urlAgentId);
+  const [agentNameDisplay, setAgentNameDisplay] = useState(urlAgentName);
+
+  useEffect(() => {
+    if (urlAgentId) {
+      setAgentIdFilter(urlAgentId);
+      if (urlAgentName) setAgentNameDisplay(urlAgentName);
+    }
+  }, [urlAgentId, urlAgentName]);
 
   const [statusFilter, setStatusFilter] = useState('');
   const [q, setQ] = useState('');
@@ -104,13 +120,14 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
     const params: any = { page, limit };
     if (statusFilter && statusFilter !== 'none') params.status = statusFilter;
     if (q.trim()) params.q = q.trim();
+    if (agentIdFilter.trim()) params.agentId = agentIdFilter.trim();
     if (createdRange) {
       const [from, to] = createdRange.split(' to ');
       if (from) params.createdFrom = from;
       if (to) params.createdTo = to;
     }
     fetchClients(params);
-  }, [fetchClients, statusFilter, q, createdRange, page, limit]);
+  }, [fetchClients, statusFilter, q, agentIdFilter, createdRange, page, limit]);
 
   const openWalletModal = async (client: any) => {
     setSelectedClient(client);
@@ -318,7 +335,7 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
     }
   };
 
-  const renderStatusBadge = (status?: string) => {
+  const renderUserStatusBadge = (status?: string) => {
     const raw = (status || 'PENDING_IPPIS').toUpperCase();
     if (raw === 'ACTIVE' || raw === 'VERIFIED' || raw === 'APPROVED') {
       return (
@@ -344,6 +361,14 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
         </span>
       );
     }
+    if (raw.includes('PHONE') && raw.includes('VERIFIED')) {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+          {raw.replace(/_/g, ' ')}
+        </span>
+      );
+    }
     if (raw.includes('FAILED') || raw.includes('REJECT')) {
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
@@ -360,17 +385,74 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
     );
   };
 
+  const renderOnboardingStatusBadge = (step?: string, client?: any) => {
+    const rawStep = (
+      step || 
+      client?.onboarding?.step || 
+      client?.onboardingStep || 
+      (client?.status === 'VERIFIED' ? 'COMPLETED' : '')
+    )?.toUpperCase();
+
+    if (rawStep === 'COMPLETED' || rawStep === 'VERIFIED') {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          COMPLETED
+        </span>
+      );
+    }
+    if (rawStep === 'DOCUMENTS_SUBMITTED') {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+          <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+          DOCS SUBMITTED
+        </span>
+      );
+    }
+    if (rawStep === 'IDENTITY_SUBMITTED') {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+          <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+          IDENTITY SUBMITTED
+        </span>
+      );
+    }
+    if (rawStep === 'IPPIS_LINKED') {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+          IPPIS LINKED
+        </span>
+      );
+    }
+    if (rawStep === 'FACE_MATCH_PENDING') {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-cyan-50 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800">
+          <span className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
+          FACE MATCH PENDING
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+        <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+        NOT STARTED
+      </span>
+    );
+  };
+
   // Export table data to Excel (.xlsx)
   const handleExportExcel = () => {
     try {
       const dataToExport = clients.map((c: any) => ({
         'NAME': getClientName(c),
         'IPPIS NO.': getIppisNumber(c),
-        'AGENT': getAgentName(c),
+        'ONBOARDED BY': getAgentName(c),
         'SECTOR': getSector(c),
         'LOAN AMT': getLoanAmount(c),
         'DATE': getDate(c),
-        'STATUS': c.status || 'PENDING_IPPIS'
+        'USER STATUS': c.status || 'PENDING_IPPIS',
+        'ONBOARDING STATUS': c.onboarding?.step || c.onboardingStep || (c.status === 'VERIFIED' ? 'COMPLETED' : 'NOT_STARTED')
       }));
 
       const worksheet = xlsx.utils.json_to_sheet(dataToExport);
@@ -385,6 +467,27 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
 
   return (
     <main className="w-full">
+      {/* Active Agent Filter Banner */}
+      {agentIdFilter && (
+        <div className="flex items-center gap-2 mb-4 p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl text-xs text-emerald-800 dark:text-emerald-300">
+          <Users className="w-4 h-4 shrink-0 text-emerald-600" />
+          <span className="font-semibold">Scoped to Agent:</span>
+          <span className="font-medium">{agentNameDisplay || agentIdFilter}</span>
+          <span className="font-mono text-[10px] text-muted-foreground">({agentIdFilter})</span>
+          <button
+            type="button"
+            onClick={() => {
+              setAgentIdFilter('');
+              setAgentNameDisplay('');
+            }}
+            className="ml-auto flex items-center gap-1 px-2.5 py-1 bg-card hover:bg-muted text-foreground rounded-lg border border-border text-[11px] font-medium transition-colors"
+          >
+            <X className="w-3.5 h-3.5" />
+            Clear Agent Filter
+          </button>
+        </div>
+      )}
+
       {/* ================= CONTROLS ROW (Matching screenshot) ================= */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 mb-5">
         <div className="flex items-center gap-3 flex-wrap justify-end">
@@ -468,7 +571,7 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
       {/* ================= FILTERS DRAWER ================= */}
       {showFilter && (
         <div className="bg-card p-6 rounded-2xl border border-border/70 mb-6 animate-in fade-in slide-in-from-top-2 duration-200 shadow-xs">
-          <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
             <div className="space-y-1.5">
               <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Search</label>
               <input 
@@ -477,6 +580,19 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 className="w-full px-4 py-2 border rounded-lg text-sm bg-background border-border outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Agent (UUID)</label>
+              <input 
+                type="text"
+                placeholder="Filter by agent UUID..."
+                value={agentIdFilter}
+                onChange={(e) => {
+                  setAgentIdFilter(e.target.value);
+                  setAgentNameDisplay('');
+                }}
+                className="w-full px-4 py-2 border rounded-lg text-sm bg-background border-border outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 font-mono text-xs"
               />
             </div>
             <div className="space-y-1.5">
@@ -504,7 +620,7 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
             <div className="flex items-end">
               <button 
                 type="button"
-                onClick={() => { setQ(''); setStatusFilter('none'); setCreatedRange(''); }} 
+                onClick={() => { setQ(''); setStatusFilter('none'); setCreatedRange(''); setAgentIdFilter(''); setAgentNameDisplay(''); }} 
                 className="w-full px-5 py-2.5 bg-background border border-border rounded-lg text-sm font-medium text-foreground hover:bg-muted/40 transition-colors"
               >
                 Clear Filters
@@ -534,7 +650,7 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
                     IPPIS NO.
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
-                    AGENT
+                    ONBOARDED BY
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
                     SECTOR
@@ -546,7 +662,10 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
                     DATE
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
-                    STATUS
+                    USER STATUS
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
+                    ONBOARDING STATUS
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
                     ACTION
@@ -566,7 +685,7 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
                     <tr key={client.id} className="hover:bg-muted/30 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-foreground">
                         <Link 
-                          href={`/dashboard/clients/${client.id}`}
+                           href={`/dashboard/clients/${client.id}`}
                           className="hover:text-[#018752] transition-colors"
                         >
                           {clientName}
@@ -588,7 +707,23 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
                         ) : agentName === '—' ? (
                           <span className="text-muted-foreground">—</span>
                         ) : (
-                          agentName
+                          <div className="flex items-center gap-1.5">
+                            <span>{agentName}</span>
+                            {(client.onboarding?.onboardedByAgentId || client.onboardedByAgentId || client.agentId) && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const aid = client.onboarding?.onboardedByAgentId || client.onboardedByAgentId || client.agentId;
+                                  setAgentIdFilter(aid);
+                                  setAgentNameDisplay(agentName);
+                                }}
+                                className="text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline font-semibold bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-200/50"
+                                title={`Filter list by ${agentName}`}
+                              >
+                                Filter
+                              </button>
+                            )}
+                          </div>
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
@@ -601,7 +736,10 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
                         {dateStr}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {renderStatusBadge(client.status || client.onboarding?.employeeStatus)}
+                        {renderUserStatusBadge(client.status)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {renderOnboardingStatusBadge(client.onboarding?.step, client)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end">
