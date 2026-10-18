@@ -14,9 +14,11 @@ import Pagination from '@/app/components/ui/Pagination';
 import TableDropdown from '@/app/components/ui/TableDropdown';
 import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
-import { Mail, Clock, CheckCircle2, AlertCircle, UserPlus, Plus } from 'lucide-react';
+import { Mail, Clock, CheckCircle2, AlertCircle, UserPlus, Plus, FileCheck2 } from 'lucide-react';
+import RecruitmentApplicationsTab from './components/RecruitmentApplicationsTab';
 
 export default function InvitesPage() {
+ const [activeTab, setActiveTab] = useState<'applications' | 'invites'>('applications');
  const { loading, error, invites, fetchInvites, resendInvite, deleteInvite, createInvite, meta } = useInvites();
  const { roles, fetchRoles } = useRoles();
  const { addToast } = useToast();
@@ -165,29 +167,71 @@ export default function InvitesPage() {
    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
     <div>
      <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Agent Recruitment</h1>
-     <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Manage recruitment invitations, track candidate onboarding progress and enrollment statuses.</p>
+     <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Manage recruitment applications, track candidate onboarding progress, and issue direct role invitations.</p>
     </div>
-    <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
-     <button 
-      onClick={() => setShowFilter(!showFilter)}
-      className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-full text-sm font-medium text-foreground/90 hover:bg-muted/30 transition-colors"
-     >
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
-      Filters
-      <svg className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-     </button>
+    {activeTab === 'invites' && (
+     <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+      <button 
+       onClick={() => setShowFilter(!showFilter)}
+       className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-full text-sm font-medium text-foreground/90 hover:bg-muted/30 transition-colors"
+      >
+       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+       Filters
+       <svg className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+      </button>
 
-     <button
-      onClick={() => setShowInviteModal(true)}
-      className="flex items-center gap-2 px-4 py-2 bg-[#018752] hover:bg-[#017044] text-white rounded-full text-sm font-medium transition-colors shadow-xs"
-     >
-      <UserPlus className="w-4 h-4" />
-      Invite Candidate
-     </button>
-    </div>
+      <button
+       onClick={() => setShowInviteModal(true)}
+       className="flex items-center gap-2 px-4 py-2 bg-[#018752] hover:bg-[#017044] text-white rounded-full text-sm font-medium transition-colors shadow-xs"
+      >
+       <UserPlus className="w-4 h-4" />
+       Invite Candidate
+      </button>
+     </div>
+    )}
    </div>
 
-   {/* ================= STATS SECTION ================= */}
+   {/* ================= TABS NAVIGATION ================= */}
+   <div className="flex items-center gap-6 border-b border-border/70 mb-6">
+    <button
+     type="button"
+     onClick={() => setActiveTab('applications')}
+     className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${
+      activeTab === 'applications'
+       ? 'border-[#018752] text-[#018752]'
+       : 'border-transparent text-muted-foreground hover:text-foreground'
+     }`}
+    >
+     <FileCheck2 className="w-4 h-4" />
+     <span>Recruitment Applications</span>
+    </button>
+
+    <button
+     type="button"
+     onClick={() => setActiveTab('invites')}
+     className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${
+      activeTab === 'invites'
+       ? 'border-[#018752] text-[#018752]'
+       : 'border-transparent text-muted-foreground hover:text-foreground'
+     }`}
+    >
+     <Mail className="w-4 h-4" />
+     <span>Candidate Invitations</span>
+     <span className="px-2 py-0.5 rounded-full text-xs font-mono bg-muted/60 text-muted-foreground">
+      {totalInvitesCount}
+     </span>
+    </button>
+   </div>
+
+   {/* ================= TAB 1: RECRUITMENT APPLICATIONS ================= */}
+   {activeTab === 'applications' && (
+    <RecruitmentApplicationsTab />
+   )}
+
+   {/* ================= TAB 2: CANDIDATE INVITATIONS ================= */}
+   {activeTab === 'invites' && (
+    <>
+     {/* ================= STATS SECTION ================= */}
    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
     {/* Total Invitations */}
     <div className="bg-card rounded-2xl border border-border/70 p-5 shadow-xs transition-all hover:border-[#018752]/40">
@@ -384,6 +428,8 @@ export default function InvitesPage() {
       />
      )}
     </div>
+   )}
+   </>
    )}
 
    {/* Invite Agent Modal */}

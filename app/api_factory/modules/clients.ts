@@ -37,9 +37,7 @@ export const clients_api = {
     return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/clients/${id}/onboarding/identity`, payload);
   },
   uploadClientDocument: (id: string, type: string, payload: any) => {
-    return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/clients/${id}/onboarding/documents/${type}`, payload, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/clients/${id}/onboarding/documents/${type}`, payload);
   },
   submitClientFaceMatch: (id: string, payload?: any) => {
     return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/clients/${id}/onboarding/face-match`, payload);
