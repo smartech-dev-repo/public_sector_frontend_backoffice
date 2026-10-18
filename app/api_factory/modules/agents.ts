@@ -21,5 +21,8 @@ export const agents_api = {
   },
   revokeSessions: (id: string) => {
     return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/agents/${id}/sessions/revoke-all`);
+  },
+  getAgentAnalytics: (params?: { createdFrom?: string; createdTo?: string }) => {
+    return GATEWAY_ENDPOINT_WITH_AUTH.get('/admin/agents/analytics', { params });
   }
 };

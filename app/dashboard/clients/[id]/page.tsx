@@ -449,10 +449,15 @@ export default function ClientWalletPage() {
           </div>
          </div>
 
-         <div className="flex items-center gap-2">
+         <div className="flex items-center gap-2 flex-wrap">
           <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(client.status)}`}>
-           {client.status || 'PENDING_IPPIS'}
+           User: {client.status || 'PENDING_IPPIS'}
           </span>
+          {(client.onboarding?.step || client.onboardingStep) && (
+           <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+            Onboarding: {client.onboarding?.step || client.onboardingStep}
+           </span>
+          )}
          </div>
         </div>
        </div>
