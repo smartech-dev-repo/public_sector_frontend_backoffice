@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import CustomerProfilesTab from './components/CustomerProfilesTab';
 import ClientOnboardingModal from './components/ClientOnboardingModal';
 import IppisRecordsTab from './components/IppisRecordsTab';
+import PulseLoader from '@/app/components/ui/PulseLoader';
 
 export default function CustomerManagementPage() {
- const [activeTab, setActiveTab] = useState<'profiles' | 'ippis'>('profiles');
- const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [activeTab, setActiveTab] = useState<'profiles' | 'ippis'>('profiles');
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
 
  const tabs = [
   { id: 'profiles', label: 'Customer Profiles' },
@@ -37,10 +39,18 @@ export default function CustomerManagementPage() {
      ))}
     </nav>
    </div>
-   <ClientOnboardingModal open={onboardingOpen} onOpenChange={setOnboardingOpen} />
+   <ClientOnboardingModal 
+     open={onboardingOpen} 
+     onOpenChange={setOnboardingOpen}
+     onSuccess={() => setRefreshKey((prev) => prev + 1)}
+   />
 
    <div className="pt-1">
-    {activeTab === 'profiles' && <CustomerProfilesTab onOpenOnboard={() => setOnboardingOpen(true)} />}
+    {activeTab === 'profiles' && (
+      <Suspense fallback={<PulseLoader />}>
+        <CustomerProfilesTab key={refreshKey} onOpenOnboard={() => setOnboardingOpen(true)} />
+      </Suspense>
+    )}
     {activeTab === 'ippis' && <IppisRecordsTab />}
    </div>
   </div>

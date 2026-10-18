@@ -6,6 +6,23 @@ export const useAgents = () => {
  const [meta, setMeta] = useState({ total: 0, page: 1, limit: 25, totalPages: 1 });
  const [error, setError] = useState(null);
  const [agents, setAgents] = useState([] as any[]);
+ const [agentAnalytics, setAgentAnalytics] = useState<any>(null);
+ const [analyticsLoading, setAnalyticsLoading] = useState(false);
+
+ const fetchAgentAnalytics = useCallback(async (params?: { createdFrom?: string; createdTo?: string }) => {
+  setAnalyticsLoading(true);
+  try {
+   const res = await agents_api.getAgentAnalytics(params);
+   const data = res.data?.data || res.data;
+   setAgentAnalytics(data);
+   return data;
+  } catch (err: any) {
+   // graceful fallback
+   return null;
+  } finally {
+   setAnalyticsLoading(false);
+  }
+ }, []);
 
  const fetchAgents = useCallback(async (params?: any) => {
   setLoading(true);
@@ -104,6 +121,7 @@ export const useAgents = () => {
 
  return { 
   loading, error, agents, fetchAgents, getAgentById, approveAgent, rejectAgent, 
-  resendCredentials, updateOnboardingAccess, revokeAgentSessions, revokeSessions: revokeAgentSessions, meta 
+  resendCredentials, updateOnboardingAccess, revokeAgentSessions, revokeSessions: revokeAgentSessions, meta,
+  agentAnalytics, analyticsLoading, fetchAgentAnalytics
  };
 };

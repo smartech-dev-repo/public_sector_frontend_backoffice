@@ -1,23 +1,51 @@
 "use client";
 
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { useClients } from '@/app/composables/modules/useClients';
 import { Modal, ModalContent } from '@/components/layout/modal';
 import { 
   X, 
   CheckCircle2, 
   Building2, 
-  CreditCard 
+  CreditCard,
+  AlertCircle,
+  Loader2,
+  RefreshCw,
+  ArrowRight,
+  ArrowLeft,
+  UploadCloud,
+  User
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { documents_api } from '@/app/api_factory/modules/documents';
 
 type StepNumber = 1 | 2 | 3 | 4 | 5 | 6;
 
-interface DocUploadState {
-  file: File;
+type DocKey = 'ninSlip' | 'workId' | 'passport' | 'signature';
+
+interface DocSlotState {
+  file: File | null;
+  status: 'idle' | 'uploading' | 'success' | 'error';
   progress: number;
   statusText: string;
+  errorText?: string;
+  isExisting?: boolean;
+  url?: string;
 }
+
+const docTypeMap: Record<DocKey, string> = {
+  ninSlip: 'NIN_CARD',
+  workId: 'WORK_ID',
+  passport: 'PASSPORT_PHOTO',
+  signature: 'SIGNATURE',
+};
+
+const docLabels: Record<DocKey, string> = {
+  ninSlip: 'NIN slip / card',
+  workId: 'Work identity card',
+  passport: 'Passport photo in uniform',
+  signature: 'Signature',
+};
 
 interface Props {
   open: boolean;
@@ -26,7 +54,7 @@ interface Props {
 }
 
 export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }: Props) {
-  const { ippisLookup, identityVerification, uploadDocument, runFaceMatch, loading } = useClients();
+  const { ippisLookup, identityVerification, uploadDocument, runFaceMatch, getClientById, loading } = useClients();
   const [step, setStep] = useState<StepNumber>(1);
   const [completed, setCompleted] = useState(false);
   const [clientId, setClientId] = useState<string | null>(null);
@@ -40,16 +68,11 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
   const [nin, setNin] = useState('');
 
   // Step 5: Upload customer documents
-  const [docs, setDocs] = useState<{
-    ninSlip: DocUploadState | null;
-    workId: DocUploadState | null;
-    passport: DocUploadState | null;
-    signature: DocUploadState | null;
-  }>({
-    ninSlip: null,
-    workId: null,
-    passport: null,
-    signature: null,
+  const [docs, setDocs] = useState<Record<DocKey, DocSlotState>>({
+    ninSlip: { file: null, status: 'idle', progress: 0, statusText: '' },
+    workId: { file: null, status: 'idle', progress: 0, statusText: '' },
+    passport: { file: null, status: 'idle', progress: 0, statusText: '' },
+    signature: { file: null, status: 'idle', progress: 0, statusText: '' },
   });
 
   const ninSlipRef = useRef<HTMLInputElement>(null);
@@ -66,10 +89,10 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
     setBvn('');
     setNin('');
     setDocs({
-      ninSlip: null,
-      workId: null,
-      passport: null,
-      signature: null,
+      ninSlip: { file: null, status: 'idle', progress: 0, statusText: '' },
+      workId: { file: null, status: 'idle', progress: 0, statusText: '' },
+      passport: { file: null, status: 'idle', progress: 0, statusText: '' },
+      signature: { file: null, status: 'idle', progress: 0, statusText: '' },
     });
   };
 
@@ -85,38 +108,36 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
     return `${Math.round(bytes / 1024)}KB`;
   };
 
-  const handleFileSelect = (key: 'ninSlip' | 'workId' | 'passport' | 'signature', file: File) => {
-    const sizeStr = formatFileSize(file.size);
+  // Populate pre-existing documents and identity info if found in employeeRecord
+  useEffect(() => {
+    if (!employeeRecord) return;
 
-    // Initial in-progress uploading state (70%)
-    setDocs((prev) => ({
-      ...prev,
-      [key]: {
-        file,
-        progress: 70,
-        statusText: `${sizeStr} • 4 seconds left`,
-      },
-    }));
+    if (employeeRecord.bvn && !bvn) setBvn(employeeRecord.bvn);
+    if (employeeRecord.nin && !nin) setNin(employeeRecord.nin);
 
-    // Transition to 100% complete shortly
-    setTimeout(() => {
+    const backendDocs = employeeRecord.documents || [];
+    if (Array.isArray(backendDocs) && backendDocs.length > 0) {
       setDocs((prev) => {
-        if (!prev[key]) return prev;
-        return {
-          ...prev,
-          [key]: {
-            file,
-            progress: 100,
-            statusText: sizeStr,
-          },
-        };
+        const next = { ...prev };
+        backendDocs.forEach((d: any) => {
+          const type = d.documentType;
+          (Object.keys(docTypeMap) as DocKey[]).forEach((key) => {
+            if (docTypeMap[key] === type) {
+              next[key] = {
+                file: null,
+                status: 'success',
+                progress: 100,
+                statusText: 'Verified on file',
+                isExisting: true,
+                url: d.url,
+              };
+            }
+          });
+        });
+        return next;
       });
-    }, 700);
-  };
-
-  const handleRemoveDoc = (key: 'ninSlip' | 'workId' | 'passport' | 'signature') => {
-    setDocs((prev) => ({ ...prev, [key]: null }));
-  };
+    }
+  }, [employeeRecord]);
 
   // Step 1 -> 2: Lookup IPPIS
   const handleIppisLookup = async () => {
@@ -125,25 +146,55 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
     }
     try {
       const res: any = await ippisLookup({ ippisNumber: ippisNumber.trim() });
-      if (res?.type === 'ERROR' || res?.status >= 400 || res?.statusCode >= 400 || res?.error) {
-        return;
-      }
-      const foundId = res?.clientId || res?.id || res?.data?.clientId || res?.data?.id;
+      const foundId = res?.clientId || res?.id;
       if (!foundId) {
+        toast.error('Unable to resolve client ID from IPPIS record');
         return;
       }
       setClientId(foundId);
-      setEmployeeRecord(res?.data || res);
+
+      // Attempt to fetch full client detail to get any existing documents and full state
+      let fullRecord = res;
+      try {
+        const clientDetail = await getClientById(foundId);
+        if (clientDetail) {
+          fullRecord = {
+            ...res,
+            ...clientDetail,
+            ...(clientDetail.onboarding || {}),
+            documents: clientDetail.onboarding?.documents || clientDetail.documents || res.documents || []
+          };
+        }
+      } catch {
+        // Fallback to res
+      }
+
+      setEmployeeRecord(fullRecord);
+      if (fullRecord.bvn) setBvn(fullRecord.bvn);
+      if (fullRecord.nin) setNin(fullRecord.nin);
+
       toast.success('IPPIS payroll record found');
       setStep(2);
     } catch (e: any) {
-      toast.error(e?.response?.data?.message || e?.message || 'Failed to lookup IPPIS record');
+      toast.error(e?.message || 'Failed to lookup IPPIS record');
     }
   };
 
-  // Step 2 -> 3: Confirm Record
+  // Step 2 Proceed: Route intelligently based on the client's current onboarding status!
   const handleConfirmRecord = () => {
-    setStep(3);
+    const backendStep = employeeRecord?.step;
+    if (backendStep === 'COMPLETED' || employeeRecord?.status === 'VERIFIED') {
+      setCompleted(true);
+    } else if (backendStep === 'DOCUMENTS_SUBMITTED') {
+      // Identity & all documents uploaded; proceed to face match
+      setStep(6);
+    } else if (backendStep === 'IDENTITY_SUBMITTED' || employeeRecord?.identityVerified) {
+      // BVN & NIN are already confirmed! Proceed directly to Step 5 (Upload customer documents)
+      setStep(5);
+    } else {
+      // First-time onboarding, proceed to Step 3 (Verify BVN & NIN)
+      setStep(3);
+    }
   };
 
   // Step 3 -> 4: Verify BVN & NIN
@@ -154,13 +205,18 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
 
     try {
       const res = await identityVerification(clientId, { bvn, nin });
-      if (res?.data) {
-        setEmployeeRecord((prev: any) => ({ ...prev, ...res.data }));
-      }
+      setEmployeeRecord((prev: any) => ({
+        ...prev,
+        ...(res?.data || res),
+        bvn,
+        nin,
+        identityVerified: true,
+        step: 'IDENTITY_SUBMITTED',
+      }));
       toast.success('Identity verified successfully against NIBSS and NIMC');
       setStep(4);
     } catch (e: any) {
-      toast.error(e?.response?.data?.message || e?.message || 'Identity verification failed');
+      toast.error(e?.message || 'Identity verification failed');
     }
   };
 
@@ -169,25 +225,85 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
     setStep(5);
   };
 
-  // Step 5 -> 6: Upload customer documents
-  const handleDocumentsProceed = async () => {
-    if (!clientId) return toast.error('Client ID is missing');
-    const hasAny = docs.ninSlip || docs.workId || docs.passport || docs.signature;
-    if (!hasAny) {
-      return toast.error('Please select at least one document to proceed');
+  // Step 5: Upload an individual document
+  const handleFileSelect = async (key: DocKey, file: File) => {
+    if (!clientId) {
+      toast.error('Client ID is missing');
+      return;
     }
+
+    if (key === 'passport' && file.type === 'application/pdf') {
+      toast.error('Passport photo must be an image (JPEG or PNG) for facial comparison, not a PDF');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File size cannot exceed 5MB');
+      return;
+    }
+
+    const sizeStr = formatFileSize(file.size);
+    setDocs((prev) => ({
+      ...prev,
+      [key]: {
+        file,
+        status: 'uploading',
+        progress: 60,
+        statusText: `${sizeStr} • Uploading...`,
+        errorText: '',
+        isExisting: false,
+      },
+    }));
 
     try {
-      if (docs.ninSlip) await uploadDocument(clientId, 'NIN_CARD', docs.ninSlip.file);
-      if (docs.workId) await uploadDocument(clientId, 'WORK_ID', docs.workId.file);
-      if (docs.passport) await uploadDocument(clientId, 'PASSPORT_PHOTO', docs.passport.file);
-      if (docs.signature) await uploadDocument(clientId, 'SIGNATURE', docs.signature.file);
-
-      toast.success('Documents uploaded successfully');
-      setStep(6);
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message || e?.message || 'Document upload failed');
+      const res = await uploadDocument(clientId, docTypeMap[key], file);
+      setDocs((prev) => ({
+        ...prev,
+        [key]: {
+          file,
+          status: 'success',
+          progress: 100,
+          statusText: sizeStr,
+          isExisting: false,
+          url: res?.url || res?.storageKey,
+        },
+      }));
+      toast.success(`${docLabels[key]} uploaded successfully`);
+    } catch (err: any) {
+      const errorMsg = err?.message || 'Upload failed';
+      setDocs((prev) => ({
+        ...prev,
+        [key]: {
+          file,
+          status: 'error',
+          progress: 0,
+          statusText: 'Upload failed',
+          errorText: errorMsg,
+          isExisting: false,
+        },
+      }));
+      toast.error(`Failed to upload ${docLabels[key]}: ${errorMsg}`);
     }
+  };
+
+  const handleRemoveDoc = (key: DocKey) => {
+    setDocs((prev) => ({
+      ...prev,
+      [key]: { file: null, status: 'idle', progress: 0, statusText: '' },
+    }));
+  };
+
+  // Step 5 -> 6: Validate all 4 documents uploaded before advancing
+  const handleDocumentsProceed = () => {
+    const isReady = (key: DocKey) => docs[key]?.status === 'success';
+    const missing = (Object.keys(docTypeMap) as DocKey[]).filter((k) => !isReady(k));
+
+    if (missing.length > 0) {
+      const missingLabels = missing.map((k) => docLabels[k]).join(', ');
+      return toast.error(`All 4 documents are required. Missing: ${missingLabels}`);
+    }
+
+    setStep(6);
   };
 
   // Step 6: Face Match
@@ -199,34 +315,188 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
       setCompleted(true);
       if (onSuccess) onSuccess();
     } catch (e: any) {
-      toast.error(e?.response?.data?.message || e?.message || 'Face match failed');
+      toast.error(e?.message || 'Biometric cross-check failed');
     }
   };
 
-  const passportPreview = useMemo(() => {
+  const isIdentityAlreadyDone = Boolean(
+    employeeRecord?.step === 'IDENTITY_SUBMITTED' || 
+    employeeRecord?.step === 'DOCUMENTS_SUBMITTED' || 
+    employeeRecord?.step === 'COMPLETED' || 
+    employeeRecord?.identityVerified
+  );
+
+  const [bvnPhotoBlobUrl, setBvnPhotoBlobUrl] = useState<string | null>(null);
+  const [bvnPhotoFailed, setBvnPhotoFailed] = useState(false);
+  const [passportBlobUrl, setPassportBlobUrl] = useState<string | null>(null);
+  const [passportPhotoFailed, setPassportPhotoFailed] = useState(false);
+
+  // Fetch biometric photo blob with auth header
+  useEffect(() => {
+    let active = true;
+    const fetchBiometricPhoto = async () => {
+      setBvnPhotoFailed(false);
+      const rawUrl = employeeRecord?.bvnSelfieUrl || employeeRecord?.ninSelfieUrl;
+      const directKey = employeeRecord?.bvnSelfie || employeeRecord?.ninSelfie;
+      const fileKey = directKey || (
+        rawUrl && rawUrl.includes('/admin/documents/files/')
+          ? decodeURIComponent(rawUrl.split('/admin/documents/files/')[1])
+          : null
+      );
+
+      if (!fileKey) {
+        if (!rawUrl) setBvnPhotoFailed(true);
+        return;
+      }
+
+      try {
+        const res = await documents_api.getDocumentFile(fileKey);
+        if (!active) return;
+        const blob = res.data;
+        if (blob && blob.size > 0 && blob.type !== 'application/json') {
+          const url = URL.createObjectURL(blob);
+          setBvnPhotoBlobUrl(url);
+          setBvnPhotoFailed(false);
+        } else {
+          setBvnPhotoFailed(true);
+        }
+      } catch {
+        if (active) setBvnPhotoFailed(true);
+      }
+    };
+
+    fetchBiometricPhoto();
+
+    return () => {
+      active = false;
+    };
+  }, [employeeRecord?.bvnSelfieUrl, employeeRecord?.ninSelfieUrl, employeeRecord?.bvnSelfie, employeeRecord?.ninSelfie]);
+
+  // Fetch or resolve passport photo preview
+  useEffect(() => {
+    let active = true;
     if (docs.passport?.file && docs.passport.file.type.startsWith('image/')) {
-      return URL.createObjectURL(docs.passport.file);
+      const url = URL.createObjectURL(docs.passport.file);
+      setPassportBlobUrl(url);
+      setPassportPhotoFailed(false);
+      return;
     }
-    return null;
-  }, [docs.passport]);
+
+    const docObj = employeeRecord?.documents?.find((d: any) => d.documentType === 'PASSPORT_PHOTO');
+    const rawUrl = docs.passport?.url || docObj?.url;
+    const directKey = docObj?.storageKey;
+    const fileKey = directKey || (
+      rawUrl && rawUrl.includes('/admin/documents/files/')
+        ? decodeURIComponent(rawUrl.split('/admin/documents/files/')[1])
+        : null
+    );
+
+    if (!fileKey) {
+      if (rawUrl && (rawUrl.startsWith('http') || rawUrl.startsWith('data:'))) {
+        setPassportBlobUrl(rawUrl);
+        setPassportPhotoFailed(false);
+      } else {
+        setPassportPhotoFailed(true);
+      }
+      return;
+    }
+
+    const fetchPassport = async () => {
+      try {
+        const res = await documents_api.getDocumentFile(fileKey);
+        if (!active) return;
+        const blob = res.data;
+        if (blob && blob.size > 0 && blob.type !== 'application/json') {
+          setPassportBlobUrl(URL.createObjectURL(blob));
+          setPassportPhotoFailed(false);
+        } else {
+          setPassportPhotoFailed(true);
+        }
+      } catch {
+        if (active) setPassportPhotoFailed(true);
+      }
+    };
+
+    fetchPassport();
+
+    return () => {
+      active = false;
+    };
+  }, [docs.passport?.file, docs.passport?.url, employeeRecord?.documents]);
+
+  const handleBack = () => {
+    if (step === 2) {
+      setStep(1);
+    } else if (step === 3) {
+      setStep(2);
+    } else if (step === 4) {
+      setStep(2);
+    } else if (step === 5) {
+      if (isIdentityAlreadyDone) {
+        setStep(2);
+      } else {
+        setStep(4);
+      }
+    } else if (step === 6) {
+      setStep(5);
+    }
+  };
+
+  const displayBvn = employeeRecord?.bvn || bvn;
+  const displayNin = employeeRecord?.nin || nin;
+
+  const formatDob = (val: any) => {
+    if (!val) return '—';
+    try {
+      const d = new Date(val);
+      if (isNaN(d.getTime())) return String(val);
+      return d.toLocaleDateString('en-GB');
+    } catch {
+      return String(val);
+    }
+  };
+
+  const formatLengthOfService = (val: any) => {
+    if (!val) return '—';
+    if (typeof val === 'object' && (val.years !== undefined || val.months !== undefined)) {
+      const yrs = val.years ?? 0;
+      const mos = val.months ?? 0;
+      return `${yrs} yr${yrs === 1 ? '' : 's'} ${mos} mo${mos === 1 ? '' : 's'}`;
+    }
+    return String(val);
+  };
 
   // Document item renderer for Step 5
   const renderDocDropzone = (
     label: string,
-    key: 'ninSlip' | 'workId' | 'passport' | 'signature',
-    inputRef: React.RefObject<HTMLInputElement | null>
+    key: DocKey,
+    inputRef: React.RefObject<HTMLInputElement | null>,
+    isImageOnly: boolean = false
   ) => {
     const doc = docs[key];
 
     return (
-      <div className="mb-4">
-        <label className="block text-xs font-semibold text-foreground/80 mb-1.5">
-          {label}
-        </label>
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-center justify-between">
+          <label className="block text-xs font-semibold text-foreground/85">
+            {label}
+          </label>
+          {doc.status === 'success' && (
+            <span className="text-[11px] font-semibold text-emerald-600 flex items-center gap-1">
+              <CheckCircle2 className="size-3.5" /> Ready
+            </span>
+          )}
+          {doc.status === 'error' && (
+            <span className="text-[11px] font-semibold text-rose-600 flex items-center gap-1">
+              <AlertCircle className="size-3.5" /> Upload Failed
+            </span>
+          )}
+        </div>
+
         <input
           ref={inputRef}
           type="file"
-          accept=".png,.jpg,.jpeg,.pdf"
+          accept={isImageOnly ? '.png,.jpg,.jpeg' : '.png,.jpg,.jpeg,.pdf'}
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0];
@@ -234,27 +504,55 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
           }}
         />
 
-        {doc ? (
-          // Uploaded or in-progress state (Matches Screenshot 2)
-          <div className="rounded-xl border border-border/80 bg-background p-2.5 sm:p-3 relative overflow-hidden shadow-xs">
+        {doc.status === 'uploading' ? (
+          <div className="rounded-xl border border-border/80 bg-background p-3.5 relative overflow-hidden shadow-xs">
             <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5 min-w-0">
-                {/* Green folded document icon */}
-                <div className="size-8 rounded-lg bg-[#018752] text-white flex items-center justify-center shrink-0">
-                  <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="size-8 rounded-lg bg-emerald-100 text-[#018752] flex items-center justify-center shrink-0">
+                  <Loader2 className="size-4 animate-spin text-[#018752]" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs sm:text-[13px] font-bold text-foreground truncate">
-                    {doc.file.name}
+                  <p className="text-xs font-bold text-foreground truncate">
+                    {doc.file?.name || label}
                   </p>
                   <p className="text-[10px] text-muted-foreground mt-0.5">
-                    {doc.statusText}
+                    Uploading to server...
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
+              <span className="text-xs font-semibold text-[#018752] shrink-0 animate-pulse">
+                Uploading
+              </span>
+            </div>
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-muted">
+              <div className="h-full bg-[#018752] w-2/3 animate-pulse" />
+            </div>
+          </div>
+        ) : doc.status === 'success' ? (
+          <div className="rounded-xl border border-emerald-500/40 bg-emerald-50/20 dark:bg-emerald-950/20 p-3 sm:p-3.5 relative overflow-hidden shadow-xs">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="size-8 rounded-lg bg-[#018752] text-white flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="size-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-[13px] font-bold text-foreground truncate">
+                    {doc.file?.name || (doc.isExisting ? `${label} on file` : label)}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    {doc.statusText || 'Uploaded successfully'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => inputRef.current?.click()}
+                  className="text-[11px] font-semibold text-[#018752] hover:underline"
+                  title="Replace file"
+                >
+                  Replace
+                </button>
                 <button
                   type="button"
                   onClick={(e) => {
@@ -266,21 +564,47 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
                 >
                   <X className="size-3.5" />
                 </button>
-                <span className="text-xs font-semibold text-muted-foreground min-w-[28px] text-right">
-                  {doc.progress}%
-                </span>
               </div>
             </div>
-            {/* Progress bar line at bottom */}
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-muted">
-              <div 
-                className="h-full bg-[#018752] transition-all duration-300"
-                style={{ width: `${doc.progress}%` }}
-              />
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#018752]" />
+          </div>
+        ) : doc.status === 'error' ? (
+          <div className="rounded-xl border border-rose-300 dark:border-rose-800 bg-rose-50/20 dark:bg-rose-950/20 p-3 sm:p-3.5 relative overflow-hidden shadow-xs">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="size-8 rounded-lg bg-rose-100 dark:bg-rose-900/60 text-rose-600 flex items-center justify-center shrink-0">
+                  <AlertCircle className="size-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-rose-700 dark:text-rose-400 truncate">
+                    {doc.file?.name || 'Upload failed'}
+                  </p>
+                  <p className="text-[10px] text-rose-600/90 dark:text-rose-400/90 mt-0.5 truncate">
+                    {doc.errorText || 'Server rejected file'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => inputRef.current?.click()}
+                  className="size-7 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-700 flex items-center justify-center text-xs font-semibold gap-1 px-2 transition-colors"
+                  title="Retry upload"
+                >
+                  <RefreshCw className="size-3" /> Retry
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveDoc(key)}
+                  className="size-6 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
+                  title="Clear"
+                >
+                  <X className="size-3.5" />
+                </button>
+              </div>
             </div>
           </div>
         ) : (
-          // Empty dashed dropzone state (Matches Screenshot 1)
           <div
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
@@ -289,21 +613,15 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
               if (file) handleFileSelect(key, file);
             }}
             onClick={() => inputRef.current?.click()}
-            className="rounded-xl border border-dashed border-emerald-400/60 dark:border-emerald-600/50 p-3 sm:p-3.5 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-emerald-50/20 dark:hover:bg-emerald-950/20 transition-all group"
+            className="rounded-xl border border-dashed border-border/90 hover:border-[#018752] bg-background hover:bg-emerald-50/10 p-3.5 sm:p-4 flex flex-col items-center justify-center text-center cursor-pointer transition-all group"
           >
-            {/* Upward tray upload icon */}
-            <svg 
-              className="size-5 text-muted-foreground/60 group-hover:text-[#018752] transition-colors mb-1" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-            </svg>
+            <UploadCloud className="size-5 text-muted-foreground/60 group-hover:text-[#018752] transition-colors mb-1" />
             <p className="text-xs text-muted-foreground">
               Drag and drop or <span className="text-[#018752] font-semibold underline underline-offset-2">choose file</span> to upload
             </p>
-            <span className="text-[10px] text-muted-foreground/60 mt-0.5">.png .jpg or .pdf</span>
+            <span className="text-[10px] text-muted-foreground/60 mt-0.5">
+              {isImageOnly ? '.png or .jpg (image only)' : '.png, .jpg or .pdf'}
+            </span>
           </div>
         )}
       </div>
@@ -314,21 +632,20 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
     <Modal open={open} onOpenChange={onOpenChange}>
       <ModalContent 
         hideClose 
-        className="max-w-[480px] w-full p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-card border border-border shadow-2xl outline-none"
+        className="max-w-[580px] sm:max-w-[620px] w-full p-6 sm:p-7 rounded-2xl sm:rounded-3xl bg-card border border-border shadow-2xl outline-none"
       >
-        {/* Top Right Close 'X' Button */}
-        <button
-          type="button"
-          onClick={handleClose}
-          className="absolute right-4 top-4 size-7 rounded-full bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
-          title="Close"
-        >
-          <X className="size-3.5" />
-        </button>
-
         {/* ================= COMPLETED SUCCESS STATE ================= */}
         {completed ? (
-          <div className="animate-in fade-in zoom-in-95 duration-200 text-center py-1">
+          <div className="animate-in fade-in zoom-in-95 duration-200 text-center py-2 relative">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="absolute right-0 top-0 size-7 rounded-full bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors cursor-pointer"
+              title="Close"
+            >
+              <X className="size-3.5" />
+            </button>
+
             <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#EAF5F0] dark:bg-emerald-950/40 text-[#018752] dark:text-emerald-400 mb-3">
               Step 6 of 6 • Completed
             </div>
@@ -341,22 +658,22 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
               Onboarding Complete!
             </h2>
 
-            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-sm mx-auto mb-4">
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mb-5">
               The public sector client has been successfully verified, payroll-linked, and activated in Customer Profiles.
             </p>
 
-            <div className="rounded-xl border border-border p-3 bg-background mb-4 max-w-sm mx-auto text-left text-xs space-y-1.5">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Client Name:</span>
-                <span className="font-bold text-foreground">{employeeRecord?.employeeName || '—'}</span>
+            <div className="rounded-xl sm:rounded-2xl border border-border/80 p-4 sm:p-5 bg-background mb-6 w-full text-left text-xs sm:text-sm space-y-3 shadow-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground font-medium">Client Name:</span>
+                <span className="font-bold text-foreground text-sm sm:text-base">{employeeRecord?.employeeName || '—'}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">IPPIS Number:</span>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground font-medium">IPPIS Number:</span>
                 <span className="font-mono font-semibold text-foreground">{ippisNumber || employeeRecord?.staffId || employeeRecord?.legacyId || '—'}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Status:</span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground font-medium">Status:</span>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
                   ACTIVE
                 </span>
               </div>
@@ -365,20 +682,45 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
             <button
               type="button"
               onClick={handleClose}
-              className="w-full py-2.5 px-5 rounded-xl bg-[#018752] text-white font-semibold text-sm hover:bg-[#016f43] transition-colors shadow-sm"
+              className="w-full py-2.5 px-5 rounded-xl bg-[#018752] text-white font-semibold text-sm hover:bg-[#016f43] transition-colors shadow-sm cursor-pointer"
             >
               Done & View Customer
             </button>
           </div>
         ) : (
           <>
+            {/* Top Navigation Bar: Back button (when step > 1), Step Badge, and Close Button */}
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <div className="flex items-center gap-2">
+                {step > 1 && (
+                  <button
+                    type="button"
+                    onClick={handleBack}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 -ml-1.5 rounded-lg text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors group cursor-pointer"
+                    title="Go back to previous step"
+                  >
+                    <ArrowLeft className="size-3.5 transition-transform group-hover:-translate-x-0.5" />
+                    <span>Back</span>
+                  </button>
+                )}
+                <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#EAF5F0] dark:bg-emerald-950/40 text-[#018752] dark:text-emerald-400">
+                  Step {step} of 6
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleClose}
+                className="size-7 rounded-full bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors cursor-pointer"
+                title="Close"
+              >
+                <X className="size-3.5" />
+              </button>
+            </div>
+
             {/* ================= STEP 1: START APPLICATION ================= */}
             {step === 1 && (
               <div className="animate-in fade-in zoom-in-95 duration-200">
-                <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#EAF5F0] dark:bg-emerald-950/40 text-[#018752] dark:text-emerald-400 mb-3">
-                  Step 1 of 6
-                </div>
-
                 <h2 className="text-xl sm:text-[22px] font-bold text-foreground tracking-tight mb-1.5">
                   Start a new application
                 </h2>
@@ -417,7 +759,7 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
                   <button
                     type="button"
                     onClick={handleClose}
-                    className="px-6 py-2.5 rounded-xl border border-[#018752] text-[#018752] font-semibold text-sm hover:bg-[#EAF5F0] dark:hover:bg-emerald-950/20 transition-colors"
+                    className="px-6 py-2.5 rounded-xl border border-border text-foreground hover:bg-muted font-semibold text-sm transition-colors"
                   >
                     Cancel
                   </button>
@@ -425,9 +767,15 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
                     type="button"
                     onClick={handleIppisLookup}
                     disabled={loading || !ippisNumber.trim()}
-                    className="flex-1 py-2.5 px-5 rounded-xl bg-[#018752] text-white font-semibold text-sm hover:bg-[#016f43] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
+                    className="flex-1 py-2.5 px-5 rounded-xl bg-[#018752] text-white font-semibold text-sm hover:bg-[#016f43] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 whitespace-nowrap shadow-sm"
                   >
-                    {loading ? 'Looking up...' : 'Look up Customer'}
+                    {loading ? (
+                      <>
+                        <Loader2 className="size-4 animate-spin" /> Looking up...
+                      </>
+                    ) : (
+                      'Look up Customer'
+                    )}
                   </button>
                 </div>
               </div>
@@ -436,10 +784,6 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
             {/* ================= STEP 2: CONFIRM EMPLOYEE DETAILS ================= */}
             {step === 2 && (
               <div className="animate-in fade-in zoom-in-95 duration-200">
-                <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#EAF5F0] dark:bg-emerald-950/40 text-[#018752] dark:text-emerald-400 mb-3">
-                  Step 2 of 6
-                </div>
-
                 <h2 className="text-xl sm:text-[22px] font-bold text-foreground tracking-tight mb-1.5">
                   Confirm Employee Details
                 </h2>
@@ -482,27 +826,54 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
                   </div>
                 </div>
 
-                <div className="bg-[#EAF5F0] dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/40 rounded-xl p-3 flex items-center gap-3 mb-5">
-                  <CheckCircle2 className="size-4 text-[#018752] shrink-0" />
-                  <p className="text-xs font-medium text-[#016f43] dark:text-emerald-300 leading-snug">
-                    Employee record verified directly from the Federal Ministry of Finance IPPIS database.
-                  </p>
-                </div>
+                {/* Status Indicator Banner */}
+                {isIdentityAlreadyDone ? (
+                  <div className="bg-[#EAF5F0] dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/40 rounded-xl p-3 flex items-start gap-3 mb-5">
+                    <CheckCircle2 className="size-4 text-[#018752] shrink-0 mt-0.5" />
+                    <div className="text-xs">
+                      <p className="font-bold text-[#016f43] dark:text-emerald-300">
+                        Identity Verified (BVN & NIN Confirmed)
+                      </p>
+                      <p className="text-[#016f43]/85 dark:text-emerald-300/80 mt-0.5 leading-snug">
+                        Customer identity was previously validated against NIBSS and NIMC. Proceed directly to document upload.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-[#EAF5F0] dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/40 rounded-xl p-3 flex items-center gap-3 mb-5">
+                    <CheckCircle2 className="size-4 text-[#018752] shrink-0" />
+                    <p className="text-xs font-medium text-[#016f43] dark:text-emerald-300 leading-snug">
+                      Employee record verified directly from the Federal Ministry of Finance IPPIS database.
+                    </p>
+                  </div>
+                )}
 
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={handleClose}
-                    className="px-6 py-2.5 rounded-xl border border-[#018752] text-[#018752] font-semibold text-sm hover:bg-[#EAF5F0] transition-colors"
-                  >
-                    Cancel
-                  </button>
+                <div className="flex items-center gap-3 pt-2">
+                  {isIdentityAlreadyDone && (
+                    <button
+                      type="button"
+                      onClick={() => setStep(4)}
+                      className="py-2.5 px-4 rounded-xl border border-border text-foreground hover:bg-muted font-semibold text-xs sm:text-sm transition-colors whitespace-nowrap cursor-pointer"
+                    >
+                      Review Details
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={handleConfirmRecord}
-                    className="flex-1 py-2.5 px-5 rounded-xl bg-[#018752] text-white font-semibold text-sm hover:bg-[#016f43] transition-colors flex items-center justify-center gap-2 shadow-sm"
+                    className="flex-1 py-2.5 px-5 rounded-xl bg-[#018752] text-white font-semibold text-xs sm:text-sm hover:bg-[#016f43] transition-colors flex items-center justify-center gap-2 whitespace-nowrap shadow-sm cursor-pointer"
                   >
-                    Proceed
+                    {isIdentityAlreadyDone ? (
+                      <>
+                        <span className="whitespace-nowrap">Proceed to Document Upload</span>
+                        <ArrowRight className="size-4 shrink-0" />
+                      </>
+                    ) : (
+                      <>
+                        <span className="whitespace-nowrap">Proceed</span>
+                        <ArrowRight className="size-4 shrink-0" />
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
@@ -511,10 +882,6 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
             {/* ================= STEP 3: VERIFY CUSTOMER IDENTITY ================= */}
             {step === 3 && (
               <div className="animate-in fade-in zoom-in-95 duration-200">
-                <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#EAF5F0] dark:bg-emerald-950/40 text-[#018752] dark:text-emerald-400 mb-3">
-                  Step 3 of 6
-                </div>
-
                 <h2 className="text-xl sm:text-[22px] font-bold text-foreground tracking-tight mb-1.5">
                   Verify customer identity
                 </h2>
@@ -523,83 +890,129 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
                   Customer BVN and NIN generate all your personal details date of birth, gender, address, next of kin and more.
                 </p>
 
-                {/* BVN Card */}
-                <div className="rounded-xl border border-border p-3 bg-background focus-within:border-[#018752] transition-all mb-2.5">
-                  <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                    BVN
-                  </label>
-                  <input
-                    type="text"
-                    value={bvn}
-                    onChange={(e) => setBvn(e.target.value.replace(/\D/g, '').slice(0, 11))}
-                    placeholder="Enter 11-digit BVN"
-                    maxLength={11}
-                    className="w-full text-base font-bold text-foreground bg-transparent outline-none font-mono tracking-wide"
-                    autoFocus
-                  />
-                </div>
+                {isIdentityAlreadyDone ? (
+                  <div className="space-y-4">
+                    <div className="bg-[#EAF5F0] dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/40 rounded-xl p-3 flex items-start gap-3">
+                      <CheckCircle2 className="size-4 text-[#018752] shrink-0 mt-0.5" />
+                      <div className="text-xs">
+                        <p className="font-bold text-[#016f43] dark:text-emerald-300">
+                          Identity Already Verified
+                        </p>
+                        <p className="text-[#016f43]/85 dark:text-emerald-300/80 mt-0.5">
+                          This customer&apos;s BVN and NIN were previously confirmed against NIBSS and NIMC. Re-submission is not required.
+                        </p>
+                      </div>
+                    </div>
 
-                {/* NIN Card */}
-                <div className="rounded-xl border border-border p-3 bg-background focus-within:border-[#018752] transition-all mb-3">
-                  <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                    NIN
-                  </label>
-                  <input
-                    type="text"
-                    value={nin}
-                    onChange={(e) => setNin(e.target.value.replace(/\D/g, '').slice(0, 11))}
-                    placeholder="Enter 11-digit NIN"
-                    maxLength={11}
-                    className="w-full text-base font-bold text-foreground bg-transparent outline-none font-mono tracking-wide"
-                  />
-                </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="rounded-xl border border-border p-3 bg-background">
+                        <span className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                          BVN
+                        </span>
+                        <span className="text-sm font-bold text-foreground font-mono">
+                          {displayBvn ? `••••••• ${displayBvn.slice(-4)}` : 'Verified'}
+                        </span>
+                      </div>
+                      <div className="rounded-xl border border-border p-3 bg-background">
+                        <span className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                          NIN
+                        </span>
+                        <span className="text-sm font-bold text-foreground font-mono">
+                          {displayNin ? `••••• ${displayNin.slice(-4)}` : 'Verified'}
+                        </span>
+                      </div>
+                    </div>
 
-                {/* Green Verified Banner */}
-                <div className="bg-[#EAF5F0] dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/40 rounded-xl p-3 flex items-center gap-3 mb-5">
-                  <div className="size-5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-[#018752] flex items-center justify-center shrink-0 font-bold text-[11px] select-none">
-                    !
+                    <div className="pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setStep(5)}
+                        className="w-full py-2.5 px-5 rounded-xl bg-[#018752] text-white font-semibold text-sm hover:bg-[#016f43] transition-colors flex items-center justify-center gap-2 whitespace-nowrap shadow-sm cursor-pointer"
+                      >
+                        <span className="whitespace-nowrap">Proceed to Document Upload</span>
+                        <ArrowRight className="size-4 shrink-0" />
+                      </button>
+                    </div>
                   </div>
-                  <p className="text-xs font-medium text-[#016f43] dark:text-emerald-300 leading-snug">
-                    Validated against NIBSS (BVN) and NIMC(NIN). Your name from both must match your IPPIS record.
-                  </p>
-                </div>
+                ) : (
+                  <>
+                    {/* BVN Card */}
+                    <div className="rounded-xl border border-border p-3 bg-background focus-within:border-[#018752] transition-all mb-2.5">
+                      <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                        BVN
+                      </label>
+                      <input
+                        type="text"
+                        value={bvn}
+                        onChange={(e) => setBvn(e.target.value.replace(/\D/g, '').slice(0, 11))}
+                        placeholder="Enter 11-digit BVN"
+                        maxLength={11}
+                        className="w-full text-base font-bold text-foreground bg-transparent outline-none font-mono tracking-wide"
+                        autoFocus
+                      />
+                    </div>
 
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={handleClose}
-                    className="px-6 py-2.5 rounded-xl border border-[#018752] text-[#018752] font-semibold text-sm hover:bg-[#EAF5F0] transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleIdentity}
-                    disabled={loading || bvn.length !== 11 || nin.length !== 11}
-                    className="flex-1 py-2.5 px-5 rounded-xl bg-[#018752] text-white font-semibold text-sm hover:bg-[#016f43] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
-                  >
-                    {loading ? 'Validating...' : 'Proceed'}
-                  </button>
-                </div>
+                    {/* NIN Card */}
+                    <div className="rounded-xl border border-border p-3 bg-background focus-within:border-[#018752] transition-all mb-3">
+                      <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                        NIN
+                      </label>
+                      <input
+                        type="text"
+                        value={nin}
+                        onChange={(e) => setNin(e.target.value.replace(/\D/g, '').slice(0, 11))}
+                        placeholder="Enter 11-digit NIN"
+                        maxLength={11}
+                        className="w-full text-base font-bold text-foreground bg-transparent outline-none font-mono tracking-wide"
+                      />
+                    </div>
+
+                    {/* Green Verified Banner */}
+                    <div className="bg-[#EAF5F0] dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/40 rounded-xl p-3 flex items-center gap-3 mb-5">
+                      <div className="size-5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-[#018752] flex items-center justify-center shrink-0 font-bold text-[11px] select-none">
+                        !
+                      </div>
+                      <p className="text-xs font-medium text-[#016f43] dark:text-emerald-300 leading-snug">
+                        Validated against NIBSS (BVN) and NIMC (NIN). Your name from both must match your IPPIS record.
+                      </p>
+                    </div>
+
+                    <div className="pt-2">
+                      <button
+                        type="button"
+                        onClick={handleIdentity}
+                        disabled={loading || bvn.length !== 11 || nin.length !== 11}
+                        className="w-full py-2.5 px-5 rounded-xl bg-[#018752] text-white font-semibold text-sm hover:bg-[#016f43] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 whitespace-nowrap shadow-sm cursor-pointer"
+                      >
+                        {loading ? (
+                          <>
+                            <Loader2 className="size-4 animate-spin" /> <span className="whitespace-nowrap">Validating with NIBSS & NIMC...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="whitespace-nowrap">Verify & Proceed</span>
+                            <ArrowRight className="size-4 shrink-0" />
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
             {/* ================= STEP 4: REVIEW WITH THE CUSTOMER ================= */}
             {step === 4 && (
               <div className="animate-in fade-in zoom-in-95 duration-200">
-                <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#EAF5F0] dark:bg-emerald-950/40 text-[#018752] dark:text-emerald-400 mb-3">
-                  Step 4 of 6
-                </div>
-
                 <h2 className="text-xl sm:text-[22px] font-bold text-foreground tracking-tight mb-1">
                   Review with the customer
                 </h2>
 
                 <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">
-                  Auto-filled from IPPIS (READ ONLY)
+                  Auto-filled from IPPIS & Verified Identity (READ ONLY)
                 </p>
 
-                <div className="space-y-2 mb-4 max-h-[300px] overflow-y-auto pr-1">
+                <div className="space-y-2 mb-4 max-h-[360px] sm:max-h-[400px] overflow-y-auto pr-1">
                   {/* Full Name */}
                   <div className="rounded-xl border border-border/80 p-2.5 bg-background">
                     <span className="block text-[10px] font-medium text-muted-foreground mb-0.5">
@@ -614,18 +1027,18 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
                   <div className="grid grid-cols-2 gap-2">
                     <div className="rounded-xl border border-border/80 p-2.5 bg-background">
                       <span className="block text-[10px] font-medium text-muted-foreground mb-0.5">
-                        Bvn
+                        BVN
                       </span>
                       <span className="text-xs sm:text-sm font-bold text-foreground font-mono tracking-wider">
-                        {bvn ? `••••••• ${bvn.slice(-4)}` : '—'}
+                        {displayBvn ? `••••••• ${displayBvn.slice(-4)}` : '—'}
                       </span>
                     </div>
                     <div className="rounded-xl border border-border/80 p-2.5 bg-background">
                       <span className="block text-[10px] font-medium text-muted-foreground mb-0.5">
-                        Nin
+                        NIN
                       </span>
                       <span className="text-xs sm:text-sm font-bold text-foreground font-mono tracking-wider">
-                        {nin ? `••••• ${nin.slice(-4)}` : '—'}
+                        {displayNin ? `••••• ${displayNin.slice(-4)}` : '—'}
                       </span>
                     </div>
                   </div>
@@ -637,9 +1050,7 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
                         Date of birth
                       </span>
                       <span className="text-xs sm:text-sm font-bold text-foreground">
-                        {employeeRecord?.identityDateOfBirth || employeeRecord?.dob || employeeRecord?.dateOfBirth 
-                          ? new Date(employeeRecord.identityDateOfBirth || employeeRecord.dob || employeeRecord.dateOfBirth).toLocaleDateString('en-GB') 
-                          : '—'}
+                        {formatDob(employeeRecord?.identityDateOfBirth || employeeRecord?.dob || employeeRecord?.dateOfBirth)}
                       </span>
                     </div>
                     <div className="rounded-xl border border-border/80 p-2.5 bg-background">
@@ -732,28 +1143,20 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
                         Length of service
                       </span>
                       <span className="text-xs sm:text-sm font-bold text-foreground">
-                        {employeeRecord?.lengthOfService 
-                          ? (typeof employeeRecord.lengthOfService === 'object' ? `${employeeRecord.lengthOfService.years} yrs ${employeeRecord.lengthOfService.months} mo` : employeeRecord.lengthOfService) 
-                          : (employeeRecord?.hireDate ? `${new Date().getFullYear() - new Date(employeeRecord.hireDate).getFullYear()} yrs` : '—')}
+                        {formatLengthOfService(employeeRecord?.lengthOfService)}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={handleClose}
-                    className="px-6 py-2.5 rounded-xl border border-[#018752] text-[#018752] font-semibold text-sm hover:bg-[#EAF5F0] transition-colors"
-                  >
-                    Cancel
-                  </button>
+                <div className="pt-2">
                   <button
                     type="button"
                     onClick={handleReviewProceed}
-                    className="flex-1 py-2.5 px-5 rounded-xl bg-[#018752] text-white font-semibold text-sm hover:bg-[#016f43] transition-colors flex items-center justify-center gap-2 shadow-sm"
+                    className="w-full py-2.5 px-5 rounded-xl bg-[#018752] text-white font-semibold text-sm hover:bg-[#016f43] transition-colors flex items-center justify-center gap-2 whitespace-nowrap shadow-sm cursor-pointer"
                   >
-                    Proceed
+                    <span className="whitespace-nowrap">Proceed to Document Upload</span>
+                    <ArrowRight className="size-4 shrink-0" />
                   </button>
                 </div>
               </div>
@@ -762,41 +1165,31 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
             {/* ================= STEP 5: UPLOAD CUSTOMER DOCUMENTS ================= */}
             {step === 5 && (
               <div className="animate-in fade-in zoom-in-95 duration-200">
-                <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#EAF5F0] dark:bg-emerald-950/40 text-[#018752] dark:text-emerald-400 mb-3">
-                  Step 5 of 6
-                </div>
-
                 <h2 className="text-xl sm:text-[22px] font-bold text-foreground tracking-tight mb-1.5">
                   Upload customer documents
                 </h2>
 
                 <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mb-4">
-                  Upload your documents so we run an automatic legibility check on your file.
+                  All 4 documents must be uploaded to confirm customer profile and proceed to biometric cross-check.
                 </p>
 
-                {/* 4 Document Dropzones in Exact Order */}
-                <div className="space-y-2.5 mb-5 max-h-[320px] overflow-y-auto pr-1">
-                  {renderDocDropzone('NIN slip', 'ninSlip', ninSlipRef)}
+                {/* 4 Document Dropzones in Order */}
+                <div className="space-y-3.5 mb-5 max-h-[420px] sm:max-h-[460px] overflow-y-auto pr-1.5 scrollbar-thin">
+                  {renderDocDropzone('NIN slip / card', 'ninSlip', ninSlipRef)}
                   {renderDocDropzone('Work identity card', 'workId', workIdRef)}
-                  {renderDocDropzone('Passport photo in uniform', 'passport', passportRef)}
+                  {renderDocDropzone('Passport photo in uniform (image only)', 'passport', passportRef, true)}
                   {renderDocDropzone('Signature', 'signature', signatureRef)}
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={handleClose}
-                    className="px-6 py-2.5 rounded-xl border border-[#018752] text-[#018752] font-semibold text-sm hover:bg-[#EAF5F0] transition-colors"
-                  >
-                    Cancel
-                  </button>
+                <div className="pt-2">
                   <button
                     type="button"
                     onClick={handleDocumentsProceed}
                     disabled={loading}
-                    className="flex-1 py-2.5 px-5 rounded-xl bg-[#018752] text-white font-semibold text-sm hover:bg-[#016f43] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
+                    className="w-full py-2.5 px-5 rounded-xl bg-[#018752] text-white font-semibold text-sm hover:bg-[#016f43] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 whitespace-nowrap shadow-sm cursor-pointer"
                   >
-                    {loading ? 'Uploading...' : 'Proceed'}
+                    <span className="whitespace-nowrap">Proceed to Facial Cross-check</span>
+                    <ArrowRight className="size-4 shrink-0" />
                   </button>
                 </div>
               </div>
@@ -805,79 +1198,92 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
             {/* ================= STEP 6: PASSPORT FACIAL CROSS-CHECK ================= */}
             {step === 6 && (
               <div className="animate-in fade-in zoom-in-95 duration-200">
-                <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#EAF5F0] dark:bg-emerald-950/40 text-[#018752] dark:text-emerald-400 mb-3">
-                  Step 6 of 6
-                </div>
-
                 <h2 className="text-xl sm:text-[22px] font-bold text-foreground tracking-tight mb-1.5">
                   Passport facial cross-check
                 </h2>
 
                 <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mb-4">
-                  The customer's passport photo (in uniform) is matched 1:1 against their BVN/NIN biometric image.
+                  The customer&apos;s passport photo (in uniform) is matched 1:1 against their BVN/NIN biometric image.
                 </p>
 
                 {/* Facial cross-check visual comparison container */}
-                <div className="flex items-center justify-center gap-4 sm:gap-6 mb-5 py-2">
+                <div className="flex items-center justify-center gap-4 sm:gap-6 mb-6 py-4 bg-muted/20 border border-border/60 rounded-2xl p-4">
                   {/* Left: Passport photo card */}
                   <div className="flex flex-col items-center">
-                    <div className="size-24 rounded-xl bg-muted/40 border border-border/40 flex items-center justify-center overflow-hidden shadow-xs">
-                      {passportPreview ? (
+                    <div className="size-28 sm:size-32 rounded-2xl bg-card border border-border/80 flex items-center justify-center overflow-hidden shadow-xs relative">
+                      {passportBlobUrl && !passportPhotoFailed ? (
                         <img 
-                          src={passportPreview} 
+                          src={passportBlobUrl} 
                           alt="Passport preview" 
                           className="size-full object-cover"
+                          onError={() => setPassportPhotoFailed(true)}
                         />
                       ) : (
-                        <div className="size-12 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/50 flex items-center justify-center text-2xl select-none">
-                          👮‍♂️
+                        <div className="size-full flex flex-col items-center justify-center bg-muted/30 p-2 text-center select-none">
+                          <div className="size-10 rounded-full bg-muted text-muted-foreground flex items-center justify-center mb-1.5">
+                            <User className="size-5" />
+                          </div>
+                          <span className="text-[11px] font-bold text-foreground">Passport Photo</span>
+                          <span className="text-[9px] text-muted-foreground">In Uniform</span>
                         </div>
                       )}
                     </div>
-                    <span className="text-[11px] text-muted-foreground mt-2 font-medium text-center">
+                    <span className="text-xs text-foreground/80 mt-2 font-semibold text-center">
                       Passport (uniform)
                     </span>
                   </div>
 
-                  {/* Middle: Green double arrow ⇄ */}
-                  <div className="flex items-center justify-center text-[#018752] px-2 select-none">
-                    <svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M7 16h13M7 16l3 3M7 16l3-3M17 8H4m0 0l3-3M4 8l3 3" />
-                    </svg>
+                  {/* Middle: Green match badge */}
+                  <div className="flex flex-col items-center justify-center select-none px-1">
+                    <div className="size-9 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-[#018752] flex items-center justify-center shadow-xs">
+                      <RefreshCw className="size-4" />
+                    </div>
+                    <span className="text-[10px] font-bold text-[#018752] mt-1 tracking-wider uppercase">1:1 MATCH</span>
                   </div>
 
                   {/* Right: BVN / NIN Photo card */}
                   <div className="flex flex-col items-center">
-                    <div className="size-24 rounded-xl bg-muted/40 border border-border/40 flex items-center justify-center overflow-hidden shadow-xs">
-                      <div className="size-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/50 flex items-center justify-center text-[#018752]">
-                        <svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <rect x="3" y="4" width="18" height="16" rx="2.5" strokeWidth="2" />
-                          <circle cx="9" cy="10" r="2.5" strokeWidth="2" />
-                          <path d="M15 8h2M15 12h2M7 16h10" strokeWidth="2" strokeLinecap="round" />
-                        </svg>
-                      </div>
+                    <div className="size-28 sm:size-32 rounded-2xl bg-card border border-border/80 flex items-center justify-center overflow-hidden shadow-xs relative">
+                      {bvnPhotoBlobUrl && !bvnPhotoFailed ? (
+                        <img 
+                          src={bvnPhotoBlobUrl} 
+                          alt="Biometric photo" 
+                          className="size-full object-cover" 
+                          onError={() => setBvnPhotoFailed(true)}
+                        />
+                      ) : (
+                        <div className="size-full flex flex-col items-center justify-center bg-emerald-50/40 dark:bg-emerald-950/20 p-2 text-center select-none">
+                          <div className="size-10 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-[#018752] flex items-center justify-center mb-1.5 shadow-xs">
+                            <CheckCircle2 className="size-5" />
+                          </div>
+                          <span className="text-[11px] font-bold text-foreground">Biometric on File</span>
+                          <span className="text-[9px] text-[#018752] font-semibold">NIBSS Verified</span>
+                        </div>
+                      )}
                     </div>
-                    <span className="text-[11px] text-muted-foreground mt-2 font-medium text-center">
+                    <span className="text-xs text-foreground/80 mt-2 font-semibold text-center">
                       BVN / NIN photo
                     </span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={handleClose}
-                    className="px-6 py-2.5 rounded-xl border border-[#018752] text-[#018752] font-semibold text-sm hover:bg-[#EAF5F0] transition-colors"
-                  >
-                    Cancel
-                  </button>
+                <div className="pt-2">
                   <button
                     type="button"
                     onClick={handleFaceMatch}
                     disabled={loading}
-                    className="flex-1 py-2.5 px-5 rounded-xl bg-[#018752] text-white font-semibold text-sm hover:bg-[#016f43] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
+                    className="w-full py-2.5 px-5 rounded-xl bg-[#018752] text-white font-semibold text-sm hover:bg-[#016f43] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 whitespace-nowrap shadow-sm cursor-pointer"
                   >
-                    {loading ? 'Matching biometrics...' : 'Proceed'}
+                    {loading ? (
+                      <>
+                        <Loader2 className="size-4 animate-spin" /> <span className="whitespace-nowrap">Matching biometrics...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="whitespace-nowrap">Run Biometric Cross-check & Complete</span>
+                        <ArrowRight className="size-4 shrink-0" />
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
