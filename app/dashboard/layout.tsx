@@ -8,9 +8,9 @@ import SearchModal from '@/app/components/ui/SearchModal';
 import SessionManager from '@/app/components/ui/SessionManager';
 import ProfileDropdown from '@/app/components/ui/ProfileDropdown';
 import { useProfile } from '@/app/composables/modules/useProfile';
-import { usePermissions, Can } from '@/app/composables/usePermissions';
 import { useTheme } from 'next-themes';
-import { Monitor, Moon, Sun, Folder, UserPlus, Users, User, LineChart, UserCog, ClipboardList, Scale, ShieldCheck, Settings, Banknote, ChevronDown } from 'lucide-react';
+import { Monitor, Moon, Sun, Folder, UserPlus, Users, User, LineChart, UserCog, ClipboardList, Scale, ShieldCheck, Settings, Banknote, ChevronDown, ShieldAlert } from 'lucide-react';
+import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function CreditRiskLayout({ children }: { children: React.ReactNode }) {
  const pathname = usePathname();
@@ -18,7 +18,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
  const { theme, setTheme, resolvedTheme } = useTheme();
  const [mounted, setMounted] = useState(false);
  const { profile, fetchProfile } = useProfile();
- const { hasPermission, canAccessRoute, isSuperAdmin } = usePermissions();
+ const { hasPermission, hasAnyPermission, canAccessRoute, isSuperAdmin } = useAdminPermissions();
 
  useEffect(() => {
   fetchProfile();
@@ -122,9 +122,6 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
   if (typeof window !== 'undefined') {
    document.cookie = 'public_sector_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
    localStorage.removeItem('token');
-   localStorage.removeItem('refreshToken');
-   localStorage.removeItem('public_sector_permissions');
-   localStorage.removeItem('public_sector_role');
   }
   router.push('/login');
  };
@@ -138,6 +135,65 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
   const i = order.indexOf(theme || 'system');
   setTheme(order[(i + 1) % order.length]);
  };
+
+ const navItems = useMemo(() => [
+  {
+   href: '/dashboard/broadsheet',
+   label: 'Broadsheet and Repayment',
+   icon: Folder,
+   match: (p: string) => p.startsWith('/dashboard/broadsheet') || p.startsWith('/dashboard/uploads'),
+   visible: hasAnyPermission(['loans:upload', 'repayments:upload', 'ippis:upload', 'client-loans:read']),
+  },
+  {
+   href: '/dashboard/loan-terms',
+   label: 'Loan Products',
+   icon: Settings,
+   match: (p: string) => p.startsWith('/dashboard/loan-terms') || p.startsWith('/dashboard/catalog/loans') || p.startsWith('/dashboard/loan-products'),
+   visible: hasAnyPermission(['loan-terms:manage', 'loan-products:manage', 'loan-settings:manage']),
+  },
+  {
+   href: '/dashboard/invites',
+   label: 'Agent Recruitment',
+   icon: UserPlus,
+   match: (p: string) => p.startsWith('/dashboard/invites'),
+   visible: hasAnyPermission(['agents:recruitment:read', 'agents:recruitment:manage', 'agents:recruitment:analytics:read']),
+  },
+  {
+   href: '/dashboard/agent-management',
+   label: 'Agent Management',
+   icon: Users,
+   match: (p: string) => p.startsWith('/dashboard/agent-management') || p.startsWith('/dashboard/agent/') || p.startsWith('/dashboard/agent-security'),
+   visible: hasAnyPermission(['agents:read', 'agents:review', 'agents:sessions:revoke', 'agents:onboarding-access:manage', 'agents:analytics:read']),
+  },
+  {
+   href: '/dashboard/loan-requests',
+   label: 'Loan Request',
+   icon: Banknote,
+   match: (p: string) => p.startsWith('/dashboard/loan-requests') || p.startsWith('/dashboard/client-loans') || p.startsWith('/dashboard/disbursement-summary') || p.startsWith('/dashboard/maker-checker'),
+   visible: hasAnyPermission(['loan-requests:review', 'client-loans:read']),
+  },
+  {
+   href: '/dashboard/clients',
+   label: 'Customer Management',
+   icon: User,
+   match: (p: string) => p.startsWith('/dashboard/clients') || p.startsWith('/dashboard/catalog/ippis'),
+   visible: hasAnyPermission(['clients:read', 'clients:review', 'clients:onboard', 'clients:analytics:read']),
+  },
+  {
+   href: '/dashboard/reports',
+   label: 'Report',
+   icon: LineChart,
+   match: (p: string) => p.startsWith('/dashboard/reports') || p.startsWith('/dashboard/analytics') || p.startsWith('/dashboard/reconciliation') || p.startsWith('/dashboard/audit-logs'),
+   visible: hasAnyPermission(['audit:read', 'reconciliation:read', 'clients:analytics:read', 'agents:analytics:read']),
+  },
+  {
+   href: '/dashboard/team',
+   label: 'Role Management',
+   icon: ShieldCheck,
+   match: (p: string) => p.startsWith('/dashboard/team') || p.startsWith('/dashboard/roles') || p.startsWith('/dashboard/admins') || p.startsWith('/dashboard/permissions'),
+   visible: hasAnyPermission(['roles:manage', 'admins:create', 'permissions:manage', 'departments:manage']),
+  },
+ ], [hasAnyPermission]);
 
  return (
   <div className="h-screen overflow-hidden bg-background font-sans flex text-foreground">
@@ -190,137 +246,34 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
       </div>
      )}
     </div>
-    
     <div className="px-3.5 py-4 space-y-2 flex-1 overflow-y-auto overflow-x-visible">
-          <nav className="space-y-1">
-        <Can permission={['ippis:upload', 'loans:upload', 'repayments:upload']}>
-         <Link href="/dashboard/broadsheet"
-          className={`flex items-center gap-3 py-2.5 rounded-xl text-[13px] font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-3'} ${
-           pathname.startsWith('/dashboard/broadsheet') || pathname.startsWith('/dashboard/uploads') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-          }`}
-         >
-          <Folder className="w-[18px] h-[18px] shrink-0 transition-colors" />
-          {!isSidebarMinimized && <span className="whitespace-nowrap">Broadsheet and Repayment</span>}
-          {isSidebarMinimized && (
-           <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded whitespace-nowrap z-50">
-            Broadsheet and Repayment
-           </div>
-          )}
-         </Link>
-        </Can>
-
-        <Can permission={['loan-products:manage', 'loan-terms:manage', 'loan-settings:manage']}>
-         <Link href="/dashboard/loan-terms"
-          className={`flex items-center gap-3 py-2.5 rounded-xl text-[13px] font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-3'} ${
-           pathname.startsWith('/dashboard/loan-terms') || pathname.startsWith('/dashboard/catalog/loans') || pathname.startsWith('/dashboard/loan-products') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-          }`}
-         >
-          <Settings className="w-[18px] h-[18px] shrink-0 transition-colors" />
-          {!isSidebarMinimized && <span className="whitespace-nowrap">Loan Products</span>}
-          {isSidebarMinimized && (
-           <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded whitespace-nowrap z-50">
-            Loan Products
-           </div>
-          )}
-         </Link>
-        </Can>
-
-        <Can permission={['agents:recruitment:read', 'agents:recruitment:manage', 'agents:recruitment:analytics:read']}>
-         <Link href="/dashboard/invites"
-          className={`flex items-center gap-3 py-2.5 rounded-xl text-[13px] font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-3'} ${
-           pathname.startsWith('/dashboard/invites') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-          }`}
-         >
-          <UserPlus className="w-[18px] h-[18px] shrink-0 transition-colors" />
-          {!isSidebarMinimized && <span className="whitespace-nowrap">Agent Recruitment</span>}
-          {isSidebarMinimized && (
-           <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded whitespace-nowrap z-50">
-            Agent Recruitment
-           </div>
-          )}
-         </Link>
-        </Can>
-
-        <Can permission={['agents:read', 'agents:review', 'agents:sessions:revoke', 'agents:onboarding-access:manage', 'agents:analytics:read']}>
-         <Link href="/dashboard/agent-management"
-          className={`flex items-center gap-3 py-2.5 rounded-xl text-[13px] font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-3'} ${
-           pathname.startsWith('/dashboard/agent-management') || pathname.startsWith('/dashboard/agent/') || pathname.startsWith('/dashboard/agent-security') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-          }`}
-         >
-          <Users className="w-[18px] h-[18px] shrink-0 transition-colors" />
-          {!isSidebarMinimized && <span className="whitespace-nowrap">Agent Management</span>}
-          {isSidebarMinimized && (
-           <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded whitespace-nowrap z-50">
-            Agent Management
-           </div>
-          )}
-         </Link>
-        </Can>
-
-        <Can permission={['loan-requests:review', 'client-loans:read']}>
-         <Link href="/dashboard/loan-requests"
-          className={`flex items-center gap-3 py-2.5 rounded-xl text-[13px] font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-3'} ${
-           pathname.startsWith('/dashboard/loan-requests') || pathname.startsWith('/dashboard/client-loans') || pathname.startsWith('/dashboard/disbursement-summary') || pathname.startsWith('/dashboard/maker-checker') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-          }`}
-         >
-          <Banknote className="w-[18px] h-[18px] shrink-0 transition-colors" />
-          {!isSidebarMinimized && <span className="whitespace-nowrap">Loan Request</span>}
-          {isSidebarMinimized && (
-           <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded whitespace-nowrap z-50">
-            Loan Request
-           </div>
-          )}
-         </Link>
-        </Can>
-
-        <Can permission={['clients:read', 'clients:review', 'clients:onboard', 'clients:sessions:revoke']}>
-         <Link href="/dashboard/clients"
-          className={`flex items-center gap-3 py-2.5 rounded-xl text-[13px] font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-3'} ${
-           pathname.startsWith('/dashboard/clients') || pathname.startsWith('/dashboard/catalog/ippis') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-          }`}
-         >
-          <User className="w-[18px] h-[18px] shrink-0 transition-colors" />
-          {!isSidebarMinimized && <span className="whitespace-nowrap">Customer Management</span>}
-          {isSidebarMinimized && (
-           <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded whitespace-nowrap z-50">
-            Customer Management
-           </div>
-          )}
-         </Link>
-        </Can>
-
-        <Can permission={['audit:read', 'reconciliation:read', 'clients:analytics:read', 'agents:analytics:read']}>
-         <Link href="/dashboard/reports"
-          className={`flex items-center gap-3 py-2.5 rounded-xl text-[13px] font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-3'} ${
-           pathname.startsWith('/dashboard/reports') || pathname.startsWith('/dashboard/analytics') || pathname.startsWith('/dashboard/reconciliation') || pathname.startsWith('/dashboard/audit-logs') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-          }`}
-         >
-          <LineChart className="w-[18px] h-[18px] shrink-0 transition-colors" />
-          {!isSidebarMinimized && <span className="whitespace-nowrap">Report</span>}
-          {isSidebarMinimized && (
-           <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded whitespace-nowrap z-50">
-            Report
-           </div>
-          )}
-         </Link>
-        </Can>
-
-        <Can permission={['roles:manage', 'admins:create', 'permissions:manage', 'departments:manage']}>
-         <Link href="/dashboard/team"
-          className={`flex items-center gap-3 py-2.5 rounded-xl text-[13px] font-medium transition-all group relative ${isSidebarMinimized ? 'justify-center px-2' : 'px-3'} ${
-           pathname.startsWith('/dashboard/team') || pathname.startsWith('/dashboard/roles') || pathname.startsWith('/dashboard/admins') || pathname.startsWith('/dashboard/permissions') ? 'bg-[#018752] text-white [&>svg]:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-          }`}
-         >
-          <ShieldCheck className="w-[18px] h-[18px] shrink-0 transition-colors" />
-          {!isSidebarMinimized && <span className="whitespace-nowrap">Role Management</span>}
-          {isSidebarMinimized && (
-           <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded whitespace-nowrap z-50">
-            Role Management
-           </div>
-          )}
-         </Link>
-        </Can>
-      </nav>
+      <nav className="space-y-1">
+           {navItems.filter(item => item.visible).map((item) => {
+            const Icon = item.icon;
+            const isActive = item.match(pathname);
+            return (
+             <Link 
+              key={item.href}
+              href={item.href}
+              className={`flex items-center gap-3 py-2.5 rounded-xl text-[13px] font-medium transition-all group relative ${
+               isSidebarMinimized ? 'justify-center px-2' : 'px-3'
+              } ${
+               isActive 
+                ? 'bg-[#018752] text-white [&>svg]:text-white' 
+                : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+              }`}
+             >
+              <Icon className="w-[18px] h-[18px] shrink-0 transition-colors" />
+              {!isSidebarMinimized && <span className="whitespace-nowrap">{item.label}</span>}
+              {isSidebarMinimized && (
+               <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded whitespace-nowrap z-50">
+                {item.label}
+               </div>
+              )}
+             </Link>
+            );
+           })}
+          </nav>
     </div>
 
     <div className="p-3 border-t border-border flex flex-col gap-2">
@@ -434,24 +387,27 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
 
     <main className="flex-1 py-6 overflow-y-auto overflow-x-hidden">
      <div className="container mx-auto">
-      {canAccessRoute(pathname) ? (
-        children
-      ) : (
-        <div className="flex flex-col items-center justify-center min-h-[55vh] text-center p-8 bg-card rounded-2xl border border-border/60 shadow-sm my-6">
-          <div className="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4">
-            <ShieldCheck className="w-8 h-8" />
+      {!canAccessRoute(pathname) ? (
+        <div className="flex flex-col items-center justify-center min-h-[50vh] text-center p-8 bg-card rounded-2xl border border-border shadow-sm max-w-lg mx-auto mt-8">
+          <div className="w-16 h-16 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4 border border-amber-200 dark:border-amber-800">
+            <ShieldAlert className="w-8 h-8" />
           </div>
-          <h2 className="text-xl font-bold text-foreground mb-2">Access Restricted</h2>
-          <p className="text-sm text-muted-foreground max-w-md mb-6">
-            You do not have the required permission to access this section ({pageTitle}). Please contact your system administrator if you require access.
+          <h2 className="text-xl font-bold text-foreground">Access Restricted</h2>
+          <p className="text-sm text-muted-foreground mt-2">
+            Your current role <span className="font-semibold text-foreground">({displayRole})</span> does not have the required permissions to view this section.
           </p>
-          <Link
-            href="/dashboard/settings"
-            className="px-4 py-2 bg-[#018752] text-white rounded-xl text-sm font-medium hover:bg-[#018752]/90 transition-colors"
+          <button 
+            onClick={() => {
+              const firstAllowed = navItems.find(i => i.visible);
+              router.push(firstAllowed ? firstAllowed.href : '/dashboard');
+            }}
+            className="mt-6 px-5 py-2.5 bg-[#018752] hover:bg-[#018752]/90 text-white rounded-xl text-sm font-medium transition-colors cursor-pointer"
           >
-            Go to Settings
-          </Link>
+            Go to Authorized Section
+          </button>
         </div>
+      ) : (
+        children
       )}
      </div>
     </main>

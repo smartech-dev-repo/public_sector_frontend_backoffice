@@ -12,9 +12,12 @@ import TableDropdown from '@/app/components/ui/TableDropdown';
 import Pagination from '@/app/components/ui/Pagination';
 import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
-import { Can } from '@/app/composables/usePermissions';
+import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function InvitesTab() {
+ const { hasPermission, isSuperAdmin } = useAdminPermissions();
+ const canInvite = isSuperAdmin || hasPermission('admins:create');
+
  const [page, setPage] = useState(1);
  const [limit, setLimit] = useState(25);
  const { loading, error, invites, fetchInvites, resendInvite, deleteInvite, createInvite, revokeInvite, meta } = useInvites();
@@ -131,11 +134,11 @@ export default function InvitesTab() {
       Filters
       <svg className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
      </button>
-     <Can permission="admins:create">
+     {canInvite && (
       <button onClick={() => setShowInviteModal(true)} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium whitespace-nowrap ">
        Invite Admin
       </button>
-     </Can>
+     )}
     </div>
    </div>
 
@@ -200,12 +203,14 @@ export default function InvitesTab() {
         <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Role</th>
         <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Status</th>
         <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Invited At</th>
-        <th className="px-4 py-4 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
+        {canInvite && (
+         <th className="px-4 py-4 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
+        )}
        </tr>
       </thead>
       <tbody className="divide-y divide-slate-100">
  {invites.length === 0 ? (
-  <tr><td colSpan={5} className="p-8"><div className="flex justify-center w-full"><EmptyState title="No pending invites." /></div></td></tr>
+  <tr><td colSpan={canInvite ? 5 : 4} className="p-8"><div className="flex justify-center w-full"><EmptyState title="No pending invites." /></div></td></tr>
  ) : (invites.map((invite: any) => (
         <tr key={invite.id} className="hover:bg-muted/30 transition-colors">
          <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground font-medium">{invite.email}</td>
@@ -216,15 +221,15 @@ export default function InvitesTab() {
           </span>
          </td>
          <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{new Date(invite.createdAt).toLocaleDateString()}</td>
-         <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium relative">
-          <Can permission="admins:create">
+         {canInvite && (
+          <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium relative">
            <TableDropdown>
             <button onClick={() => handleResend(invite.id, invite.email)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 hover:text-emerald-800 transition-colors">Resend</button>
             <button onClick={() => handleRevoke(invite.id, invite.email)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-amber-600 hover:bg-amber-50 hover:text-amber-800 transition-colors">Revoke</button>
             <button onClick={() => handleDelete(invite.id, invite.email)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 hover:text-rose-800 transition-colors">Delete</button>
            </TableDropdown>
-          </Can>
-         </td>
+          </td>
+         )}
         </tr>
        )))}
 </tbody>

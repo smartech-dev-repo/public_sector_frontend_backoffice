@@ -23,12 +23,15 @@ export const useProfile = () => {
         if (typeof data.twoFactorEnabled === 'boolean') {
           localStorage.setItem('admin_2fa_enabled', String(data.twoFactorEnabled));
         }
-        const rawPerms = Array.isArray(data.permissions) ? data.permissions : (Array.isArray(data.role?.permissions) ? data.role.permissions : []);
-        const perms = rawPerms.map((p: any) => typeof p === 'string' ? p : (p?.permission?.key || p?.key || '')).filter(Boolean);
+        const perms = Array.isArray(data.permissions) 
+          ? data.permissions 
+          : (Array.isArray(data.role?.permissions) ? data.role.permissions : []);
         localStorage.setItem('public_sector_permissions', JSON.stringify(perms));
-        const roleName = data.role?.name || (typeof data.role === 'string' ? data.role : '');
-        if (roleName) {
-          localStorage.setItem('public_sector_role', roleName);
+        if (data.role?.name) {
+          localStorage.setItem('public_sector_role', data.role.name);
+        }
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('public_sector_profile_updated'));
         }
       }
       return data;

@@ -14,13 +14,22 @@ import PulseLoader from '@/app/components/ui/PulseLoader';
 import Pagination from '@/app/components/ui/Pagination';
 import DatePicker from '@/app/components/ui/DatePicker';
 import { useConfirm } from '@/app/composables/useConfirm';
-import { Can } from '@/app/components/ui/Can';
+import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function AgentPage({ params }: { params: Promise<{ id: string }> }) {
  const { confirm } = useConfirm();
  const router = useRouter();
  const { id } = use(params);
  
+ const { hasPermission, hasAnyPermission, isSuperAdmin } = useAdminPermissions();
+ const canReviewAgent = isSuperAdmin || hasPermission('agents:review');
+ const canManageAccess = isSuperAdmin || hasPermission('agents:onboarding-access:manage');
+ const canRevokeSessions = isSuperAdmin || hasPermission('agents:sessions:revoke');
+ const canReadLoans = isSuperAdmin || hasPermission('client-loans:read');
+ const canReadClients = isSuperAdmin || hasPermission('clients:read');
+ const canReadDocs = isSuperAdmin || hasPermission('documents:read');
+ const canSendCreds = canReviewAgent || isSuperAdmin || hasPermission('agents:recruitment:manage');
+
  const { getAgentById, approveAgent, rejectAgent, resendCredentials, updateOnboardingAccess } = useAgents();
  const { revokeAgentSessions } = useSessions();
  const { clientLoans, fetchClientLoans, meta, loading: loansLoading } = useLoans();
@@ -41,7 +50,11 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
  const [onboardedClients, setOnboardedClients] = useState<any[]>([]);
  const [clientsMeta, setClientsMeta] = useState<any>(null);
  const [clientsLoading, setClientsLoading] = useState(false);
- const [activeTab, setActiveTab] = useState<'loans' | 'clients'>('loans');
+ const [activeTab, setActiveTab] = useState<'loans' | 'clients'>(() => {
+  if (isSuperAdmin || hasPermission('client-loans:read')) return 'loans';
+  if (isSuperAdmin || hasPermission('clients:read')) return 'clients';
+  return 'loans';
+ });
  const [clientsPage, setClientsPage] = useState(1);
  const [clientsLimit, setClientsLimit] = useState(10);
 
@@ -177,42 +190,40 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
    </div>
 
    {/* Action Buttons Block (for approval) */}
-   {application.status === 'PENDING' && (
-    <Can permission="agents:review">
-     <div className="bg-amber-50 rounded-xl border border-amber-200 p-4 mb-4 flex items-center justify-between">
-      <div>
-       <h3 className="text-amber-800 font-semibold">Agent Pending Approval</h3>
-       <p className="text-amber-700 text-sm">Please review the agent details before approving.</p>
-      </div>
-      <div className="flex items-center gap-3">
-       <button onClick={handleReject} disabled={submitting} className="px-4 py-2 bg-card text-rose-600 border border-rose-200 rounded-lg hover:bg-rose-50 transition-colors text-sm font-medium">
-        Reject
-       </button>
-       <button onClick={handleApprove} disabled={submitting} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium">
-        Approve Agent
-       </button>
-      </div>
+   {application.status === 'PENDING' && canReviewAgent && (
+    <div className="bg-amber-50 rounded-xl border border-amber-200 p-4 mb-4 flex items-center justify-between">
+     <div>
+      <h3 className="text-amber-800 font-semibold">Agent Pending Approval</h3>
+      <p className="text-amber-700 text-sm">Please review the agent details before approving.</p>
      </div>
-    </Can>
+     <div className="flex items-center gap-3">
+      <button onClick={handleReject} disabled={submitting} className="px-4 py-2 bg-card text-rose-600 border border-rose-200 rounded-lg hover:bg-rose-50 transition-colors text-sm font-medium">
+       Reject
+      </button>
+      <button onClick={handleApprove} disabled={submitting} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium">
+       Approve Agent
+      </button>
+     </div>
+    </div>
    )}
 
-   {application.status === 'APPROVED' && (
+   {application.status === 'APPROVED' && (canSendCreds || canManageAccess || canRevokeSessions) && (
     <div className="flex flex-wrap gap-3 mb-4 w-full">
-      <Can permission="agents:review">
-       <button onClick={handleResendCredentials} className="flex-1 min-w-[140px] px-4 py-2 bg-card border border-border text-foreground/90 hover:bg-muted/30 rounded-lg transition-colors text-sm font-medium">
-        Resend Credentials
-       </button>
-      </Can>
-      <Can permission="agents:onboarding-access:manage">
-       <button onClick={handleToggleOnboarding} className="flex-1 min-w-[160px] px-4 py-2 bg-card border border-amber-200 text-amber-700 hover:bg-amber-50 rounded-lg transition-colors text-sm font-medium">
-        {application.canOnboardClients === false ? 'Grant Onboarding Access' : 'Restrict Onboarding Access'}
-       </button>
-      </Can>
-      <Can permission="agents:sessions:revoke">
-       <button onClick={handleRevokeSessions} className="flex-1 min-w-[140px] px-4 py-2 bg-card border border-rose-200 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors text-sm font-medium">
-        Revoke Sessions
-       </button>
-      </Can>
+     {canSendCreds && (
+      <button onClick={handleResendCredentials} className="flex-1 min-w-[140px] px-4 py-2 bg-card border border-border text-foreground/90 hover:bg-muted/30 rounded-lg transition-colors text-sm font-medium">
+       Resend Credentials
+      </button>
+     )}
+     {canManageAccess && (
+      <button onClick={handleToggleOnboarding} className="flex-1 min-w-[160px] px-4 py-2 bg-card border border-amber-200 text-amber-700 hover:bg-amber-50 rounded-lg transition-colors text-sm font-medium">
+       {application.canOnboardClients === false ? 'Grant Onboarding Access' : 'Restrict Onboarding Access'}
+      </button>
+     )}
+     {canRevokeSessions && (
+      <button onClick={handleRevokeSessions} className="flex-1 min-w-[140px] px-4 py-2 bg-card border border-rose-200 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors text-sm font-medium">
+       Revoke Sessions
+      </button>
+     )}
     </div>
    )}
 
@@ -253,7 +264,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
     <div>
      <p className="text-[12px] text-muted-foreground/70 mb-1">Document</p>
      <p className="text-[16px] font-semibold text-blue-600">
-      {application.cvKey ? (
+      {application.cvKey && canReadDocs ? (
        <button
         type="button"
         onClick={() => setPreviewDoc({
@@ -266,7 +277,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
         <Eye className="w-3.5 h-3.5" />
         <span>View Document</span>
        </button>
-      ) : 'N/A'}
+      ) : application.cvKey ? 'Document on file' : 'N/A'}
      </p>
     </div>
     <div className="md:col-span-2">
@@ -328,39 +339,44 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
    </div>
 
    {/* View Tabs Selector */}
+   {(canReadLoans || canReadClients) && (
    <div className="flex items-center justify-between border-b border-border/60 pt-4">
     <div className="flex items-center gap-6">
-     <button
-      type="button"
-      onClick={() => setActiveTab('loans')}
-      className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${
-       activeTab === 'loans'
-        ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400'
-        : 'border-transparent text-muted-foreground hover:text-foreground'
-      }`}
-     >
-      <Banknote className="w-4 h-4" />
-      <span>Originated Loans</span>
-      <span className="px-2 py-0.5 rounded-full text-xs font-mono bg-muted/60 text-muted-foreground">
-       {meta?.total || 0}
-      </span>
-     </button>
+     {canReadLoans && (
+      <button
+       type="button"
+       onClick={() => setActiveTab('loans')}
+       className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${
+        activeTab === 'loans'
+         ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400'
+         : 'border-transparent text-muted-foreground hover:text-foreground'
+       }`}
+      >
+       <Banknote className="w-4 h-4" />
+       <span>Originated Loans</span>
+       <span className="px-2 py-0.5 rounded-full text-xs font-mono bg-muted/60 text-muted-foreground">
+        {meta?.total || 0}
+       </span>
+      </button>
+     )}
 
-     <button
-      type="button"
-      onClick={() => setActiveTab('clients')}
-      className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${
-       activeTab === 'clients'
-        ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400'
-        : 'border-transparent text-muted-foreground hover:text-foreground'
-      }`}
-     >
-      <Users className="w-4 h-4" />
-      <span>Onboarded Customers</span>
-      <span className="px-2 py-0.5 rounded-full text-xs font-mono bg-muted/60 text-muted-foreground">
-       {clientsMeta?.total ?? onboardedClients.length}
-      </span>
-     </button>
+     {canReadClients && (
+      <button
+       type="button"
+       onClick={() => setActiveTab('clients')}
+       className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${
+        activeTab === 'clients'
+         ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400'
+         : 'border-transparent text-muted-foreground hover:text-foreground'
+       }`}
+      >
+       <Users className="w-4 h-4" />
+       <span>Onboarded Customers</span>
+       <span className="px-2 py-0.5 rounded-full text-xs font-mono bg-muted/60 text-muted-foreground">
+        {clientsMeta?.total ?? onboardedClients.length}
+       </span>
+      </button>
+     )}
     </div>
 
     {activeTab === 'clients' && (
@@ -373,9 +389,10 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
      </Link>
     )}
    </div>
+   )}
 
    {/* TAB 1: LOANS TABLE */}
-   {activeTab === 'loans' && (
+   {activeTab === 'loans' && canReadLoans && (
     <>
      {/* Table Actions */}
      <div className="flex gap-3 w-full pt-4 relative">
@@ -473,7 +490,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
    )}
 
    {/* TAB 2: ONBOARDED CUSTOMERS TABLE */}
-   {activeTab === 'clients' && (
+   {activeTab === 'clients' && canReadClients && (
     <>
      <div className="pt-4 flex items-center justify-between">
       <span className="text-sm text-muted-foreground/70">

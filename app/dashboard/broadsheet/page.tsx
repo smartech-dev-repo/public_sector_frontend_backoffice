@@ -8,11 +8,15 @@ import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { useIppis } from '@/app/composables/modules/useIppis';
 import Pagination from '@/app/components/ui/Pagination';
-import { Can, usePermissions } from '@/app/composables/usePermissions';
+import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function BroadsheetPage() {
+ const { isSuperAdmin, hasPermission } = useAdminPermissions();
+ const canUploadIppis = isSuperAdmin || hasPermission('ippis:upload');
+ const canUploadRepayments = isSuperAdmin || hasPermission('repayments:upload');
+ const canReadDocuments = isSuperAdmin || hasPermission('documents:read');
+
  const { addToast } = useToast();
- const { hasPermission } = usePermissions();
  const { fetchBatches, batches, loading, uploadBroadsheet, uploadRepaymentSchedule, downloadFile } = useIppis();
 
  const [showFilter, setShowFilter] = useState(false);
@@ -205,6 +209,17 @@ export default function BroadsheetPage() {
   // Implement full export if API provides one
  };
 
+ if (!canUploadIppis && !canUploadRepayments) {
+  return (
+   <div className="p-8">
+    <EmptyState
+     title="Access Restricted"
+     description="You do not have permission to view or upload IPPIS broadsheets or Repayment schedules."
+    />
+   </div>
+  );
+ }
+
  return (
   <div className="space-y-3">
    {/* Header Actions */}
@@ -271,100 +286,100 @@ export default function BroadsheetPage() {
    {loading && batches.length === 0 ? (
     <div className="w-full py-4"><PulseLoader /></div>
    ) : (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+    <div className={`grid grid-cols-1 ${canUploadIppis && canUploadRepayments ? 'lg:grid-cols-2' : ''} gap-8 items-start`}>
      {/* IPPIS Broadsheet Column */}
-     <div className="bg-card rounded-xl border border-border/50 p-6 flex flex-col gap-6">
-      <h2 className="text-lg font-semibold text-foreground">IPPIS Broadsheet</h2>
-      
-      {/* Upload Box */}
-      <Can permission="ippis:upload">
+     {canUploadIppis && (
+      <div className="bg-card rounded-xl border border-border/50 p-6 flex flex-col gap-6">
+       <h2 className="text-lg font-semibold text-foreground">IPPIS Broadsheet</h2>
+       
+       {/* Upload Box */}
        <div onClick={triggerIppisUpload} className="border border-dashed border-emerald-300 rounded-xl p-8 flex flex-col items-center justify-center text-center bg-emerald-50/30 hover:bg-emerald-50/50 transition-colors cursor-pointer relative overflow-hidden group">
         <input type="file" ref={ippisFileInput} className="hidden" onChange={handleIppisUpload} accept=".csv, .xlsx" />
         <svg className="w-6 h-6 text-muted-foreground/70 mb-3 group-hover:text-emerald-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
         <p className="text-sm text-muted-foreground/70">Drag and drop or <span className="text-emerald-600 font-medium">choose file</span> to upload</p>
         <p className="text-xs text-muted-foreground/70 mt-1">.xlsx or .csv</p>
        </div>
-      </Can>
 
-      {/* List */}
-      <div 
-       className="space-y-4 max-h-[500px] overflow-y-auto pr-2"
-       onScroll={(e) => {
-        const target = e.target as HTMLDivElement;
-        if (target.scrollHeight - target.scrollTop <= target.clientHeight + 50) {
-         if (ippisLimit < filteredIppis.length) {
-          setIppisLimit(prev => prev + 10);
+       {/* List */}
+       <div 
+        className="space-y-4 max-h-[500px] overflow-y-auto pr-2"
+        onScroll={(e) => {
+         const target = e.target as HTMLDivElement;
+         if (target.scrollHeight - target.scrollTop <= target.clientHeight + 50) {
+          if (ippisLimit < filteredIppis.length) {
+           setIppisLimit(prev => prev + 10);
+          }
          }
-        }
-       }}
-      >
-       {filteredIppis.length === 0 && <EmptyState title="No IPPIS uploads found." />}
-       {paginatedIppis.map((item) => (
-        <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 border-b border-slate-50 pb-4 last:border-0 hover:bg-muted/30/30 px-2 rounded-lg transition-colors">
-         <div>
-          <div className="flex items-center gap-3 mb-1">
-           <span className="font-semibold text-foreground">{item.month}</span>
-           <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-medium border border-emerald-100/50">{item.status}</span>
+        }}
+       >
+        {filteredIppis.length === 0 && <EmptyState title="No IPPIS uploads found." />}
+        {paginatedIppis.map((item) => (
+         <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 border-b border-slate-50 pb-4 last:border-0 hover:bg-muted/30/30 px-2 rounded-lg transition-colors">
+          <div>
+           <div className="flex items-center gap-3 mb-1">
+            <span className="font-semibold text-foreground">{item.month}</span>
+            <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-medium border border-emerald-100/50">{item.status}</span>
+           </div>
+           <p className="text-[12px] text-muted-foreground/70">{item.user} &bull; {item.date}</p>
           </div>
-          <p className="text-[12px] text-muted-foreground/70">{item.user} &bull; {item.date}</p>
+          {canReadDocuments && (
+           <button onClick={() => handleDownload(item, 'IPPIS')} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white text-xs font-medium transition-colors ">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            Download
+           </button>
+          )}
          </div>
-         <Can permission={['documents:read', 'ippis:upload']}>
-          <button onClick={() => handleDownload(item, 'IPPIS')} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white text-xs font-medium transition-colors ">
-           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-           Download
-          </button>
-         </Can>
-        </div>
-       ))}
+        ))}
+       </div>
       </div>
-     </div>
+     )}
 
      {/* Repayment Schedule Column */}
-     <div className="bg-card rounded-xl border border-border/50 p-6 flex flex-col gap-6">
-      <h2 className="text-lg font-semibold text-foreground">Repayment Schedule</h2>
-      
-      {/* Upload Box */}
-      <Can permission="repayments:upload">
+     {canUploadRepayments && (
+      <div className="bg-card rounded-xl border border-border/50 p-6 flex flex-col gap-6">
+       <h2 className="text-lg font-semibold text-foreground">Repayment Schedule</h2>
+       
+       {/* Upload Box */}
        <div onClick={triggerRepaymentUpload} className="border border-dashed border-emerald-300 rounded-xl p-8 flex flex-col items-center justify-center text-center bg-emerald-50/30 hover:bg-emerald-50/50 transition-colors cursor-pointer relative overflow-hidden group">
         <input type="file" ref={repaymentFileInput} className="hidden" onChange={handleRepaymentUpload} accept=".csv, .xlsx" />
         <svg className="w-6 h-6 text-muted-foreground/70 mb-3 group-hover:text-emerald-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
         <p className="text-sm text-muted-foreground/70">Drag and drop or <span className="text-emerald-600 font-medium">choose file</span> to upload</p>
         <p className="text-xs text-muted-foreground/70 mt-1">.xlsx or .csv</p>
        </div>
-      </Can>
 
-      {/* List */}
-      <div 
-       className="space-y-4 max-h-[500px] overflow-y-auto pr-2"
-       onScroll={(e) => {
-        const target = e.target as HTMLDivElement;
-        if (target.scrollHeight - target.scrollTop <= target.clientHeight + 50) {
-         if (repaymentLimit < filteredRepayment.length) {
-          setRepaymentLimit(prev => prev + 10);
+       {/* List */}
+       <div 
+        className="space-y-4 max-h-[500px] overflow-y-auto pr-2"
+        onScroll={(e) => {
+         const target = e.target as HTMLDivElement;
+         if (target.scrollHeight - target.scrollTop <= target.clientHeight + 50) {
+          if (repaymentLimit < filteredRepayment.length) {
+           setRepaymentLimit(prev => prev + 10);
+          }
          }
-        }
-       }}
-      >
-       {filteredRepayment.length === 0 && <EmptyState title="No repayment schedules found." />}
-       {paginatedRepayment.map((item) => (
-        <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 border-b border-slate-50 pb-4 last:border-0 hover:bg-muted/30/30 px-2 rounded-lg transition-colors">
-         <div>
-          <div className="flex items-center gap-3 mb-1">
-           <span className="font-semibold text-foreground">{item.month}</span>
-           <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-medium border border-emerald-100/50">{item.status}</span>
+        }}
+       >
+        {filteredRepayment.length === 0 && <EmptyState title="No repayment schedules found." />}
+        {paginatedRepayment.map((item) => (
+         <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 border-b border-slate-50 pb-4 last:border-0 hover:bg-muted/30/30 px-2 rounded-lg transition-colors">
+          <div>
+           <div className="flex items-center gap-3 mb-1">
+            <span className="font-semibold text-foreground">{item.month}</span>
+            <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-medium border border-emerald-100/50">{item.status}</span>
+           </div>
+           <p className="text-[12px] text-muted-foreground/70">{item.user} &bull; {item.date}</p>
           </div>
-          <p className="text-[12px] text-muted-foreground/70">{item.user} &bull; {item.date}</p>
+          {canReadDocuments && (
+           <button onClick={() => handleDownload(item, 'Repayment')} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white text-xs font-medium transition-colors ">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            Download
+           </button>
+          )}
          </div>
-         <Can permission={['documents:read', 'repayments:upload']}>
-          <button onClick={() => handleDownload(item, 'Repayment')} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white text-xs font-medium transition-colors ">
-           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-           Download
-          </button>
-         </Can>
-        </div>
-       ))}
+        ))}
+       </div>
       </div>
-     </div>
+     )}
     </div>
    )}
   </div>
