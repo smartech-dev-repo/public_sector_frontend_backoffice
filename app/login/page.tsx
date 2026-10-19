@@ -33,8 +33,7 @@ export default function LoginPage() {
     setPendingToken(data.pendingToken || '');
     setShow2fa(true);
    } else {
-    setTheme('light');
-    router.push('/dashboard/broadsheet');
+    router.push('/dashboard');
    }
   } catch (err: any) {
    if (err?.response?.data?.twoFactorRequired || err?.response?.data?.message?.toLowerCase().includes('two-factor')) {
@@ -56,8 +55,7 @@ export default function LoginPage() {
    if (typeof window !== 'undefined') {
     localStorage.setItem('admin_2fa_enabled', 'true');
    }
-   setTheme('light');
-   router.push('/dashboard/broadsheet');
+   router.push('/dashboard');
   } catch (err: any) {
    setVerifyError(err?.response?.data?.message || 'Invalid verification code. Please try again.');
   }

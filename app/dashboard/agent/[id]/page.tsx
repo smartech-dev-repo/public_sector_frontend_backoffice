@@ -14,6 +14,7 @@ import PulseLoader from '@/app/components/ui/PulseLoader';
 import Pagination from '@/app/components/ui/Pagination';
 import DatePicker from '@/app/components/ui/DatePicker';
 import { useConfirm } from '@/app/composables/useConfirm';
+import { Can } from '@/app/components/ui/Can';
 
 export default function AgentPage({ params }: { params: Promise<{ id: string }> }) {
  const { confirm } = useConfirm();
@@ -177,33 +178,41 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
 
    {/* Action Buttons Block (for approval) */}
    {application.status === 'PENDING' && (
-    <div className="bg-amber-50 rounded-xl border border-amber-200 p-4 mb-4 flex items-center justify-between">
-     <div>
-      <h3 className="text-amber-800 font-semibold">Agent Pending Approval</h3>
-      <p className="text-amber-700 text-sm">Please review the agent details before approving.</p>
+    <Can permission="agents:review">
+     <div className="bg-amber-50 rounded-xl border border-amber-200 p-4 mb-4 flex items-center justify-between">
+      <div>
+       <h3 className="text-amber-800 font-semibold">Agent Pending Approval</h3>
+       <p className="text-amber-700 text-sm">Please review the agent details before approving.</p>
+      </div>
+      <div className="flex items-center gap-3">
+       <button onClick={handleReject} disabled={submitting} className="px-4 py-2 bg-card text-rose-600 border border-rose-200 rounded-lg hover:bg-rose-50 transition-colors text-sm font-medium">
+        Reject
+       </button>
+       <button onClick={handleApprove} disabled={submitting} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium">
+        Approve Agent
+       </button>
+      </div>
      </div>
-     <div className="flex items-center gap-3">
-      <button onClick={handleReject} disabled={submitting} className="px-4 py-2 bg-card text-rose-600 border border-rose-200 rounded-lg hover:bg-rose-50 transition-colors text-sm font-medium">
-       Reject
-      </button>
-      <button onClick={handleApprove} disabled={submitting} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium">
-       Approve Agent
-      </button>
-     </div>
-    </div>
+    </Can>
    )}
 
    {application.status === 'APPROVED' && (
     <div className="flex flex-wrap gap-3 mb-4 w-full">
-      <button onClick={handleResendCredentials} className="flex-1 min-w-[140px] px-4 py-2 bg-card border border-border text-foreground/90 hover:bg-muted/30 rounded-lg transition-colors text-sm font-medium">
-       Resend Credentials
-      </button>
-      <button onClick={handleToggleOnboarding} className="flex-1 min-w-[160px] px-4 py-2 bg-card border border-amber-200 text-amber-700 hover:bg-amber-50 rounded-lg transition-colors text-sm font-medium">
-       {application.canOnboardClients === false ? 'Grant Onboarding Access' : 'Restrict Onboarding Access'}
-      </button>
-      <button onClick={handleRevokeSessions} className="flex-1 min-w-[140px] px-4 py-2 bg-card border border-rose-200 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors text-sm font-medium">
-       Revoke Sessions
-      </button>
+      <Can permission="agents:review">
+       <button onClick={handleResendCredentials} className="flex-1 min-w-[140px] px-4 py-2 bg-card border border-border text-foreground/90 hover:bg-muted/30 rounded-lg transition-colors text-sm font-medium">
+        Resend Credentials
+       </button>
+      </Can>
+      <Can permission="agents:onboarding-access:manage">
+       <button onClick={handleToggleOnboarding} className="flex-1 min-w-[160px] px-4 py-2 bg-card border border-amber-200 text-amber-700 hover:bg-amber-50 rounded-lg transition-colors text-sm font-medium">
+        {application.canOnboardClients === false ? 'Grant Onboarding Access' : 'Restrict Onboarding Access'}
+       </button>
+      </Can>
+      <Can permission="agents:sessions:revoke">
+       <button onClick={handleRevokeSessions} className="flex-1 min-w-[140px] px-4 py-2 bg-card border border-rose-200 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors text-sm font-medium">
+        Revoke Sessions
+       </button>
+      </Can>
     </div>
    )}
 

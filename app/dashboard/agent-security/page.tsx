@@ -9,6 +9,7 @@ import EmptyState from '@/app/components/ui/EmptyState';
 import { useConfirm } from '@/app/composables/useConfirm';
 import TableDropdown from '@/app/components/ui/TableDropdown';
 import Pagination from '@/app/components/ui/Pagination';
+import { Can } from '@/app/components/ui/Can';
 
 export default function AgentSecurityPage() {
  const [page, setPage] = useState(1);
@@ -103,9 +104,11 @@ export default function AgentSecurityPage() {
            </td>
            <td className="px-4 py-4 text-right relative">
             <TableDropdown>
-             <button onClick={() => handleRevoke(agent)} disabled={revokingId === agent.id} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-50">
-              {revokingId === agent.id ? 'Revoking...' : 'Revoke All Sessions'}
-             </button>
+             <Can permission="agents:sessions:revoke">
+              <button onClick={() => handleRevoke(agent)} disabled={revokingId === agent.id} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-50">
+               {revokingId === agent.id ? 'Revoking...' : 'Revoke All Sessions'}
+              </button>
+             </Can>
             </TableDropdown>
            </td>
           </tr>

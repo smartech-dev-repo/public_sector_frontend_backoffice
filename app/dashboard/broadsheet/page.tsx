@@ -8,9 +8,11 @@ import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { useIppis } from '@/app/composables/modules/useIppis';
 import Pagination from '@/app/components/ui/Pagination';
+import { Can, usePermissions } from '@/app/composables/usePermissions';
 
 export default function BroadsheetPage() {
  const { addToast } = useToast();
+ const { hasPermission } = usePermissions();
  const { fetchBatches, batches, loading, uploadBroadsheet, uploadRepaymentSchedule, downloadFile } = useIppis();
 
  const [showFilter, setShowFilter] = useState(false);
@@ -275,12 +277,14 @@ export default function BroadsheetPage() {
       <h2 className="text-lg font-semibold text-foreground">IPPIS Broadsheet</h2>
       
       {/* Upload Box */}
-      <div onClick={triggerIppisUpload} className="border border-dashed border-emerald-300 rounded-xl p-8 flex flex-col items-center justify-center text-center bg-emerald-50/30 hover:bg-emerald-50/50 transition-colors cursor-pointer relative overflow-hidden group">
-       <input type="file" ref={ippisFileInput} className="hidden" onChange={handleIppisUpload} accept=".csv, .xlsx" />
-       <svg className="w-6 h-6 text-muted-foreground/70 mb-3 group-hover:text-emerald-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-       <p className="text-sm text-muted-foreground/70">Drag and drop or <span className="text-emerald-600 font-medium">choose file</span> to upload</p>
-       <p className="text-xs text-muted-foreground/70 mt-1">.xlsx or .csv</p>
-      </div>
+      <Can permission="ippis:upload">
+       <div onClick={triggerIppisUpload} className="border border-dashed border-emerald-300 rounded-xl p-8 flex flex-col items-center justify-center text-center bg-emerald-50/30 hover:bg-emerald-50/50 transition-colors cursor-pointer relative overflow-hidden group">
+        <input type="file" ref={ippisFileInput} className="hidden" onChange={handleIppisUpload} accept=".csv, .xlsx" />
+        <svg className="w-6 h-6 text-muted-foreground/70 mb-3 group-hover:text-emerald-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+        <p className="text-sm text-muted-foreground/70">Drag and drop or <span className="text-emerald-600 font-medium">choose file</span> to upload</p>
+        <p className="text-xs text-muted-foreground/70 mt-1">.xlsx or .csv</p>
+       </div>
+      </Can>
 
       {/* List */}
       <div 
@@ -304,10 +308,12 @@ export default function BroadsheetPage() {
           </div>
           <p className="text-[12px] text-muted-foreground/70">{item.user} &bull; {item.date}</p>
          </div>
-         <button onClick={() => handleDownload(item, 'IPPIS')} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white text-xs font-medium transition-colors ">
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-          Download
-         </button>
+         <Can permission={['documents:read', 'ippis:upload']}>
+          <button onClick={() => handleDownload(item, 'IPPIS')} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white text-xs font-medium transition-colors ">
+           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+           Download
+          </button>
+         </Can>
         </div>
        ))}
       </div>
@@ -318,12 +324,14 @@ export default function BroadsheetPage() {
       <h2 className="text-lg font-semibold text-foreground">Repayment Schedule</h2>
       
       {/* Upload Box */}
-      <div onClick={triggerRepaymentUpload} className="border border-dashed border-emerald-300 rounded-xl p-8 flex flex-col items-center justify-center text-center bg-emerald-50/30 hover:bg-emerald-50/50 transition-colors cursor-pointer relative overflow-hidden group">
-       <input type="file" ref={repaymentFileInput} className="hidden" onChange={handleRepaymentUpload} accept=".csv, .xlsx" />
-       <svg className="w-6 h-6 text-muted-foreground/70 mb-3 group-hover:text-emerald-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-       <p className="text-sm text-muted-foreground/70">Drag and drop or <span className="text-emerald-600 font-medium">choose file</span> to upload</p>
-       <p className="text-xs text-muted-foreground/70 mt-1">.xlsx or .csv</p>
-      </div>
+      <Can permission="repayments:upload">
+       <div onClick={triggerRepaymentUpload} className="border border-dashed border-emerald-300 rounded-xl p-8 flex flex-col items-center justify-center text-center bg-emerald-50/30 hover:bg-emerald-50/50 transition-colors cursor-pointer relative overflow-hidden group">
+        <input type="file" ref={repaymentFileInput} className="hidden" onChange={handleRepaymentUpload} accept=".csv, .xlsx" />
+        <svg className="w-6 h-6 text-muted-foreground/70 mb-3 group-hover:text-emerald-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+        <p className="text-sm text-muted-foreground/70">Drag and drop or <span className="text-emerald-600 font-medium">choose file</span> to upload</p>
+        <p className="text-xs text-muted-foreground/70 mt-1">.xlsx or .csv</p>
+       </div>
+      </Can>
 
       {/* List */}
       <div 
@@ -347,10 +355,12 @@ export default function BroadsheetPage() {
           </div>
           <p className="text-[12px] text-muted-foreground/70">{item.user} &bull; {item.date}</p>
          </div>
-         <button onClick={() => handleDownload(item, 'Repayment')} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white text-xs font-medium transition-colors ">
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-          Download
-         </button>
+         <Can permission={['documents:read', 'repayments:upload']}>
+          <button onClick={() => handleDownload(item, 'Repayment')} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white text-xs font-medium transition-colors ">
+           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+           Download
+          </button>
+         </Can>
         </div>
        ))}
       </div>

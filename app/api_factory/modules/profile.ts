@@ -20,6 +20,7 @@ export interface AdminProfile {
   role?: AdminRole;
   profileImage?: string | null;
   twoFactorEnabled?: boolean;
+  permissions?: string[];
 }
 
 export const profile_api = {
