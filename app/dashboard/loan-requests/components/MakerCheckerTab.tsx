@@ -6,8 +6,11 @@ import { useLoans } from '@/app/composables/modules/useLoans';
 import { DataTable } from '@/components/data-display/data-table';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { Badge } from '@/components/ui/badge';
+import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function MakerCheckerTab() {
+ const { isSuperAdmin, hasPermission } = useAdminPermissions();
+ const canReview = isSuperAdmin || hasPermission('loan-requests:review');
  const { loading, error, loanRequests, fetchLoanRequests, meta } = useLoans();
 
  const [page, setPage] = useState(1);
@@ -20,56 +23,63 @@ export default function MakerCheckerTab() {
  const pendingCount = useMemo(() => loanRequests.filter((lr: any) => lr.status === 'CONFIRMED' || lr.status === 'PENDING').length, [loanRequests]);
  const approvedCount = useMemo(() => loanRequests.filter((lr: any) => lr.status === 'APPROVED').length, [loanRequests]);
 
- const columns = useMemo(() => [
-  {
-   accessorKey: 'id',
-   header: 'Application Ref (ID)',
-   cell: ({ row }: any) => <span className="font-mono text-muted-foreground">{row.original.id}</span>
-  },
-  {
-   accessorKey: 'customerName',
-   header: 'Customer Name',
-   cell: ({ row }: any) => <span className="font-medium text-foreground">{row.original.client?.firstName} {row.original.client?.lastName}</span>
-  },
-  {
-   accessorKey: 'amount',
-   header: 'Amount',
-   cell: ({ row }: any) => <span className="font-medium text-foreground">₦{Number(row.original.amount || 0).toLocaleString()}</span>
-  },
-  {
-   accessorKey: 'tenor',
-   header: 'Tenor (Months)',
-   cell: ({ row }: any) => <span className="text-muted-foreground">{row.original.tenor}</span>
-  },
-  {
-   accessorKey: 'createdAt',
-   header: 'Date Submitted',
-   cell: ({ row }: any) => <span className="text-muted-foreground">{new Date(row.original.createdAt).toLocaleDateString()}</span>
-  },
-  {
-   accessorKey: 'status',
-   header: 'Status',
-   cell: ({ row }: any) => {
-    const s = row.original.status;
-    return (
-     <Badge variant={s === 'PENDING' ? 'warning' : s === 'APPROVED' ? 'success' : s === 'REJECTED' ? 'error' : 'default'}>
-      {s}
-     </Badge>
-    );
+ const columns = useMemo(() => {
+  const cols: any[] = [
+   {
+    accessorKey: 'id',
+    header: 'Application Ref (ID)',
+    cell: ({ row }: any) => <span className="font-mono text-muted-foreground">{row.original.id}</span>
+   },
+   {
+    accessorKey: 'customerName',
+    header: 'Customer Name',
+    cell: ({ row }: any) => <span className="font-medium text-foreground">{row.original.client?.firstName} {row.original.client?.lastName}</span>
+   },
+   {
+    accessorKey: 'amount',
+    header: 'Amount',
+    cell: ({ row }: any) => <span className="font-medium text-foreground">₦{Number(row.original.amount || 0).toLocaleString()}</span>
+   },
+   {
+    accessorKey: 'tenor',
+    header: 'Tenor (Months)',
+    cell: ({ row }: any) => <span className="text-muted-foreground">{row.original.tenor}</span>
+   },
+   {
+    accessorKey: 'createdAt',
+    header: 'Date Submitted',
+    cell: ({ row }: any) => <span className="text-muted-foreground">{new Date(row.original.createdAt).toLocaleDateString()}</span>
+   },
+   {
+    accessorKey: 'status',
+    header: 'Status',
+    cell: ({ row }: any) => {
+     const s = row.original.status;
+     return (
+      <Badge variant={s === 'PENDING' ? 'warning' : s === 'APPROVED' ? 'success' : s === 'REJECTED' ? 'error' : 'default'}>
+       {s}
+      </Badge>
+     );
+    }
    }
-  },
-  {
-   id: 'actions',
-   header: 'Action',
-   cell: ({ row }: any) => (
-    <div className="text-right">
-     <Link href={`/dashboard/loan-requests/${row.original.id}`} className="text-emerald-600 hover:text-emerald-800 font-medium text-sm">
-      Review Request
-     </Link>
-    </div>
-   )
+  ];
+
+  if (canReview) {
+   cols.push({
+    id: 'actions',
+    header: 'Action',
+    cell: ({ row }: any) => (
+     <div className="text-right">
+      <Link href={`/dashboard/loan-requests/${row.original.id}`} className="text-emerald-600 hover:text-emerald-800 font-medium text-sm">
+       Review Request
+      </Link>
+     </div>
+    )
+   });
   }
- ], []);
+
+  return cols;
+ }, [canReview]);
 
  return (
   <div className="space-y-3">

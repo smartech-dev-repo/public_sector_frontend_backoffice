@@ -1,6 +1,6 @@
 "use client";
 
-import { Monitor, Moon, Sun } from 'lucide-react';
+import { Moon, Sun } from 'lucide-react';
 import * as React from 'react';
 import { useTheme } from 'next-themes';
 
@@ -21,16 +21,12 @@ export function ThemeToggle() {
   setTheme(order[(i + 1) % order.length]!);
  }, [theme, setTheme]);
 
- if (!mounted) {
-  return (
-   <IconButton type="button" variant="ghost" aria-label="Loading theme..." disabled>
-    <span className="size-4" />
-   </IconButton>
-  );
- }
-
- const icon =
-  theme === 'dark' ? <Moon className="size-4" /> : theme === 'light' ? <Sun className="size-4" /> : <Monitor className="size-4" />;
+ const icon = (
+  <>
+   <Sun className="size-4 dark:hidden" />
+   <Moon className="size-4 hidden dark:block" />
+  </>
+ );
 
  return (
   <TooltipProvider delayDuration={200}>
