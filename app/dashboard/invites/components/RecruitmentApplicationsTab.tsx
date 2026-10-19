@@ -20,9 +20,11 @@ import {
   ArrowRight,
   TrendingUp,
   RefreshCw,
-  UserCheck
+  UserCheck,
+  KeyRound
 } from 'lucide-react';
 import { useAgentRecruitment, AgentRecruitmentApplication } from '@/app/composables/modules/useAgentRecruitment';
+import { useAgents } from '@/app/composables/modules/useAgents';
 import { useConfirm } from '@/app/composables/useConfirm';
 import { useToast } from '@/app/composables/useToast';
 import PulseLoader from '@/app/components/ui/PulseLoader';
@@ -49,6 +51,24 @@ export default function RecruitmentApplicationsTab() {
     getApplicationById,
     deleteApplication
   } = useAgentRecruitment();
+
+  const { approveAgent, resendCredentials, rejectAgent } = useAgents();
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+
+  // Reject Reason Modal state
+  const [rejectModal, setRejectModal] = useState<{
+    isOpen: boolean;
+    agentId: string;
+    applicantName: string;
+    reason: string;
+    submitting: boolean;
+  }>({
+    isOpen: false,
+    agentId: '',
+    applicantName: '',
+    reason: '',
+    submitting: false
+  });
 
   // Filters state
   const [showFilter, setShowFilter] = useState(false);
@@ -142,6 +162,94 @@ export default function RecruitmentApplicationsTab() {
       loadAnalytics();
     } catch (err: any) {
       addToast(err.message || 'Failed to delete application', 'error');
+    }
+  };
+
+  const handleApproveAgent = async (agentId: string, applicantName?: string) => {
+    const confirmed = await confirm({
+      title: 'Approve Field Agent',
+      message: `Are you sure you want to approve ${applicantName || 'this agent'}? They will be granted full access to the agent network.`,
+      confirmText: 'Approve Agent'
+    });
+    if (!confirmed) return;
+
+    setActionLoadingId(agentId);
+    try {
+      await approveAgent(agentId);
+      addToast('Agent approved successfully', 'success');
+      loadApplications();
+      loadAnalytics();
+      if (selectedApp && selectedApp.submittedAgent && selectedApp.submittedAgent.id === agentId) {
+        setSelectedApp({
+          ...selectedApp,
+          submittedAgent: {
+            ...selectedApp.submittedAgent,
+            status: 'APPROVED'
+          }
+        });
+      }
+    } catch (err: any) {
+      addToast(err?.response?.data?.message || err?.message || 'Failed to approve agent', 'error');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleResendCredentials = async (agentId: string, applicantName?: string) => {
+    const confirmed = await confirm({
+      title: 'Send Login Credentials',
+      message: `Send temporary login credentials to ${applicantName || 'this agent'}? An email containing login credentials will be dispatched.`,
+      confirmText: 'Send Credentials'
+    });
+    if (!confirmed) return;
+
+    setActionLoadingId(agentId);
+    try {
+      await resendCredentials(agentId);
+      addToast('Login credentials sent successfully to agent email', 'success');
+    } catch (err: any) {
+      addToast(err?.response?.data?.message || err?.message || 'Failed to send credentials', 'error');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const openRejectModal = (agentId: string, applicantName?: string) => {
+    setRejectModal({
+      isOpen: true,
+      agentId,
+      applicantName: applicantName || 'this agent',
+      reason: '',
+      submitting: false
+    });
+  };
+
+  const submitReject = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!rejectModal.reason.trim()) {
+      addToast('Please provide a reason for rejection', 'error');
+      return;
+    }
+
+    setRejectModal(prev => ({ ...prev, submitting: true }));
+    try {
+      await rejectAgent(rejectModal.agentId, { reason: rejectModal.reason.trim() });
+      addToast('Agent application rejected', 'success');
+      setRejectModal({ isOpen: false, agentId: '', applicantName: '', reason: '', submitting: false });
+      loadApplications();
+      loadAnalytics();
+      if (selectedApp && selectedApp.submittedAgent && selectedApp.submittedAgent.id === rejectModal.agentId) {
+        setSelectedApp({
+          ...selectedApp,
+          submittedAgent: {
+            ...selectedApp.submittedAgent,
+            status: 'REJECTED'
+          }
+        });
+      }
+    } catch (err: any) {
+      addToast(err?.response?.data?.message || err?.message || 'Failed to reject agent', 'error');
+      setRejectModal(prev => ({ ...prev, submitting: false }));
     }
   };
 
@@ -470,13 +578,50 @@ export default function RecruitmentApplicationsTab() {
                             </button>
 
                             {app.submittedAgent && (
-                              <Link
-                                href={`/dashboard/agent/${app.submittedAgent.id}`}
-                                className="w-full text-left px-4 py-2.5 text-xs font-medium text-foreground hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 transition-colors flex items-center gap-2.5"
-                              >
-                                <ExternalLink className="w-4 h-4 text-blue-600 shrink-0" />
-                                View Field Agent
-                              </Link>
+                              <>
+                                {app.submittedAgent.status === 'PENDING_REVIEW' && (
+                                  <>
+                                    <button
+                                      type="button"
+                                      disabled={actionLoadingId === app.submittedAgent.id}
+                                      onClick={() => handleApproveAgent(app.submittedAgent!.id, app.fullName || app.email)}
+                                      className="w-full text-left px-4 py-2.5 text-xs font-medium text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors flex items-center gap-2.5 disabled:opacity-50"
+                                    >
+                                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                                      {actionLoadingId === app.submittedAgent.id ? 'Approving...' : 'Approve Agent'}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      disabled={actionLoadingId === app.submittedAgent.id}
+                                      onClick={() => openRejectModal(app.submittedAgent!.id, app.fullName || app.email)}
+                                      className="w-full text-left px-4 py-2.5 text-xs font-medium text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors flex items-center gap-2.5 disabled:opacity-50"
+                                    >
+                                      <X className="w-4 h-4 text-amber-600 shrink-0" />
+                                      Reject Agent
+                                    </button>
+                                  </>
+                                )}
+
+                                {app.submittedAgent.status === 'APPROVED' && (
+                                  <button
+                                    type="button"
+                                    disabled={actionLoadingId === app.submittedAgent.id}
+                                    onClick={() => handleResendCredentials(app.submittedAgent!.id, app.fullName || app.email)}
+                                    className="w-full text-left px-4 py-2.5 text-xs font-medium text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-colors flex items-center gap-2.5 disabled:opacity-50"
+                                  >
+                                    <KeyRound className="w-4 h-4 text-blue-600 shrink-0" />
+                                    {actionLoadingId === app.submittedAgent.id ? 'Sending...' : 'Send Login Details'}
+                                  </button>
+                                )}
+
+                                <Link
+                                  href={`/dashboard/agent/${app.submittedAgent.id}`}
+                                  className="w-full text-left px-4 py-2.5 text-xs font-medium text-foreground hover:bg-muted transition-colors flex items-center gap-2.5"
+                                >
+                                  <ExternalLink className="w-4 h-4 text-muted-foreground shrink-0" />
+                                  View Field Agent Profile
+                                </Link>
+                              </>
                             )}
 
                             {app.status !== 'SUBMITTED' ? (
@@ -747,24 +892,73 @@ export default function RecruitmentApplicationsTab() {
                     </div>
                   </div>
 
-                  {/* Submitted Agent Link */}
+                  {/* Submitted Agent Review & Actions Panel */}
                   {selectedApp.submittedAgent && (
-                    <div className="p-4 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between">
-                      <div>
-                        <span className="text-xs font-semibold text-emerald-800 dark:text-emerald-300 block">
-                          Transferred to Field Agent Network
-                        </span>
-                        <span className="text-xs text-emerald-700 dark:text-emerald-400">
-                          Agent Status: {selectedApp.submittedAgent.status}
-                        </span>
+                    <div className="p-4 rounded-xl bg-card border border-border shadow-sm space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-border/50">
+                        <div>
+                          <span className="text-xs font-bold text-foreground block">
+                            Field Agent Record Created
+                          </span>
+                          <span className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
+                            <span>Agent Status:</span>
+                            <span className={`font-semibold inline-flex items-center px-2 py-0.5 rounded text-[11px] ${
+                              selectedApp.submittedAgent.status === 'APPROVED'
+                                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300'
+                                : selectedApp.submittedAgent.status === 'REJECTED'
+                                ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300'
+                                : 'bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300'
+                            }`}>
+                              {selectedApp.submittedAgent.status}
+                            </span>
+                          </span>
+                        </div>
+                        <Link
+                          href={`/dashboard/agent/${selectedApp.submittedAgent.id}`}
+                          className="px-3 py-1.5 bg-muted hover:bg-muted/80 text-foreground rounded-lg text-xs font-medium transition-colors inline-flex items-center gap-1.5 self-start sm:self-auto"
+                        >
+                          <span>Full Profile</span>
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </Link>
                       </div>
-                      <Link
-                        href={`/dashboard/agent/${selectedApp.submittedAgent.id}`}
-                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5"
-                      >
-                        <span>Open Agent</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </Link>
+
+                      {/* Action buttons inside detail modal */}
+                      <div className="flex flex-wrap items-center gap-2 pt-1">
+                        {selectedApp.submittedAgent.status === 'PENDING_REVIEW' && (
+                          <>
+                            <button
+                              type="button"
+                              disabled={actionLoadingId === selectedApp.submittedAgent.id}
+                              onClick={() => handleApproveAgent(selectedApp.submittedAgent!.id, selectedApp.fullName || selectedApp.email)}
+                              className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 disabled:opacity-50 shadow-sm"
+                            >
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <span>{actionLoadingId === selectedApp.submittedAgent.id ? 'Approving...' : 'Approve Agent'}</span>
+                            </button>
+                            <button
+                              type="button"
+                              disabled={actionLoadingId === selectedApp.submittedAgent.id}
+                              onClick={() => openRejectModal(selectedApp.submittedAgent!.id, selectedApp.fullName || selectedApp.email)}
+                              className="px-3.5 py-2 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 dark:border-rose-800 dark:bg-rose-950/30 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                              <span>Reject Application</span>
+                            </button>
+                          </>
+                        )}
+
+                        {selectedApp.submittedAgent.status === 'APPROVED' && (
+                          <button
+                            type="button"
+                            disabled={actionLoadingId === selectedApp.submittedAgent.id}
+                            onClick={() => handleResendCredentials(selectedApp.submittedAgent!.id, selectedApp.fullName || selectedApp.email)}
+                            className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 disabled:opacity-50 shadow-sm"
+                          >
+                            <KeyRound className="w-3.5 h-3.5" />
+                            <span>{actionLoadingId === selectedApp.submittedAgent.id ? 'Sending...' : 'Send Login Details'}</span>
+                          </button>
+                        )}
+                      </div>
                     </div>
                   )}
                 </>
@@ -794,6 +988,82 @@ export default function RecruitmentApplicationsTab() {
                 Close
               </button>
             </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ================= REJECT REASON MODAL ================= */}
+      {rejectModal.isOpen && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[140] flex items-center justify-center p-4">
+          <div 
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+            onClick={() => !rejectModal.submitting && setRejectModal(prev => ({ ...prev, isOpen: false }))}
+          />
+          <div className="relative bg-card rounded-2xl max-w-md w-full border border-border shadow-2xl z-10 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-4 border-b border-border bg-muted/40">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-950/50 flex items-center justify-center text-rose-600">
+                  <X className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-foreground">Reject Agent Application</h4>
+                  <p className="text-xs text-muted-foreground">{rejectModal.applicantName}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                disabled={rejectModal.submitting}
+                onClick={() => setRejectModal(prev => ({ ...prev, isOpen: false }))}
+                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={submitReject} className="p-5 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-foreground mb-1.5">
+                  Rejection Reason <span className="text-rose-500">*</span>
+                </label>
+                <textarea
+                  value={rejectModal.reason}
+                  onChange={(e) => setRejectModal(prev => ({ ...prev, reason: e.target.value }))}
+                  placeholder="e.g. CV does not meet required criteria, or NIN verification mismatch..."
+                  rows={4}
+                  required
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 placeholder:text-muted-foreground/60 resize-none transition-all"
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  This note is submitted to the backend as the rejection justification.
+                </p>
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-2">
+                <button
+                  type="button"
+                  disabled={rejectModal.submitting}
+                  onClick={() => setRejectModal(prev => ({ ...prev, isOpen: false }))}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-foreground bg-muted/60 hover:bg-muted transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={rejectModal.submitting || !rejectModal.reason.trim()}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 transition-colors flex items-center gap-1.5 disabled:opacity-50 shadow-sm"
+                >
+                  {rejectModal.submitting ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Rejecting...</span>
+                    </>
+                  ) : (
+                    <span>Confirm Rejection</span>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>,
         document.body
