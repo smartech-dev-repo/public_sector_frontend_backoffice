@@ -30,12 +30,22 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 interface Props {
   onOpenOnboard?: () => void;
 }
 
 export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
+  const { isSuperAdmin, hasPermission } = useAdminPermissions();
+  const canReadAnalytics = isSuperAdmin || hasPermission('clients:analytics:read');
+  const canOnboard = isSuperAdmin || hasPermission('clients:onboard');
+  const canReadLoans = isSuperAdmin || hasPermission('client-loans:read');
+  const canReadWallet = isSuperAdmin || hasPermission('wallets:read');
+  const canManageWallet = isSuperAdmin || hasPermission('wallets:manage');
+  const canReviewClient = isSuperAdmin || hasPermission('clients:review');
+  const canRevokeSessions = isSuperAdmin || hasPermission('clients:sessions:revoke');
+
   const { confirm } = useConfirm();
 
   const { 
@@ -87,8 +97,10 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
   const [limit, setLimit] = useState(25);
 
   useEffect(() => {
-    fetchClientAnalytics();
-  }, [fetchClientAnalytics]);
+    if (canReadAnalytics) {
+      fetchClientAnalytics();
+    }
+  }, [fetchClientAnalytics, canReadAnalytics]);
 
   const totalCustomers = useMemo(() => {
     if (analytics?.totalClients) return analytics.totalClients;
@@ -513,60 +525,64 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
             Export as Excel (.xlsx)
           </button>
 
-          <button 
-            type="button"
-            onClick={onOpenOnboard}
-            className="flex items-center gap-1 px-4 py-2 bg-[#018752] text-white text-xs sm:text-sm font-semibold rounded-lg hover:bg-[#016f43] transition-colors shadow-xs"
-          >
-            <Plus className="size-4" />
-            Onboard Customer
-          </button>
+          {canOnboard && (
+            <button 
+              type="button"
+              onClick={onOpenOnboard}
+              className="flex items-center gap-1 px-4 py-2 bg-[#018752] text-white text-xs sm:text-sm font-semibold rounded-lg hover:bg-[#016f43] transition-colors shadow-xs"
+            >
+              <Plus className="size-4" />
+              Onboard Customer
+            </button>
+          )}
         </div>
       </div>
 
       {/* ================= STATS SECTION (Computed client metrics) ================= */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        {/* Card 1 */}
-        <div className="bg-card rounded-2xl border border-border/70 p-5 shadow-xs">
-          <span className="block text-xs sm:text-[13px] font-medium text-muted-foreground mb-2">
-            Customers onboarded
-          </span>
-          <span className="block text-3xl font-bold text-[#018752] tracking-tight mb-1">
-            {totalCustomers}
-          </span>
-          <span className="block text-[11px] text-muted-foreground/70">
-            {analytics?.bySource
-              ? `${analytics.bySource.SELF || 0} Self · ${analytics.bySource.AGENT || 0} Agent assisted${analytics.bySource.ADMIN ? ` · ${analytics.bySource.ADMIN} Admin` : ''}`
-              : `${clients.filter(c => c.onboardingSource === 'SELF').length} Self · ${clients.filter(c => c.onboardingSource === 'AGENT').length} Agent assisted${clients.filter(c => c.onboardingSource === 'ADMIN').length ? ` · ${clients.filter(c => c.onboardingSource === 'ADMIN').length} Admin` : ''}`}
-          </span>
-        </div>
+      {canReadAnalytics && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          {/* Card 1 */}
+          <div className="bg-card rounded-2xl border border-border/70 p-5 shadow-xs">
+            <span className="block text-xs sm:text-[13px] font-medium text-muted-foreground mb-2">
+              Customers onboarded
+            </span>
+            <span className="block text-3xl font-bold text-[#018752] tracking-tight mb-1">
+              {totalCustomers}
+            </span>
+            <span className="block text-[11px] text-muted-foreground/70">
+              {analytics?.bySource
+                ? `${analytics.bySource.SELF || 0} Self · ${analytics.bySource.AGENT || 0} Agent assisted${analytics.bySource.ADMIN ? ` · ${analytics.bySource.ADMIN} Admin` : ''}`
+                : `${clients.filter(c => c.onboardingSource === 'SELF').length} Self · ${clients.filter(c => c.onboardingSource === 'AGENT').length} Agent assisted${clients.filter(c => c.onboardingSource === 'ADMIN').length ? ` · ${clients.filter(c => c.onboardingSource === 'ADMIN').length} Admin` : ''}`}
+            </span>
+          </div>
 
-        {/* Card 2 */}
-        <div className="bg-card rounded-2xl border border-border/70 p-5 shadow-xs">
-          <span className="block text-xs sm:text-[13px] font-medium text-muted-foreground mb-2">
-            Verified customers
-          </span>
-          <span className="block text-3xl font-bold text-[#018752] tracking-tight mb-1">
-            {verifiedCustomers}
-          </span>
-          <span className="block text-[11px] text-muted-foreground/70">
-            ready for loan applications
-          </span>
-        </div>
+          {/* Card 2 */}
+          <div className="bg-card rounded-2xl border border-border/70 p-5 shadow-xs">
+            <span className="block text-xs sm:text-[13px] font-medium text-muted-foreground mb-2">
+              Verified customers
+            </span>
+            <span className="block text-3xl font-bold text-[#018752] tracking-tight mb-1">
+              {verifiedCustomers}
+            </span>
+            <span className="block text-[11px] text-muted-foreground/70">
+              ready for loan applications
+            </span>
+          </div>
 
-        {/* Card 3 */}
-        <div className="bg-card rounded-2xl border border-border/70 p-5 shadow-xs">
-          <span className="block text-xs sm:text-[13px] font-medium text-muted-foreground mb-2">
-            Pending verification
-          </span>
-          <span className="block text-3xl font-bold text-amber-600 dark:text-amber-500 tracking-tight mb-1">
-            {pendingVerification}
-          </span>
-          <span className="block text-[11px] text-muted-foreground/70">
-            needs IPPIS / KYC check
-          </span>
+          {/* Card 3 */}
+          <div className="bg-card rounded-2xl border border-border/70 p-5 shadow-xs">
+            <span className="block text-xs sm:text-[13px] font-medium text-muted-foreground mb-2">
+              Pending verification
+            </span>
+            <span className="block text-3xl font-bold text-amber-600 dark:text-amber-500 tracking-tight mb-1">
+              {pendingVerification}
+            </span>
+            <span className="block text-[11px] text-muted-foreground/70">
+              needs IPPIS / KYC check
+            </span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ================= FILTERS DRAWER ================= */}
       {showFilter && (
@@ -751,22 +767,26 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
                               <User className="w-4 h-4 text-muted-foreground shrink-0" />
                               View Details
                             </Link>
-                            <Link 
-                              href={`/dashboard/loan-requests?tab=client-loans&clientId=${client.id}`} 
-                              className="w-full text-left px-4 py-2.5 text-xs font-medium text-foreground hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 transition-colors flex items-center gap-2.5"
-                            >
-                              <CreditCard className="w-4 h-4 text-emerald-600 shrink-0" />
-                              Loans
-                            </Link>
-                            <button 
-                              type="button"
-                              onClick={() => openWalletModal(client)} 
-                              className="w-full text-left px-4 py-2.5 text-xs font-medium text-foreground hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-950/30 transition-colors flex items-center gap-2.5"
-                            >
-                              <Wallet className="w-4 h-4 text-blue-600 shrink-0" />
-                              Wallet
-                            </button>
-                            {client.status === 'MANUAL_REVIEW' && (
+                            {canReadLoans && (
+                              <Link 
+                                href={`/dashboard/loan-requests?tab=client-loans&clientId=${client.id}`} 
+                                className="w-full text-left px-4 py-2.5 text-xs font-medium text-foreground hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 transition-colors flex items-center gap-2.5"
+                              >
+                                <CreditCard className="w-4 h-4 text-emerald-600 shrink-0" />
+                                Loans
+                              </Link>
+                            )}
+                            {canReadWallet && (
+                              <button 
+                                type="button"
+                                onClick={() => openWalletModal(client)} 
+                                className="w-full text-left px-4 py-2.5 text-xs font-medium text-foreground hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-950/30 transition-colors flex items-center gap-2.5"
+                              >
+                                <Wallet className="w-4 h-4 text-blue-600 shrink-0" />
+                                Wallet
+                              </button>
+                            )}
+                            {canReviewClient && client.status === 'MANUAL_REVIEW' && (
                               <button 
                                 type="button"
                                 onClick={() => handleApprove(client.id)} 
@@ -776,23 +796,29 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
                                 Approve
                               </button>
                             )}
-                            <button 
-                              type="button"
-                              onClick={() => openRetryModal(client)} 
-                              className="w-full text-left px-4 py-2.5 text-xs font-medium text-amber-600 hover:bg-amber-50 transition-colors flex items-center gap-2.5"
-                            >
-                              <RotateCcw className="w-4 h-4" />
-                              Retry Verification
-                            </button>
-                            <div className="h-px bg-border/60 my-1"></div>
-                            <button 
-                              type="button"
-                              onClick={() => handleRevokeSessions(client.id)} 
-                              className="w-full text-left px-4 py-2.5 text-xs font-medium text-rose-600 hover:bg-rose-50 transition-colors flex items-center gap-2.5"
-                            >
-                              <ShieldAlert className="w-4 h-4" />
-                              Revoke Sessions
-                            </button>
+                            {canReviewClient && (
+                              <button 
+                                type="button"
+                                onClick={() => openRetryModal(client)} 
+                                className="w-full text-left px-4 py-2.5 text-xs font-medium text-amber-600 hover:bg-amber-50 transition-colors flex items-center gap-2.5"
+                              >
+                                <RotateCcw className="w-4 h-4" />
+                                Retry Verification
+                              </button>
+                            )}
+                            {canRevokeSessions && (
+                              <>
+                                <div className="h-px bg-border/60 my-1"></div>
+                                <button 
+                                  type="button"
+                                  onClick={() => handleRevokeSessions(client.id)} 
+                                  className="w-full text-left px-4 py-2.5 text-xs font-medium text-rose-600 hover:bg-rose-50 transition-colors flex items-center gap-2.5"
+                                >
+                                  <ShieldAlert className="w-4 h-4" />
+                                  Revoke Sessions
+                                </button>
+                              </>
+                            )}
                           </TableDropdown>
                         </div>
                       </td>
@@ -802,7 +828,7 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
 
                 {clients.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="p-0 border-b-0">
+                    <td colSpan={9} className="p-0 border-b-0">
                       <div className="p-8">
                         <EmptyState title="No customers found" description="There are no customers matching your criteria." />
                       </div>
@@ -852,49 +878,55 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
               )}
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-foreground/90 mb-1">Amount (₦)</label>
-                <input 
-                  type="number" 
-                  value={amount}
-                  onChange={(e) => setAmount(Number(e.target.value))}
-                  placeholder="Enter amount" 
-                  className="w-full px-4 py-2.5 border border-border rounded-lg text-sm focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 outline-none transition-all" 
-                />
+            {canManageWallet ? (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-foreground/90 mb-1">Amount (₦)</label>
+                  <input 
+                    type="number" 
+                    value={amount}
+                    onChange={(e) => setAmount(Number(e.target.value))}
+                    placeholder="Enter amount" 
+                    className="w-full px-4 py-2.5 border border-border rounded-lg text-sm focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 outline-none transition-all" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground/90 mb-1">Note / Description</label>
+                  <input 
+                    type="text" 
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="e.g. Refund or Adjustment" 
+                    className="w-full px-4 py-2.5 border border-border rounded-lg text-sm focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 outline-none transition-all" 
+                  />
+                </div>
+                
+                <div className="flex gap-3 pt-4">
+                  <button 
+                    onClick={handleDebit} 
+                    disabled={walletLoading || !amount} 
+                    className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
+                  >
+                    <ButtonLoader loading={walletLoading && walletAction === 'debit'} loadingText="Debiting...">
+                      Debit Wallet
+                    </ButtonLoader>
+                  </button>
+                  <button 
+                    onClick={handleCredit} 
+                    disabled={walletLoading || !amount} 
+                    className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
+                  >
+                    <ButtonLoader loading={walletLoading && walletAction === 'credit'} loadingText="Crediting...">
+                      Credit Wallet
+                    </ButtonLoader>
+                  </button>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-foreground/90 mb-1">Note / Description</label>
-                <input 
-                  type="text" 
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder="e.g. Refund or Adjustment" 
-                  className="w-full px-4 py-2.5 border border-border rounded-lg text-sm focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 outline-none transition-all" 
-                />
-              </div>
-              
-              <div className="flex gap-3 pt-4">
-                <button 
-                  onClick={handleDebit} 
-                  disabled={walletLoading || !amount} 
-                  className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
-                >
-                  <ButtonLoader loading={walletLoading && walletAction === 'debit'} loadingText="Debiting...">
-                    Debit Wallet
-                  </ButtonLoader>
-                </button>
-                <button 
-                  onClick={handleCredit} 
-                  disabled={walletLoading || !amount} 
-                  className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
-                >
-                  <ButtonLoader loading={walletLoading && walletAction === 'credit'} loadingText="Crediting...">
-                    Credit Wallet
-                  </ButtonLoader>
-                </button>
-              </div>
-            </div>
+            ) : (
+              <p className="text-center text-xs text-muted-foreground pt-2">
+                You do not have permission to credit or debit this wallet.
+              </p>
+            )}
           </div>
         </div>,
         document.body
