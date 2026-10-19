@@ -72,12 +72,14 @@ export const ALL_PERMISSIONS: AdminPermission[] = [
  * Route to Permission mappings for top-level pages & sub-routes
  */
 export const ROUTE_PERMISSIONS: Record<string, AdminPermission[]> = {
-  '/dashboard/broadsheet': ['loans:upload', 'repayments:upload', 'ippis:upload', 'client-loans:read'],
+  '/dashboard/broadsheet': ['loans:upload', 'repayments:upload', 'ippis:upload'],
   '/dashboard/uploads': ['documents:read', 'loans:upload', 'repayments:upload', 'ippis:upload'],
+  '/dashboard/ippis': ['ippis:upload'],
   '/dashboard/loan-terms': ['loan-terms:manage', 'loan-products:manage', 'loan-settings:manage'],
   '/dashboard/loan-products': ['loan-products:manage'],
   '/dashboard/invites': ['agents:recruitment:read', 'agents:recruitment:manage', 'agents:recruitment:analytics:read'],
   '/dashboard/agent': ['agents:read', 'agents:review'],
+  '/dashboard/agent-details': ['agents:read', 'agents:review'],
   '/dashboard/agent-management': ['agents:read', 'agents:review', 'agents:sessions:revoke', 'agents:onboarding-access:manage', 'agents:analytics:read'],
   '/dashboard/agent-security': ['agents:sessions:revoke', 'agents:review'],
   '/dashboard/loan-requests': ['loan-requests:review', 'client-loans:read'],
@@ -93,6 +95,25 @@ export const ROUTE_PERMISSIONS: Record<string, AdminPermission[]> = {
   '/dashboard/admins': ['admins:create', 'roles:manage'],
 };
 
+export const normalizePermissionList = (raw: any): string[] => {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((p: any) => {
+    if (typeof p === 'string') return p.trim();
+    if (p && typeof p === 'object') {
+      return (
+        p.key ||
+        p.permission?.key ||
+        p.name ||
+        p.permission?.name ||
+        p.slug ||
+        p.permission?.slug ||
+        ''
+      );
+    }
+    return '';
+  }).filter((s: string) => s.length > 0);
+};
+
 export const useAdminPermissions = () => {
   const { profile, fetchProfile, loading } = useProfile();
 
@@ -100,7 +121,7 @@ export const useAdminPermissions = () => {
     if (typeof window !== 'undefined') {
       try {
         const stored = localStorage.getItem('public_sector_permissions');
-        if (stored) return JSON.parse(stored);
+        if (stored) return normalizePermissionList(JSON.parse(stored));
       } catch {}
     }
     return [];
@@ -118,7 +139,7 @@ export const useAdminPermissions = () => {
       if (typeof window !== 'undefined') {
         try {
           const stored = localStorage.getItem('public_sector_permissions');
-          if (stored) setCachedPermissions(JSON.parse(stored));
+          if (stored) setCachedPermissions(normalizePermissionList(JSON.parse(stored)));
           const r = localStorage.getItem('public_sector_role');
           if (r) setCachedRole(r);
         } catch {}
@@ -130,15 +151,18 @@ export const useAdminPermissions = () => {
   }, []);
 
   const permissions = useMemo(() => {
+    let list: any[] = [];
     if (profile) {
       if (Array.isArray(profile.permissions) && profile.permissions.length > 0) {
-        return profile.permissions;
-      }
-      if (Array.isArray(profile.role?.permissions) && profile.role.permissions.length > 0) {
-        return profile.role.permissions;
+        list = profile.permissions;
+      } else if (Array.isArray(profile.role?.permissions) && profile.role.permissions.length > 0) {
+        list = profile.role.permissions;
       }
     }
-    return cachedPermissions;
+    if (list.length === 0 && cachedPermissions.length > 0) {
+      list = cachedPermissions;
+    }
+    return normalizePermissionList(list);
   }, [profile, cachedPermissions]);
 
   const roleName = useMemo(() => {

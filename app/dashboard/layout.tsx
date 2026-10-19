@@ -142,7 +142,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
    label: 'Broadsheet and Repayment',
    icon: Folder,
    match: (p: string) => p.startsWith('/dashboard/broadsheet') || p.startsWith('/dashboard/uploads'),
-   visible: hasAnyPermission(['loans:upload', 'repayments:upload', 'ippis:upload', 'client-loans:read']),
+   visible: hasAnyPermission(['loans:upload', 'repayments:upload', 'ippis:upload']),
   },
   {
    href: '/dashboard/loan-terms',
