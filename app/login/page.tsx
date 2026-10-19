@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { useAuth } from '@/app/composables/core/useAuth';
 import AuthInput from '@/app/components/Auth/Input';
@@ -11,7 +10,6 @@ import { Mail, ShieldCheck, ArrowLeft, KeyRound } from 'lucide-react';
 
 export default function LoginPage() {
  const router = useRouter();
- const { setTheme } = useTheme();
  const { adminLogin, loginVerify2fa, loading } = useAuth();
  
  const [email, setEmail] = useState('');
@@ -25,6 +23,9 @@ export default function LoginPage() {
  const handleLogin = async (e: React.FormEvent) => {
   e.preventDefault();
   setVerifyError(null);
+  if (email && typeof window !== 'undefined') {
+   localStorage.setItem('public_sector_user_email', email);
+  }
   try {
    const res: any = await adminLogin({ email, password });
    if (res?.twoFactorRequired || res?.data?.twoFactorRequired || res?.requires2fa) {
@@ -33,8 +34,7 @@ export default function LoginPage() {
     setPendingToken(data.pendingToken || '');
     setShow2fa(true);
    } else {
-    setTheme('light');
-    router.push('/dashboard/broadsheet');
+    router.push('/dashboard');
    }
   } catch (err: any) {
    if (err?.response?.data?.twoFactorRequired || err?.response?.data?.message?.toLowerCase().includes('two-factor')) {
@@ -56,8 +56,7 @@ export default function LoginPage() {
    if (typeof window !== 'undefined') {
     localStorage.setItem('admin_2fa_enabled', 'true');
    }
-   setTheme('light');
-   router.push('/dashboard/broadsheet');
+   router.push('/dashboard');
   } catch (err: any) {
    setVerifyError(err?.response?.data?.message || 'Invalid verification code. Please try again.');
   }

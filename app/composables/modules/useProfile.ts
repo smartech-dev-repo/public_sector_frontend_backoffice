@@ -23,9 +23,16 @@ export const useProfile = () => {
         if (typeof data.twoFactorEnabled === 'boolean') {
           localStorage.setItem('admin_2fa_enabled', String(data.twoFactorEnabled));
         }
-        const perms = Array.isArray(data.permissions) 
+        const rawPerms = Array.isArray(data.permissions) 
           ? data.permissions 
           : (Array.isArray(data.role?.permissions) ? data.role.permissions : []);
+        const perms = rawPerms.map((p: any) => {
+          if (typeof p === 'string') return p.trim();
+          if (p && typeof p === 'object') {
+            return p.key || p.permission?.key || p.name || p.permission?.name || p.slug || p.permission?.slug || '';
+          }
+          return '';
+        }).filter(Boolean);
         localStorage.setItem('public_sector_permissions', JSON.stringify(perms));
         if (data.role?.name) {
           localStorage.setItem('public_sector_role', data.role.name);
