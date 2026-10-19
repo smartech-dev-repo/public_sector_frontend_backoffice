@@ -19,7 +19,9 @@ export interface AdminProfile {
   isActive: boolean;
   role?: AdminRole;
   profileImage?: string | null;
+  profileImageUrl?: string | null;
   twoFactorEnabled?: boolean;
+  permissions?: string[];
 }
 
 export const profile_api = {
