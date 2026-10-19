@@ -79,6 +79,16 @@
   
   html {
     scroll-behavior: smooth;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+  
+  html.dark {
+    color-scheme: dark;
+  }
+  
+  html:not(.dark) {
+    color-scheme: light;
   }
   
   body {

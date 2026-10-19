@@ -10,8 +10,15 @@ import { useConfirm } from '@/app/composables/useConfirm';
 import TableDropdown from '@/app/components/ui/TableDropdown';
 import Pagination from '@/app/components/ui/Pagination';
 import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
+import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function RolesTab() {
+ const { hasPermission, isSuperAdmin } = useAdminPermissions();
+ const canManageRoles = isSuperAdmin || hasPermission('roles:manage');
+ const canManagePermissions = isSuperAdmin || hasPermission('permissions:manage');
+ const canViewPermissions = canManageRoles || canManagePermissions;
+ const hasActions = canManageRoles || canViewPermissions;
+
  const [page, setPage] = useState(1);
  const [limit, setLimit] = useState(25);
  const [showFilter, setShowFilter] = useState(false);
@@ -146,9 +153,11 @@ export default function RolesTab() {
       Filters
       <svg className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
      </button>
-     <button onClick={openCreateModal} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium ">
-      Create Role
-     </button>
+     {canManageRoles && (
+      <button onClick={openCreateModal} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium ">
+       Create Role
+      </button>
+     )}
     </div>
    </div>
 
@@ -202,12 +211,14 @@ export default function RolesTab() {
         <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Description</th>
         <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Permissions</th>
         <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Updated At</th>
-        <th className="px-4 py-4 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
+        {hasActions && (
+         <th className="px-4 py-4 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
+        )}
        </tr>
       </thead>
       <tbody className="divide-y divide-slate-100">
  {roles.length === 0 ? (
-  <tr><td colSpan={6} className="p-8"><div className="flex justify-center w-full"><EmptyState title="No roles found." /></div></td></tr>
+  <tr><td colSpan={hasActions ? 6 : 5} className="p-8"><div className="flex justify-center w-full"><EmptyState title="No roles found." /></div></td></tr>
  ) : (roles.map((role: any) => (
         <tr key={role.id} className="hover:bg-muted/30 transition-colors">
          <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground font-mono">{new Date(role.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
@@ -233,13 +244,21 @@ export default function RolesTab() {
          <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">
           {new Date(role.updatedAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
          </td>
-         <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium relative">
-          <TableDropdown>
-           <button onClick={() => openViewPermissionsModal(role)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-foreground/90 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">View Permissions</button>
-           <button onClick={() => openEditModal(role)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-foreground/90 hover:bg-blue-50 hover:text-blue-700 transition-colors">Edit</button>
-           <button onClick={() => handleDelete(role.id)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 hover:text-rose-800 transition-colors">Delete</button>
-          </TableDropdown>
-         </td>
+         {hasActions && (
+          <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium relative">
+           <TableDropdown>
+            {canViewPermissions && (
+             <button onClick={() => openViewPermissionsModal(role)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-foreground/90 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">View Permissions</button>
+            )}
+            {canManageRoles && (
+             <>
+              <button onClick={() => openEditModal(role)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-foreground/90 hover:bg-blue-50 hover:text-blue-700 transition-colors">Edit</button>
+              <button onClick={() => handleDelete(role.id)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 hover:text-rose-800 transition-colors">Delete</button>
+             </>
+            )}
+           </TableDropdown>
+          </td>
+         )}
         </tr>
        )))}
 </tbody>

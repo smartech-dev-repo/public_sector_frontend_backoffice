@@ -11,8 +11,11 @@ import Pagination from '@/app/components/ui/Pagination';
 import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 import { useConfirm } from '@/app/composables/useConfirm';
+import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function RequestsTab() {
+ const { isSuperAdmin, hasPermission } = useAdminPermissions();
+ const canReview = isSuperAdmin || hasPermission('loan-requests:review');
  const [showFilter, setShowFilter] = useState(false);
  const [page, setPage] = useState(1);
  const [limit, setLimit] = useState(25);
@@ -186,11 +189,13 @@ export default function RequestsTab() {
           <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Client</th>
           <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Amount</th>
           <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Status</th>
-          <th className="px-4 py-4 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
+          {canReview && (
+           <th className="px-4 py-4 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
+          )}
          </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
- {loanRequests.length === 0 ? (<tr><td colSpan={5} className="p-8"><div className="flex justify-center w-full"><EmptyState title="No loan requests found." /></div></td></tr>) : (loanRequests.map((req: any) => (
+ {loanRequests.length === 0 ? (<tr><td colSpan={canReview ? 5 : 4} className="p-8"><div className="flex justify-center w-full"><EmptyState title="No loan requests found." /></div></td></tr>) : (loanRequests.map((req: any) => (
           <tr key={req.id} className="hover:bg-muted/30 transition-colors">
            <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground font-mono">{new Date(req.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
            <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground">{req.clientId}</td>
@@ -198,22 +203,24 @@ export default function RequestsTab() {
            <td className="px-4 py-4 whitespace-nowrap text-sm">
             <span className="px-2 py-1 bg-muted/50 rounded text-xs font-medium">{req.status}</span>
            </td>
-           <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium relative">
-            <TableDropdown>
-             {req.status === 'CONFIRMED' && (
-              <>
-               <button onClick={() => handleApprove(req.id)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 transition-colors">Approve</button>
-               <button onClick={() => openRejectModal(req)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-700 hover:bg-rose-50 transition-colors">Reject</button>
-              </>
-             )}
-             {req.status === 'APPROVED' && (
-              <button onClick={() => handleDisburse(req.id)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-blue-700 hover:bg-blue-50 transition-colors">Disburse</button>
-             )}
-             {req.status !== 'CONFIRMED' && req.status !== 'APPROVED' && (
-              <span className="w-full text-left px-4 py-2.5 text-sm font-medium text-muted-foreground/70">No actions</span>
-             )}
-            </TableDropdown>
-           </td>
+           {canReview && (
+            <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium relative">
+             <TableDropdown>
+              {req.status === 'CONFIRMED' && (
+               <>
+                <button onClick={() => handleApprove(req.id)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 transition-colors">Approve</button>
+                <button onClick={() => openRejectModal(req)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-700 hover:bg-rose-50 transition-colors">Reject</button>
+               </>
+              )}
+              {req.status === 'APPROVED' && (
+               <button onClick={() => handleDisburse(req.id)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-blue-700 hover:bg-blue-50 transition-colors">Disburse</button>
+              )}
+              {req.status !== 'CONFIRMED' && req.status !== 'APPROVED' && (
+               <span className="w-full text-left px-4 py-2.5 text-sm font-medium text-muted-foreground/70">No actions</span>
+              )}
+             </TableDropdown>
+            </td>
+           )}
           </tr>
          )))}
 </tbody>

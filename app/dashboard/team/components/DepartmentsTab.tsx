@@ -9,8 +9,12 @@ import EmptyState from '@/app/components/ui/EmptyState';
 import { useConfirm } from '@/app/composables/useConfirm';
 import TableDropdown from '@/app/components/ui/TableDropdown';
 import Pagination from '@/app/components/ui/Pagination';
+import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function DepartmentsTab() {
+ const { hasPermission, isSuperAdmin } = useAdminPermissions();
+ const canManage = isSuperAdmin || hasPermission('departments:manage');
+
  const [page, setPage] = useState(1);
  const [limit, setLimit] = useState(25);
  const [q, setQ] = useState('');
@@ -89,16 +93,18 @@ export default function DepartmentsTab() {
   <div className="space-y-3">
    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
     <h1 className="text-2xl font-semibold text-foreground hidden">Departments</h1>
-    <button 
-     onClick={() => {
-      setEditingDepartment(null);
-      setForm({ name: '', description: '' });
-      setShowModal(true);
-     }}
-     className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors whitespace-nowrap"
-    >
-     Add Department
-    </button>
+    {canManage && (
+     <button 
+      onClick={() => {
+       setEditingDepartment(null);
+       setForm({ name: '', description: '' });
+       setShowModal(true);
+      }}
+      className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors whitespace-nowrap"
+     >
+      Add Department
+     </button>
+    )}
    </div>
 
    <div className="mb-6 space-y-4">
@@ -139,7 +145,9 @@ export default function DepartmentsTab() {
          <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Name</th>
          <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Description</th>
          <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Updated At</th>
-         <th className="px-4 py-4 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
+         {canManage && (
+          <th className="px-4 py-4 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
+         )}
         </tr>
        </thead>
        <tbody className="divide-y divide-border">
@@ -157,12 +165,14 @@ export default function DepartmentsTab() {
           <td className="px-4 py-4">
            <div className="text-muted-foreground text-sm">{new Date(department.updatedAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
           </td>
-          <td className="px-4 py-4 text-right">
-           <TableDropdown>
-            <button onClick={() => handleEdit(department)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-foreground/90 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">Edit</button>
-            <button onClick={() => handleDelete(department.id)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-colors">Delete</button>
-           </TableDropdown>
-          </td>
+          {canManage && (
+           <td className="px-4 py-4 text-right">
+            <TableDropdown>
+             <button onClick={() => handleEdit(department)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-foreground/90 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">Edit</button>
+             <button onClick={() => handleDelete(department.id)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-colors">Delete</button>
+            </TableDropdown>
+           </td>
+          )}
          </tr>
         ))}
        </tbody>

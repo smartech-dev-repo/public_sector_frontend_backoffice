@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import RequestsTab from './components/RequestsTab';
 import ClientLoansTab from './components/ClientLoansTab';
 import MakerCheckerTab from './components/MakerCheckerTab';
 import DisbursementSummaryTab from './components/DisbursementSummaryTab';
 import PulseLoader from '@/app/components/ui/PulseLoader';
+import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 type TabId = 'requests' | 'client-loans' | 'maker-checker' | 'disbursement';
 
@@ -14,19 +15,48 @@ function LoanRequestPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const tabParam = searchParams.get('tab') as TabId | null;
+  const { hasPermission, hasAnyPermission, isSuperAdmin } = useAdminPermissions();
+
+  const tabs = useMemo(() => {
+    const allTabs: { id: TabId; label: string; visible: boolean }[] = [
+      { 
+        id: 'requests', 
+        label: 'Loan Requests', 
+        visible: isSuperAdmin || hasPermission('loan-requests:review') 
+      },
+      { 
+        id: 'client-loans', 
+        label: 'Client Loans', 
+        visible: isSuperAdmin || hasPermission('client-loans:read') 
+      },
+      { 
+        id: 'maker-checker', 
+        label: 'Maker/Checker Queue', 
+        visible: isSuperAdmin || hasPermission('loan-requests:review') 
+      },
+      { 
+        id: 'disbursement', 
+        label: 'Disbursement Summary', 
+        visible: isSuperAdmin || hasAnyPermission(['loan-requests:review', 'client-loans:read']) 
+      },
+    ];
+    return allTabs.filter(t => t.visible);
+  }, [hasPermission, hasAnyPermission, isSuperAdmin]);
 
   const [activeTab, setActiveTab] = useState<TabId>(() => {
-    if (tabParam && ['requests', 'client-loans', 'maker-checker', 'disbursement'].includes(tabParam)) {
+    if (tabParam && tabs.some(t => t.id === tabParam)) {
       return tabParam;
     }
-    return 'requests';
+    return tabs[0]?.id || 'requests';
   });
 
   useEffect(() => {
-    if (tabParam && ['requests', 'client-loans', 'maker-checker', 'disbursement'].includes(tabParam)) {
+    if (tabParam && tabs.some(t => t.id === tabParam)) {
       setActiveTab(tabParam);
+    } else if (tabs.length > 0 && !tabs.some(t => t.id === activeTab)) {
+      setActiveTab(tabs[0].id);
     }
-  }, [tabParam]);
+  }, [tabParam, tabs, activeTab]);
 
   const handleTabChange = (newTab: TabId) => {
     setActiveTab(newTab);
@@ -35,12 +65,15 @@ function LoanRequestPageContent() {
     router.replace(`/dashboard/loan-requests?${params.toString()}`, { scroll: false });
   };
 
-  const tabs = [
-    { id: 'requests', label: 'Loan Requests' },
-    { id: 'client-loans', label: 'Client Loans' },
-    { id: 'maker-checker', label: 'Maker/Checker Queue' },
-    { id: 'disbursement', label: 'Disbursement Summary' },
-  ] as const;
+  if (tabs.length === 0) {
+    return (
+      <div className="bg-card rounded-2xl border border-border p-12 text-center max-w-lg mx-auto mt-8">
+        <div className="w-12 h-12 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center mx-auto mb-4 font-bold text-xl">!</div>
+        <h3 className="text-lg font-semibold text-foreground mb-1">Access Restricted</h3>
+        <p className="text-sm text-muted-foreground">You do not have permission to view or review loan requests or client loans.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">

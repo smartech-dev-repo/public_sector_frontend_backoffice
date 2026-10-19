@@ -34,10 +34,18 @@ import Pagination from '@/app/components/ui/Pagination';
 import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 import SensitiveValue from '@/app/components/ui/SensitiveValue';
+import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function RecruitmentApplicationsTab() {
   const { confirm } = useConfirm();
   const { addToast } = useToast();
+  const { hasPermission, isSuperAdmin } = useAdminPermissions();
+
+  const canReadAnalytics = isSuperAdmin || hasPermission('agents:recruitment:analytics:read');
+  const canReviewAgent = isSuperAdmin || hasPermission('agents:review');
+  const canManageRecruitment = isSuperAdmin || hasPermission('agents:recruitment:manage');
+  const canReadDocs = isSuperAdmin || hasPermission('documents:read');
+  const canSendCreds = canReviewAgent || canManageRecruitment;
 
   const {
     loading,
@@ -88,13 +96,14 @@ export default function RecruitmentApplicationsTab() {
 
   // Load analytics
   const loadAnalytics = useCallback(() => {
+    if (!canReadAnalytics) return;
     let params: any = undefined;
     if (dateRange) {
       const [from, to] = dateRange.split(' to ');
       if (from && to) params = { createdFrom: from, createdTo: to };
     }
     fetchAnalytics(params);
-  }, [fetchAnalytics, dateRange]);
+  }, [fetchAnalytics, dateRange, canReadAnalytics]);
 
   // Load applications list
   const loadApplications = useCallback(() => {
@@ -267,6 +276,7 @@ export default function RecruitmentApplicationsTab() {
   return (
     <div className="space-y-6">
       {/* ================= RECRUITMENT FUNNEL ANALYTICS ================= */}
+      {canReadAnalytics && (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Total Applications */}
         <div className="bg-card rounded-2xl border border-border/70 p-5 shadow-xs transition-all hover:border-[#018752]/40">
@@ -358,6 +368,7 @@ export default function RecruitmentApplicationsTab() {
           </span>
         </div>
       </div>
+      )}
 
       {/* ================= CONTROLS & FILTER ROW ================= */}
       <div className="space-y-4">
@@ -579,7 +590,7 @@ export default function RecruitmentApplicationsTab() {
 
                             {app.submittedAgent && (
                               <>
-                                {app.submittedAgent.status === 'PENDING_REVIEW' && (
+                                {app.submittedAgent.status === 'PENDING_REVIEW' && canReviewAgent && (
                                   <>
                                     <button
                                       type="button"
@@ -602,7 +613,7 @@ export default function RecruitmentApplicationsTab() {
                                   </>
                                 )}
 
-                                {app.submittedAgent.status === 'APPROVED' && (
+                                {app.submittedAgent.status === 'APPROVED' && canSendCreds && (
                                   <button
                                     type="button"
                                     disabled={actionLoadingId === app.submittedAgent.id}
@@ -625,14 +636,16 @@ export default function RecruitmentApplicationsTab() {
                             )}
 
                             {app.status !== 'SUBMITTED' ? (
-                              <button
-                                type="button"
-                                onClick={() => handleDelete(app)}
-                                className="w-full text-left px-4 py-2.5 text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors flex items-center gap-2.5"
-                              >
-                                <Trash2 className="w-4 h-4 text-rose-600 shrink-0" />
-                                Delete Draft
-                              </button>
+                              canManageRecruitment && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDelete(app)}
+                                  className="w-full text-left px-4 py-2.5 text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors flex items-center gap-2.5"
+                                >
+                                  <Trash2 className="w-4 h-4 text-rose-600 shrink-0" />
+                                  Delete Draft
+                                </button>
+                              )
                             ) : (
                               <div className="px-4 py-1.5 text-[11px] text-muted-foreground/70 italic border-t border-border/40">
                                 Submitted (locked from deletion)
@@ -924,7 +937,7 @@ export default function RecruitmentApplicationsTab() {
 
                       {/* Action buttons inside detail modal */}
                       <div className="flex flex-wrap items-center gap-2 pt-1">
-                        {selectedApp.submittedAgent.status === 'PENDING_REVIEW' && (
+                        {selectedApp.submittedAgent.status === 'PENDING_REVIEW' && canReviewAgent && (
                           <>
                             <button
                               type="button"
@@ -947,7 +960,7 @@ export default function RecruitmentApplicationsTab() {
                           </>
                         )}
 
-                        {selectedApp.submittedAgent.status === 'APPROVED' && (
+                        {selectedApp.submittedAgent.status === 'APPROVED' && canSendCreds && (
                           <button
                             type="button"
                             disabled={actionLoadingId === selectedApp.submittedAgent.id}
@@ -967,7 +980,7 @@ export default function RecruitmentApplicationsTab() {
 
             {/* Modal Footer */}
             <div className="p-4 border-t border-border bg-muted/30 flex items-center justify-between shrink-0">
-              {selectedApp && selectedApp.status !== 'SUBMITTED' ? (
+              {selectedApp && selectedApp.status !== 'SUBMITTED' && canManageRecruitment ? (
                 <button
                   type="button"
                   onClick={() => handleDelete(selectedApp)}
