@@ -12,6 +12,7 @@ import TableDropdown from '@/app/components/ui/TableDropdown';
 import Pagination from '@/app/components/ui/Pagination';
 import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
+import { Can } from '@/app/composables/usePermissions';
 
 export default function InvitesTab() {
  const [page, setPage] = useState(1);
@@ -130,9 +131,11 @@ export default function InvitesTab() {
       Filters
       <svg className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
      </button>
-     <button onClick={() => setShowInviteModal(true)} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium whitespace-nowrap ">
-      Invite Admin
-     </button>
+     <Can permission="admins:create">
+      <button onClick={() => setShowInviteModal(true)} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium whitespace-nowrap ">
+       Invite Admin
+      </button>
+     </Can>
     </div>
    </div>
 
@@ -214,11 +217,13 @@ export default function InvitesTab() {
          </td>
          <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{new Date(invite.createdAt).toLocaleDateString()}</td>
          <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium relative">
-          <TableDropdown>
-           <button onClick={() => handleResend(invite.id, invite.email)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 hover:text-emerald-800 transition-colors">Resend</button>
-           <button onClick={() => handleRevoke(invite.id, invite.email)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-amber-600 hover:bg-amber-50 hover:text-amber-800 transition-colors">Revoke</button>
-           <button onClick={() => handleDelete(invite.id, invite.email)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 hover:text-rose-800 transition-colors">Delete</button>
-          </TableDropdown>
+          <Can permission="admins:create">
+           <TableDropdown>
+            <button onClick={() => handleResend(invite.id, invite.email)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 hover:text-emerald-800 transition-colors">Resend</button>
+            <button onClick={() => handleRevoke(invite.id, invite.email)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-amber-600 hover:bg-amber-50 hover:text-amber-800 transition-colors">Revoke</button>
+            <button onClick={() => handleDelete(invite.id, invite.email)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 hover:text-rose-800 transition-colors">Delete</button>
+           </TableDropdown>
+          </Can>
          </td>
         </tr>
        )))}

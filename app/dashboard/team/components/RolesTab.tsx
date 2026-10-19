@@ -10,6 +10,7 @@ import { useConfirm } from '@/app/composables/useConfirm';
 import TableDropdown from '@/app/components/ui/TableDropdown';
 import Pagination from '@/app/components/ui/Pagination';
 import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
+import { Can } from '@/app/components/ui/Can';
 
 export default function RolesTab() {
  const [page, setPage] = useState(1);
@@ -146,9 +147,11 @@ export default function RolesTab() {
       Filters
       <svg className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
      </button>
-     <button onClick={openCreateModal} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium ">
-      Create Role
-     </button>
+     <Can permission="roles:manage">
+      <button onClick={openCreateModal} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium ">
+       Create Role
+      </button>
+     </Can>
     </div>
    </div>
 
@@ -236,8 +239,10 @@ export default function RolesTab() {
          <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium relative">
           <TableDropdown>
            <button onClick={() => openViewPermissionsModal(role)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-foreground/90 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">View Permissions</button>
-           <button onClick={() => openEditModal(role)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-foreground/90 hover:bg-blue-50 hover:text-blue-700 transition-colors">Edit</button>
-           <button onClick={() => handleDelete(role.id)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 hover:text-rose-800 transition-colors">Delete</button>
+           <Can permission="roles:manage">
+            <button onClick={() => openEditModal(role)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-foreground/90 hover:bg-blue-50 hover:text-blue-700 transition-colors">Edit</button>
+            <button onClick={() => handleDelete(role.id)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 hover:text-rose-800 transition-colors">Delete</button>
+           </Can>
           </TableDropdown>
          </td>
         </tr>
@@ -293,34 +298,36 @@ export default function RolesTab() {
          className="w-full px-4 py-2.5 border border-border rounded-lg text-sm focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 outline-none transition-all" 
         />
               </div>
-       <div className="pt-2">
-        <label className="block text-sm font-medium text-foreground/90 mb-2">Assign Permissions</label>
-        <div className="max-h-[300px] overflow-y-auto border border-border rounded-lg p-3 grid grid-cols-1 sm:grid-cols-2 gap-2 bg-muted/30">
-         {availablePermissions?.map((perm: any) => (
-          <label key={perm.id} className="flex items-start gap-2 p-2 bg-card rounded border border-border/50 hover:border-emerald-200 cursor-pointer">
-           <input 
-            type="checkbox" 
-            className="mt-1 w-4 h-4 text-emerald-600 rounded border-border focus:ring-emerald-500"
-            checked={selectedPermissions.includes(perm.id)}
-            onChange={(e) => {
-             if (e.target.checked) {
-              setSelectedPermissions(prev => [...prev, perm.id]);
-             } else {
-              setSelectedPermissions(prev => prev.filter(id => id !== perm.id));
-             }
-            }}
-           />
-           <div className="flex-1">
-            <div className="text-sm font-medium text-foreground">{perm.key}</div>
-            <div className="text-xs text-muted-foreground leading-tight line-clamp-1" title={perm.description}>{perm.description}</div>
-           </div>
-          </label>
-         ))}
-         {(!availablePermissions || availablePermissions.length === 0) && (
-           <div className="text-sm text-muted-foreground col-span-2 text-center py-4">No permissions available.</div>
-         )}
+       <Can permission="permissions:manage">
+        <div className="pt-2">
+         <label className="block text-sm font-medium text-foreground/90 mb-2">Assign Permissions</label>
+         <div className="max-h-[300px] overflow-y-auto border border-border rounded-lg p-3 grid grid-cols-1 sm:grid-cols-2 gap-2 bg-muted/30">
+          {availablePermissions?.map((perm: any) => (
+           <label key={perm.id} className="flex items-start gap-2 p-2 bg-card rounded border border-border/50 hover:border-emerald-200 cursor-pointer">
+            <input 
+             type="checkbox" 
+             className="mt-1 w-4 h-4 text-emerald-600 rounded border-border focus:ring-emerald-500"
+             checked={selectedPermissions.includes(perm.id)}
+             onChange={(e) => {
+              if (e.target.checked) {
+               setSelectedPermissions(prev => [...prev, perm.id]);
+              } else {
+               setSelectedPermissions(prev => prev.filter(id => id !== perm.id));
+              }
+             }}
+            />
+            <div className="flex-1">
+             <div className="text-sm font-medium text-foreground">{perm.key}</div>
+             <div className="text-xs text-muted-foreground leading-tight line-clamp-1" title={perm.description}>{perm.description}</div>
+            </div>
+           </label>
+          ))}
+          {(!availablePermissions || availablePermissions.length === 0) && (
+            <div className="text-sm text-muted-foreground col-span-2 text-center py-4">No permissions available.</div>
+          )}
+         </div>
         </div>
-       </div>
+       </Can>
        <div className="flex gap-3 w-full mt-6">
         <button type="button" onClick={() => setShowCreateRole(false)} className="flex-1 px-5 py-2.5 rounded-lg text-sm text-foreground/90 bg-muted/50 hover:bg-slate-200 transition-colors">Cancel</button>
         <button type="submit" disabled={submitting} className="flex-1 px-5 py-2.5 rounded-lg text-sm text-white bg-emerald-600 hover:bg-emerald-700 transition-colors disabled:opacity-50">

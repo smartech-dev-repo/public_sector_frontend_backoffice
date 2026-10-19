@@ -17,6 +17,31 @@ export const useAuth = () => {
   if (refreshToken && typeof window !== 'undefined') {
    localStorage.setItem('refreshToken', refreshToken);
   }
+  const rawPerms = data?.permissions || data?.data?.permissions || data?.role?.permissions || data?.data?.role?.permissions;
+  if (Array.isArray(rawPerms) && typeof window !== 'undefined') {
+   const perms = rawPerms.map((p: any) => typeof p === 'string' ? p : (p?.permission?.key || p?.key || '')).filter(Boolean);
+   localStorage.setItem('public_sector_permissions', JSON.stringify(perms));
+  }
+  const roleName = data?.role?.name || data?.data?.role?.name || (typeof data?.role === 'string' ? data.role : '');
+  if (roleName && typeof window !== 'undefined') {
+   localStorage.setItem('public_sector_role', roleName);
+  }
+ };
+
+ const refreshToken = async () => {
+  const storedRefresh = typeof localStorage !== 'undefined' ? localStorage.getItem('refreshToken') : null;
+  if (!storedRefresh) return null;
+  try {
+   const response = await auth_api.refreshToken({ refreshToken: storedRefresh });
+   const data = (response.data as any)?.data || response.data;
+   if (data) {
+    setToken(data);
+    return data;
+   }
+   return null;
+  } catch (e) {
+   return null;
+  }
  };
 
  const login = async (payload: any) => {
@@ -189,12 +214,23 @@ export const useAuth = () => {
   }
  };
 
+ const clearAuthStorage = () => {
+  if (typeof window !== 'undefined') {
+   document.cookie = 'public_sector_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+   localStorage.removeItem('token');
+   localStorage.removeItem('refreshToken');
+   localStorage.removeItem('public_sector_permissions');
+   localStorage.removeItem('public_sector_role');
+  }
+ };
+
  const logout = async () => {
   try {
    await auth_api.logout();
   } catch (err) {
    console.error('Logout API failed', err);
   } finally {
+   clearAuthStorage();
    setUser(null);
    setIsAuthenticated(false);
   }
@@ -206,6 +242,7 @@ export const useAuth = () => {
   } catch (err) {
    console.error('LogoutAll API failed', err);
   } finally {
+   clearAuthStorage();
    setUser(null);
    setIsAuthenticated(false);
   }
@@ -227,6 +264,7 @@ export const useAuth = () => {
   clientOtpVerify,
   logout,
   logoutAll,
+  refreshToken,
   loginVerify2fa
  };
 };

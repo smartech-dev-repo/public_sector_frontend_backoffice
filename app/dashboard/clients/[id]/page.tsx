@@ -12,6 +12,8 @@ import ButtonLoader from '@/app/components/ui/ButtonLoader';
 import SensitiveValue from '@/app/components/ui/SensitiveValue';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
+import { Can } from '@/app/components/ui/Can';
+import { usePermissions, Permission } from '@/app/composables/usePermissions';
 import { 
  Eye, 
  EyeOff, 
@@ -321,13 +323,17 @@ export default function ClientWalletPage() {
   }
  };
 
- const tabs = [
+ const { hasPermission } = usePermissions();
+
+ const allTabs: { key: 'profile' | 'onboarding' | 'wallet' | 'loans' | 'activities'; label: string; permissions?: Permission[] }[] = [
   { key: 'profile' as const, label: 'Profile' },
-  { key: 'onboarding' as const, label: 'Onboarding' },
-  { key: 'wallet' as const, label: 'Wallet' },
-  { key: 'loans' as const, label: 'Loans' },
-  { key: 'activities' as const, label: 'Activities' },
+  { key: 'onboarding' as const, label: 'Onboarding', permissions: ['clients:review'] },
+  { key: 'wallet' as const, label: 'Wallet', permissions: ['wallets:read', 'wallets:manage'] },
+  { key: 'loans' as const, label: 'Loans', permissions: ['client-loans:read'] },
+  { key: 'activities' as const, label: 'Activities', permissions: ['clients:read', 'audit:read'] },
  ];
+
+ const tabs = allTabs.filter(tab => !tab.permissions || tab.permissions.some(p => hasPermission(p)));
 
  return (
   <main className="w-full">
@@ -360,7 +366,7 @@ export default function ClientWalletPage() {
       </button>
 
       {client.status === 'MANUAL_REVIEW' && (
-       <>
+       <Can permission="clients:review">
         <button
          onClick={handleApprove}
          disabled={submitting}
@@ -379,18 +385,20 @@ export default function ClientWalletPage() {
          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
          Request Retry
         </button>
-       </>
+       </Can>
       )}
-      <button
-       onClick={handleRevokeSessions}
-       disabled={submitting}
-       className="px-3.5 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 disabled:opacity-50 min-w-[130px]"
-      >
-       <ButtonLoader loading={submitting} loadingText="Revoking...">
-        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-        Revoke Sessions
-       </ButtonLoader>
-      </button>
+      <Can permission="clients:sessions:revoke">
+       <button
+        onClick={handleRevokeSessions}
+        disabled={submitting}
+        className="px-3.5 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 disabled:opacity-50 min-w-[130px]"
+       >
+        <ButtonLoader loading={submitting} loadingText="Revoking...">
+         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+         Revoke Sessions
+        </ButtonLoader>
+       </button>
+      </Can>
      </div>
     )}
    </div>

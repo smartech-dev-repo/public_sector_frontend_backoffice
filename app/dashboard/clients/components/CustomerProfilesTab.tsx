@@ -28,6 +28,7 @@ import {
   Users,
   X
 } from 'lucide-react';
+import { Can } from '@/app/components/ui/Can';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
@@ -513,14 +514,16 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
             Export as Excel (.xlsx)
           </button>
 
-          <button 
-            type="button"
-            onClick={onOpenOnboard}
-            className="flex items-center gap-1 px-4 py-2 bg-[#018752] text-white text-xs sm:text-sm font-semibold rounded-lg hover:bg-[#016f43] transition-colors shadow-xs"
-          >
-            <Plus className="size-4" />
-            Onboard Customer
-          </button>
+          <Can permission="clients:onboard">
+            <button 
+              type="button"
+              onClick={onOpenOnboard}
+              className="flex items-center gap-1 px-4 py-2 bg-[#018752] text-white text-xs sm:text-sm font-semibold rounded-lg hover:bg-[#016f43] transition-colors shadow-xs"
+            >
+              <Plus className="size-4" />
+              Onboard Customer
+            </button>
+          </Can>
         </div>
       </div>
 
@@ -751,48 +754,56 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
                               <User className="w-4 h-4 text-muted-foreground shrink-0" />
                               View Details
                             </Link>
-                            <Link 
-                              href={`/dashboard/loan-requests?tab=client-loans&clientId=${client.id}`} 
-                              className="w-full text-left px-4 py-2.5 text-xs font-medium text-foreground hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 transition-colors flex items-center gap-2.5"
-                            >
-                              <CreditCard className="w-4 h-4 text-emerald-600 shrink-0" />
-                              Loans
-                            </Link>
-                            <button 
-                              type="button"
-                              onClick={() => openWalletModal(client)} 
-                              className="w-full text-left px-4 py-2.5 text-xs font-medium text-foreground hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-950/30 transition-colors flex items-center gap-2.5"
-                            >
-                              <Wallet className="w-4 h-4 text-blue-600 shrink-0" />
-                              Wallet
-                            </button>
-                            {client.status === 'MANUAL_REVIEW' && (
+                            <Can permission="client-loans:read">
+                              <Link 
+                                href={`/dashboard/loan-requests?tab=client-loans&clientId=${client.id}`} 
+                                className="w-full text-left px-4 py-2.5 text-xs font-medium text-foreground hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 transition-colors flex items-center gap-2.5"
+                              >
+                                <CreditCard className="w-4 h-4 text-emerald-600 shrink-0" />
+                                Loans
+                              </Link>
+                            </Can>
+                            <Can permissions={["wallets:read", "wallets:manage"]}>
                               <button 
                                 type="button"
-                                onClick={() => handleApprove(client.id)} 
-                                className="w-full text-left px-4 py-2.5 text-xs font-medium text-emerald-600 hover:bg-emerald-50 transition-colors flex items-center gap-2.5"
+                                onClick={() => openWalletModal(client)} 
+                                className="w-full text-left px-4 py-2.5 text-xs font-medium text-foreground hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-950/30 transition-colors flex items-center gap-2.5"
                               >
-                                <CheckCircle2 className="w-4 h-4" />
-                                Approve
+                                <Wallet className="w-4 h-4 text-blue-600 shrink-0" />
+                                Wallet
                               </button>
-                            )}
-                            <button 
-                              type="button"
-                              onClick={() => openRetryModal(client)} 
-                              className="w-full text-left px-4 py-2.5 text-xs font-medium text-amber-600 hover:bg-amber-50 transition-colors flex items-center gap-2.5"
-                            >
-                              <RotateCcw className="w-4 h-4" />
-                              Retry Verification
-                            </button>
-                            <div className="h-px bg-border/60 my-1"></div>
-                            <button 
-                              type="button"
-                              onClick={() => handleRevokeSessions(client.id)} 
-                              className="w-full text-left px-4 py-2.5 text-xs font-medium text-rose-600 hover:bg-rose-50 transition-colors flex items-center gap-2.5"
-                            >
-                              <ShieldAlert className="w-4 h-4" />
-                              Revoke Sessions
-                            </button>
+                            </Can>
+                            <Can permission="clients:review">
+                              {client.status === 'MANUAL_REVIEW' && (
+                                <button 
+                                  type="button"
+                                  onClick={() => handleApprove(client.id)} 
+                                  className="w-full text-left px-4 py-2.5 text-xs font-medium text-emerald-600 hover:bg-emerald-50 transition-colors flex items-center gap-2.5"
+                                >
+                                  <CheckCircle2 className="w-4 h-4" />
+                                  Approve
+                                </button>
+                              )}
+                              <button 
+                                type="button"
+                                onClick={() => openRetryModal(client)} 
+                                className="w-full text-left px-4 py-2.5 text-xs font-medium text-amber-600 hover:bg-amber-50 transition-colors flex items-center gap-2.5"
+                              >
+                                <RotateCcw className="w-4 h-4" />
+                                Retry Verification
+                              </button>
+                            </Can>
+                            <Can permission="clients:sessions:revoke">
+                              <div className="h-px bg-border/60 my-1"></div>
+                              <button 
+                                type="button"
+                                onClick={() => handleRevokeSessions(client.id)} 
+                                className="w-full text-left px-4 py-2.5 text-xs font-medium text-rose-600 hover:bg-rose-50 transition-colors flex items-center gap-2.5"
+                              >
+                                <ShieldAlert className="w-4 h-4" />
+                                Revoke Sessions
+                              </button>
+                            </Can>
                           </TableDropdown>
                         </div>
                       </td>

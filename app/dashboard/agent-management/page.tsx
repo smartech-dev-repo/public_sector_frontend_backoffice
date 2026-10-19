@@ -16,6 +16,7 @@ import Link from 'next/link';
 import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 import { Users, UserCheck, Clock, ShieldCheck, UserX } from 'lucide-react';
+import { Can } from '@/app/components/ui/Can';
 
 export default function AgentManagementPage() {
  const { confirm } = useConfirm();
@@ -188,22 +189,26 @@ export default function AgentManagementPage() {
      </p>
     </div>
     <div className="flex items-center gap-3">
-     <Link 
-      href="/dashboard/invites"
-      className="flex items-center gap-2 px-4 py-2 bg-card border border-border hover:bg-muted/30 text-foreground rounded-full text-xs sm:text-sm font-medium transition-colors shadow-xs"
-     >
-      <Users className="w-4 h-4 text-[#018752]" />
-      <span>Recruitment Applications</span>
-     </Link>
-     {reviewers.length > 0 && (
-      <button
-       type="button"
-       onClick={() => setShowLeaderboard(!showLeaderboard)}
-       className="flex items-center gap-1.5 px-3.5 py-2 bg-[#E8F5EE] hover:bg-[#d8efe2] text-[#018752] rounded-full text-xs sm:text-sm font-semibold transition-colors"
+     <Can permissions={["agents:recruitment:read", "agents:recruitment:manage", "agents:recruitment:analytics:read"]}>
+      <Link 
+       href="/dashboard/invites"
+       className="flex items-center gap-2 px-4 py-2 bg-card border border-border hover:bg-muted/30 text-foreground rounded-full text-xs sm:text-sm font-medium transition-colors shadow-xs"
       >
-       <ShieldCheck className="w-4 h-4" />
-       <span>{showLeaderboard ? 'Hide Reviewers' : 'Reviewer Leaderboard'}</span>
-      </button>
+       <Users className="w-4 h-4 text-[#018752]" />
+       <span>Recruitment Applications</span>
+      </Link>
+     </Can>
+     {reviewers.length > 0 && (
+      <Can permissions={["agents:analytics:read", "agents:review"]}>
+       <button
+        type="button"
+        onClick={() => setShowLeaderboard(!showLeaderboard)}
+        className="flex items-center gap-1.5 px-3.5 py-2 bg-[#E8F5EE] hover:bg-[#d8efe2] text-[#018752] rounded-full text-xs sm:text-sm font-semibold transition-colors"
+       >
+        <ShieldCheck className="w-4 h-4" />
+        <span>{showLeaderboard ? 'Hide Reviewers' : 'Reviewer Leaderboard'}</span>
+       </button>
+      </Can>
      )}
     </div>
    </div>
@@ -406,41 +411,49 @@ export default function AgentManagementPage() {
            </td>
            <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
             <TableDropdown>
-             {agent.status === 'PENDING_REVIEW' && (
-              <>
-               <button onClick={() => handleApprove(agent.id)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 transition-colors flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
-                Approve
-               </button>
-               <button onClick={() => openRejectModal(agent)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-700 hover:bg-rose-50 transition-colors flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                Reject
-               </button>
-               <div className="h-px bg-muted/50 my-1.5"></div>
-              </>
-             )}
-             <button onClick={() => handleResendCredentials(agent.id)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-blue-700 hover:bg-blue-50 transition-colors flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-              Resend Credentials
-             </button>
+             <Can permission="agents:review">
+              {agent.status === 'PENDING_REVIEW' && (
+               <>
+                <button onClick={() => handleApprove(agent.id)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 transition-colors flex items-center gap-2">
+                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                 Approve
+                </button>
+                <button onClick={() => openRejectModal(agent)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-700 hover:bg-rose-50 transition-colors flex items-center gap-2">
+                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                 Reject
+                </button>
+                <div className="h-px bg-muted/50 my-1.5"></div>
+               </>
+              )}
+              <button onClick={() => handleResendCredentials(agent.id)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-blue-700 hover:bg-blue-50 transition-colors flex items-center gap-2">
+               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+               Resend Credentials
+              </button>
+             </Can>
              <Link href={`/dashboard/agent/${agent.id}`} className="w-full text-left px-4 py-2.5 text-sm font-medium text-foreground/90 hover:bg-muted/30 transition-colors flex items-center gap-2">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
               View Details
              </Link>
-             <Link href={`/dashboard/clients?agentId=${agent.id}&agentName=${encodeURIComponent(agent.fullName || agent.email || '')}`} className="w-full text-left px-4 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 transition-colors flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-              Onboarded Clients
-             </Link>
+             <Can permission="clients:read">
+              <Link href={`/dashboard/clients?agentId=${agent.id}&agentName=${encodeURIComponent(agent.fullName || agent.email || '')}`} className="w-full text-left px-4 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 transition-colors flex items-center gap-2">
+               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+               Onboarded Clients
+              </Link>
+             </Can>
              {agent.status === 'APPROVED' && (
-              <button onClick={() => handleToggleOnboardingAccess(agent)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-amber-700 hover:bg-amber-50 transition-colors flex items-center gap-2">
-               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-               {agent.canOnboardClients === false ? 'Grant Onboarding' : 'Restrict Onboarding'}
-              </button>
+              <Can permission="agents:onboarding-access:manage">
+               <button onClick={() => handleToggleOnboardingAccess(agent)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-amber-700 hover:bg-amber-50 transition-colors flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                {agent.canOnboardClients === false ? 'Grant Onboarding' : 'Restrict Onboarding'}
+               </button>
+              </Can>
              )}
-             <button onClick={() => handleRevokeAgentSessions(agent.id)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-700 hover:bg-rose-50 transition-colors flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-              Revoke Sessions
-             </button>
+             <Can permission="agents:sessions:revoke">
+              <button onClick={() => handleRevokeAgentSessions(agent.id)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-700 hover:bg-rose-50 transition-colors flex items-center gap-2">
+               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+               Revoke Sessions
+              </button>
+             </Can>
             </TableDropdown>
            </td>
           </tr>

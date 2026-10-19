@@ -8,12 +8,24 @@ import MakerCheckerTab from './components/MakerCheckerTab';
 import DisbursementSummaryTab from './components/DisbursementSummaryTab';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 
+import { usePermissions, Permission } from '@/app/composables/usePermissions';
+
 type TabId = 'requests' | 'client-loans' | 'maker-checker' | 'disbursement';
 
 function LoanRequestPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const tabParam = searchParams.get('tab') as TabId | null;
+  const { hasPermission } = usePermissions();
+
+  const allTabs: { id: TabId; label: string; permissions: Permission[] }[] = [
+    { id: 'requests', label: 'Loan Requests', permissions: ['loan-requests:review'] },
+    { id: 'client-loans', label: 'Client Loans', permissions: ['client-loans:read'] },
+    { id: 'maker-checker', label: 'Maker/Checker Queue', permissions: ['loan-requests:review'] },
+    { id: 'disbursement', label: 'Disbursement Summary', permissions: ['loan-requests:review', 'client-loans:read'] },
+  ];
+
+  const tabs = allTabs.filter(tab => tab.permissions.some(p => hasPermission(p)));
 
   const [activeTab, setActiveTab] = useState<TabId>(() => {
     if (tabParam && ['requests', 'client-loans', 'maker-checker', 'disbursement'].includes(tabParam)) {
@@ -21,6 +33,12 @@ function LoanRequestPageContent() {
     }
     return 'requests';
   });
+
+  useEffect(() => {
+    if (tabs.length > 0 && !tabs.some(t => t.id === activeTab)) {
+      setActiveTab(tabs[0].id);
+    }
+  }, [tabs, activeTab]);
 
   useEffect(() => {
     if (tabParam && ['requests', 'client-loans', 'maker-checker', 'disbursement'].includes(tabParam)) {
@@ -35,12 +53,13 @@ function LoanRequestPageContent() {
     router.replace(`/dashboard/loan-requests?${params.toString()}`, { scroll: false });
   };
 
-  const tabs = [
-    { id: 'requests', label: 'Loan Requests' },
-    { id: 'client-loans', label: 'Client Loans' },
-    { id: 'maker-checker', label: 'Maker/Checker Queue' },
-    { id: 'disbursement', label: 'Disbursement Summary' },
-  ] as const;
+  if (tabs.length === 0) {
+    return (
+      <div className="p-8 text-center bg-card rounded-2xl border border-border">
+        <p className="text-sm font-medium text-muted-foreground">You do not have permission to view any loan request sections.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">
