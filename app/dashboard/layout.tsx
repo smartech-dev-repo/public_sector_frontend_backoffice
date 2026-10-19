@@ -126,9 +126,12 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
   router.push('/login');
  };
 
- const themeIcon = mounted ? (
-  resolvedTheme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />
- ) : <Sun className="w-5 h-5" />;
+ const themeIcon = (
+  <>
+   <Sun className="w-5 h-5 dark:hidden" />
+   <Moon className="w-5 h-5 hidden dark:block" />
+  </>
+ );
 
  const cycleTheme = () => {
   const order = ['light', 'dark', 'system'];
