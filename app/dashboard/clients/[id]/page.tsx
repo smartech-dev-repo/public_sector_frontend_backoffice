@@ -12,8 +12,6 @@ import ButtonLoader from '@/app/components/ui/ButtonLoader';
 import SensitiveValue from '@/app/components/ui/SensitiveValue';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import { Can } from '@/app/components/ui/Can';
-import { usePermissions, Permission } from '@/app/composables/usePermissions';
 import { 
  Eye, 
  EyeOff, 
@@ -35,8 +33,18 @@ import {
  MapPin,
  CreditCard
 } from 'lucide-react';
+import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function ClientWalletPage() {
+ const { isSuperAdmin, hasPermission } = useAdminPermissions();
+ const canReview = isSuperAdmin || hasPermission('clients:review');
+ const canRevokeSessions = isSuperAdmin || hasPermission('clients:sessions:revoke');
+ const canReadWallet = isSuperAdmin || hasPermission('wallets:read');
+ const canManageWallet = isSuperAdmin || hasPermission('wallets:manage');
+ const canReadLoans = isSuperAdmin || hasPermission('client-loans:read');
+ const canReadActivities = isSuperAdmin || hasPermission('audit:read') || hasPermission('clients:read');
+ const canReadDocuments = isSuperAdmin || hasPermission('documents:read');
+
  const { id } = useParams();
  const clientId = typeof id === 'string' ? id : '';
  
@@ -323,17 +331,19 @@ export default function ClientWalletPage() {
   }
  };
 
- const { hasPermission } = usePermissions();
-
- const allTabs: { key: 'profile' | 'onboarding' | 'wallet' | 'loans' | 'activities'; label: string; permissions?: Permission[] }[] = [
+ const tabs = [
   { key: 'profile' as const, label: 'Profile' },
-  { key: 'onboarding' as const, label: 'Onboarding', permissions: ['clients:review'] },
-  { key: 'wallet' as const, label: 'Wallet', permissions: ['wallets:read', 'wallets:manage'] },
-  { key: 'loans' as const, label: 'Loans', permissions: ['client-loans:read'] },
-  { key: 'activities' as const, label: 'Activities', permissions: ['clients:read', 'audit:read'] },
+  { key: 'onboarding' as const, label: 'Onboarding' },
+  ...(canReadWallet ? [{ key: 'wallet' as const, label: 'Wallet' }] : []),
+  ...(canReadLoans ? [{ key: 'loans' as const, label: 'Loans' }] : []),
+  ...(canReadActivities ? [{ key: 'activities' as const, label: 'Activities' }] : []),
  ];
 
- const tabs = allTabs.filter(tab => !tab.permissions || tab.permissions.some(p => hasPermission(p)));
+ useEffect(() => {
+  if (tabs.length > 0 && !tabs.some(t => t.key === activeTab)) {
+   setActiveTab(tabs[0].key);
+  }
+ }, [tabs, activeTab]);
 
  return (
   <main className="w-full">
@@ -365,8 +375,8 @@ export default function ClientWalletPage() {
        )}
       </button>
 
-      {client.status === 'MANUAL_REVIEW' && (
-       <Can permission="clients:review">
+      {client.status === 'MANUAL_REVIEW' && canReview && (
+       <>
         <button
          onClick={handleApprove}
          disabled={submitting}
@@ -385,9 +395,9 @@ export default function ClientWalletPage() {
          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
          Request Retry
         </button>
-       </Can>
+       </>
       )}
-      <Can permission="clients:sessions:revoke">
+      {canRevokeSessions && (
        <button
         onClick={handleRevokeSessions}
         disabled={submitting}
@@ -398,7 +408,7 @@ export default function ClientWalletPage() {
          Revoke Sessions
         </ButtonLoader>
        </button>
-      </Can>
+      )}
      </div>
     )}
    </div>
@@ -1258,18 +1268,22 @@ export default function ClientWalletPage() {
                )}
               </div>
               {doc.url ? (
-               <button
-                type="button"
-                onClick={() => setPreviewImage({
-                 url: doc.url,
-                 title: docTitle,
-                 subtitle: `Uploaded Document • ${doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleString() : 'Verification file'}`
-                })}
-                className="mt-2 py-1.5 px-3 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors border border-emerald-200/60 dark:border-emerald-800/40 cursor-pointer"
-               >
-                <Eye className="w-3.5 h-3.5" />
-                <span>View Document</span>
-               </button>
+               canReadDocuments ? (
+                <button
+                 type="button"
+                 onClick={() => setPreviewImage({
+                  url: doc.url,
+                  title: docTitle,
+                  subtitle: `Uploaded Document • ${doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleString() : 'Verification file'}`
+                 })}
+                 className="mt-2 py-1.5 px-3 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors border border-emerald-200/60 dark:border-emerald-800/40 cursor-pointer"
+                >
+                 <Eye className="w-3.5 h-3.5" />
+                 <span>View Document</span>
+                </button>
+               ) : (
+                <span className="text-muted-foreground text-xs mt-2 block">Viewing restricted</span>
+               )
               ) : (
                <span className="text-muted-foreground text-xs mt-2 block">Document Uploaded</span>
               )}
@@ -1293,10 +1307,12 @@ export default function ClientWalletPage() {
           <p className="text-muted-foreground text-sm font-medium mb-1">Available Balance</p>
           <p className="text-3xl font-bold text-foreground">₦{wallet.balance?.toLocaleString() || 0}</p>
          </div>
-         <div className="flex gap-3">
-          <button onClick={() => setShowCreditModal(true)} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">Credit Wallet</button>
-          <button onClick={() => setShowDebitModal(true)} className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors">Debit Wallet</button>
-         </div>
+         {canManageWallet && (
+          <div className="flex gap-3">
+           <button onClick={() => setShowCreditModal(true)} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">Credit Wallet</button>
+           <button onClick={() => setShowDebitModal(true)} className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors">Debit Wallet</button>
+          </div>
+         )}
         </div>
        ) : (
         <p className="text-muted-foreground text-sm">No wallet information available.</p>

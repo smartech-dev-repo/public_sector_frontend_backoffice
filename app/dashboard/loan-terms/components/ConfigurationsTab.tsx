@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/app/components/ui/Select';
+import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 const SECTOR_OPTIONS = [
   { code: 'NPF', name: 'Nigerian Police Force' },
@@ -32,6 +33,9 @@ const SECTOR_OPTIONS = [
 ];
 
 export default function ConfigurationsTab() {
+  const { isSuperAdmin, hasPermission } = useAdminPermissions();
+  const canManageProducts = isSuperAdmin || hasPermission('loan-products:manage');
+  const canManageSettings = isSuperAdmin || hasPermission('loan-settings:manage');
   const router = useRouter();
   const { 
     loading, 
@@ -159,14 +163,16 @@ export default function ConfigurationsTab() {
         </div>
 
         <div className="flex items-center gap-3 self-end sm:self-auto">
-          <button
-            type="button"
-            onClick={() => setShowSettingsModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-border text-foreground hover:bg-muted text-sm font-medium transition-colors"
-          >
-            <SettingsIcon className="w-4 h-4 text-muted-foreground" />
-            Statutory Settings
-          </button>
+          {canManageSettings && (
+            <button
+              type="button"
+              onClick={() => setShowSettingsModal(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-border text-foreground hover:bg-muted text-sm font-medium transition-colors"
+            >
+              <SettingsIcon className="w-4 h-4 text-muted-foreground" />
+              Statutory Settings
+            </button>
+          )}
 
           <button
             type="button"
@@ -181,14 +187,16 @@ export default function ConfigurationsTab() {
             Filter
           </button>
 
-          <button
-            type="button"
-            onClick={handleOpenCreate}
-            className="flex items-center gap-2 px-5 py-2.5 bg-[#018752] hover:bg-[#017044] text-white rounded-full text-sm font-semibold transition-all shadow-sm hover:shadow active:scale-[0.98]"
-          >
-            <Plus className="w-4 h-4 stroke-[2.5]" />
-            Add New Products
-          </button>
+          {canManageProducts && (
+            <button
+              type="button"
+              onClick={handleOpenCreate}
+              className="flex items-center gap-2 px-5 py-2.5 bg-[#018752] hover:bg-[#017044] text-white rounded-full text-sm font-semibold transition-all shadow-sm hover:shadow active:scale-[0.98]"
+            >
+              <Plus className="w-4 h-4 stroke-[2.5]" />
+              Add New Products
+            </button>
+          )}
         </div>
       </div>
 
@@ -278,15 +286,17 @@ export default function ConfigurationsTab() {
                   <th className="py-3.5 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Last Updated
                   </th>
-                  <th className="py-3.5 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">
-                    Actions
-                  </th>
+                  {canManageProducts && (
+                    <th className="py-3.5 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                      Actions
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {filteredProducts.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-12">
+                    <td colSpan={canManageProducts ? 7 : 6} className="py-12">
                       <EmptyState 
                         title="No Loan Products Found" 
                         description={
@@ -326,16 +336,18 @@ export default function ConfigurationsTab() {
                         <td className="py-4 px-6 text-sm text-muted-foreground whitespace-nowrap">
                           {updatedDate}
                         </td>
-                        <td className="py-4 px-6 text-right">
-                          <button
-                            type="button"
-                            onClick={() => handleOpenEdit(product)}
-                            className="p-2 text-muted-foreground hover:text-[#018752] hover:bg-[#E8F5EE] rounded-lg transition-colors"
-                            title="Edit Product"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </button>
-                        </td>
+                        {canManageProducts && (
+                          <td className="py-4 px-6 text-right">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEdit(product)}
+                              className="p-2 text-muted-foreground hover:text-[#018752] hover:bg-[#E8F5EE] rounded-lg transition-colors"
+                              title="Edit Product"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                          </td>
+                        )}
                       </tr>
                     );
                   })
@@ -347,7 +359,7 @@ export default function ConfigurationsTab() {
       )}
 
       {/* Global Loan Settings Modal */}
-      {showSettingsModal && (
+      {canManageSettings && showSettingsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div 
             className="fixed inset-0 bg-black/40 backdrop-blur-sm"

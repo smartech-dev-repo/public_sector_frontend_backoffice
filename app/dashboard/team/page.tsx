@@ -5,36 +5,55 @@ import AdminsTab from './components/AdminsTab';
 import RolesTab from './components/RolesTab';
 import InvitesTab from './components/InvitesTab';
 import DepartmentsTab from './components/DepartmentsTab';
-import { usePermissions } from '@/app/composables/usePermissions';
+import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+
+type TabId = 'admins' | 'roles' | 'departments' | 'invites';
 
 export default function TeamManagementPage() {
- const { hasPermission } = usePermissions();
+ const { hasPermission, hasAnyPermission, isSuperAdmin } = useAdminPermissions();
 
- const allTabs = useMemo(() => [
-  { id: 'admins' as const, label: 'Admins', perms: ['admins:create'] },
-  { id: 'roles' as const, label: 'Roles', perms: ['roles:manage', 'permissions:manage'] },
-  { id: 'departments' as const, label: 'Departments', perms: ['departments:manage'] },
-  { id: 'invites' as const, label: 'Invites', perms: ['admins:create'] },
- ], []);
+ const tabs = useMemo(() => {
+  const allTabs: { id: TabId; label: string; visible: boolean }[] = [
+   { 
+     id: 'admins', 
+     label: 'Admins', 
+     visible: isSuperAdmin || hasAnyPermission(['admins:create', 'roles:manage']) 
+   },
+   { 
+     id: 'roles', 
+     label: 'Roles', 
+     visible: isSuperAdmin || hasAnyPermission(['roles:manage', 'permissions:manage']) 
+   },
+   { 
+     id: 'departments', 
+     label: 'Departments', 
+     visible: isSuperAdmin || hasPermission('departments:manage') 
+   },
+   { 
+     id: 'invites', 
+     label: 'Invites', 
+     visible: isSuperAdmin || hasPermission('admins:create') 
+   },
+  ];
+  return allTabs.filter(t => t.visible);
+ }, [hasPermission, hasAnyPermission, isSuperAdmin]);
 
- const availableTabs = useMemo(() => {
-  return allTabs.filter(tab => hasPermission(tab.perms));
- }, [allTabs, hasPermission]);
-
- const [activeTab, setActiveTab] = useState<'admins' | 'roles' | 'departments' | 'invites' | ''>(() => {
-  return availableTabs[0]?.id || 'admins';
+ const [activeTab, setActiveTab] = useState<TabId>(() => {
+  return tabs[0]?.id || 'admins';
  });
 
  useEffect(() => {
-  if (availableTabs.length > 0 && !availableTabs.some(t => t.id === activeTab)) {
-   setActiveTab(availableTabs[0].id);
+  if (tabs.length > 0 && !tabs.some(t => t.id === activeTab)) {
+   setActiveTab(tabs[0].id);
   }
- }, [availableTabs, activeTab]);
+ }, [tabs, activeTab]);
 
- if (availableTabs.length === 0) {
+ if (tabs.length === 0) {
   return (
-   <div className="p-8 text-center bg-card rounded-2xl border border-border">
-    <p className="text-muted-foreground text-sm">No role or team management tabs available for your permissions.</p>
+   <div className="bg-card rounded-2xl border border-border p-12 text-center max-w-lg mx-auto mt-8">
+    <div className="w-12 h-12 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center mx-auto mb-4 font-bold text-xl">!</div>
+    <h3 className="text-lg font-semibold text-foreground mb-1">Access Restricted</h3>
+    <p className="text-sm text-muted-foreground">You do not have permission to manage team members, roles, or departments.</p>
    </div>
   );
  }
@@ -43,7 +62,7 @@ export default function TeamManagementPage() {
   <div className="space-y-3">
    <div className="border-b border-border">
     <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-     {availableTabs.map((tab) => (
+     {tabs.map((tab) => (
       <button
        key={tab.id}
        onClick={() => setActiveTab(tab.id)}
