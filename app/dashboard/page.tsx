@@ -68,41 +68,57 @@ export default function DashboardOverviewPage() {
     return 'Good evening';
   }, []);
 
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
   const calculateDateRange = useCallback((selectedPeriod: string) => {
     const now = new Date();
-    let from: Date | null = null;
-    let to: Date = now;
-
     if (selectedPeriod === '30d') {
-      from = new Date();
+      const from = new Date();
       from.setDate(now.getDate() - 30);
-    } else if (selectedPeriod === '90d') {
-      from = new Date();
-      from.setDate(now.getDate() - 90);
-    } else if (selectedPeriod === 'ytd') {
-      from = new Date(now.getFullYear(), 0, 1);
+      return { createdFrom: from.toISOString().split('T')[0], createdTo: now.toISOString().split('T')[0] };
     }
-
-    return {
-      from: from ? from.toISOString().split('T')[0] : undefined,
-      to: to.toISOString().split('T')[0]
-    };
+    if (selectedPeriod === '90d') {
+      const from = new Date();
+      from.setDate(now.getDate() - 90);
+      return { createdFrom: from.toISOString().split('T')[0], createdTo: now.toISOString().split('T')[0] };
+    }
+    if (selectedPeriod === 'ytd') {
+      const from = new Date(now.getFullYear(), 0, 1);
+      return { createdFrom: from.toISOString().split('T')[0], createdTo: now.toISOString().split('T')[0] };
+    }
+    return undefined; // All time passes no date filter params
   }, []);
 
-  const loadData = useCallback(() => {
-    const range = calculateDateRange(period);
-    const params: any = {};
-    if (range.from) params.createdFrom = range.from;
-    if (range.to) params.createdTo = range.to;
+  const executeFetch = useCallback((filterPeriod: string) => {
+    const range = calculateDateRange(filterPeriod);
+    const promises: Promise<any>[] = [];
+    if (canClientAnalytics) promises.push(fetchClientAnalytics(range));
+    if (canAgentAnalytics) promises.push(fetchAgentAnalytics(range));
+    if (canRecruitmentAnalytics) promises.push(fetchRecruitmentAnalytics(range));
+    return Promise.allSettled(promises);
+  }, [calculateDateRange, canClientAnalytics, canAgentAnalytics, canRecruitmentAnalytics, fetchClientAnalytics, fetchAgentAnalytics, fetchRecruitmentAnalytics]);
 
-    if (canClientAnalytics) fetchClientAnalytics(params);
-    if (canAgentAnalytics) fetchAgentAnalytics(params);
-    if (canRecruitmentAnalytics) fetchRecruitmentAnalytics(params);
-  }, [period, canClientAnalytics, canAgentAnalytics, canRecruitmentAnalytics, calculateDateRange, fetchClientAnalytics, fetchAgentAnalytics, fetchRecruitmentAnalytics]);
+  const handlePeriodChange = useCallback((newPeriod: string) => {
+    setPeriod(newPeriod);
+    executeFetch(newPeriod);
+  }, [executeFetch]);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    addToast('Refreshing analytics data...', 'info');
+    try {
+      await executeFetch(period);
+      addToast('Analytics refreshed successfully', 'success');
+    } catch {
+      addToast('Failed to refresh some analytics', 'error');
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [period, executeFetch, addToast]);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    executeFetch(period);
+  }, [executeFetch, period]);
 
   const loading = clientLoading || agentLoading || recruitmentLoading;
   const error = clientError;
@@ -231,11 +247,11 @@ export default function DashboardOverviewPage() {
         {/* Global Controls */}
         <div className="flex flex-wrap items-center gap-2.5">
           <div className="w-40">
-            <Select value={period} onValueChange={setPeriod}>
+            <Select value={period} onValueChange={handlePeriodChange}>
               <SelectTrigger className="w-full bg-card h-9 text-xs">
                 <SelectValue placeholder="Period Filter" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent hideSearch>
                 <SelectItem value="all">All Time</SelectItem>
                 <SelectItem value="30d">Last 30 Days</SelectItem>
                 <SelectItem value="90d">Last 90 Days</SelectItem>
@@ -245,13 +261,14 @@ export default function DashboardOverviewPage() {
           </div>
 
           <button
-            onClick={loadData}
-            disabled={loading}
-            className="h-9 px-3 bg-card border border-border hover:bg-muted/30 text-foreground rounded-lg flex items-center gap-1.5 text-xs font-medium transition-colors disabled:opacity-50 cursor-pointer"
+            type="button"
+            onClick={handleRefresh}
+            disabled={isRefreshing || loading}
+            className="h-9 px-3.5 bg-card border border-border hover:bg-muted/40 text-foreground rounded-lg flex items-center gap-1.5 text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer shadow-2xs"
             title="Refresh analytics data"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
+            <RefreshCw className={`w-3.5 h-3.5 text-[#018752] ${isRefreshing || loading ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
           </button>
 
           <button
@@ -274,7 +291,7 @@ export default function DashboardOverviewPage() {
         <div className="p-8 bg-destructive/10 border border-destructive/20 rounded-2xl text-center space-y-3">
           <AlertCircle className="w-8 h-8 text-destructive mx-auto" />
           <p className="text-sm font-medium text-destructive">{error}</p>
-          <button onClick={loadData} className="text-xs underline text-destructive hover:opacity-80">
+          <button onClick={() => executeFetch(period)} className="text-xs underline text-destructive hover:opacity-80">
             Try again
           </button>
         </div>
