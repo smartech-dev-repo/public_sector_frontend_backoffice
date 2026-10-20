@@ -17,7 +17,7 @@ export default function TeamManagementPage() {
    { 
      id: 'admins', 
      label: 'Admins', 
-     visible: isSuperAdmin || hasAnyPermission(['admins:create', 'roles:manage']) 
+     visible: isSuperAdmin || hasPermission('roles:manage') 
    },
    { 
      id: 'roles', 

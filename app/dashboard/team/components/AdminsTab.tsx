@@ -17,9 +17,10 @@ import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function AdminsTab() {
  const { hasPermission, isSuperAdmin } = useAdminPermissions();
+ const canReadAdmins = isSuperAdmin || hasPermission('roles:manage');
  const canInvite = isSuperAdmin || hasPermission('admins:create');
  const canAssignRole = isSuperAdmin || hasPermission('roles:manage');
- const canSuspend = isSuperAdmin || hasPermission('admins:create');
+ const canSuspend = isSuperAdmin || hasPermission('roles:manage');
  const hasActions = canAssignRole || canSuspend;
 
  const [page, setPage] = useState(1);
@@ -45,6 +46,7 @@ export default function AdminsTab() {
 
 
  useEffect(() => {
+  if (!canReadAdmins) return;
   const params: any = { page, limit };
   if (search.trim()) params.search = search.trim();
   if (statusFilter && statusFilter !== 'none') params.status = statusFilter;
@@ -54,8 +56,10 @@ export default function AdminsTab() {
    if (to) params.to = to;
   }
   fetchAdmins(params);
-  fetchRoles();
- }, [fetchAdmins, fetchRoles, page, limit, search, statusFilter, dateRange]);
+  if (canAssignRole || canInvite) {
+   fetchRoles();
+  }
+ }, [fetchAdmins, fetchRoles, page, limit, search, statusFilter, dateRange, canReadAdmins, canAssignRole, canInvite]);
 
  const clearFilters = () => {
   setSearch('');
@@ -114,6 +118,17 @@ export default function AdminsTab() {
    }
   }
  };
+
+ if (!canReadAdmins) {
+  return (
+   <div className="p-8">
+    <EmptyState
+     title="Access Restricted"
+     description="You do not have permission to view administrator accounts."
+    />
+   </div>
+  );
+ }
 
  return (
   <main className="w-full">

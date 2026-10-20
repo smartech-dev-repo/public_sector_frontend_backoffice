@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/app/composables/core/useAuth';
+import { useAuth, clearAuthStorage } from '@/app/composables/core/useAuth';
 import AuthInput from '@/app/components/Auth/Input';
 import OtpInput from '@/app/components/ui/OtpInput';
 import { Mail, ShieldCheck, ArrowLeft, KeyRound } from 'lucide-react';
@@ -19,6 +19,11 @@ export default function LoginPage() {
  const [pendingToken, setPendingToken] = useState('');
  const [token2fa, setToken2fa] = useState('');
  const [verifyError, setVerifyError] = useState<string | null>(null);
+
+ useEffect(() => {
+  // Ensure any stale permissions or previous session data is completely purged
+  clearAuthStorage();
+ }, []);
 
  const handleLogin = async (e: React.FormEvent) => {
   e.preventDefault();

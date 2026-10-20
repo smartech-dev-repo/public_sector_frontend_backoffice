@@ -48,8 +48,10 @@ export default function BroadsheetPage() {
  }, []);
 
  useEffect(() => {
-  fetchBatches();
- }, [fetchBatches]);
+  if (canReadDocuments) {
+   fetchBatches();
+  }
+ }, [fetchBatches, canReadDocuments]);
 
  const mapBatchToData = (batch: any) => {
   const d = new Date(batch.createdAt);
@@ -209,7 +211,7 @@ export default function BroadsheetPage() {
   // Implement full export if API provides one
  };
 
- if (!canUploadIppis && !canUploadRepayments) {
+ if (!canUploadIppis && !canUploadRepayments && !canReadDocuments) {
   return (
    <div className="p-8">
     <EmptyState
@@ -301,36 +303,38 @@ export default function BroadsheetPage() {
        </div>
 
        {/* List */}
-       <div 
-        className="space-y-4 max-h-[500px] overflow-y-auto pr-2"
-        onScroll={(e) => {
-         const target = e.target as HTMLDivElement;
-         if (target.scrollHeight - target.scrollTop <= target.clientHeight + 50) {
-          if (ippisLimit < filteredIppis.length) {
-           setIppisLimit(prev => prev + 10);
+       {canReadDocuments && (
+        <div 
+         className="space-y-4 max-h-[500px] overflow-y-auto pr-2"
+         onScroll={(e) => {
+          const target = e.target as HTMLDivElement;
+          if (target.scrollHeight - target.scrollTop <= target.clientHeight + 50) {
+           if (ippisLimit < filteredIppis.length) {
+            setIppisLimit(prev => prev + 10);
+           }
           }
-         }
-        }}
-       >
-        {filteredIppis.length === 0 && <EmptyState title="No IPPIS uploads found." />}
-        {paginatedIppis.map((item) => (
-         <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 border-b border-slate-50 pb-4 last:border-0 hover:bg-muted/30/30 px-2 rounded-lg transition-colors">
-          <div>
-           <div className="flex items-center gap-3 mb-1">
-            <span className="font-semibold text-foreground">{item.month}</span>
-            <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-medium border border-emerald-100/50">{item.status}</span>
+         }}
+        >
+         {filteredIppis.length === 0 && <EmptyState title="No IPPIS uploads found." />}
+         {paginatedIppis.map((item) => (
+          <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 border-b border-slate-50 pb-4 last:border-0 hover:bg-muted/30/30 px-2 rounded-lg transition-colors">
+           <div>
+            <div className="flex items-center gap-3 mb-1">
+             <span className="font-semibold text-foreground">{item.month}</span>
+             <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-medium border border-emerald-100/50">{item.status}</span>
+            </div>
+            <p className="text-[12px] text-muted-foreground/70">{item.user} &bull; {item.date}</p>
            </div>
-           <p className="text-[12px] text-muted-foreground/70">{item.user} &bull; {item.date}</p>
+           {canReadDocuments && (
+            <button onClick={() => handleDownload(item, 'IPPIS')} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white text-xs font-medium transition-colors ">
+             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+             Download
+            </button>
+           )}
           </div>
-          {canReadDocuments && (
-           <button onClick={() => handleDownload(item, 'IPPIS')} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white text-xs font-medium transition-colors ">
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-            Download
-           </button>
-          )}
-         </div>
-        ))}
-       </div>
+         ))}
+        </div>
+       )}
       </div>
      )}
 
@@ -348,36 +352,38 @@ export default function BroadsheetPage() {
        </div>
 
        {/* List */}
-       <div 
-        className="space-y-4 max-h-[500px] overflow-y-auto pr-2"
-        onScroll={(e) => {
-         const target = e.target as HTMLDivElement;
-         if (target.scrollHeight - target.scrollTop <= target.clientHeight + 50) {
-          if (repaymentLimit < filteredRepayment.length) {
-           setRepaymentLimit(prev => prev + 10);
+       {canReadDocuments && (
+        <div 
+         className="space-y-4 max-h-[500px] overflow-y-auto pr-2"
+         onScroll={(e) => {
+          const target = e.target as HTMLDivElement;
+          if (target.scrollHeight - target.scrollTop <= target.clientHeight + 50) {
+           if (repaymentLimit < filteredRepayment.length) {
+            setRepaymentLimit(prev => prev + 10);
+           }
           }
-         }
-        }}
-       >
-        {filteredRepayment.length === 0 && <EmptyState title="No repayment schedules found." />}
-        {paginatedRepayment.map((item) => (
-         <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 border-b border-slate-50 pb-4 last:border-0 hover:bg-muted/30/30 px-2 rounded-lg transition-colors">
-          <div>
-           <div className="flex items-center gap-3 mb-1">
-            <span className="font-semibold text-foreground">{item.month}</span>
-            <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-medium border border-emerald-100/50">{item.status}</span>
+         }}
+        >
+         {filteredRepayment.length === 0 && <EmptyState title="No repayment schedules found." />}
+         {paginatedRepayment.map((item) => (
+          <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 border-b border-slate-50 pb-4 last:border-0 hover:bg-muted/30/30 px-2 rounded-lg transition-colors">
+           <div>
+            <div className="flex items-center gap-3 mb-1">
+             <span className="font-semibold text-foreground">{item.month}</span>
+             <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-medium border border-emerald-100/50">{item.status}</span>
+            </div>
+            <p className="text-[12px] text-muted-foreground/70">{item.user} &bull; {item.date}</p>
            </div>
-           <p className="text-[12px] text-muted-foreground/70">{item.user} &bull; {item.date}</p>
+           {canReadDocuments && (
+            <button onClick={() => handleDownload(item, 'Repayment')} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white text-xs font-medium transition-colors ">
+             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+             Download
+            </button>
+           )}
           </div>
-          {canReadDocuments && (
-           <button onClick={() => handleDownload(item, 'Repayment')} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white text-xs font-medium transition-colors ">
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-            Download
-           </button>
-          )}
-         </div>
-        ))}
-       </div>
+         ))}
+        </div>
+       )}
       </div>
      )}
     </div>

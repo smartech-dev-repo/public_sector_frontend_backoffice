@@ -37,6 +37,7 @@ export default function InvitesTab() {
  const [expiresRange, setExpiresRange] = useState('');
 
  useEffect(() => {
+  if (!canInvite) return;
   const params: any = { page, limit };
   if (statusFilter && statusFilter !== 'none') params.status = statusFilter;
   if (q.trim()) params.q = q.trim();
@@ -52,7 +53,7 @@ export default function InvitesTab() {
   }
   fetchInvites(params);
   fetchRoles();
- }, [fetchInvites, fetchRoles, page, limit, statusFilter, q, createdRange, expiresRange]);
+ }, [fetchInvites, fetchRoles, page, limit, statusFilter, q, createdRange, expiresRange, canInvite]);
 
  const handleCreateInvite = async (e: React.FormEvent) => {
   e.preventDefault();
@@ -120,6 +121,17 @@ export default function InvitesTab() {
    addToast(e?.response?.data?.message || 'Failed to delete invite', 'error');
   }
  };
+
+ if (!canInvite) {
+  return (
+   <div className="p-8">
+    <EmptyState
+     title="Access Restricted"
+     description="You do not have permission to view or manage admin invites."
+    />
+   </div>
+  );
+ }
 
  return (
   <main className="w-full">

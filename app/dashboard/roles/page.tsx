@@ -8,9 +8,14 @@ import EmptyState from '@/app/components/ui/EmptyState';
 import { useConfirm } from '@/app/composables/useConfirm';
 import TableDropdown from '@/app/components/ui/TableDropdown';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
+import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function RolesPage() {
  const { confirm } = useConfirm();
+ const { isSuperAdmin, hasPermission } = useAdminPermissions();
+ const canManageRoles = isSuperAdmin || hasPermission('roles:manage');
+ const canManagePermissions = isSuperAdmin || hasPermission('permissions:manage');
+ const hasActions = canManageRoles || canManagePermissions;
 
  const { loading, error, roles, fetchRoles, deleteRole, createRole, updateRole } = useRoles();
  const { addToast } = useToast();
@@ -24,8 +29,10 @@ export default function RolesPage() {
  const [form, setForm] = useState({ name: '', description: '' });
 
  useEffect(() => {
-  fetchRoles();
- }, [fetchRoles]);
+  if (canManageRoles) {
+   fetchRoles();
+  }
+ }, [fetchRoles, canManageRoles]);
 
  const openCreateModal = () => {
   setIsEditing(false);
@@ -86,14 +93,27 @@ export default function RolesPage() {
   }
  };
 
+ if (!canManageRoles) {
+  return (
+   <div className="p-8">
+    <EmptyState
+     title="Access Restricted"
+     description="You do not have permission to view or manage system roles."
+    />
+   </div>
+  );
+ }
+
  return (
   <main className="w-full">
-   <div className="flex justify-end items-center mb-4">
-    <h1 className="sr-only">Role Management</h1>
-    <button onClick={openCreateModal} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium">
-     Create Role
-    </button>
-   </div>
+   {canManageRoles && (
+    <div className="flex justify-end items-center mb-4">
+     <h1 className="sr-only">Role Management</h1>
+     <button onClick={openCreateModal} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium cursor-pointer">
+      Create Role
+     </button>
+    </div>
+   )}
 
    {loading && <PulseLoader />}
    {!loading && error && <div className="text-red-500 py-12 text-center">{error}</div>}
@@ -108,12 +128,14 @@ export default function RolesPage() {
         <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Name</th>
         <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Description</th>
         <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Permissions</th>
-        <th className="px-4 py-4 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
+        {hasActions && (
+         <th className="px-4 py-4 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
+        )}
        </tr>
       </thead>
       <tbody className="divide-y divide-slate-100">
  {roles.length === 0 ? (
-  <tr><td colSpan={5} className="p-8"><div className="flex justify-center w-full"><EmptyState title="No roles found." /></div></td></tr>
+  <tr><td colSpan={hasActions ? 5 : 4} className="p-8"><div className="flex justify-center w-full"><EmptyState title="No roles found." /></div></td></tr>
  ) : (roles.map((role: any) => (
         <tr key={role.id} className="hover:bg-muted/30 transition-colors">
          <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground font-mono">{role.id.substring(0, 8)}...</td>
@@ -136,35 +158,43 @@ export default function RolesPage() {
            )}
           </div>
          </td>
-         <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium relative">
-          <TableDropdown>
-           <button 
-            type="button"
-            onClick={() => openViewPermissionsModal(role)} 
-            className="w-full text-left px-4 py-2.5 text-xs font-medium text-foreground hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 transition-colors flex items-center gap-2.5"
-           >
-            <Eye className="w-4 h-4 text-emerald-600 shrink-0" />
-            View Permissions
-           </button>
-           <button 
-            type="button"
-            onClick={() => openEditModal(role)} 
-            className="w-full text-left px-4 py-2.5 text-xs font-medium text-foreground hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-950/30 transition-colors flex items-center gap-2.5"
-           >
-            <Pencil className="w-4 h-4 text-blue-600 shrink-0" />
-            Edit Role
-           </button>
-           <div className="h-px bg-border/60 my-1"></div>
-           <button 
-            type="button"
-            onClick={() => handleDelete(role.id)} 
-            className="w-full text-left px-4 py-2.5 text-xs font-medium text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/30 transition-colors flex items-center gap-2.5"
-           >
-            <Trash2 className="w-4 h-4 text-rose-600 shrink-0" />
-            Delete
-           </button>
-          </TableDropdown>
-         </td>
+         {hasActions && (
+          <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium relative">
+           <TableDropdown>
+            {canManagePermissions && (
+             <button 
+              type="button"
+              onClick={() => openViewPermissionsModal(role)} 
+              className="w-full text-left px-4 py-2.5 text-xs font-medium text-foreground hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 transition-colors flex items-center gap-2.5"
+             >
+              <Eye className="w-4 h-4 text-emerald-600 shrink-0" />
+              View Permissions
+             </button>
+            )}
+            {canManageRoles && (
+             <>
+              <button 
+               type="button"
+               onClick={() => openEditModal(role)} 
+               className="w-full text-left px-4 py-2.5 text-xs font-medium text-foreground hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-950/30 transition-colors flex items-center gap-2.5"
+              >
+               <Pencil className="w-4 h-4 text-blue-600 shrink-0" />
+               Edit Role
+              </button>
+              <div className="h-px bg-border/60 my-1"></div>
+              <button 
+               type="button"
+               onClick={() => handleDelete(role.id)} 
+               className="w-full text-left px-4 py-2.5 text-xs font-medium text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/30 transition-colors flex items-center gap-2.5"
+              >
+               <Trash2 className="w-4 h-4 text-rose-600 shrink-0" />
+               Delete
+              </button>
+             </>
+            )}
+           </TableDropdown>
+          </td>
+         )}
         </tr>
        )))}
 </tbody>
