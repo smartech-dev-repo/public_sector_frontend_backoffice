@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef, use } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
@@ -26,7 +26,8 @@ import {
   Download,
   ArrowLeft,
   Copy,
-  Check
+  Check,
+  Image as ImageIcon
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { useAgents } from '@/app/composables/modules/useAgents';
@@ -64,6 +65,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<{ url: string; title: string; subtitle?: string } | null>(null);
+  const [showDocsModal, setShowDocsModal] = useState(false);
 
   // Actions dropdown
   const [actionsOpen, setActionsOpen] = useState(false);
@@ -83,9 +85,95 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
   const [onboardedClients, setOnboardedClients] = useState<any[]>([]);
   const [clientsMeta, setClientsMeta] = useState<any>(null);
   const [clientsLoading, setClientsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'loans' | 'clients'>('loans');
+  const [activeTab, setActiveTab] = useState<'loans' | 'clients'>('clients');
   const [clientsPage, setClientsPage] = useState(1);
   const [clientsLimit, setClientsLimit] = useState(10);
+
+  const resolveDocUrl = useCallback((urlOrKey?: string | null) => {
+    if (!urlOrKey) return '';
+    if (urlOrKey.startsWith('http://') || urlOrKey.startsWith('https://')) {
+      return urlOrKey;
+    }
+    return urlOrKey.startsWith('/') ? urlOrKey : `/${urlOrKey}`;
+  }, []);
+
+  const agentDocuments = useMemo(() => {
+    if (!application) return [];
+    const docs: Array<{
+      id: string;
+      title: string;
+      type: 'CV' | 'PASSPORT' | 'ID' | 'SUPPORTING';
+      url: string;
+      key?: string;
+      format: string;
+    }> = [];
+
+    // 1. CV (PDF or Doc)
+    const cvRaw = application.cvUrl || application.cvKey;
+    if (cvRaw) {
+      const url = resolveDocUrl(cvRaw);
+      const isDoc = url.toLowerCase().includes('.doc');
+      docs.push({
+        id: 'cv',
+        title: 'Curriculum Vitae (CV)',
+        type: 'CV',
+        url,
+        key: application.cvKey,
+        format: isDoc ? 'Word Document (.doc / .docx)' : 'PDF Document'
+      });
+    }
+
+    // 2. Passport Photo
+    const photoRaw = application.passportPhotoUrl || application.passportPhotoKey;
+    if (photoRaw) {
+      docs.push({
+        id: 'passport',
+        title: 'Passport Photograph',
+        type: 'PASSPORT',
+        url: resolveDocUrl(photoRaw),
+        key: application.passportPhotoKey,
+        format: 'Image (JPEG/PNG)'
+      });
+    }
+
+    // 3. Identity Document
+    const idRaw = application.identityDocumentUrl || application.identityDocumentKey || application.ninSlipUrl || application.ninSlipKey;
+    if (idRaw) {
+      const url = resolveDocUrl(idRaw);
+      const isPdf = url.toLowerCase().includes('.pdf');
+      docs.push({
+        id: 'id-doc',
+        title: 'National Identity / KYC Document',
+        type: 'ID',
+        url,
+        key: application.identityDocumentKey || application.ninSlipKey,
+        format: isPdf ? 'PDF Document' : 'Image (JPEG/PNG)'
+      });
+    }
+
+    // 4. Supporting / Additional documents
+    const supporting = application.supportingDocumentUrls || application.supportingDocumentKeys || application.documents || application.additionalDocuments || [];
+    if (Array.isArray(supporting)) {
+      supporting.forEach((item: any, idx: number) => {
+        const itemUrl = typeof item === 'string' ? item : (item.url || item.key);
+        if (itemUrl) {
+          const resolved = resolveDocUrl(itemUrl);
+          const isDoc = resolved.toLowerCase().includes('.doc');
+          const isPdf = resolved.toLowerCase().includes('.pdf');
+          docs.push({
+            id: `supporting-${idx}`,
+            title: item.title || item.name || `Supporting Document ${idx + 1}`,
+            type: 'SUPPORTING',
+            url: resolved,
+            key: typeof item === 'string' ? item : item.key,
+            format: isDoc ? 'Word Document' : isPdf ? 'PDF Document' : 'Document/Image'
+          });
+        }
+      });
+    }
+
+    return docs;
+  }, [application, resolveDocUrl]);
 
   // Click outside handlers
   useEffect(() => {
@@ -147,12 +235,12 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
   }, [id, canReadAgent]);
 
   useEffect(() => {
-    if (canReadLoans) {
-      const params: any = { agentId: id, page, limit };
+    if (canReadLoans && application?.clientId) {
+      const params: any = { clientId: application.clientId, page, limit };
       if (filterParams.search) params.q = filterParams.search;
       fetchClientLoans(params);
     }
-  }, [fetchClientLoans, id, page, limit, filterParams, canReadLoans]);
+  }, [fetchClientLoans, application?.clientId, page, limit, filterParams, canReadLoans]);
 
   useEffect(() => {
     if (!canReadLoans && canReadClients) {
@@ -302,7 +390,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
 
   const agentName = application.fullName || `${application.firstName || ''} ${application.lastName || ''}`.trim() || 'Agent';
   const initial = (agentName.charAt(0) || application.email?.charAt(0) || 'A').toUpperCase();
-  const hasActions = canSendCreds || canManageAccess || canRevokeSessions || (application.status === 'PENDING' && canReviewAgent);
+  const hasActions = canSendCreds || canManageAccess || canRevokeSessions || canReadDocs || (application.status === 'PENDING' && canReviewAgent);
 
   return (
     <div className="space-y-6 pb-16">
@@ -348,8 +436,26 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
                   Agent Actions
                 </div>
 
+                {/* View Uploaded Documents */}
+                {canReadDocs && (
+                  <button
+                    onClick={() => { setActionsOpen(false); setShowDocsModal(true); }}
+                    className="w-full text-left px-3.5 py-2.5 text-xs sm:text-sm font-medium text-foreground hover:bg-muted flex items-center justify-between transition-colors cursor-pointer"
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <FileText className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>View Uploaded Documents</span>
+                    </span>
+                    {agentDocuments.length > 0 && (
+                      <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
+                        {agentDocuments.length}
+                      </span>
+                    )}
+                  </button>
+                )}
+
                 {/* Resend Credentials */}
-                {canSendCreds && (
+                {canSendCreds && application.mustChangePassword !== false && (
                   <button
                     onClick={() => { setActionsOpen(false); handleResendCredentials(); }}
                     className="w-full text-left px-3.5 py-2.5 text-xs sm:text-sm font-medium text-foreground hover:bg-muted flex items-center gap-2.5 transition-colors cursor-pointer"
@@ -546,24 +652,33 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
             <div className="space-y-1">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                 <FileText className="w-3.5 h-3.5 text-emerald-600" />
-                Verification Document
+                Uploaded Documents
               </span>
               <div>
-                {application.cvKey ? (
+                {agentDocuments.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowDocsModal(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-[#018752] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 rounded-lg text-xs font-semibold hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors cursor-pointer shadow-2xs"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>View Documents ({agentDocuments.length})</span>
+                  </button>
+                ) : application.cvKey ? (
                   <button
                     type="button"
                     onClick={() => setPreviewDoc({
-                      url: `/${application.cvKey}`,
+                      url: resolveDocUrl(application.cvUrl || application.cvKey),
                       title: `${agentName} - Verification Document`,
                       subtitle: `Agent ID: ${application.id}`
                     })}
-                    className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 dark:bg-emerald-950/40 text-[#018752] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 rounded-lg text-xs font-semibold hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-[#018752] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 rounded-lg text-xs font-semibold hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors cursor-pointer shadow-2xs"
                   >
                     <Eye className="w-3.5 h-3.5" />
                     <span>View Document</span>
                   </button>
                 ) : (
-                  <span className="text-xs text-muted-foreground">No document attached</span>
+                  <span className="text-xs text-muted-foreground">No documents attached</span>
                 )}
               </div>
             </div>
@@ -660,8 +775,15 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
               <ShieldCheck className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 capitalize mb-1">
-            {application.status?.toLowerCase() || 'N/A'}
+          <div className="mb-2">
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold ${
+              application.status === 'APPROVED' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800' :
+              application.status === 'PENDING' ? 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300' :
+              'bg-rose-50 text-rose-700 border border-rose-200'
+            }`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${application.status === 'APPROVED' ? 'bg-emerald-600' : application.status === 'PENDING' ? 'bg-amber-500' : 'bg-rose-600'}`}></span>
+              <span className="capitalize">{application.status?.toLowerCase() || 'Pending'}</span>
+            </span>
           </div>
           <span className="text-xs text-muted-foreground">
             {application.canOnboardClients === false ? 'Onboarding restricted' : 'Authorized for customer onboarding'}
@@ -981,6 +1103,133 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
         </div>
       )}
 
+      {/* ================= AGENT UPLOADED DOCUMENTS MODAL ================= */}
+      {showDocsModal && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[125] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+          <div 
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+            onClick={() => setShowDocsModal(false)} 
+          />
+          <div className="relative bg-card rounded-2xl max-w-2xl w-full border border-border shadow-2xl z-10 animate-in fade-in zoom-in-95 duration-200 overflow-hidden flex flex-col max-h-[85vh]">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-5 border-b border-border bg-muted/40 shrink-0">
+              <div>
+                <h3 className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-[#018752]" />
+                  <span>Agent Uploaded Documents</span>
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {agentName} • {agentDocuments.length} document{agentDocuments.length === 1 ? '' : 's'} available
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowDocsModal(false)}
+                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto">
+              {agentDocuments.length === 0 ? (
+                <div className="py-12 text-center max-w-sm mx-auto">
+                  <div className="w-12 h-12 rounded-2xl bg-muted text-muted-foreground flex items-center justify-center mx-auto mb-3">
+                    <FileText className="w-6 h-6" />
+                  </div>
+                  <h4 className="text-sm font-bold text-foreground">No Documents Found</h4>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    This agent does not have any documents attached to their record.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {agentDocuments.map((doc) => {
+                    return (
+                      <div 
+                        key={doc.id}
+                        className="p-4 rounded-xl border border-border/70 bg-card hover:border-emerald-500/40 hover:shadow-xs transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                      >
+                        <div className="flex items-start gap-3 min-w-0">
+                          <div className={`p-2.5 rounded-xl shrink-0 mt-0.5 ${
+                            doc.type === 'CV' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' :
+                            doc.type === 'PASSPORT' ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300' :
+                            doc.type === 'ID' ? 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300' :
+                            'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300'
+                          }`}>
+                            {doc.type === 'PASSPORT' ? (
+                              <ImageIcon className="w-5 h-5" />
+                            ) : doc.type === 'ID' ? (
+                              <ShieldCheck className="w-5 h-5" />
+                            ) : (
+                              <FileText className="w-5 h-5" />
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <h5 className="text-sm font-bold text-foreground truncate">{doc.title}</h5>
+                            <div className="flex items-center gap-2 mt-1 flex-wrap text-xs text-muted-foreground">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-muted text-muted-foreground border border-border/50">
+                                {doc.format}
+                              </span>
+                              {doc.key && (
+                                <span className="text-[11px] font-mono truncate max-w-[200px]" title={doc.key}>
+                                  {doc.key.split('/').pop()}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowDocsModal(false);
+                              setPreviewDoc({
+                                url: doc.url,
+                                title: `${agentName} - ${doc.title}`,
+                                subtitle: doc.format
+                              });
+                            }}
+                            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-[#018752] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 rounded-lg text-xs font-semibold hover:bg-emerald-100 transition-colors cursor-pointer"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Preview</span>
+                          </button>
+                          <a
+                            href={doc.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            download
+                            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-card text-foreground border border-border rounded-lg text-xs font-semibold hover:bg-muted transition-colors cursor-pointer"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+                            <span>Open</span>
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-border bg-muted/30 flex items-center justify-end shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowDocsModal(false)}
+                className="px-5 py-2 bg-background border border-border hover:bg-muted text-foreground rounded-lg text-xs font-medium transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
       {/* ================= DOCUMENT LIGHTBOX MODAL ================= */}
       {previewDoc && typeof document !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 sm:p-6">
@@ -996,13 +1245,24 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
                   <p className="text-xs text-muted-foreground truncate mt-0.5">{previewDoc.subtitle}</p>
                 )}
               </div>
-              <button
-                onClick={() => setPreviewDoc(null)}
-                className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-                title="Close viewer"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-1.5">
+                <a
+                  href={previewDoc.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                  title="Open in new tab"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+                <button
+                  onClick={() => setPreviewDoc(null)}
+                  className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                  title="Close viewer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             <div className="p-4 bg-muted/20 flex-1 overflow-auto flex items-center justify-center min-h-[320px] max-h-[72vh]">
@@ -1012,6 +1272,39 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
                   title={previewDoc.title}
                   className="w-full h-[68vh] rounded-xl border border-border bg-white"
                 />
+              ) : previewDoc.url.toLowerCase().includes('.doc') ? (
+                <div className="w-full h-[68vh] flex flex-col items-center justify-center bg-card rounded-xl border border-border p-6 text-center space-y-4">
+                  <div className="w-16 h-16 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 flex items-center justify-center">
+                    <FileText className="w-8 h-8" />
+                  </div>
+                  <div className="max-w-md">
+                    <h4 className="text-base font-bold text-foreground">{previewDoc.title}</h4>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      This is a Word document (.doc / .docx). You can download it directly or view it through Google Docs.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 pt-2 flex-wrap justify-center">
+                    <a
+                      href={previewDoc.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      download
+                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#018752] hover:bg-[#017044] text-white rounded-xl text-xs font-semibold shadow-xs transition-colors"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>Download Document</span>
+                    </a>
+                    <a
+                      href={`https://docs.google.com/gview?url=${encodeURIComponent(previewDoc.url)}&embedded=true`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-muted hover:bg-muted/80 text-foreground border border-border rounded-xl text-xs font-semibold transition-colors"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      <span>View in Google Docs</span>
+                    </a>
+                  </div>
+                </div>
               ) : (
                 <img
                   src={previewDoc.url}
