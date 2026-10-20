@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useToast } from '@/app/composables/useToast';
-import { useAuth } from '@/app/composables/core/useAuth';
+import { useAuth, clearAuthStorage } from '@/app/composables/core/useAuth';
 import AuthInput from '@/app/components/Auth/Input';
 
 function SetupAccountContent() {
@@ -99,8 +99,9 @@ function SetupAccountContent() {
         sessionStorage.removeItem('public_sector_invite_email');
       }
 
-      addToast('Account activated successfully! Redirecting...', 'success');
-      router.push('/dashboard/broadsheet');
+      clearAuthStorage();
+      addToast('Account activated successfully! Please sign in with your credentials.', 'success');
+      router.push('/login');
     } catch (err: any) {
       const msg = err?.response?.data?.message || err?.message || 'Failed to complete invitation setup.';
       addToast(Array.isArray(msg) ? msg.join(', ') : msg, 'error');

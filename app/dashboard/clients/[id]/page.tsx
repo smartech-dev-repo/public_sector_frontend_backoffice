@@ -24,6 +24,7 @@ import {
  Maximize2, 
  X, 
  FileText,
+ FileCheck2,
  BadgeCheck,
  Building2,
  Calendar,
@@ -866,6 +867,127 @@ export default function ClientWalletPage() {
           </div>
          </div>
         </div>
+
+        {/* Additional Documents Collected (Onboarding Uploads) */}
+        {(() => {
+          const rawDocs = Array.isArray(client.documents) && client.documents.length > 0 
+            ? client.documents 
+            : (Array.isArray(client.onboarding?.documents) ? client.onboarding.documents : []);
+
+          return (
+            <div className="bg-card p-6 rounded-2xl border border-border shadow-xs md:col-span-2">
+              <div className="flex items-center justify-between mb-4 pb-2 border-b border-border/60 flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-emerald-600" />
+                  <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
+                    Additional Documents Collected
+                  </h3>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 font-semibold font-mono">
+                    {rawDocs.length}
+                  </span>
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  Supporting files and identity documents uploaded during onboarding
+                </span>
+              </div>
+
+              {rawDocs.length === 0 ? (
+                <div className="py-8 text-center text-muted-foreground bg-muted/10 rounded-xl border border-dashed border-border/80">
+                  <FileCheck2 className="w-8 h-8 mx-auto mb-2 opacity-30 text-emerald-600" />
+                  <p className="text-xs font-medium text-foreground">No Additional Documents Uploaded</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">Only core KYC biometric photos (BVN, NIN, Selfie) were captured for this client.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                  {rawDocs.map((doc: any, idx: number) => {
+                    const docType = doc.documentType || 'DOCUMENT';
+                    const docTitle = docType.replace(/_/g, ' ');
+                    const isPdf = typeof doc.url === 'string' && doc.url.toLowerCase().includes('.pdf');
+
+                    return (
+                      <div key={doc.id || idx} className="bg-muted/20 border border-border/70 rounded-xl p-3.5 flex flex-col justify-between hover:border-emerald-600/40 transition-colors">
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-bold text-xs uppercase tracking-wider text-foreground truncate" title={docTitle}>
+                              {docTitle}
+                            </span>
+                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
+                              {isPdf ? 'PDF' : 'IMAGE'}
+                            </span>
+                          </div>
+
+                          {doc.url ? (
+                            <div 
+                              onClick={() => setPreviewImage({
+                                url: doc.url,
+                                title: docTitle,
+                                subtitle: `Uploaded Onboarding Document • ${doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleString() : 'File'}`
+                              })}
+                              className="relative group cursor-pointer aspect-video rounded-lg overflow-hidden bg-slate-900 border border-border flex items-center justify-center my-2"
+                            >
+                              {isPdf ? (
+                                <div className="flex flex-col items-center justify-center text-muted-foreground">
+                                  <FileText className="w-8 h-8 text-emerald-500 mb-1" />
+                                  <span className="text-[11px] font-mono text-white">PDF Document</span>
+                                </div>
+                              ) : (
+                                <img 
+                                  src={doc.url} 
+                                  alt={docTitle} 
+                                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
+                                />
+                              )}
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-xs font-medium">
+                                <Maximize2 className="w-4 h-4" />
+                                <span>Click to zoom</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="aspect-video rounded-lg border border-dashed border-border/80 flex items-center justify-center text-muted-foreground my-2">
+                              <span className="text-xs">No File URL</span>
+                            </div>
+                          )}
+
+                          {doc.uploadedAt && (
+                            <p className="text-[10px] text-muted-foreground mt-1.5 font-mono">
+                              Uploaded {new Date(doc.uploadedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </p>
+                          )}
+                        </div>
+
+                        {doc.url && (
+                          <div className="flex items-center gap-2 mt-3 pt-2 border-t border-border/40">
+                            <button
+                              type="button"
+                              onClick={() => setPreviewImage({
+                                url: doc.url,
+                                title: docTitle,
+                                subtitle: `Uploaded Onboarding Document • ${doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleString() : 'File'}`
+                              })}
+                              className="flex-1 py-1.5 px-2 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition-colors border border-emerald-200/60 dark:border-emerald-800/40 cursor-pointer"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                              <span>Preview</span>
+                            </button>
+                            <a
+                              href={doc.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1.5 bg-muted hover:bg-muted/80 text-foreground rounded-lg transition-colors border border-border"
+                              title="Open original file"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })()}
        </div>
       </div>
      )}
@@ -1255,13 +1377,17 @@ export default function ClientWalletPage() {
         </div>
 
         {/* Uploaded Documents if any */}
-        {Array.isArray(client.onboarding?.documents) && client.onboarding.documents.length > 0 && canReadDocuments && (
+        {(() => {
+          const rawDocs = Array.isArray(client.documents) && client.documents.length > 0 
+            ? client.documents 
+            : (Array.isArray(client.onboarding?.documents) ? client.onboarding.documents : []);
+          return rawDocs.length > 0 && (canReadDocuments || canReadClient) && (
          <div className="bg-card p-6 rounded-2xl border border-border shadow-xs md:col-span-2">
           <h3 className="font-semibold text-foreground text-sm uppercase tracking-wider mb-4 pb-2 border-b border-border/60">
            Uploaded Verification Documents
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-           {client.onboarding.documents.map((doc: any, idx: number) => {
+           {rawDocs.map((doc: any, idx: number) => {
             const docTitle = doc.documentType?.replace(/_/g, ' ') || 'Verification Document';
             const isPdf = typeof doc.url === 'string' && doc.url.toLowerCase().includes('.pdf');
             return (
@@ -1298,7 +1424,7 @@ export default function ClientWalletPage() {
            })}
           </div>
          </div>
-        )}
+        ); })()}
        </div>
       </div>
      )}
