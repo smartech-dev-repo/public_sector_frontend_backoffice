@@ -9,8 +9,23 @@ import SessionManager from '@/app/components/ui/SessionManager';
 import ProfileDropdown from '@/app/components/ui/ProfileDropdown';
 import { useProfile } from '@/app/composables/modules/useProfile';
 import { useTheme } from 'next-themes';
-import { Monitor, Moon, Sun, Folder, UserPlus, Users, User, LineChart, UserCog, ClipboardList, Scale, ShieldCheck, Settings, Banknote, ChevronDown, ShieldAlert } from 'lucide-react';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+import { clearAuthStorage } from '@/app/composables/core/useAuth';
+import { 
+  Sun, 
+  Moon, 
+  Monitor, 
+  Folder, 
+  Settings, 
+  UserPlus, 
+  Users, 
+  Banknote, 
+  User, 
+  LineChart, 
+  ShieldCheck, 
+  ChevronDown, 
+  ShieldAlert 
+} from 'lucide-react';
 
 export default function CreditRiskLayout({ children }: { children: React.ReactNode }) {
  const pathname = usePathname();
@@ -119,24 +134,8 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
 
  const confirmLogout = () => {
   setShowLogoutModal(false);
-  if (typeof window !== 'undefined') {
-   document.cookie = 'public_sector_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-   localStorage.removeItem('token');
-  }
+  clearAuthStorage();
   router.push('/login');
- };
-
- const themeIcon = (
-  <>
-   <Sun className="w-5 h-5 dark:hidden" />
-   <Moon className="w-5 h-5 hidden dark:block" />
-  </>
- );
-
- const cycleTheme = () => {
-  const order = ['light', 'dark', 'system'];
-  const i = order.indexOf(theme || 'system');
-  setTheme(order[(i + 1) % order.length]);
  };
 
  const navItems = useMemo(() => [
@@ -145,14 +144,14 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
    label: 'Broadsheet and Repayment',
    icon: Folder,
    match: (p: string) => p.startsWith('/dashboard/broadsheet') || p.startsWith('/dashboard/uploads'),
-   visible: hasAnyPermission(['loans:upload', 'repayments:upload', 'ippis:upload']),
+   visible: hasAnyPermission(['loans:upload', 'repayments:upload', 'ippis:upload', 'documents:read']),
   },
   {
    href: '/dashboard/loan-terms',
    label: 'Loan Products',
    icon: Settings,
    match: (p: string) => p.startsWith('/dashboard/loan-terms') || p.startsWith('/dashboard/catalog/loans') || p.startsWith('/dashboard/loan-products'),
-   visible: hasAnyPermission(['loan-terms:manage', 'loan-products:manage', 'loan-settings:manage']),
+   visible: hasAnyPermission(['loan-products:manage', 'loan-settings:manage', 'loans:upload']),
   },
   {
    href: '/dashboard/invites',
@@ -173,14 +172,14 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
    label: 'Loan Request',
    icon: Banknote,
    match: (p: string) => p.startsWith('/dashboard/loan-requests') || p.startsWith('/dashboard/client-loans') || p.startsWith('/dashboard/disbursement-summary') || p.startsWith('/dashboard/maker-checker'),
-   visible: hasAnyPermission(['loan-requests:review', 'client-loans:read']),
+   visible: hasAnyPermission(['loan-requests:review', 'client-loans:read', 'clients:read']),
   },
   {
    href: '/dashboard/clients',
    label: 'Customer Management',
    icon: User,
    match: (p: string) => p.startsWith('/dashboard/clients') || p.startsWith('/dashboard/catalog/ippis'),
-   visible: hasAnyPermission(['clients:read', 'clients:review', 'clients:onboard', 'clients:analytics:read']),
+   visible: hasAnyPermission(['clients:read', 'clients:review', 'clients:onboard', 'clients:analytics:read', 'ippis:upload', 'wallets:read', 'wallets:manage']),
   },
   {
    href: '/dashboard/reports',
@@ -332,7 +331,8 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
         className="p-2 text-muted-foreground hover:text-primary hover:bg-accent rounded-lg transition-colors" 
         title="Theme settings"
        >
-        {themeIcon}
+        <Sun className="w-5 h-5 dark:hidden" />
+        <Moon className="w-5 h-5 hidden dark:block" />
        </button>
        {isThemeDropdownOpen && (
         <div className="absolute top-full right-0 mt-2 w-40 bg-popover rounded-xl border border-border py-1 z-50">

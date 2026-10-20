@@ -8,7 +8,11 @@ import Pagination from '@/app/components/ui/Pagination';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 import SensitiveValue from '@/app/components/ui/SensitiveValue';
 
+import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+
 export default function IppisRecordsTab() {
+ const { isSuperAdmin, hasPermission } = useAdminPermissions();
+ const canUploadIppis = isSuperAdmin || hasPermission('ippis:upload');
  const { loading, error, ippisRecords, fetchIppisRecords, meta } = useIppis();
  
  const [page, setPage] = useState(1);
@@ -19,13 +23,14 @@ export default function IppisRecordsTab() {
  const [showFilter, setShowFilter] = useState(false);
 
  useEffect(() => {
+  if (!canUploadIppis) return;
   const params: any = { page, limit };
   if (q.trim()) params.q = q.trim();
   if (agency !== 'all') params.agency = agency;
   if (status !== 'all') params.status = status;
   
   fetchIppisRecords(params);
- }, [fetchIppisRecords, page, limit, q, agency, status]);
+ }, [fetchIppisRecords, page, limit, q, agency, status, canUploadIppis]);
 
  return (
   <main className="w-full">

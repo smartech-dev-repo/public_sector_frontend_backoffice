@@ -17,8 +17,9 @@ export default function MakerCheckerTab() {
  const [limit, setLimit] = useState(25);
 
  useEffect(() => {
+  if (!canReview) return;
   fetchLoanRequests({ status: 'CONFIRMED', page, limit }); 
- }, [fetchLoanRequests, page, limit]);
+ }, [fetchLoanRequests, page, limit, canReview]);
 
  const pendingCount = useMemo(() => loanRequests.filter((lr: any) => lr.status === 'CONFIRMED' || lr.status === 'PENDING').length, [loanRequests]);
  const approvedCount = useMemo(() => loanRequests.filter((lr: any) => lr.status === 'APPROVED').length, [loanRequests]);
@@ -80,6 +81,17 @@ export default function MakerCheckerTab() {
 
   return cols;
  }, [canReview]);
+
+ if (!canReview) {
+  return (
+   <div className="p-8">
+    <EmptyState
+     title="Access Restricted"
+     description="You do not have permission to view or manage the Maker/Checker Queue."
+    />
+   </div>
+  );
+ }
 
  return (
   <div className="space-y-3">

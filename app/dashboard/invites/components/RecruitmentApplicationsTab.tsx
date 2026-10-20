@@ -42,10 +42,11 @@ export default function RecruitmentApplicationsTab() {
   const { hasPermission, isSuperAdmin } = useAdminPermissions();
 
   const canReadAnalytics = isSuperAdmin || hasPermission('agents:recruitment:analytics:read');
+  const canReadRecruitment = isSuperAdmin || hasPermission('agents:recruitment:read');
   const canReviewAgent = isSuperAdmin || hasPermission('agents:review');
   const canManageRecruitment = isSuperAdmin || hasPermission('agents:recruitment:manage');
   const canReadDocs = isSuperAdmin || hasPermission('documents:read');
-  const canSendCreds = canReviewAgent || canManageRecruitment;
+  const canSendCreds = canReviewAgent;
 
   const {
     loading,
@@ -107,6 +108,7 @@ export default function RecruitmentApplicationsTab() {
 
   // Load applications list
   const loadApplications = useCallback(() => {
+    if (!canReadRecruitment) return;
     const params: any = { page: currentPage, limit: itemsPerPage };
     if (q.trim()) params.q = q.trim();
     if (statusFilter && statusFilter !== 'none') params.status = statusFilter;
@@ -116,7 +118,7 @@ export default function RecruitmentApplicationsTab() {
       if (to) params.createdTo = to;
     }
     fetchApplications(params);
-  }, [fetchApplications, currentPage, itemsPerPage, q, statusFilter, dateRange]);
+  }, [fetchApplications, currentPage, itemsPerPage, q, statusFilter, dateRange, canReadRecruitment]);
 
   useEffect(() => {
     loadAnalytics();
@@ -371,7 +373,9 @@ export default function RecruitmentApplicationsTab() {
       )}
 
       {/* ================= CONTROLS & FILTER ROW ================= */}
-      <div className="space-y-4">
+      {canReadRecruitment && (
+        <>
+          <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <span className="text-xs sm:text-sm text-muted-foreground font-medium">
             Showing {applications.length} of {meta?.total || applications.length} Recruitment Applications
@@ -635,21 +639,15 @@ export default function RecruitmentApplicationsTab() {
                               </>
                             )}
 
-                            {app.status !== 'SUBMITTED' ? (
-                              canManageRecruitment && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleDelete(app)}
-                                  className="w-full text-left px-4 py-2.5 text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors flex items-center gap-2.5"
-                                >
-                                  <Trash2 className="w-4 h-4 text-rose-600 shrink-0" />
-                                  Delete Draft
-                                </button>
-                              )
-                            ) : (
-                              <div className="px-4 py-1.5 text-[11px] text-muted-foreground/70 italic border-t border-border/40">
-                                Submitted (locked from deletion)
-                              </div>
+                            {app.status !== 'SUBMITTED' && canManageRecruitment && (
+                              <button
+                                type="button"
+                                onClick={() => handleDelete(app)}
+                                className="w-full text-left px-4 py-2.5 text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors flex items-center gap-2.5"
+                              >
+                                <Trash2 className="w-4 h-4 text-rose-600 shrink-0" />
+                                Delete Draft
+                              </button>
                             )}
                           </TableDropdown>
                         </div>
@@ -683,6 +681,18 @@ export default function RecruitmentApplicationsTab() {
               onItemsPerPageChange={setItemsPerPage}
             />
           )}
+        </div>
+      )}
+        </>
+      )}
+
+      {!canReadRecruitment && !canReadAnalytics && (
+        <div className="bg-card border border-border/60 rounded-2xl p-12 text-center shadow-xs">
+          <ShieldCheck className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
+          <h3 className="text-base font-semibold text-foreground">Access Restricted</h3>
+          <p className="text-sm text-muted-foreground mt-1 max-w-md mx-auto">
+            You do not have permission to view agent recruitment applications or funnel analytics.
+          </p>
         </div>
       )}
 
@@ -837,7 +847,7 @@ export default function RecruitmentApplicationsTab() {
                           <FileText className="w-4 h-4 text-emerald-600" />
                           Curriculum Vitae
                         </span>
-                        {selectedApp.cvKey ? (
+                        {selectedApp.cvKey && canReadDocs ? (
                           <button
                             type="button"
                             onClick={() => setPreviewDoc({
@@ -850,9 +860,9 @@ export default function RecruitmentApplicationsTab() {
                             <Eye className="w-3.5 h-3.5" />
                             View CV
                           </button>
-                        ) : (
+                        ) : !selectedApp.cvKey ? (
                           <span className="text-xs text-muted-foreground block py-1">Not uploaded</span>
-                        )}
+                        ) : null}
                       </div>
 
                       {/* Passport Photo */}
@@ -861,7 +871,7 @@ export default function RecruitmentApplicationsTab() {
                           <Eye className="w-4 h-4 text-blue-600" />
                           Passport Photo
                         </span>
-                        {selectedApp.passportPhotoKey ? (
+                        {selectedApp.passportPhotoKey && canReadDocs ? (
                           <button
                             type="button"
                             onClick={() => setPreviewDoc({
@@ -874,9 +884,9 @@ export default function RecruitmentApplicationsTab() {
                             <Eye className="w-3.5 h-3.5" />
                             View Photo
                           </button>
-                        ) : (
+                        ) : !selectedApp.passportPhotoKey ? (
                           <span className="text-xs text-muted-foreground block py-1">Not uploaded</span>
-                        )}
+                        ) : null}
                       </div>
 
                       {/* Identity Document */}
@@ -885,7 +895,7 @@ export default function RecruitmentApplicationsTab() {
                           <ShieldCheck className="w-4 h-4 text-purple-600" />
                           ID Document
                         </span>
-                        {selectedApp.identityDocumentKey ? (
+                        {selectedApp.identityDocumentKey && canReadDocs ? (
                           <button
                             type="button"
                             onClick={() => setPreviewDoc({
@@ -898,9 +908,9 @@ export default function RecruitmentApplicationsTab() {
                             <Eye className="w-3.5 h-3.5" />
                             View ID
                           </button>
-                        ) : (
+                        ) : !selectedApp.identityDocumentKey ? (
                           <span className="text-xs text-muted-foreground block py-1">Not uploaded</span>
-                        )}
+                        ) : null}
                       </div>
                     </div>
                   </div>

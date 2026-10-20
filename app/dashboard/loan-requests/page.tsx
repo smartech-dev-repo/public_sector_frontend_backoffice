@@ -27,7 +27,7 @@ function LoanRequestPageContent() {
       { 
         id: 'client-loans', 
         label: 'Client Loans', 
-        visible: isSuperAdmin || hasPermission('client-loans:read') 
+        visible: isSuperAdmin || hasAnyPermission(['client-loans:read', 'clients:read']) 
       },
       { 
         id: 'maker-checker', 

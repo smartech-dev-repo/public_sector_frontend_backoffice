@@ -9,8 +9,11 @@ import { MonthPicker } from '@/app/components/ui/MonthPicker';
 import TableDropdown from '@/app/components/ui/TableDropdown';
 import { useReconciliation } from '@/app/composables/modules/useReconciliation';
 import { FileSpreadsheet, Eye, Scale, CheckCircle2, AlertTriangle, AlertCircle, Clock } from 'lucide-react';
+import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function ReconciliationTab() {
+  const { isSuperAdmin, hasPermission } = useAdminPermissions();
+  const canUpload = isSuperAdmin || hasPermission('ippis:upload') || hasPermission('repayments:upload');
   const [isLoading, setIsLoading] = useState(true);
   const { reconciliation, fetchReconciliation, meta } = useReconciliation();
 
@@ -88,13 +91,15 @@ export default function ReconciliationTab() {
                 Filters
                 <svg className={`w-3 h-3 transition-transform ${showFilter ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
               </button>
-              <Link 
-                href="/dashboard/broadsheet" 
-                className="bg-[#018752] hover:bg-[#016f43] text-white px-4 py-2 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm"
-              >
-                <FileSpreadsheet className="w-3.5 h-3.5" />
-                Upload Schedules
-              </Link>
+              {canUpload && (
+                <Link 
+                  href="/dashboard/broadsheet" 
+                  className="bg-[#018752] hover:bg-[#016f43] text-white px-4 py-2 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm"
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5" />
+                  Upload Schedules
+                </Link>
+              )}
             </div>
           </div>
 

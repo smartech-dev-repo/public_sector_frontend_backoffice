@@ -9,8 +9,11 @@ import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { useConfirm } from '@/app/composables/useConfirm';
 import TableDropdown from '@/app/components/ui/TableDropdown';
+import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function AdminsPage() {
+ const { isSuperAdmin, hasPermission } = useAdminPermissions();
+ const canManageRoles = isSuperAdmin || hasPermission('roles:manage');
  const [page, setPage] = useState(1);
  const [limit, setLimit] = useState(25);
  const { confirm } = useConfirm();
@@ -26,8 +29,10 @@ export default function AdminsPage() {
 
 
  useEffect(() => {
-  fetchAdmins({ page, limit });
- }, [fetchAdmins, page, limit]);
+  if (canManageRoles) {
+   fetchAdmins({ page, limit });
+  }
+ }, [fetchAdmins, page, limit, canManageRoles]);
 
  const openAssignRoleModal = (admin: any) => {
   setSelectedAdmin(admin);
@@ -80,6 +85,17 @@ export default function AdminsPage() {
   }
  };
 
+ if (!canManageRoles) {
+  return (
+   <div className="p-8">
+    <EmptyState
+     title="Access Restricted"
+     description="You do not have permission to view or manage administrators."
+    />
+   </div>
+  );
+ }
+
  return (
   <main className="w-full">
    <h1 className="sr-only">Admin Users</h1>
@@ -101,11 +117,13 @@ export default function AdminsPage() {
           <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Role</th>
           <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Department</th>
           <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Status</th>
-          <th className="px-4 py-4 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
+          {canManageRoles && (
+           <th className="px-4 py-4 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
+          )}
          </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
- {admins.length === 0 ? (<tr><td colSpan={7} className="p-8"><div className="flex justify-center w-full"><EmptyState title="No admins found." /></div></td></tr>) : (admins.map((admin: any) => (
+ {admins.length === 0 ? (<tr><td colSpan={canManageRoles ? 7 : 6} className="p-8"><div className="flex justify-center w-full"><EmptyState title="No admins found." /></div></td></tr>) : (admins.map((admin: any) => (
           <tr key={admin.id} className="hover:bg-muted/30 transition-colors">
            <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground font-mono">{new Date(admin.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
            <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground">{admin.email}</td>
@@ -125,26 +143,28 @@ export default function AdminsPage() {
              {admin.isActive ? 'Active' : 'Suspended'}
             </span>
            </td>
-           <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium relative">
-            <TableDropdown>
-             <button onClick={() => { openAssignRoleModal(admin); }} className="w-full text-left px-4 py-2.5 text-sm font-medium text-foreground/90 hover:bg-emerald-50 hover:text-emerald-700 transition-colors flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
-              Assign Role
-             </button>
-             <div className="h-px bg-muted/50 my-1.5"></div>
-             {admin.isActive ? (
-              <button onClick={() => { handleSuspend(admin); }} className="w-full text-left px-4 py-2.5 text-sm font-medium text-foreground/90 hover:bg-amber-50 hover:text-amber-700 transition-colors flex items-center gap-2">
-               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
-               Suspend
+           {canManageRoles && (
+            <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium relative">
+             <TableDropdown>
+              <button onClick={() => { openAssignRoleModal(admin); }} className="w-full text-left px-4 py-2.5 text-sm font-medium text-foreground/90 hover:bg-emerald-50 hover:text-emerald-700 transition-colors flex items-center gap-2">
+               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+               Assign Role
               </button>
-             ) : (
-              <button onClick={() => { handleUnsuspend(admin); }} className="w-full text-left px-4 py-2.5 text-sm font-medium text-foreground/90 hover:bg-blue-50 hover:text-blue-700 transition-colors flex items-center gap-2">
-               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-               Unsuspend
-              </button>
-             )}
-            </TableDropdown>
-           </td>
+              <div className="h-px bg-muted/50 my-1.5"></div>
+              {admin.isActive ? (
+               <button onClick={() => { handleSuspend(admin); }} className="w-full text-left px-4 py-2.5 text-sm font-medium text-foreground/90 hover:bg-amber-50 hover:text-amber-700 transition-colors flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                Suspend
+               </button>
+              ) : (
+               <button onClick={() => { handleUnsuspend(admin); }} className="w-full text-left px-4 py-2.5 text-sm font-medium text-foreground/90 hover:bg-blue-50 hover:text-blue-700 transition-colors flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Unsuspend
+               </button>
+              )}
+             </TableDropdown>
+            </td>
+           )}
           </tr>
          )))}
 </tbody>

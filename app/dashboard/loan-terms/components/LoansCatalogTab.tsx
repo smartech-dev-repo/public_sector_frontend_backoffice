@@ -8,7 +8,11 @@ import Pagination from '@/app/components/ui/Pagination';
 import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 
+import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+
 export default function LoansCatalogTab() {
+ const { isSuperAdmin, hasPermission } = useAdminPermissions();
+ const canAccessCatalog = isSuperAdmin || hasPermission('loans:upload');
  const { loading, error, loans, fetchLoans, meta } = useLoans();
  
  const [page, setPage] = useState(1);
@@ -20,6 +24,7 @@ export default function LoansCatalogTab() {
  const [dateRange, setDateRange] = useState('');
 
  useEffect(() => {
+  if (!canAccessCatalog) return;
   const params: any = { page, limit };
   if (q.trim()) params.q = q.trim();
   if (agency !== 'all') params.agency = agency;
@@ -31,7 +36,7 @@ export default function LoansCatalogTab() {
   }
   
   fetchLoans(params);
- }, [fetchLoans, page, limit, q, agency, product, dateRange]);
+ }, [fetchLoans, page, limit, q, agency, product, dateRange, canAccessCatalog]);
 
  return (
   <main className="w-full">
