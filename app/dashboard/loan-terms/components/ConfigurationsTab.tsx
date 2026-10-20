@@ -74,7 +74,7 @@ export default function ConfigurationsTab() {
     if (canManageSettings) {
       fetchLoanSettings().then(res => {
         if (res) {
-          const rawMax = res.maximumMonths ?? res.maximumMonth ?? res.maxServiceMonths ?? res.maxServiceYears ?? 35;
+          const rawMax = res.maximumMonths ?? res.maximumMonth ?? res.MaximumMonth ?? res.maxServiceMonths ?? res.maxServiceYears ?? 35;
           const maxYears = Number(rawMax) > 50 ? Math.round(Number(rawMax) / 12) : Number(rawMax) || 35;
           setSettingsForm({
             retirementAgeYears: Number(res.retirementAgeYears) || 60,
@@ -126,14 +126,15 @@ export default function ConfigurationsTab() {
   const handleSaveSettings = async () => {
     setSubmitting(true);
     try {
-      const years = Number(settingsForm.maxServiceYears);
-      const months = years * 12;
+      const years = Number(settingsForm.maxServiceYears) || 35;
+      const months = years > 50 ? years : years * 12;
       await updateLoanSettings({
         retirementAgeYears: Number(settingsForm.retirementAgeYears),
         maxServiceYears: years,
         maxServiceMonths: months,
         maximumMonths: months,
-        maximumMonth: months
+        maximumMonth: months,
+        MaximumMonth: months
       });
       addToast('Loan settings updated successfully', 'success');
       setShowSettingsModal(false);
