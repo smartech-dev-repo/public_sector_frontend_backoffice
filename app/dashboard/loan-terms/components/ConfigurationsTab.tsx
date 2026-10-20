@@ -74,9 +74,11 @@ export default function ConfigurationsTab() {
     if (canManageSettings) {
       fetchLoanSettings().then(res => {
         if (res) {
+          const rawMax = res.maximumMonths ?? res.maximumMonth ?? res.maxServiceMonths ?? res.maxServiceYears ?? 35;
+          const maxYears = Number(rawMax) > 50 ? Math.round(Number(rawMax) / 12) : Number(rawMax) || 35;
           setSettingsForm({
-            retirementAgeYears: res.retirementAgeYears || 60,
-            maxServiceYears: res.maxServiceYears || 35
+            retirementAgeYears: Number(res.retirementAgeYears) || 60,
+            maxServiceYears: maxYears
           });
         }
       });
@@ -124,9 +126,14 @@ export default function ConfigurationsTab() {
   const handleSaveSettings = async () => {
     setSubmitting(true);
     try {
+      const years = Number(settingsForm.maxServiceYears);
+      const months = years * 12;
       await updateLoanSettings({
         retirementAgeYears: Number(settingsForm.retirementAgeYears),
-        maxServiceYears: Number(settingsForm.maxServiceYears)
+        maxServiceYears: years,
+        maxServiceMonths: months,
+        maximumMonths: months,
+        maximumMonth: months
       });
       addToast('Loan settings updated successfully', 'success');
       setShowSettingsModal(false);
@@ -420,7 +427,7 @@ export default function ConfigurationsTab() {
                   <SelectContent hideSearch>
                     {[25, 30, 35, 40].map(yrs => (
                       <SelectItem key={yrs} value={String(yrs)}>
-                        {yrs} years {yrs === 35 ? '(Public Service Standard)' : ''}
+                        {yrs} years ({yrs * 12} months) {yrs === 35 ? '(Public Service Standard)' : ''}
                       </SelectItem>
                     ))}
                   </SelectContent>

@@ -137,6 +137,33 @@ export default function AnalyticsTab() {
     ? Number(agentAnalytics.activity.averageReviewTimeHours).toFixed(1)
     : null;
 
+  type AnalyticsSubTab = 'clients' | 'recruitment' | 'agents' | 'all';
+
+  const subTabs = useMemo(() => {
+    const list: { id: AnalyticsSubTab; label: string; icon: any; count?: number }[] = [];
+    if (canClientAnalytics) {
+      list.push({ id: 'clients', label: 'Client Onboarding & Lending', icon: Users, count: totalClients });
+    }
+    if (canRecruitmentAnalytics) {
+      list.push({ id: 'recruitment', label: 'Recruitment Funnel', icon: FileCheck2, count: totalRecruitmentApps });
+    }
+    if (canAgentAnalytics) {
+      list.push({ id: 'agents', label: 'Agent Verification & Reviewers', icon: UserCheck, count: totalAgentApps });
+    }
+    if (list.length > 1) {
+      list.push({ id: 'all', label: 'View All', icon: Activity });
+    }
+    return list;
+  }, [canClientAnalytics, canRecruitmentAnalytics, canAgentAnalytics, totalClients, totalRecruitmentApps, totalAgentApps]);
+
+  const [activeSubTab, setActiveSubTab] = useState<AnalyticsSubTab>('clients');
+
+  useEffect(() => {
+    if (subTabs.length > 0 && !subTabs.some(t => t.id === activeSubTab)) {
+      setActiveSubTab(subTabs[0].id);
+    }
+  }, [subTabs, activeSubTab]);
+
   const downloadReport = () => {
     setIsExporting(true);
     addToast('Generating comprehensive analytics CSV...', 'info');
@@ -281,6 +308,39 @@ export default function AnalyticsTab() {
         </div>
       </div>
 
+      {/* Analytics Sub-Tabs Navigation */}
+      {subTabs.length > 1 && (
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-border/60">
+          {subTabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeSubTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveSubTab(tab.id)}
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                  isActive
+                    ? 'bg-[#018752] text-white shadow-xs'
+                    : 'bg-card text-muted-foreground hover:text-foreground hover:bg-muted/40 border border-border/70'
+                }`}
+              >
+                <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-muted-foreground'}`} />
+                <span>{tab.label}</span>
+                {typeof tab.count === 'number' && (
+                  <span
+                    className={`text-[11px] px-2 py-0.5 rounded-full font-mono font-medium ${
+                      isActive ? 'bg-white/20 text-white' : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {loading && !analytics && !agentAnalytics && !recruitmentAnalytics ? (
         <div className="py-16">
           <PulseLoader />
@@ -297,7 +357,7 @@ export default function AnalyticsTab() {
         <div className="space-y-8 animate-in fade-in duration-300">
           
           {/* ================= SECTION 1: CLIENT ONBOARDING & ACTIVITY ================= */}
-          {canClientAnalytics && (
+          {canClientAnalytics && (activeSubTab === 'clients' || activeSubTab === 'all') && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
@@ -581,8 +641,8 @@ export default function AnalyticsTab() {
           )}
 
           {/* ================= SECTION 2: AGENT RECRUITMENT FUNNEL ================= */}
-          {canRecruitmentAnalytics && (
-          <div className="space-y-4 pt-4 border-t border-border/70">
+          {canRecruitmentAnalytics && (activeSubTab === 'recruitment' || activeSubTab === 'all') && (
+          <div className={`space-y-4 ${activeSubTab === 'all' ? 'pt-4 border-t border-border/70' : ''}`}>
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-base font-bold text-foreground flex items-center gap-2">
@@ -678,8 +738,8 @@ export default function AnalyticsTab() {
           )}
 
           {/* ================= SECTION 3: AGENT REVIEW & ADMIN PERFORMANCE ================= */}
-          {canAgentAnalytics && (
-          <div className="space-y-4 pt-4 border-t border-border/70">
+          {canAgentAnalytics && (activeSubTab === 'agents' || activeSubTab === 'all') && (
+          <div className={`space-y-4 ${activeSubTab === 'all' ? 'pt-4 border-t border-border/70' : ''}`}>
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-base font-bold text-foreground flex items-center gap-2">
