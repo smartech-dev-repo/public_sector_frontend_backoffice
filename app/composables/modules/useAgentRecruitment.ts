@@ -22,14 +22,21 @@ export interface AgentRecruitmentApplication {
   ninVerifiedName: string | null;
   coverLetter: string | null;
   cvKey: string | null;
+  cvUrl?: string | null;
   passportPhotoKey: string | null;
+  passportPhotoUrl?: string | null;
   identityDocumentKey: string | null;
+  identityDocumentUrl?: string | null;
+  ninSlipKey?: string | null;
+  ninSlipUrl?: string | null;
   submittedAgent: {
     id: string;
     status: string;
+    mustChangePassword?: boolean;
   } | null;
   createdAt: string;
   updatedAt: string;
+  [key: string]: any;
 }
 
 export interface RecruitmentAnalytics {
