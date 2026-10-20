@@ -19,6 +19,19 @@ export default function IppisPage() {
   }
  }, [fetchBatches, canReadDocs]);
 
+ const getStatusBadgeClass = (status: string) => {
+  switch ((status || '').toUpperCase()) {
+   case 'COMPLETED':
+    return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60';
+   case 'PROCESSING':
+    return 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60';
+   case 'FAILED':
+    return 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60';
+   default:
+    return 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60';
+  }
+ };
+
  if (!canUploadIppis && !canReadDocs) {
   return (
    <div className="p-8">
@@ -62,7 +75,12 @@ export default function IppisPage() {
          <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground font-mono">{new Date(batch.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
          <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground font-medium">{batch.documentType}</td>
          <td className="px-4 py-4 whitespace-nowrap text-sm">
-          <span className={`px-2.5 py-1 text-xs rounded-full font-medium ${batch.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-full font-semibold ${getStatusBadgeClass(batch.status)}`}>
+           <span className={`w-1.5 h-1.5 rounded-full ${
+            batch.status === 'COMPLETED' ? 'bg-emerald-500' :
+            batch.status === 'PROCESSING' ? 'bg-blue-500' :
+            batch.status === 'FAILED' ? 'bg-rose-500' : 'bg-amber-500'
+           }`} />
            {batch.status}
           </span>
          </td>
