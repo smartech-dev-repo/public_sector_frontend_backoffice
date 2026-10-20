@@ -35,6 +35,7 @@ export default function RequestsTab() {
  const [disbursedRange, setDisbursedRange] = useState('');
 
  useEffect(() => {
+  if (!canReview) return;
   const params: any = { page, limit };
   if (statusFilter && statusFilter !== 'none') params.status = statusFilter;
   if (typeFilter && typeFilter !== 'none') params.type = typeFilter;
@@ -99,6 +100,17 @@ export default function RequestsTab() {
    setSubmitting(false);
   }
  };
+
+ if (!canReview) {
+  return (
+   <div className="p-8">
+    <EmptyState
+     title="Access Restricted"
+     description="You do not have permission to view or review loan requests."
+    />
+   </div>
+  );
+ }
 
  return (
   <main className="w-full">

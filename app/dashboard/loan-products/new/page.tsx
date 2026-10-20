@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { useLoans } from '@/app/composables/modules/useLoans';
 import { useToast } from '@/app/composables/useToast';
 import PulseLoader from '@/app/components/ui/PulseLoader';
+import EmptyState from '@/app/components/ui/EmptyState';
+import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 import { 
   ArrowLeft, 
   ArrowRight,
@@ -58,6 +60,9 @@ function ProductFormContent() {
   const productId = searchParams.get('id');
   const isEdit = Boolean(productId);
 
+  const { isSuperAdmin, hasPermission } = useAdminPermissions();
+  const canManageProducts = isSuperAdmin || hasPermission('loan-products:manage');
+
   const { 
     loanProducts, 
     loanProductSectors,
@@ -98,11 +103,13 @@ function ProductFormContent() {
 
   // Load sectors
   useEffect(() => {
+    if (!canManageProducts) return;
     fetchLoanProductSectors();
-  }, [fetchLoanProductSectors]);
+  }, [fetchLoanProductSectors, canManageProducts]);
 
   // If in Edit mode, load product by ID
   useEffect(() => {
+    if (!canManageProducts) return;
     if (isEdit && productId) {
       setLoadingData(true);
       fetchLoanProducts().then((products) => {
@@ -417,6 +424,17 @@ function ProductFormContent() {
       setSubmitting(false);
     }
   };
+
+  if (!canManageProducts) {
+    return (
+      <div className="p-8">
+        <EmptyState
+          title="Access Restricted"
+          description="You do not have permission to create or edit loan products."
+        />
+      </div>
+    );
+  }
 
   if (loadingData) {
     return (

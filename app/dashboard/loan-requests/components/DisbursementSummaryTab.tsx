@@ -7,8 +7,11 @@ import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { MonthPicker } from '@/app/components/ui/MonthPicker';
 import { GATEWAY_ENDPOINT_WITH_AUTH } from '@/app/api_factory/axios.config';
+import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function DisbursementSummaryTab() {
+ const { isSuperAdmin, hasPermission } = useAdminPermissions();
+ const canReadDisbursement = isSuperAdmin || hasPermission('client-loans:read');
  const { loading, error, disbursementSummary, fetchDisbursementSummary } = useLoans();
  const { addToast } = useToast();
 
@@ -18,10 +21,10 @@ export default function DisbursementSummaryTab() {
  });
 
  useEffect(() => {
-  if (month) {
+  if (month && canReadDisbursement) {
    fetchDisbursementSummary({ month });
   }
- }, [fetchDisbursementSummary, month]);
+ }, [fetchDisbursementSummary, month, canReadDisbursement]);
 
  const handleExportCSV = async () => {
   if (!month) return;
@@ -43,6 +46,17 @@ export default function DisbursementSummaryTab() {
    addToast(e?.response?.data?.message || 'Failed to export CSV', 'error');
   }
  };
+
+ if (!canReadDisbursement) {
+  return (
+   <div className="p-8">
+    <EmptyState
+     title="Access Restricted"
+     description="You do not have permission to view loan disbursement summaries."
+    />
+   </div>
+  );
+ }
 
  return (
   <main className="w-full">

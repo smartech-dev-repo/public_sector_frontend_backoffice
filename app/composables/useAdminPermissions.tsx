@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useProfile } from './modules/useProfile';
+import { decodeJwtPayload } from './core/useAuth';
 
 export type AdminPermission =
   | 'admins:create'
@@ -19,21 +20,20 @@ export type AdminPermission =
   | 'permissions:manage'
   | 'wallets:read'
   | 'wallets:manage'
-  | 'loan-terms:manage'
+  | 'loan-products:manage'
+  | 'loan-settings:manage'
   | 'loan-requests:review'
   | 'client-loans:read'
   | 'clients:read'
+  | 'departments:manage'
+  | 'clients:onboard'
   | 'agents:onboarding-access:manage'
   | 'clients:analytics:read'
   | 'agents:analytics:read'
-  | 'departments:manage'
   | 'agents:recruitment:read'
   | 'agents:recruitment:analytics:read'
   | 'agents:recruitment:manage'
-  | 'reconciliation:read'
-  | 'clients:onboard'
-  | 'loan-products:manage'
-  | 'loan-settings:manage';
+  | 'reconciliation:read';
 
 export const ALL_PERMISSIONS: AdminPermission[] = [
   'admins:create',
@@ -51,40 +51,39 @@ export const ALL_PERMISSIONS: AdminPermission[] = [
   'permissions:manage',
   'wallets:read',
   'wallets:manage',
-  'loan-terms:manage',
+  'loan-products:manage',
+  'loan-settings:manage',
   'loan-requests:review',
   'client-loans:read',
   'clients:read',
+  'departments:manage',
+  'clients:onboard',
   'agents:onboarding-access:manage',
   'clients:analytics:read',
   'agents:analytics:read',
-  'departments:manage',
   'agents:recruitment:read',
   'agents:recruitment:analytics:read',
   'agents:recruitment:manage',
   'reconciliation:read',
-  'clients:onboard',
-  'loan-products:manage',
-  'loan-settings:manage',
 ];
 
 /**
  * Route to Permission mappings for top-level pages & sub-routes
  */
 export const ROUTE_PERMISSIONS: Record<string, AdminPermission[]> = {
-  '/dashboard/broadsheet': ['loans:upload', 'repayments:upload', 'ippis:upload'],
+  '/dashboard/broadsheet': ['loans:upload', 'repayments:upload', 'ippis:upload', 'documents:read'],
   '/dashboard/uploads': ['documents:read', 'loans:upload', 'repayments:upload', 'ippis:upload'],
   '/dashboard/ippis': ['ippis:upload'],
-  '/dashboard/loan-terms': ['loan-terms:manage', 'loan-products:manage', 'loan-settings:manage'],
+  '/dashboard/loan-terms': ['loan-products:manage', 'loan-settings:manage', 'loans:upload'],
   '/dashboard/loan-products': ['loan-products:manage'],
   '/dashboard/invites': ['agents:recruitment:read', 'agents:recruitment:manage', 'agents:recruitment:analytics:read'],
   '/dashboard/agent': ['agents:read', 'agents:review'],
   '/dashboard/agent-details': ['agents:read', 'agents:review'],
   '/dashboard/agent-management': ['agents:read', 'agents:review', 'agents:sessions:revoke', 'agents:onboarding-access:manage', 'agents:analytics:read'],
-  '/dashboard/agent-security': ['agents:sessions:revoke', 'agents:review'],
-  '/dashboard/loan-requests': ['loan-requests:review', 'client-loans:read'],
-  '/dashboard/client-loans': ['client-loans:read'],
-  '/dashboard/clients': ['clients:read', 'clients:review', 'clients:onboard', 'clients:analytics:read'],
+  '/dashboard/agent-security': ['agents:sessions:revoke', 'agents:read', 'agents:review'],
+  '/dashboard/loan-requests': ['loan-requests:review', 'client-loans:read', 'clients:read'],
+  '/dashboard/client-loans': ['client-loans:read', 'clients:read'],
+  '/dashboard/clients': ['clients:read', 'clients:review', 'clients:onboard', 'clients:analytics:read', 'ippis:upload', 'wallets:read', 'wallets:manage'],
   '/dashboard/customer-details': ['clients:read', 'clients:review'],
   '/dashboard/reports': ['audit:read', 'reconciliation:read', 'clients:analytics:read', 'agents:analytics:read'],
   '/dashboard/audit-logs': ['audit:read'],
@@ -120,6 +119,13 @@ export const useAdminPermissions = () => {
   const [cachedPermissions, setCachedPermissions] = useState<string[]>(() => {
     if (typeof window !== 'undefined') {
       try {
+        const token = localStorage.getItem('token');
+        if (token) {
+          const decoded = decodeJwtPayload(token);
+          if (Array.isArray(decoded?.permissions)) {
+            return normalizePermissionList(decoded.permissions);
+          }
+        }
         const stored = localStorage.getItem('public_sector_permissions');
         if (stored) return normalizePermissionList(JSON.parse(stored));
       } catch {}
@@ -138,11 +144,24 @@ export const useAdminPermissions = () => {
     const handleProfileUpdate = () => {
       if (typeof window !== 'undefined') {
         try {
-          const stored = localStorage.getItem('public_sector_permissions');
-          if (stored) setCachedPermissions(normalizePermissionList(JSON.parse(stored)));
+          const token = localStorage.getItem('token');
+          if (token) {
+            const decoded = decodeJwtPayload(token);
+            if (Array.isArray(decoded?.permissions)) {
+              setCachedPermissions(normalizePermissionList(decoded.permissions));
+            } else {
+              const stored = localStorage.getItem('public_sector_permissions');
+              setCachedPermissions(stored ? normalizePermissionList(JSON.parse(stored)) : []);
+            }
+          } else {
+            setCachedPermissions([]);
+          }
           const r = localStorage.getItem('public_sector_role');
-          if (r) setCachedRole(r);
-        } catch {}
+          setCachedRole(r || '');
+        } catch {
+          setCachedPermissions([]);
+          setCachedRole('');
+        }
       }
     };
 
@@ -166,16 +185,19 @@ export const useAdminPermissions = () => {
   }, [profile, cachedPermissions]);
 
   const roleName = useMemo(() => {
-    return profile?.role?.name || cachedRole || '';
+    const fromProfile = typeof profile?.role === 'string' ? profile.role : profile?.role?.name;
+    return (fromProfile || cachedRole || '').trim();
   }, [profile, cachedRole]);
 
+  // isSuperAdmin is ONLY true if roleName is strictly SUPER_ADMIN (never arbitrary substring)
   const isSuperAdmin = useMemo(() => {
     const name = roleName.toUpperCase().trim();
-    return name === 'SUPER_ADMIN' || name === 'SUPERADMIN' || name.includes('SUPER_ADMIN');
+    return name === 'SUPER_ADMIN' || name === 'SUPERADMIN';
   }, [roleName]);
 
   const hasPermission = useCallback((permission: AdminPermission | AdminPermission[]): boolean => {
     if (isSuperAdmin) return true;
+    if (permissions.length === 0) return false;
     if (Array.isArray(permission)) {
       return permission.some(p => permissions.includes(p));
     }
@@ -184,23 +206,31 @@ export const useAdminPermissions = () => {
 
   const hasAnyPermission = useCallback((perms: AdminPermission[]): boolean => {
     if (isSuperAdmin) return true;
+    if (permissions.length === 0) return false;
     return perms.some(p => permissions.includes(p));
   }, [isSuperAdmin, permissions]);
 
   const hasAllPermissions = useCallback((perms: AdminPermission[]): boolean => {
     if (isSuperAdmin) return true;
+    if (permissions.length === 0) return false;
     return perms.every(p => permissions.includes(p));
   }, [isSuperAdmin, permissions]);
 
   const canAccessRoute = useCallback((pathname: string): boolean => {
     if (isSuperAdmin) return true;
+    // Allow basic non-permission authenticated pages
+    if (pathname === '/dashboard' || pathname === '/dashboard/settings' || pathname === '/dashboard/me') {
+      return true;
+    }
+    if (permissions.length === 0) return false;
+
     for (const [route, requiredPerms] of Object.entries(ROUTE_PERMISSIONS)) {
       if (pathname === route || pathname.startsWith(route + '/')) {
         return requiredPerms.some(p => permissions.includes(p));
       }
     }
-    // Default open for generic dashboard / settings
-    return true;
+    // Strict default deny for any unrecognized dashboard route
+    return false;
   }, [isSuperAdmin, permissions]);
 
   return {

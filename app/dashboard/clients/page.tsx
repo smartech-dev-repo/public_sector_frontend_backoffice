@@ -10,7 +10,7 @@ import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function CustomerManagementPage() {
   const { isSuperAdmin, hasPermission } = useAdminPermissions();
-  const canReadProfiles = isSuperAdmin || hasPermission('clients:read') || hasPermission('clients:review');
+  const canReadProfiles = isSuperAdmin || hasPermission('clients:review') || hasPermission('clients:analytics:read');
   const canUploadIppis = isSuperAdmin || hasPermission('ippis:upload');
   const canOnboard = isSuperAdmin || hasPermission('clients:onboard');
 

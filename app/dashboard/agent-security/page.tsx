@@ -9,8 +9,13 @@ import EmptyState from '@/app/components/ui/EmptyState';
 import { useConfirm } from '@/app/composables/useConfirm';
 import TableDropdown from '@/app/components/ui/TableDropdown';
 import Pagination from '@/app/components/ui/Pagination';
+import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function AgentSecurityPage() {
+ const { hasPermission, isSuperAdmin } = useAdminPermissions();
+ const canReadAgents = isSuperAdmin || hasPermission('agents:read');
+ const canRevokeSessions = isSuperAdmin || hasPermission('agents:sessions:revoke');
+
  const [page, setPage] = useState(1);
  const [limit, setLimit] = useState(25);
  const { confirm } = useConfirm();
@@ -22,8 +27,10 @@ export default function AgentSecurityPage() {
  const [revokingId, setRevokingId] = useState('');
 
  useEffect(() => {
-  fetchAgents({ page, limit });
- }, [fetchAgents, page, limit]);
+  if (canReadAgents) {
+   fetchAgents({ page, limit });
+  }
+ }, [fetchAgents, page, limit, canReadAgents]);
 
  const approvedAgents = useMemo(() => {
   return agents.filter((a: any) => a.status === 'APPROVED');
@@ -42,6 +49,17 @@ export default function AgentSecurityPage() {
    setRevokingId('');
   }
  };
+
+ if (!canReadAgents && !canRevokeSessions) {
+  return (
+   <div className="p-8">
+    <EmptyState
+     title="Access Restricted"
+     description="You do not have permission to view or manage agent security."
+    />
+   </div>
+  );
+ }
 
  return (
   <div className="space-y-3">
@@ -71,16 +89,16 @@ export default function AgentSecurityPage() {
       <div className="overflow-x-auto">
        <table className="w-full text-sm text-left">
         <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
-         <tr>
+          <tr>
           <th scope="col" className="px-4 py-4 tracking-wider">Agent Details</th>
           <th scope="col" className="px-4 py-4 tracking-wider">Status</th>
-          <th scope="col" className="px-4 py-4 tracking-wider text-right">Action</th>
+          {canRevokeSessions && <th scope="col" className="px-4 py-4 tracking-wider text-right">Action</th>}
          </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
          {approvedAgents.length === 0 && (
           <tr>
-           <td colSpan={3} className="px-6 py-8 text-center text-muted-foreground">No active agents found.</td>
+           <td colSpan={canRevokeSessions ? 3 : 2} className="px-6 py-8 text-center text-muted-foreground">No active agents found.</td>
           </tr>
          )}
          {approvedAgents.map((agent: any) => (
@@ -101,13 +119,15 @@ export default function AgentSecurityPage() {
              {agent.status}
             </span>
            </td>
-           <td className="px-4 py-4 text-right relative">
-            <TableDropdown>
-             <button onClick={() => handleRevoke(agent)} disabled={revokingId === agent.id} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-50">
-              {revokingId === agent.id ? 'Revoking...' : 'Revoke All Sessions'}
-             </button>
-            </TableDropdown>
-           </td>
+           {canRevokeSessions && (
+            <td className="px-4 py-4 text-right relative">
+             <TableDropdown>
+              <button onClick={() => handleRevoke(agent)} disabled={revokingId === agent.id} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-50">
+               {revokingId === agent.id ? 'Revoking...' : 'Revoke All Sessions'}
+              </button>
+             </TableDropdown>
+            </td>
+           )}
           </tr>
          ))}
         </tbody>
