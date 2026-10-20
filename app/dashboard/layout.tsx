@@ -24,7 +24,8 @@ import {
   LineChart, 
   ShieldCheck, 
   ChevronDown, 
-  ShieldAlert 
+  ShieldAlert,
+  LayoutDashboard 
 } from 'lucide-react';
 
 export default function CreditRiskLayout({ children }: { children: React.ReactNode }) {
@@ -139,6 +140,13 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
  };
 
  const navItems = useMemo(() => [
+  {
+   href: '/dashboard',
+   label: 'Dashboard',
+   icon: LayoutDashboard,
+   match: (p: string) => p === '/dashboard',
+   visible: true,
+  },
   {
    href: '/dashboard/broadsheet',
    label: 'Broadsheet and Repayment',
@@ -390,7 +398,8 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
 
     <main className="flex-1 py-6 overflow-y-auto overflow-x-hidden">
      <div className="container mx-auto">
-      {!canAccessRoute(pathname) ? (
+      {/* Route-level permission barrier commented out: permissions are controlled via sidebar navigation */}
+      {/* {!canAccessRoute(pathname) ? (
         <div className="flex flex-col items-center justify-center min-h-[50vh] text-center p-8 bg-card rounded-2xl border border-border shadow-sm max-w-lg mx-auto mt-8">
           <div className="w-16 h-16 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4 border border-amber-200 dark:border-amber-800">
             <ShieldAlert className="w-8 h-8" />
@@ -411,7 +420,8 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
         </div>
       ) : (
         children
-      )}
+      )} */}
+      {children}
      </div>
     </main>
    </div>
