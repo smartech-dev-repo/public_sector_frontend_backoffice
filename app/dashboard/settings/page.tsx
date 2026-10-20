@@ -34,8 +34,11 @@ import {
   Trash2,
   Loader2
 } from 'lucide-react';
+import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function ProfileAndSecurityPage() {
+  const { hasPermission, isSuperAdmin } = useAdminPermissions();
+  const canManageLoanSettings = isSuperAdmin || hasPermission('loan-settings:manage');
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'password' | 'settings' | 'sessions'>('security');
   
   const { 
@@ -141,15 +144,23 @@ export default function ProfileAndSecurityPage() {
     });
 
     fetchSessions();
-    fetchLoanSettings().then(res => {
-      if (res) {
-        setSettingsForm({
-          retirementAgeYears: res.retirementAgeYears || 60,
-          maxServiceYears: res.maxServiceYears || 35
-        });
-      }
-    });
-  }, [fetchProfile, fetchSessions, fetchLoanSettings]);
+    if (canManageLoanSettings) {
+      fetchLoanSettings().then(res => {
+        if (res) {
+          setSettingsForm({
+            retirementAgeYears: res.retirementAgeYears || 60,
+            maxServiceYears: res.maxServiceYears || 35
+          });
+        }
+      });
+    }
+  }, [fetchProfile, fetchSessions, fetchLoanSettings, canManageLoanSettings]);
+
+  useEffect(() => {
+    if (activeTab === 'settings' && !canManageLoanSettings) {
+      setActiveTab('security');
+    }
+  }, [activeTab, canManageLoanSettings]);
 
   // Handle Password Change
   const handlePasswordChange = async (e: React.FormEvent) => {
@@ -462,17 +473,19 @@ export default function ProfileAndSecurityPage() {
           Password Management
         </button>
 
-        <button
-          onClick={() => setActiveTab('settings')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${
-            activeTab === 'settings'
-              ? 'bg-[#018752] text-white shadow-sm'
-              : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-          }`}
-        >
-          <Sliders className="w-4 h-4" />
-          Institutional Loan Settings
-        </button>
+        {canManageLoanSettings && (
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${
+              activeTab === 'settings'
+                ? 'bg-[#018752] text-white shadow-sm'
+                : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+            }`}
+          >
+            <Sliders className="w-4 h-4" />
+            Institutional Loan Settings
+          </button>
+        )}
 
         <button
           onClick={() => setActiveTab('sessions')}
@@ -863,7 +876,7 @@ export default function ProfileAndSecurityPage() {
       {/* ======================================================== */}
       {/* TAB 3: INSTITUTIONAL LOAN SETTINGS                      */}
       {/* ======================================================== */}
-      {activeTab === 'settings' && (
+      {activeTab === 'settings' && canManageLoanSettings && (
         <div className="max-w-2xl bg-card border border-border rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm">
           <div>
             <h3 className="text-lg font-bold text-foreground">Institutional Loan Settings</h3>

@@ -37,6 +37,7 @@ import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function ClientWalletPage() {
  const { isSuperAdmin, hasPermission } = useAdminPermissions();
+ const canReadClient = isSuperAdmin || hasPermission(['clients:read', 'clients:review']);
  const canReview = isSuperAdmin || hasPermission('clients:review');
  const canRevokeSessions = isSuperAdmin || hasPermission('clients:sessions:revoke');
  const canReadWallet = isSuperAdmin || hasPermission('wallets:read');
@@ -116,17 +117,20 @@ export default function ClientWalletPage() {
  };
 
  useEffect(() => {
-  if (clientId) {
+  if (clientId && canReadClient) {
    loadData();
   }
- }, [clientId]);
+ }, [clientId, canReadClient]);
 
  const loadData = async () => {
+  if (!canReadClient) return;
   try {
    const clientData = await getClientById(clientId);
    setClient(clientData);
-   const walletData = await getClientWallet(clientId);
-   setWallet(walletData);
+   if (canReadWallet) {
+    const walletData = await getClientWallet(clientId);
+    setWallet(walletData);
+   }
   } catch (e: any) {
    addToast('Failed to load client data', 'error');
   }
@@ -414,9 +418,17 @@ export default function ClientWalletPage() {
    </div>
 
    {loading && !client && <PulseLoader />}
-   {!loading && error && <div className="text-red-500 py-12 text-center">{error}</div>}
+   {!loading && !canReadClient && (
+    <div className="p-8">
+     <EmptyState
+      title="Access Restricted"
+      description="You do not have permission to view client profile details."
+     />
+    </div>
+   )}
+   {!loading && error && canReadClient && <div className="text-red-500 py-12 text-center">{error}</div>}
 
-   {!loading && client && (
+   {!loading && client && canReadClient && (
     <>
      {/* Tabs */}
      <div className="flex gap-1 mb-3 bg-muted/50 p-1 rounded-xl w-fit">
@@ -1243,7 +1255,7 @@ export default function ClientWalletPage() {
         </div>
 
         {/* Uploaded Documents if any */}
-        {Array.isArray(client.onboarding?.documents) && client.onboarding.documents.length > 0 && (
+        {Array.isArray(client.onboarding?.documents) && client.onboarding.documents.length > 0 && canReadDocuments && (
          <div className="bg-card p-6 rounded-2xl border border-border shadow-xs md:col-span-2">
           <h3 className="font-semibold text-foreground text-sm uppercase tracking-wider mb-4 pb-2 border-b border-border/60">
            Uploaded Verification Documents
@@ -1267,8 +1279,7 @@ export default function ClientWalletPage() {
                 </p>
                )}
               </div>
-              {doc.url ? (
-               canReadDocuments ? (
+              {doc.url && canReadDocuments && (
                 <button
                  type="button"
                  onClick={() => setPreviewImage({
@@ -1281,11 +1292,6 @@ export default function ClientWalletPage() {
                  <Eye className="w-3.5 h-3.5" />
                  <span>View Document</span>
                 </button>
-               ) : (
-                <span className="text-muted-foreground text-xs mt-2 block">Viewing restricted</span>
-               )
-              ) : (
-               <span className="text-muted-foreground text-xs mt-2 block">Document Uploaded</span>
               )}
              </div>
             );

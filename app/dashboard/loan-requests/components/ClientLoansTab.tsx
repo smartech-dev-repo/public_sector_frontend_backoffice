@@ -11,6 +11,8 @@ import Pagination from '@/app/components/ui/Pagination';
 import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 
+import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+
 export default function ClientLoansTab() {
  return (
   <Suspense fallback={<PulseLoader />}>
@@ -20,6 +22,9 @@ export default function ClientLoansTab() {
 }
 
 function ClientLoansContent() {
+ const { isSuperAdmin, hasPermission } = useAdminPermissions();
+ const canReadClientLoans = isSuperAdmin || hasPermission('clients:read');
+ const canReadPlan = isSuperAdmin || hasPermission('client-loans:read');
  const searchParams = useSearchParams();
  const { loading, error, clientLoans, fetchClientLoans, getClientLoanRepaymentPlan, meta } = useLoans();
  const { addToast } = useToast();
@@ -64,7 +69,7 @@ function ClientLoansContent() {
  };
 
  useEffect(() => {
-  if (!clientIdFilter.trim()) return;
+  if (!canReadClientLoans || !clientIdFilter.trim()) return;
   const params: any = { page, limit, clientId: clientIdFilter.trim() };
   if (statusFilter && statusFilter !== 'none') params.status = statusFilter;
   if (agencyFilter) params.agency = agencyFilter;
@@ -179,9 +184,17 @@ function ClientLoansContent() {
    </div>
 
    {loading && <PulseLoader />}
-   {!loading && error && <div className="text-red-500 py-12 text-center">{error}</div>}
+   {!loading && !canReadClientLoans && (
+    <div className="p-8">
+     <EmptyState
+      title="Access Restricted"
+      description="You do not have permission to view client loans."
+     />
+    </div>
+   )}
+   {!loading && error && canReadClientLoans && <div className="text-red-500 py-12 text-center">{error}</div>}
 
-   {!loading && !error && (
+   {!loading && !error && canReadClientLoans && (
     <div className="bg-card rounded-2xl border border-border overflow-hidden relative w-full max-w-full ">
      
      
@@ -210,11 +223,13 @@ function ClientLoansContent() {
            <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Tenor</th>
            <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Status</th>
            <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Disbursed At</th>
-           <th className="px-4 py-4 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
+           {canReadPlan && (
+            <th className="px-4 py-4 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
+           )}
           </tr>
          </thead>
          <tbody className="divide-y divide-slate-100">
- {clientLoans.length === 0 ? (<tr><td colSpan={8} className="p-8"><div className="flex justify-center w-full"><EmptyState 
+ {clientLoans.length === 0 ? (<tr><td colSpan={canReadPlan ? 8 : 7} className="p-8"><div className="flex justify-center w-full"><EmptyState 
        title={!clientIdFilter.trim() ? "Search for Client Loans" : "No client loans found."}
        description={!clientIdFilter.trim() ? "Enter a Client ID in the filter above to view their loans." : undefined}
       /></div></td></tr>) : (clientLoans.map((loan: any) => (
@@ -235,14 +250,16 @@ function ClientLoansContent() {
               : '-'
              }
             </td>
-            <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
-             <button
-              onClick={() => handleViewRepayment(loan)}
-              className="text-emerald-600 hover:text-emerald-800 font-medium transition-colors"
-             >
-              View Repayment
-             </button>
-            </td>
+            {canReadPlan && (
+             <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+              <button
+               onClick={() => handleViewRepayment(loan)}
+               className="text-emerald-600 hover:text-emerald-800 font-medium transition-colors"
+              >
+               View Repayment
+              </button>
+             </td>
+            )}
            </tr>
           )))}
 </tbody>

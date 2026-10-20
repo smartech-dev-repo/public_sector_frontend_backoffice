@@ -26,8 +26,15 @@ import {
   XCircle,
   Briefcase
 } from 'lucide-react';
+import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function AnalyticsTab() {
+  const { isSuperAdmin, hasPermission } = useAdminPermissions();
+  const canClientAnalytics = isSuperAdmin || hasPermission('clients:analytics:read');
+  const canAgentAnalytics = isSuperAdmin || hasPermission('agents:analytics:read');
+  const canRecruitmentAnalytics = isSuperAdmin || hasPermission('agents:recruitment:analytics:read');
+  const hasAnyAnalytics = canClientAnalytics || canAgentAnalytics || canRecruitmentAnalytics;
+
   const { loading: clientLoading, error: clientError, analytics, fetchAnalytics: fetchClientAnalytics } = useClientAnalytics();
   const { agentAnalytics, analyticsLoading: agentLoading, fetchAgentAnalytics } = useAgents();
   const { analytics: recruitmentAnalytics, analyticsLoading: recruitmentLoading, fetchAnalytics: fetchRecruitmentAnalytics } = useAgentRecruitment();
@@ -57,14 +64,16 @@ export default function AnalyticsTab() {
 
   const loadData = useCallback(() => {
     const range = calculateDateRange(period);
-    fetchClientAnalytics(range);
-    fetchAgentAnalytics(range);
-    fetchRecruitmentAnalytics(range);
-  }, [period, calculateDateRange, fetchClientAnalytics, fetchAgentAnalytics, fetchRecruitmentAnalytics]);
+    if (canClientAnalytics) fetchClientAnalytics(range);
+    if (canAgentAnalytics) fetchAgentAnalytics(range);
+    if (canRecruitmentAnalytics) fetchRecruitmentAnalytics(range);
+  }, [period, calculateDateRange, canClientAnalytics, canAgentAnalytics, canRecruitmentAnalytics, fetchClientAnalytics, fetchAgentAnalytics, fetchRecruitmentAnalytics]);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    if (hasAnyAnalytics) {
+      loadData();
+    }
+  }, [loadData, hasAnyAnalytics]);
 
   const loading = clientLoading || agentLoading || recruitmentLoading;
   const error = clientError;
@@ -214,6 +223,17 @@ export default function AnalyticsTab() {
     }
   };
 
+  if (!hasAnyAnalytics) {
+    return (
+      <div className="p-8">
+        <EmptyState
+          title="Access Restricted"
+          description="You do not have permission to view system analytics."
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       {/* Top Header Controls */}
@@ -277,6 +297,7 @@ export default function AnalyticsTab() {
         <div className="space-y-8 animate-in fade-in duration-300">
           
           {/* ================= SECTION 1: CLIENT ONBOARDING & ACTIVITY ================= */}
+          {canClientAnalytics && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
@@ -557,8 +578,10 @@ export default function AnalyticsTab() {
               </div>
             </div>
           </div>
+          )}
 
           {/* ================= SECTION 2: AGENT RECRUITMENT FUNNEL ================= */}
+          {canRecruitmentAnalytics && (
           <div className="space-y-4 pt-4 border-t border-border/70">
             <div className="flex items-center justify-between">
               <div>
@@ -652,8 +675,10 @@ export default function AnalyticsTab() {
               </div>
             </div>
           </div>
+          )}
 
           {/* ================= SECTION 3: AGENT REVIEW & ADMIN PERFORMANCE ================= */}
+          {canAgentAnalytics && (
           <div className="space-y-4 pt-4 border-t border-border/70">
             <div className="flex items-center justify-between">
               <div>
@@ -829,6 +854,7 @@ export default function AnalyticsTab() {
               </div>
             </div>
           </div>
+          )}
 
         </div>
       )}
