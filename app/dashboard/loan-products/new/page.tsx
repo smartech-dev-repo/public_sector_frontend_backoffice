@@ -137,7 +137,10 @@ function ProductFormContent() {
             maximumTenorMonths: Number(found.maximumTenorMonths) || 12,
             interestTiers: mappedTiers,
             minimumServiceMonthsLeft: found.minimumServiceMonthsLeft !== null ? Number(found.minimumServiceMonthsLeft) : 24,
-            maximumMonthsInService: found.maximumMonthsInService !== null ? Number(found.maximumMonthsInService) : 35,
+            maximumMonthsInService: (() => {
+              const raw = found.maximumMonthsInService !== null && found.maximumMonthsInService !== undefined ? Number(found.maximumMonthsInService) : 420;
+              return raw > 50 ? Math.round(raw / 12) : raw || 35;
+            })(),
             managementChargeType: found.managementChargeType || 'PERCENTAGE',
             managementChargeValue: Number(found.managementChargeValue) || 0,
             managementChargeApplication: found.managementChargeApplication || 'DEDUCT_FROM_DISBURSEMENT'
@@ -404,7 +407,7 @@ function ProductFormContent() {
       managementChargeValue: Number(form.managementChargeValue) || 0,
       managementChargeApplication: form.managementChargeApplication,
       minimumServiceMonthsLeft: Number(form.minimumServiceMonthsLeft),
-      maximumMonthsInService: Number(form.maximumMonthsInService)
+      maximumMonthsInService: Number(form.maximumMonthsInService) * 12
     };
 
     setSubmitting(true);
@@ -943,7 +946,7 @@ function ProductFormContent() {
                   </SelectTrigger>
                   <SelectContent hideSearch>
                     {[25, 30, 35, 40].map(y => (
-                      <SelectItem key={y} value={String(y)}>{y} years</SelectItem>
+                      <SelectItem key={y} value={String(y)}>{y} years ({y * 12} months)</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

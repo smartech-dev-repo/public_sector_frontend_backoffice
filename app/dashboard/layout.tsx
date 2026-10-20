@@ -24,7 +24,8 @@ import {
   LineChart, 
   ShieldCheck, 
   ChevronDown, 
-  ShieldAlert 
+  ShieldAlert,
+  LayoutDashboard 
 } from 'lucide-react';
 
 export default function CreditRiskLayout({ children }: { children: React.ReactNode }) {
@@ -139,6 +140,13 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
  };
 
  const navItems = useMemo(() => [
+  {
+   href: '/dashboard',
+   label: 'Dashboard',
+   icon: LayoutDashboard,
+   match: (p: string) => p === '/dashboard',
+   visible: true,
+  },
   {
    href: '/dashboard/broadsheet',
    label: 'Broadsheet and Repayment',
