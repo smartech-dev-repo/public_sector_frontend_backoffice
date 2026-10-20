@@ -132,9 +132,8 @@ export const useAuth = () => {
   setError(null);
   try {
    const response = await auth_api.acceptInvite(payload);
-   setToken(response.data);
-   setUser(response.data);
-   setIsAuthenticated(true);
+   clearAuthStorage();
+   setIsAuthenticated(false);
    return response.data;
   } catch (err: any) {
    setError(err.message);
