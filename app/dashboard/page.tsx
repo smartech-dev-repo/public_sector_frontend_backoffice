@@ -12,24 +12,24 @@ export default function DashboardIndex() {
   useEffect(() => {
     if (loading) return;
 
-    if (isSuperAdmin || hasAnyPermission(['loans:upload', 'repayments:upload', 'ippis:upload'])) {
+    if (isSuperAdmin || hasAnyPermission(['loans:upload', 'repayments:upload', 'ippis:upload', 'documents:read'])) {
       router.replace('/dashboard/broadsheet');
-    } else if (hasAnyPermission(['loan-requests:review', 'client-loans:read'])) {
+    } else if (hasAnyPermission(['loan-requests:review', 'client-loans:read', 'clients:read'])) {
       router.replace('/dashboard/loan-requests');
-    } else if (hasAnyPermission(['clients:read', 'clients:review', 'clients:onboard', 'clients:analytics:read'])) {
+    } else if (hasAnyPermission(['clients:read', 'clients:review', 'clients:onboard', 'clients:analytics:read', 'ippis:upload', 'wallets:read', 'wallets:manage'])) {
       router.replace('/dashboard/clients');
     } else if (hasAnyPermission(['audit:read', 'reconciliation:read', 'clients:analytics:read', 'agents:analytics:read'])) {
       router.replace('/dashboard/reports');
-    } else if (hasAnyPermission(['agents:read', 'agents:review', 'agents:sessions:revoke', 'agents:onboarding-access:manage'])) {
+    } else if (hasAnyPermission(['agents:read', 'agents:review', 'agents:sessions:revoke', 'agents:onboarding-access:manage', 'agents:analytics:read'])) {
       router.replace('/dashboard/agent-management');
-    } else if (hasAnyPermission(['agents:recruitment:read', 'agents:recruitment:manage'])) {
+    } else if (hasAnyPermission(['agents:recruitment:read', 'agents:recruitment:manage', 'agents:recruitment:analytics:read'])) {
       router.replace('/dashboard/invites');
-    } else if (hasAnyPermission(['loan-terms:manage', 'loan-products:manage'])) {
+    } else if (hasAnyPermission(['loan-products:manage', 'loan-settings:manage', 'loans:upload'])) {
       router.replace('/dashboard/loan-terms');
     } else if (hasAnyPermission(['roles:manage', 'admins:create', 'permissions:manage', 'departments:manage'])) {
       router.replace('/dashboard/team');
     } else {
-      router.replace('/dashboard/loan-requests');
+      router.replace('/dashboard/settings');
     }
   }, [isSuperAdmin, hasAnyPermission, loading, router]);
 

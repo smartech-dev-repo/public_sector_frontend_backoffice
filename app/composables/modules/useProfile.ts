@@ -1,17 +1,37 @@
 import { useState, useCallback, useEffect } from 'react';
 import { profile_api, AdminProfile } from '@/app/api_factory/modules/profile';
 
+let sharedProfile: AdminProfile | null = null;
+let sharedLoading = false;
+let sharedError: string | null = null;
+const listeners = new Set<() => void>();
+
 export const useProfile = () => {
-  const [loading, setLoading] = useState(false);
-  const [profile, setProfile] = useState<AdminProfile | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(sharedLoading);
+  const [profile, setProfile] = useState<AdminProfile | null>(sharedProfile);
+  const [error, setError] = useState<string | null>(sharedError);
+
+  useEffect(() => {
+    const notify = () => {
+      setProfile(sharedProfile);
+      setLoading(sharedLoading);
+      setError(sharedError);
+    };
+    listeners.add(notify);
+    return () => {
+      listeners.delete(notify);
+    };
+  }, []);
 
   const fetchProfile = useCallback(async () => {
+    sharedLoading = true;
     setLoading(true);
+    listeners.forEach(fn => fn());
     try {
       const res = await profile_api.getProfile();
       const data = (res.data as any)?.data || res.data;
       if (data && typeof data === 'object') {
+        sharedProfile = data;
         setProfile(data);
         if (data.email) {
           localStorage.setItem('public_sector_user_email', data.email);
@@ -34,19 +54,27 @@ export const useProfile = () => {
           return '';
         }).filter(Boolean);
         localStorage.setItem('public_sector_permissions', JSON.stringify(perms));
-        if (data.role?.name) {
-          localStorage.setItem('public_sector_role', data.role.name);
+
+        const rName = typeof data.role === 'string' ? data.role : data.role?.name;
+        if (rName) {
+          localStorage.setItem('public_sector_role', rName);
+        } else {
+          localStorage.removeItem('public_sector_role');
         }
+
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new Event('public_sector_profile_updated'));
         }
       }
       return data;
     } catch (err: any) {
-      setError(err?.message || 'Failed to load profile');
+      sharedError = err?.message || 'Failed to load profile';
+      setError(sharedError);
       return null;
     } finally {
+      sharedLoading = false;
       setLoading(false);
+      listeners.forEach(fn => fn());
     }
   }, []);
 

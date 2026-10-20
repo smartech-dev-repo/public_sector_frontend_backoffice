@@ -7,6 +7,7 @@ import EmptyState from '@/app/components/ui/EmptyState';
 import Pagination from '@/app/components/ui/Pagination';
 import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
+import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 const KNOWN_ACTIONS: { value: string; label: string }[] = [
   { value: 'admin.invite.created', label: 'Admin Invite Created' },
@@ -60,6 +61,8 @@ const KNOWN_TARGET_TYPES: { value: string; label: string }[] = [
 ];
 
 export default function AuditLogsTab() {
+  const { isSuperAdmin, hasPermission } = useAdminPermissions();
+  const canAudit = isSuperAdmin || hasPermission('audit:read');
   const [showFilter, setShowFilter] = useState(false);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(25);
@@ -72,6 +75,7 @@ export default function AuditLogsTab() {
   const [createdRange, setCreatedRange] = useState('');
 
   useEffect(() => {
+    if (!canAudit) return;
     const params: any = { page, limit };
     if (actionFilter && actionFilter !== 'none') params.action = actionFilter;
     if (actorTypeFilter && actorTypeFilter !== 'none') params.actorType = actorTypeFilter;
@@ -180,6 +184,17 @@ export default function AuditLogsTab() {
       </div>
     );
   };
+
+  if (!canAudit) {
+    return (
+      <div className="p-8">
+        <EmptyState
+          title="Access Restricted"
+          description="You do not have permission to view audit trail logs."
+        />
+      </div>
+    );
+  }
 
   return (
     <main className="w-full">

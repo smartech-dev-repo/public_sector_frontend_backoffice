@@ -22,13 +22,15 @@ export default function AgentManagementPage() {
  const { confirm } = useConfirm();
  const { hasPermission, hasAnyPermission, isSuperAdmin } = useAdminPermissions();
 
+ const canReadAgents = isSuperAdmin || hasPermission('agents:read');
  const canReadAnalytics = isSuperAdmin || hasPermission('agents:analytics:read');
+ const canReadClientAnalytics = isSuperAdmin || hasPermission('clients:analytics:read');
  const canReviewAgent = isSuperAdmin || hasPermission('agents:review');
  const canManageAccess = isSuperAdmin || hasPermission('agents:onboarding-access:manage');
  const canRevokeSessions = isSuperAdmin || hasPermission('agents:sessions:revoke');
  const canReadClients = isSuperAdmin || hasPermission('clients:read');
  const canReadRecruitment = isSuperAdmin || hasAnyPermission(['agents:recruitment:read', 'agents:recruitment:manage', 'agents:recruitment:analytics:read']);
- const canSendCreds = canReviewAgent || isSuperAdmin || hasPermission('agents:recruitment:manage');
+ const canSendCreds = isSuperAdmin || hasPermission('agents:review');
 
  const { 
   loading, 
@@ -65,9 +67,11 @@ export default function AgentManagementPage() {
  useEffect(() => {
   if (canReadAnalytics) {
    fetchOverallStats();
+  }
+  if (canReadClientAnalytics) {
    fetchClientAnalytics();
   }
- }, [fetchOverallStats, fetchClientAnalytics, canReadAnalytics]);
+ }, [fetchOverallStats, fetchClientAnalytics, canReadAnalytics, canReadClientAnalytics]);
 
  const totalAgentsCount = agentAnalytics?.totalApplications ?? (meta?.total || agents.length);
  const activeApprovedCount = agentAnalytics?.byStatus?.APPROVED ?? agents.filter(a => a.status === 'APPROVED').length;
@@ -91,6 +95,7 @@ export default function AgentManagementPage() {
  const [itemsPerPage, setItemsPerPage] = useState(25);
 
  useEffect(() => {
+  if (!canReadAgents) return;
   const params: any = { page: currentPage, limit: itemsPerPage };
   if (statusFilter && statusFilter !== 'none') params.status = statusFilter;
   if (qFilter.trim()) params.q = qFilter.trim();
@@ -105,7 +110,7 @@ export default function AgentManagementPage() {
    if (to) params.reviewedTo = to;
   }
   fetchAgents(params);
- }, [fetchAgents, currentPage, itemsPerPage, statusFilter, qFilter, createdRange, reviewedRange]);
+ }, [fetchAgents, currentPage, itemsPerPage, statusFilter, qFilter, createdRange, reviewedRange, canReadAgents]);
 
  const handleApprove = async (id: string) => {
   const confirmed = await confirm({ message: 'Are you sure you want to approve this agent?' });
@@ -189,6 +194,17 @@ export default function AgentManagementPage() {
    setSubmitting(false);
   }
  };
+
+ if (!canReadAgents && !canReadAnalytics) {
+  return (
+   <div className="p-8">
+    <EmptyState
+     title="Access Restricted"
+     description="You do not have permission to view Agent Management or Analytics."
+    />
+   </div>
+  );
+ }
 
  return (
   <main className="w-full">
@@ -330,8 +346,10 @@ export default function AgentManagementPage() {
    </div>
    )}
 
-   {/* Filters Area */}
-   <div className="mb-6 space-y-4">
+   {/* Filters Area & Table */}
+   {canReadAgents && (
+    <>
+     <div className="mb-6 space-y-4">
     <div className="flex items-center justify-between">
      <button 
       onClick={() => setShowFilter(!showFilter)}
@@ -483,6 +501,8 @@ export default function AgentManagementPage() {
      )}
     </div>
    )}
+   </>
+  )}
 
    {/* Reject Modal */}
    {showRejectModal && typeof document !== 'undefined' && createPortal(
