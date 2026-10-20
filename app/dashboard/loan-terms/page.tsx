@@ -9,7 +9,7 @@ import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 export default function LoanProductsPage() {
  const { isSuperAdmin, hasPermission } = useAdminPermissions();
  const canAccessConfigs = isSuperAdmin || hasPermission('loan-products:manage') || hasPermission('loan-settings:manage');
- const canAccessCatalog = isSuperAdmin || hasPermission('loan-terms:manage');
+ const canAccessCatalog = isSuperAdmin || hasPermission('loans:upload');
 
  const tabs = [
   ...(canAccessConfigs ? [{ id: 'configs' as const, label: 'Loan Products' }] : []),

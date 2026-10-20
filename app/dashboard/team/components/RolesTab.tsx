@@ -47,9 +47,13 @@ export default function RolesTab() {
    if (from) params.from = from;
    if (to) params.to = to;
   }
-  fetchRoles(params);
-  fetchPermissions();
- }, [fetchRoles, fetchPermissions, page, limit, search, dateRange]);
+  if (canManageRoles) {
+   fetchRoles(params);
+  }
+  if (canManagePermissions) {
+   fetchPermissions();
+  }
+ }, [fetchRoles, fetchPermissions, page, limit, search, dateRange, canManageRoles, canManagePermissions]);
 
  const clearFilters = () => {
   setSearch('');

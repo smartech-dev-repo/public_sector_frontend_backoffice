@@ -6,8 +6,15 @@ import { useToast } from '@/app/composables/useToast';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import Pagination from '@/app/components/ui/Pagination';
+import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function UploadsPage() {
+ const { isSuperAdmin, hasPermission } = useAdminPermissions();
+ const canUploadIppis = isSuperAdmin || hasPermission('ippis:upload');
+ const canUploadLoans = isSuperAdmin || hasPermission('loans:upload');
+ const canUploadRepayments = isSuperAdmin || hasPermission('repayments:upload');
+ const canReadDocuments = isSuperAdmin || hasPermission('documents:read');
+
  const { loading, batches, meta, fetchDocumentBatches, uploadIppisBroadsheet, uploadDisbursedLoans, uploadRepaymentSchedule } = useDocuments();
  const { addToast } = useToast();
 
@@ -20,8 +27,12 @@ export default function UploadsPage() {
  const repaymentInput = useRef<HTMLInputElement>(null);
 
  useEffect(() => {
-  fetchDocumentBatches({ page: currentPage, limit: itemsPerPage }).then(() => setIsLoading(false));
- }, [fetchDocumentBatches, currentPage, itemsPerPage]);
+  if (canReadDocuments) {
+   fetchDocumentBatches({ page: currentPage, limit: itemsPerPage }).then(() => setIsLoading(false));
+  } else {
+   setIsLoading(false);
+  }
+ }, [fetchDocumentBatches, currentPage, itemsPerPage, canReadDocuments]);
 
  const triggerFileSelect = (type: string) => {
   if (type === 'broadsheet') broadsheetInput.current?.click();
@@ -69,6 +80,13 @@ export default function UploadsPage() {
     <div className="py-10 text-center text-muted-foreground">
      Loading...
     </div>
+   ) : !canUploadIppis && !canUploadLoans && !canUploadRepayments && !canReadDocuments ? (
+    <div className="p-8">
+     <EmptyState
+      title="Access Restricted"
+      description="You do not have permission to upload document files or view batch logs."
+     />
+    </div>
    ) : (
     <div className="space-y-8">
      <div className="flex items-center justify-between">
@@ -78,108 +96,118 @@ export default function UploadsPage() {
       </div>
      </div>
 
-     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {/* Broadsheet Upload */}
-      <div className="bg-card rounded-2xl border border-border p-6 flex flex-col">
-       <div className="flex items-center gap-3 mb-4">
-        <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+     {(canUploadIppis || canUploadLoans || canUploadRepayments) && (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+       {/* Broadsheet Upload */}
+       {canUploadIppis && (
+        <div className="bg-card rounded-2xl border border-border p-6 flex flex-col">
+         <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+          </div>
+          <div>
+           <h3 className="text-foreground font-medium text-sm">IPPIS Broadsheet</h3>
+           <p className="text-xs text-muted-foreground">.csv, .xlsx</p>
+          </div>
+         </div>
+         <div className="mt-auto border-2 border-dashed border-border rounded-xl p-4 text-center hover:border-emerald-500 transition-colors cursor-pointer" onClick={() => triggerFileSelect('broadsheet')}>
+          <div className="text-xs text-muted-foreground font-medium">Select File</div>
+         </div>
+         <input type="file" ref={broadsheetInput} className="hidden" onChange={(e) => handleFileUpload(e, 'broadsheet')} accept=".csv,.xlsx" />
         </div>
-        <div>
-         <h3 className="text-foreground font-medium text-sm">IPPIS Broadsheet</h3>
-         <p className="text-xs text-muted-foreground">.csv, .xlsx</p>
-        </div>
-       </div>
-       <div className="mt-auto border-2 border-dashed border-border rounded-xl p-4 text-center hover:border-emerald-500 transition-colors cursor-pointer" onClick={() => triggerFileSelect('broadsheet')}>
-        <div className="text-xs text-muted-foreground font-medium">Select File</div>
-       </div>
-       <input type="file" ref={broadsheetInput} className="hidden" onChange={(e) => handleFileUpload(e, 'broadsheet')} accept=".csv,.xlsx" />
-      </div>
+       )}
 
-      {/* Disbursed Loans Upload */}
-      <div className="bg-card rounded-2xl border border-border p-6 flex flex-col">
-       <div className="flex items-center gap-3 mb-4">
-        <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
-         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+       {/* Disbursed Loans Upload */}
+       {canUploadLoans && (
+        <div className="bg-card rounded-2xl border border-border p-6 flex flex-col">
+         <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          </div>
+          <div>
+           <h3 className="text-foreground font-medium text-sm">Disbursed Loans</h3>
+           <p className="text-xs text-muted-foreground">.csv, .xlsx</p>
+          </div>
+         </div>
+         <div className="mt-auto border-2 border-dashed border-border rounded-xl p-4 text-center hover:border-purple-500 transition-colors cursor-pointer" onClick={() => triggerFileSelect('disbursed')}>
+          <div className="text-xs text-muted-foreground font-medium">Select File</div>
+         </div>
+         <input type="file" ref={disbursedInput} className="hidden" onChange={(e) => handleFileUpload(e, 'disbursed')} accept=".csv,.xlsx" />
         </div>
-        <div>
-         <h3 className="text-foreground font-medium text-sm">Disbursed Loans</h3>
-         <p className="text-xs text-muted-foreground">.csv, .xlsx</p>
-        </div>
-       </div>
-       <div className="mt-auto border-2 border-dashed border-border rounded-xl p-4 text-center hover:border-purple-500 transition-colors cursor-pointer" onClick={() => triggerFileSelect('disbursed')}>
-        <div className="text-xs text-muted-foreground font-medium">Select File</div>
-       </div>
-       <input type="file" ref={disbursedInput} className="hidden" onChange={(e) => handleFileUpload(e, 'disbursed')} accept=".csv,.xlsx" />
-      </div>
+       )}
 
-      {/* Repayment Schedule Upload */}
-      <div className="bg-card rounded-2xl border border-border p-6 flex flex-col">
-       <div className="flex items-center gap-3 mb-4">
-        <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+       {/* Repayment Schedule Upload */}
+       {canUploadRepayments && (
+        <div className="bg-card rounded-2xl border border-border p-6 flex flex-col">
+         <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+          </div>
+          <div>
+           <h3 className="text-foreground font-medium text-sm">Repayment Schedule</h3>
+           <p className="text-xs text-muted-foreground">.csv, .xlsx</p>
+          </div>
+         </div>
+         <div className="mt-auto border-2 border-dashed border-border rounded-xl p-4 text-center hover:border-amber-500 transition-colors cursor-pointer" onClick={() => triggerFileSelect('repayment')}>
+          <div className="text-xs text-muted-foreground font-medium">Select File</div>
+         </div>
+         <input type="file" ref={repaymentInput} className="hidden" onChange={(e) => handleFileUpload(e, 'repayment')} accept=".csv,.xlsx" />
         </div>
-        <div>
-         <h3 className="text-foreground font-medium text-sm">Repayment Schedule</h3>
-         <p className="text-xs text-muted-foreground">.csv, .xlsx</p>
-        </div>
-       </div>
-       <div className="mt-auto border-2 border-dashed border-border rounded-xl p-4 text-center hover:border-amber-500 transition-colors cursor-pointer" onClick={() => triggerFileSelect('repayment')}>
-        <div className="text-xs text-muted-foreground font-medium">Select File</div>
-       </div>
-       <input type="file" ref={repaymentInput} className="hidden" onChange={(e) => handleFileUpload(e, 'repayment')} accept=".csv,.xlsx" />
-      </div>
-     </div>
-
-     <div>
-      <h2 className="text-lg font-semibold text-foreground mb-4">Upload Batches</h2>
-      <div className="bg-card rounded-2xl border border-border overflow-hidden">
-       <div className="overflow-x-auto">
-<table className="min-w-full divide-y divide-slate-200">
-        <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
-         <tr>
-          <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Date Created</th>
-          <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Type</th>
-          <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Status</th>
-          <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Total Rows</th>
-          <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Processed</th>
-          <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Updated At</th>
-         </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100">
-         {batches.map((batch: any) => (
-          <tr key={batch.id} className="hover:bg-muted/30 transition-colors">
-           <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground font-mono">{new Date(batch.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-           <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground">{batch.documentType}</td>
-           <td className="px-4 py-4 whitespace-nowrap text-sm">
-            <span className={`px-2.5 py-1 text-xs rounded-full font-medium ${statusClass(batch.status)}`}>
-             {batch.status}
-            </span>
-           </td>
-           <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{batch.totalRows || 0}</td>
-           <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{batch.processedRows || 0}</td>
-           <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{new Date(batch.updatedAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-          </tr>
-         ))}
-         {batches.length === 0 && (
-          <tr>
-           <td colSpan={6} className="p-8 text-center text-muted-foreground/70">No batches found.</td>
-          </tr>
-         )}
-        </tbody>
-       </table>
-       </div>
-       {batches.length > 0 && (
-        <Pagination 
-         totalItems={meta?.total || 0}
-         currentPage={currentPage}
-         itemsPerPage={itemsPerPage}
-         onPageChange={setCurrentPage}
-         onItemsPerPageChange={setItemsPerPage}
-        />
        )}
       </div>
-     </div>
+     )}
+
+     {canReadDocuments && (
+      <div>
+       <h2 className="text-lg font-semibold text-foreground mb-4">Upload Batches</h2>
+       <div className="bg-card rounded-2xl border border-border overflow-hidden">
+        <div className="overflow-x-auto">
+ <table className="min-w-full divide-y divide-slate-200">
+         <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
+          <tr>
+           <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Date Created</th>
+           <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Type</th>
+           <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Status</th>
+           <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Total Rows</th>
+           <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Processed</th>
+           <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Updated At</th>
+          </tr>
+         </thead>
+         <tbody className="divide-y divide-slate-100">
+          {batches.map((batch: any) => (
+           <tr key={batch.id} className="hover:bg-muted/30 transition-colors">
+            <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground font-mono">{new Date(batch.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+            <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground">{batch.documentType}</td>
+            <td className="px-4 py-4 whitespace-nowrap text-sm">
+             <span className={`px-2.5 py-1 text-xs rounded-full font-medium ${statusClass(batch.status)}`}>
+              {batch.status}
+             </span>
+            </td>
+            <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{batch.totalRows || 0}</td>
+            <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{batch.processedRows || 0}</td>
+            <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{new Date(batch.updatedAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+           </tr>
+          ))}
+          {batches.length === 0 && (
+           <tr>
+            <td colSpan={6} className="p-8 text-center text-muted-foreground/70">No batches found.</td>
+           </tr>
+          )}
+         </tbody>
+        </table>
+        </div>
+        {batches.length > 0 && (
+         <Pagination 
+          totalItems={meta?.total || 0}
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={setItemsPerPage}
+         />
+        )}
+       </div>
+      </div>
+     )}
     </div>
    )}
   </main>

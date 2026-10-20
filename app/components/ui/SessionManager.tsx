@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useAuth } from '@/app/composables/core/useAuth';
+import { useAuth, clearAuthStorage } from '@/app/composables/core/useAuth';
 import { auth_api } from '@/app/api_factory/modules/auth';
 import { createPortal } from 'react-dom';
 import { useToast } from '@/app/composables/useToast';
@@ -224,11 +224,7 @@ export default function SessionManager() {
   };
 
   const handleFullLogout = () => {
-    if (typeof window !== 'undefined') {
-      document.cookie = 'public_sector_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      localStorage.removeItem('token');
-      localStorage.removeItem('refreshToken');
-    }
+    clearAuthStorage();
     logout();
     setIsTimedOut(false);
     setShowWarning(false);

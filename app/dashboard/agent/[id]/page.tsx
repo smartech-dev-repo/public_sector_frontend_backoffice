@@ -46,13 +46,14 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
   const { id } = use(params);
   
   const { hasPermission, isSuperAdmin } = useAdminPermissions();
+  const canReadAgent = isSuperAdmin || hasPermission(['agents:read', 'agents:review']);
   const canReviewAgent = isSuperAdmin || hasPermission('agents:review');
   const canManageAccess = isSuperAdmin || hasPermission('agents:onboarding-access:manage');
   const canRevokeSessions = isSuperAdmin || hasPermission('agents:sessions:revoke');
   const canReadLoans = isSuperAdmin || hasPermission('client-loans:read');
   const canReadClients = isSuperAdmin || hasPermission('clients:read');
   const canReadDocs = isSuperAdmin || hasPermission('documents:read');
-  const canSendCreds = canReviewAgent || isSuperAdmin || hasPermission('agents:recruitment:manage');
+  const canSendCreds = isSuperAdmin || hasPermission('agents:review');
 
   const { getAgentById, approveAgent, rejectAgent, resendCredentials, updateOnboardingAccess } = useAgents();
   const { revokeAgentSessions } = useSessions();
@@ -101,6 +102,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
   }, []);
 
   const fetchAgentClients = useCallback(async () => {
+    if (!canReadClients) return;
     setClientsLoading(true);
     try {
       const res = await clients_api.getClients({ agentId: id, page: clientsPage, limit: clientsLimit });
@@ -112,13 +114,19 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
     } finally {
       setClientsLoading(false);
     }
-  }, [id, clientsPage, clientsLimit]);
+  }, [id, clientsPage, clientsLimit, canReadClients]);
 
   useEffect(() => {
-    fetchAgentClients();
-  }, [fetchAgentClients]);
+    if (canReadClients) {
+      fetchAgentClients();
+    }
+  }, [fetchAgentClients, canReadClients]);
 
   const fetchAgentDetails = async () => {
+    if (!canReadAgent) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const data = await getAgentById(id);
@@ -131,14 +139,28 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
   };
 
   useEffect(() => {
-    fetchAgentDetails();
-  }, [id]);
+    if (canReadAgent) {
+      fetchAgentDetails();
+    } else {
+      setLoading(false);
+    }
+  }, [id, canReadAgent]);
 
   useEffect(() => {
-    const params: any = { agentId: id, page, limit };
-    if (filterParams.search) params.q = filterParams.search;
-    fetchClientLoans(params);
-  }, [fetchClientLoans, id, page, limit, filterParams]);
+    if (canReadLoans) {
+      const params: any = { agentId: id, page, limit };
+      if (filterParams.search) params.q = filterParams.search;
+      fetchClientLoans(params);
+    }
+  }, [fetchClientLoans, id, page, limit, filterParams, canReadLoans]);
+
+  useEffect(() => {
+    if (!canReadLoans && canReadClients) {
+      setActiveTab('clients');
+    } else if (canReadLoans && !canReadClients) {
+      setActiveTab('loans');
+    }
+  }, [canReadLoans, canReadClients]);
 
   const clearFilters = () => {
     setFilterParams({ search: '', dateRange: '' });
@@ -252,6 +274,18 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
 
   if (loading) {
     return <PulseLoader />;
+  }
+
+  if (!canReadAgent) {
+    return (
+      <div className="text-center py-16 bg-card rounded-2xl border border-border p-8 max-w-md mx-auto my-12">
+        <h3 className="text-lg font-bold text-foreground mb-1">Access Restricted</h3>
+        <p className="text-sm text-muted-foreground mb-4">You do not have permission to view agent details.</p>
+        <Link href="/dashboard" className="text-sm font-semibold text-[#018752] hover:underline">
+          &larr; Back to Dashboard
+        </Link>
+      </div>
+    );
   }
 
   if (!application) {
@@ -508,32 +542,32 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
           </div>
 
           {/* Verification Document */}
-          <div className="space-y-1">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-              <FileText className="w-3.5 h-3.5 text-emerald-600" />
-              Verification Document
-            </span>
-            <div>
-              {application.cvKey && canReadDocs ? (
-                <button
-                  type="button"
-                  onClick={() => setPreviewDoc({
-                    url: `/${application.cvKey}`,
-                    title: `${agentName} - Verification Document`,
-                    subtitle: `Agent ID: ${application.id}`
-                  })}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 dark:bg-emerald-950/40 text-[#018752] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 rounded-lg text-xs font-semibold hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors cursor-pointer"
-                >
-                  <Eye className="w-3.5 h-3.5" />
-                  <span>View Document</span>
-                </button>
-              ) : application.cvKey ? (
-                <span className="text-xs text-muted-foreground">Document on file</span>
-              ) : (
-                <span className="text-xs text-muted-foreground">No document attached</span>
-              )}
+          {canReadDocs && (
+            <div className="space-y-1">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5 text-emerald-600" />
+                Verification Document
+              </span>
+              <div>
+                {application.cvKey ? (
+                  <button
+                    type="button"
+                    onClick={() => setPreviewDoc({
+                      url: `/${application.cvKey}`,
+                      title: `${agentName} - Verification Document`,
+                      subtitle: `Agent ID: ${application.id}`
+                    })}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 dark:bg-emerald-950/40 text-[#018752] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 rounded-lg text-xs font-semibold hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors cursor-pointer"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>View Document</span>
+                  </button>
+                ) : (
+                  <span className="text-xs text-muted-foreground">No document attached</span>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Address */}
           <div className="space-y-1 sm:col-span-2 lg:col-span-1">
@@ -549,64 +583,74 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
       </div>
 
       {/* ================= SUMMARY STATS CARDS ================= */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className={`grid grid-cols-1 ${
+        canReadLoans && canReadClients
+          ? 'md:grid-cols-3'
+          : canReadLoans || canReadClients
+          ? 'md:grid-cols-2'
+          : 'md:grid-cols-1 max-w-sm'
+      } gap-5`}>
         {/* Total Loans Originated */}
-        <div 
-          onClick={() => setActiveTab('loans')}
-          className={`p-5 rounded-2xl border transition-all cursor-pointer relative overflow-hidden ${
-            activeTab === 'loans' 
-              ? 'bg-card border-emerald-500 shadow-sm ring-1 ring-emerald-500/20' 
-              : 'bg-card border-border hover:border-emerald-500/40 hover:shadow-xs'
-          }`}
-        >
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Loans Originated</span>
-            <div className={`p-2 rounded-xl ${activeTab === 'loans' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-muted text-muted-foreground'}`}>
-              <Banknote className="w-4 h-4" />
+        {canReadLoans && (
+          <div 
+            onClick={() => setActiveTab('loans')}
+            className={`p-5 rounded-2xl border transition-all cursor-pointer relative overflow-hidden ${
+              activeTab === 'loans' 
+                ? 'bg-card border-emerald-500 shadow-sm ring-1 ring-emerald-500/20' 
+                : 'bg-card border-border hover:border-emerald-500/40 hover:shadow-xs'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Loans Originated</span>
+              <div className={`p-2 rounded-xl ${activeTab === 'loans' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-muted text-muted-foreground'}`}>
+                <Banknote className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-3xl font-extrabold text-foreground mb-1">
+              {meta?.total || 0}
+            </div>
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>Originated via agent code</span>
+              {activeTab === 'loans' && (
+                <span className="text-emerald-700 dark:text-emerald-400 font-semibold text-[11px] flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                  Active View
+                </span>
+              )}
             </div>
           </div>
-          <div className="text-3xl font-extrabold text-foreground mb-1">
-            {meta?.total || 0}
-          </div>
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>Originated via agent code</span>
-            {activeTab === 'loans' && (
-              <span className="text-emerald-700 dark:text-emerald-400 font-semibold text-[11px] flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                Active View
-              </span>
-            )}
-          </div>
-        </div>
+        )}
 
         {/* Customers Onboarded */}
-        <div 
-          onClick={() => setActiveTab('clients')}
-          className={`p-5 rounded-2xl border transition-all cursor-pointer relative overflow-hidden ${
-            activeTab === 'clients' 
-              ? 'bg-card border-emerald-500 shadow-sm ring-1 ring-emerald-500/20' 
-              : 'bg-card border-border hover:border-emerald-500/40 hover:shadow-xs'
-          }`}
-        >
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Customers Onboarded</span>
-            <div className={`p-2 rounded-xl ${activeTab === 'clients' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-muted text-muted-foreground'}`}>
-              <Users className="w-4 h-4" />
+        {canReadClients && (
+          <div 
+            onClick={() => setActiveTab('clients')}
+            className={`p-5 rounded-2xl border transition-all cursor-pointer relative overflow-hidden ${
+              activeTab === 'clients' 
+                ? 'bg-card border-emerald-500 shadow-sm ring-1 ring-emerald-500/20' 
+                : 'bg-card border-border hover:border-emerald-500/40 hover:shadow-xs'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Customers Onboarded</span>
+              <div className={`p-2 rounded-xl ${activeTab === 'clients' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-muted text-muted-foreground'}`}>
+                <Users className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-3xl font-extrabold text-foreground mb-1">
+              {clientsMeta?.total ?? onboardedClients.length}
+            </div>
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>Onboarded by this agent</span>
+              {activeTab === 'clients' && (
+                <span className="text-emerald-700 dark:text-emerald-400 font-semibold text-[11px] flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                  Active View
+                </span>
+              )}
             </div>
           </div>
-          <div className="text-3xl font-extrabold text-foreground mb-1">
-            {clientsMeta?.total ?? onboardedClients.length}
-          </div>
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>Onboarded by this agent</span>
-            {activeTab === 'clients' && (
-              <span className="text-emerald-700 dark:text-emerald-400 font-semibold text-[11px] flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                Active View
-              </span>
-            )}
-          </div>
-        </div>
+        )}
 
         {/* Agent Account Status */}
         <div className="p-5 rounded-2xl border border-border bg-card">
@@ -672,7 +716,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
               )}
             </div>
 
-            {activeTab === 'clients' && (
+            {activeTab === 'clients' && canReadClients && (
               <Link
                 href={`/dashboard/clients?agentId=${id}&agentName=${encodeURIComponent(agentName)}`}
                 className="text-xs font-semibold text-[#018752] hover:underline flex items-center gap-1.5"
@@ -686,12 +730,14 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
           {/* Table Toolbar */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
             <span className="text-xs sm:text-sm font-medium text-muted-foreground">
-              {activeTab === 'loans'
+              {activeTab === 'loans' && canReadLoans
                 ? `Showing ${clientLoans.length} of ${meta?.total || 0} originated loans`
-                : `Showing ${onboardedClients.length} of ${clientsMeta?.total || onboardedClients.length} onboarded customers`}
+                : activeTab === 'clients' && canReadClients
+                ? `Showing ${onboardedClients.length} of ${clientsMeta?.total || onboardedClients.length} onboarded customers`
+                : ''}
             </span>
 
-            {activeTab === 'loans' && (
+            {activeTab === 'loans' && canReadLoans && (
               <div className="flex items-center gap-2.5 w-full sm:w-auto relative" ref={filterRef}>
                 <button
                   onClick={() => setShowFilter(!showFilter)}

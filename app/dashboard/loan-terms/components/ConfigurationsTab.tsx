@@ -67,17 +67,21 @@ export default function ConfigurationsTab() {
 
   // Load initial products, sectors, and settings
   useEffect(() => {
-    fetchLoanProducts();
-    fetchLoanProductSectors();
-    fetchLoanSettings().then(res => {
-      if (res) {
-        setSettingsForm({
-          retirementAgeYears: res.retirementAgeYears || 60,
-          maxServiceYears: res.maxServiceYears || 35
-        });
-      }
-    });
-  }, [fetchLoanProducts, fetchLoanProductSectors, fetchLoanSettings]);
+    if (canManageProducts) {
+      fetchLoanProducts();
+      fetchLoanProductSectors();
+    }
+    if (canManageSettings) {
+      fetchLoanSettings().then(res => {
+        if (res) {
+          setSettingsForm({
+            retirementAgeYears: res.retirementAgeYears || 60,
+            maxServiceYears: res.maxServiceYears || 35
+          });
+        }
+      });
+    }
+  }, [fetchLoanProducts, fetchLoanProductSectors, fetchLoanSettings, canManageProducts, canManageSettings]);
 
   // Available sectors combined
   const availableSectors = useMemo(() => {
@@ -262,7 +266,7 @@ export default function ConfigurationsTab() {
       )}
 
       {/* Products Table (Matches Image 3) */}
-      {!loading && (
+      {!loading && canManageProducts && (
         <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">

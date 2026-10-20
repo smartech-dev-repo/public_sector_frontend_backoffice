@@ -5,26 +5,46 @@ import { useIppis } from '@/app/composables/modules/useIppis';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 
+import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+
 export default function IppisPage() {
+ const { isSuperAdmin, hasPermission } = useAdminPermissions();
+ const canUploadIppis = isSuperAdmin || hasPermission('ippis:upload');
+ const canReadDocs = isSuperAdmin || hasPermission('documents:read');
  const { loading, error, batches, fetchBatches } = useIppis();
 
  useEffect(() => {
-  fetchBatches();
- }, [fetchBatches]);
+  if (canReadDocs) {
+   fetchBatches();
+  }
+ }, [fetchBatches, canReadDocs]);
+
+ if (!canUploadIppis && !canReadDocs) {
+  return (
+   <div className="p-8">
+    <EmptyState
+     title="Access Restricted"
+     description="You do not have permission to upload or view IPPIS documents."
+    />
+   </div>
+  );
+ }
 
  return (
   <main className="w-full">
-   <div className="flex justify-end items-center mb-3">
-    <h1 className="sr-only">IPPIS Documents</h1>
-    <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium">
-     Upload Document
-    </button>
-   </div>
+   {canUploadIppis && (
+    <div className="flex justify-end items-center mb-3">
+     <h1 className="sr-only">IPPIS Documents</h1>
+     <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium">
+      Upload Document
+     </button>
+    </div>
+   )}
 
    {loading && <PulseLoader />}
-   {!loading && error && <div className="text-red-500 py-12 text-center">{error}</div>}
+   {!loading && error && canReadDocs && <div className="text-red-500 py-12 text-center">{error}</div>}
    
-   {!loading && !error && (
+   {!loading && !error && canReadDocs && (
     <div className="bg-card rounded-2xl border border-border overflow-hidden">
      <div className="overflow-x-auto">
 <table className="min-w-full divide-y divide-slate-200">
