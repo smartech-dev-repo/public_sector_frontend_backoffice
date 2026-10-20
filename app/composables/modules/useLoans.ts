@@ -219,6 +219,12 @@ export const useLoans = () => {
  }, []);
 
  const fetchClientLoans = useCallback(async (params?: any) => {
+  // Backend /admin/client-loans requires clientId. Avoid 400 Bad Request if missing.
+  if (params && !params.clientId) {
+   setClientLoans([]);
+   setMeta({ total: 0, page: 1, limit: params?.limit || 25, totalPages: 1 });
+   return [];
+  }
   setLoading(true);
   try {
    const res = await loans_api.getClientLoans(params);

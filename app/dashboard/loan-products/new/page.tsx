@@ -33,7 +33,7 @@ export interface InterestTierItem {
   id: string;
   minTenorMonths: number;
   maxTenorMonths: number;
-  interestRatePercent: number;
+  interestRatePercent: number | string;
 }
 
 const SECTOR_OPTIONS = [
@@ -94,7 +94,7 @@ function ProductFormContent() {
     maximumMonthsInService: 35,
     // Management charge
     managementChargeType: 'PERCENTAGE',
-    managementChargeValue: 0,
+    managementChargeValue: 0 as number | string,
     managementChargeApplication: 'DEDUCT_FROM_DISBURSEMENT'
   });
 
@@ -136,10 +136,12 @@ function ProductFormContent() {
             minimumTenorMonths: Number(found.minimumTenorMonths) || 1,
             maximumTenorMonths: Number(found.maximumTenorMonths) || 12,
             interestTiers: mappedTiers,
-            minimumServiceMonthsLeft: found.minimumServiceMonthsLeft !== null ? Number(found.minimumServiceMonthsLeft) : 24,
+            minimumServiceMonthsLeft: found.minimumServiceMonthsLeft !== null && found.minimumServiceMonthsLeft !== undefined ? Number(found.minimumServiceMonthsLeft) : 24,
             maximumMonthsInService: (() => {
-              const raw = found.maximumMonthsInService !== null && found.maximumMonthsInService !== undefined ? Number(found.maximumMonthsInService) : 420;
-              return raw > 50 ? Math.round(raw / 12) : raw || 35;
+              const raw = found.maximumMonth ?? found.MaximumMonth ?? found.maximumMonths ?? found.maximumMonthsInService ?? found.maxServiceMonths ?? found.maxMonths ?? 420;
+              const num = Number(raw);
+              if (isNaN(num) || num <= 0) return 35;
+              return num > 50 ? Math.round(num / 12) : num;
             })(),
             managementChargeType: found.managementChargeType || 'PERCENTAGE',
             managementChargeValue: Number(found.managementChargeValue) || 0,
@@ -206,7 +208,7 @@ function ProductFormContent() {
     });
   };
 
-  const handleUpdateTier = (id: string, field: 'minTenorMonths' | 'maxTenorMonths' | 'interestRatePercent', value: number) => {
+  const handleUpdateTier = (id: string, field: 'minTenorMonths' | 'maxTenorMonths' | 'interestRatePercent', value: number | string) => {
     const updated = form.interestTiers.map(t => {
       if (t.id === id) {
         return { ...t, [field]: value };
@@ -382,6 +384,18 @@ function ProductFormContent() {
       if (Number(t.interestRatePercent) < 0) {
         return addToast(`Band ${i + 1}: interest rate cannot be negative`, 'error');
       }
+      if (Number(t.interestRatePercent) > 100) {
+        return addToast(`Band ${i + 1}: interest rate cannot exceed 100%`, 'error');
+      }
+    }
+
+    // Validate management charge
+    const chargeVal = Number(form.managementChargeValue);
+    if (isNaN(chargeVal) || chargeVal < 0) {
+      return addToast('Management charge value cannot be negative', 'error');
+    }
+    if (form.managementChargeType === 'PERCENTAGE' && chargeVal > 100) {
+      return addToast('Management charge percentage cannot exceed 100%', 'error');
     }
 
     const minT = Number(form.minimumTenorMonths);
@@ -407,7 +421,22 @@ function ProductFormContent() {
       managementChargeValue: Number(form.managementChargeValue) || 0,
       managementChargeApplication: form.managementChargeApplication,
       minimumServiceMonthsLeft: Number(form.minimumServiceMonthsLeft),
-      maximumMonthsInService: Number(form.maximumMonthsInService) * 12
+      maximumMonthsInService: (() => {
+        const val = Number(form.maximumMonthsInService) || 35;
+        return val > 50 ? val : val * 12;
+      })(),
+      maximumMonth: (() => {
+        const val = Number(form.maximumMonthsInService) || 35;
+        return val > 50 ? val : val * 12;
+      })(),
+      MaximumMonth: (() => {
+        const val = Number(form.maximumMonthsInService) || 35;
+        return val > 50 ? val : val * 12;
+      })(),
+      maximumMonths: (() => {
+        const val = Number(form.maximumMonthsInService) || 35;
+        return val > 50 ? val : val * 12;
+      })()
     };
 
     setSubmitting(true);
@@ -832,11 +861,18 @@ function ProductFormContent() {
                           <td className="py-3 px-3">
                             <div className="inline-flex items-center gap-1 bg-muted/20 hover:bg-muted/40 border border-border/80 focus-within:border-[#018752] focus-within:bg-background focus-within:ring-2 focus-within:ring-[#018752]/10 rounded-xl px-2.5 py-1 transition-all w-28">
                               <input
-                                type="number"
-                                step="0.05"
-                                min={0}
-                                value={tier.interestRatePercent}
-                                onChange={(e) => handleUpdateTier(tier.id, 'interestRatePercent', Number(e.target.value))}
+                                type="text"
+                                inputMode="decimal"
+                                value={tier.interestRatePercent ?? ''}
+                                onChange={(e) => {
+                                  const input = e.target.value.replace(/[^\d.]/g, '');
+                                  const parts = input.split('.');
+                                  const formatted = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : input;
+                                  const num = parseFloat(formatted);
+                                  if (formatted === '' || formatted === '.' || isNaN(num) || num <= 100) {
+                                    handleUpdateTier(tier.id, 'interestRatePercent', formatted);
+                                  }
+                                }}
                                 className="w-full text-right font-bold text-xs text-[#018752] bg-transparent outline-none"
                               />
                               <span className="text-[11px] font-bold text-muted-foreground shrink-0">% / mo</span>
@@ -960,7 +996,7 @@ function ProductFormContent() {
               <h3 className="text-sm font-bold text-foreground">Management Charge</h3>
               <span className="text-[11px] font-semibold text-[#018752] bg-[#E8F5EE] px-3 py-1 rounded-full">
                 {form.managementChargeType === 'PERCENTAGE' 
-                  ? `${form.managementChargeValue || 0}%` 
+                  ? `${form.managementChargeValue !== '' && form.managementChargeValue !== undefined ? form.managementChargeValue : 0}%` 
                   : `₦${Number(form.managementChargeValue || 0).toLocaleString()}`}
               </span>
             </div>
@@ -997,18 +1033,23 @@ function ProductFormContent() {
                   <input
                     type="text"
                     inputMode={form.managementChargeType === 'PERCENTAGE' ? 'decimal' : 'numeric'}
-                    value={
-                      form.managementChargeType === 'PERCENTAGE'
-                        ? (form.managementChargeValue || '')
-                        : (form.managementChargeValue ? Number(form.managementChargeValue).toLocaleString('en-US') : '')
-                    }
+                    value={form.managementChargeValue !== null && form.managementChargeValue !== undefined ? String(form.managementChargeValue) : ''}
                     onChange={(e) => {
+                      const input = e.target.value;
                       if (form.managementChargeType === 'PERCENTAGE') {
-                        const val = e.target.value.replace(/[^\d.]/g, '');
-                        setForm({ ...form, managementChargeValue: val ? Number(val) : 0 });
+                        // Allow digits and at most one decimal point
+                        const clean = input.replace(/[^\d.]/g, '');
+                        const parts = clean.split('.');
+                        const formatted = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : clean;
+                        const num = parseFloat(formatted);
+                        if (formatted === '' || formatted === '.' || isNaN(num) || num <= 100) {
+                          setForm({ ...form, managementChargeValue: formatted });
+                        }
                       } else {
-                        const raw = e.target.value.replace(/[^\d]/g, '');
-                        setForm({ ...form, managementChargeValue: raw ? Number(raw) : 0 });
+                        const clean = input.replace(/[^\d.]/g, '');
+                        const parts = clean.split('.');
+                        const formatted = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : clean;
+                        setForm({ ...form, managementChargeValue: formatted });
                       }
                     }}
                     placeholder="0"
