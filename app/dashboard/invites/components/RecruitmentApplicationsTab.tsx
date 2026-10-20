@@ -21,7 +21,8 @@ import {
   TrendingUp,
   RefreshCw,
   UserCheck,
-  KeyRound
+  KeyRound,
+  Download
 } from 'lucide-react';
 import { useAgentRecruitment, AgentRecruitmentApplication } from '@/app/composables/modules/useAgentRecruitment';
 import { useAgents } from '@/app/composables/modules/useAgents';
@@ -847,20 +848,24 @@ export default function RecruitmentApplicationsTab() {
                           <FileText className="w-4 h-4 text-emerald-600" />
                           Curriculum Vitae
                         </span>
-                        {selectedApp.cvKey && canReadDocs ? (
+                        {(selectedApp.cvUrl || selectedApp.cvKey) && canReadDocs ? (
                           <button
                             type="button"
-                            onClick={() => setPreviewDoc({
-                              url: `/${selectedApp.cvKey}`,
-                              title: `${selectedApp.fullName || 'Candidate'} - Curriculum Vitae`,
-                              subtitle: `Key: ${selectedApp.cvKey}`
-                            })}
+                            onClick={() => {
+                              const rawUrl = selectedApp.cvUrl || selectedApp.cvKey || '';
+                              const url = rawUrl.startsWith('http') ? rawUrl : `/${rawUrl}`;
+                              setPreviewDoc({
+                                url,
+                                title: `${selectedApp.fullName || 'Candidate'} - Curriculum Vitae`,
+                                subtitle: url.toLowerCase().includes('.doc') ? 'Word Document (.doc / .docx)' : 'PDF Document'
+                              });
+                            }}
                             className="w-full py-1.5 px-2 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 rounded-lg text-xs font-semibold hover:bg-emerald-100 transition-colors flex items-center justify-center gap-1.5"
                           >
                             <Eye className="w-3.5 h-3.5" />
-                            View CV
+                            <span>View CV</span>
                           </button>
-                        ) : !selectedApp.cvKey ? (
+                        ) : !(selectedApp.cvUrl || selectedApp.cvKey) ? (
                           <span className="text-xs text-muted-foreground block py-1">Not uploaded</span>
                         ) : null}
                       </div>
@@ -871,20 +876,24 @@ export default function RecruitmentApplicationsTab() {
                           <Eye className="w-4 h-4 text-blue-600" />
                           Passport Photo
                         </span>
-                        {selectedApp.passportPhotoKey && canReadDocs ? (
+                        {(selectedApp.passportPhotoUrl || selectedApp.passportPhotoKey) && canReadDocs ? (
                           <button
                             type="button"
-                            onClick={() => setPreviewDoc({
-                              url: `/${selectedApp.passportPhotoKey}`,
-                              title: `${selectedApp.fullName || 'Candidate'} - Passport Photograph`,
-                              subtitle: `Key: ${selectedApp.passportPhotoKey}`
-                            })}
+                            onClick={() => {
+                              const rawUrl = selectedApp.passportPhotoUrl || selectedApp.passportPhotoKey || '';
+                              const url = rawUrl.startsWith('http') ? rawUrl : `/${rawUrl}`;
+                              setPreviewDoc({
+                                url,
+                                title: `${selectedApp.fullName || 'Candidate'} - Passport Photograph`,
+                                subtitle: 'Image'
+                              });
+                            }}
                             className="w-full py-1.5 px-2 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 rounded-lg text-xs font-semibold hover:bg-blue-100 transition-colors flex items-center justify-center gap-1.5"
                           >
                             <Eye className="w-3.5 h-3.5" />
-                            View Photo
+                            <span>View Photo</span>
                           </button>
-                        ) : !selectedApp.passportPhotoKey ? (
+                        ) : !(selectedApp.passportPhotoUrl || selectedApp.passportPhotoKey) ? (
                           <span className="text-xs text-muted-foreground block py-1">Not uploaded</span>
                         ) : null}
                       </div>
@@ -895,20 +904,24 @@ export default function RecruitmentApplicationsTab() {
                           <ShieldCheck className="w-4 h-4 text-purple-600" />
                           ID Document
                         </span>
-                        {selectedApp.identityDocumentKey && canReadDocs ? (
+                        {(selectedApp.identityDocumentUrl || selectedApp.identityDocumentKey || selectedApp.ninSlipUrl || selectedApp.ninSlipKey) && canReadDocs ? (
                           <button
                             type="button"
-                            onClick={() => setPreviewDoc({
-                              url: `/${selectedApp.identityDocumentKey}`,
-                              title: `${selectedApp.fullName || 'Candidate'} - Identity Document`,
-                              subtitle: `Key: ${selectedApp.identityDocumentKey}`
-                            })}
+                            onClick={() => {
+                              const rawUrl = selectedApp.identityDocumentUrl || selectedApp.identityDocumentKey || selectedApp.ninSlipUrl || selectedApp.ninSlipKey || '';
+                              const url = rawUrl.startsWith('http') ? rawUrl : `/${rawUrl}`;
+                              setPreviewDoc({
+                                url,
+                                title: `${selectedApp.fullName || 'Candidate'} - Identity Document`,
+                                subtitle: url.toLowerCase().includes('.pdf') ? 'PDF Document' : 'Identity Document'
+                              });
+                            }}
                             className="w-full py-1.5 px-2 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 rounded-lg text-xs font-semibold hover:bg-purple-100 transition-colors flex items-center justify-center gap-1.5"
                           >
                             <Eye className="w-3.5 h-3.5" />
-                            View ID
+                            <span>View ID</span>
                           </button>
-                        ) : !selectedApp.identityDocumentKey ? (
+                        ) : !(selectedApp.identityDocumentUrl || selectedApp.identityDocumentKey || selectedApp.ninSlipUrl || selectedApp.ninSlipKey) ? (
                           <span className="text-xs text-muted-foreground block py-1">Not uploaded</span>
                         ) : null}
                       </div>
@@ -970,7 +983,7 @@ export default function RecruitmentApplicationsTab() {
                           </>
                         )}
 
-                        {selectedApp.submittedAgent.status === 'APPROVED' && canSendCreds && (
+                        {selectedApp.submittedAgent.status === 'APPROVED' && canSendCreds && selectedApp.submittedAgent.mustChangePassword !== false && (
                           <button
                             type="button"
                             disabled={actionLoadingId === selectedApp.submittedAgent.id}
@@ -1107,14 +1120,25 @@ export default function RecruitmentApplicationsTab() {
                   <p className="text-xs text-muted-foreground truncate mt-0.5">{previewDoc.subtitle}</p>
                 )}
               </div>
-              <button
-                type="button"
-                onClick={() => setPreviewDoc(null)}
-                className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                title="Close viewer"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-1.5">
+                <a
+                  href={previewDoc.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                  title="Open in new tab"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setPreviewDoc(null)}
+                  className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  title="Close viewer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             <div className="p-4 bg-muted/20 flex-1 overflow-auto flex items-center justify-center min-h-[320px] max-h-[72vh]">
@@ -1124,6 +1148,39 @@ export default function RecruitmentApplicationsTab() {
                   title={previewDoc.title}
                   className="w-full h-[68vh] rounded-xl border border-border bg-white"
                 />
+              ) : previewDoc.url.toLowerCase().includes('.doc') ? (
+                <div className="w-full h-[68vh] flex flex-col items-center justify-center bg-card rounded-xl border border-border p-6 text-center space-y-4">
+                  <div className="w-16 h-16 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 flex items-center justify-center">
+                    <FileText className="w-8 h-8" />
+                  </div>
+                  <div className="max-w-md">
+                    <h4 className="text-base font-bold text-foreground">{previewDoc.title}</h4>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Word Document format (.doc / .docx). You can download or preview it via Google Docs.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 pt-2 flex-wrap justify-center">
+                    <a
+                      href={previewDoc.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      download
+                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#018752] hover:bg-[#017044] text-white rounded-xl text-xs font-semibold shadow-xs transition-colors"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>Download Document</span>
+                    </a>
+                    <a
+                      href={`https://docs.google.com/gview?url=${encodeURIComponent(previewDoc.url)}&embedded=true`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-muted hover:bg-muted/80 text-foreground border border-border rounded-xl text-xs font-semibold transition-colors"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      <span>View in Google Docs</span>
+                    </a>
+                  </div>
+                </div>
               ) : (
                 <img
                   src={previewDoc.url}
