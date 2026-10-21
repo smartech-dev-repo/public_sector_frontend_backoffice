@@ -93,14 +93,15 @@ instanceArray.forEach((instance) => {
  if (err.response.status === 401) {
  console.log(err.response.data.error)
  // Only log out if we're not already on login page
- const isOnAuthPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/login')
- if (!isOnAuthPage && typeof window !== 'undefined') {
- document.cookie = 'public_sector_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
- document.cookie = 'public_sector_user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
- localStorage.removeItem('token');
- localStorage.removeItem('user');
- window.location.href = '/login';
- }
+ // Commented out to prevent frequent logouts based on arbitrary 401s
+ // const isOnAuthPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/login')
+ // if (!isOnAuthPage && typeof window !== 'undefined') {
+ // document.cookie = 'public_sector_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+ // document.cookie = 'public_sector_user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+ // localStorage.removeItem('token');
+ // localStorage.removeItem('user');
+ // window.location.href = '/login';
+ // }
  addToast(
  err?.response?.data?.message || err?.response?.data?.error || "An error occured",
  "error",
@@ -111,17 +112,18 @@ instanceArray.forEach((instance) => {
  ...err.response,
  };
  } else if (statusCodeStartsWith(err.response.status, 4)) {
- if (err.response.data.message) {
- addToast(
- err?.response?.data?.message || err?.response?.data?.error || "An error occured",
- "error",
- 3000
- );
- }
- return {
- type: "ERROR",
- ...err.response,
- };
+  const shouldSkipToast = (err.config as any)?.skipToast || ((err.config as any)?.skipToastOn404 && err.response.status === 404);
+  if (err.response.data.message && !shouldSkipToast) {
+   addToast(
+    err?.response?.data?.message || err?.response?.data?.error || "An error occured",
+    "error",
+    3000
+   );
+  }
+  return {
+   type: "ERROR",
+   ...err.response,
+  };
  } else if (err.response.status === 500) {
  addToast(
  err?.response?.data?.message || err?.response?.data?.error || "An error occured",

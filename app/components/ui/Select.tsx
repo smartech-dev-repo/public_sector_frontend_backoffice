@@ -1,111 +1,274 @@
-"use client";
+import * as SelectPrimitive from '@radix-ui/react-select';
+import { Check, ChevronDown, ChevronUp, Search } from 'lucide-react';
+import * as React from 'react';
 
-import React, { useState, useEffect, useRef } from 'react';
+import { cn } from '@/lib/utils';
 
-export interface SelectOption {
-  value: string | number;
-  label: string;
-}
+const SelectSearchContext = React.createContext<{
+ searchQuery: string;
+ setSearchQuery: (q: string) => void;
+ forceSelect: (val: string) => void;
+}>({
+ searchQuery: '',
+ setSearchQuery: () => {},
+ forceSelect: () => {},
+});
 
-export interface SelectProps {
-  value?: string | number;
-  onChange: (value: string | number) => void;
-  label?: string;
-  options: SelectOption[];
-  placeholder?: string;
-  icon?: React.ReactNode;
-}
+const Select = (props: React.ComponentProps<typeof SelectPrimitive.Root>) => {
+ const [searchQuery, setSearchQuery] = React.useState('');
+ const [open, setOpen] = React.useState(props.defaultOpen || false);
+ const [internalValue, setInternalValue] = React.useState(props.defaultValue || '');
+ 
+ const isControlledOpen = props.open !== undefined;
+ const currentOpen = isControlledOpen ? props.open : open;
 
-export default function Select({
-  value,
-  onChange,
-  label = '',
-  options,
-  placeholder = '',
-  icon,
-}: SelectProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+ const isControlledValue = props.value !== undefined;
+ const currentValue = isControlledValue ? props.value : internalValue;
 
-  const selectedOption = options.find((opt) => opt.value === value) || null;
+ const handleOpenChange = (newOpen: boolean) => {
+  if (!isControlledOpen) setOpen(newOpen);
+  if (!newOpen) setSearchQuery('');
+  if (props.onOpenChange) props.onOpenChange(newOpen);
+ };
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
+ const handleValueChange = (val: string) => {
+  if (!isControlledValue) setInternalValue(val);
+  setSearchQuery('');
+  if (props.onValueChange) props.onValueChange(val);
+ };
 
-    document.addEventListener('click', handleClickOutside);
-    return () => {
-      document.removeEventListener('click', handleClickOutside);
-    };
-  }, []);
+ const forceSelect = (val: string) => {
+  handleValueChange(val);
+  handleOpenChange(false);
+ };
 
-  const handleSelect = (val: string | number) => {
-    onChange(val);
-    setIsOpen(false);
-  };
+ const { defaultValue, ...restProps } = props;
 
-  return (
-    <div className="relative" ref={containerRef}>
-      {label && <label className="block text-sm text-slate-700 mb-1.5">{label}</label>}
-      <div className="relative flex items-center" onClick={() => setIsOpen(!isOpen)}>
-        {icon && (
-          <div className="absolute left-3 text-slate-400 pointer-events-none">
-            {icon}
-          </div>
-        )}
-        <div 
-          className={`w-full bg-slate-50 border rounded-xl py-2.5 text-sm outline-none transition-all cursor-pointer flex items-center justify-between ${
-            isOpen ? 'border-emerald-500 bg-white ring-2 ring-emerald-500/20' : 'border-slate-200'
-          } ${icon ? 'pl-10 pr-10' : 'pl-4 pr-10'} ${
-            selectedOption ? 'text-slate-800' : 'text-slate-400'
-          }`}
-        >
-          <span>{selectedOption ? selectedOption.label : (placeholder || 'Select...')}</span>
-          <div className={`absolute right-3 text-slate-400 pointer-events-none transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-          </div>
-        </div>
+ return (
+  <SelectSearchContext.Provider value={{ searchQuery, setSearchQuery, forceSelect }}>
+   <SelectPrimitive.Root 
+    {...restProps} 
+    value={currentValue || undefined}
+    open={currentOpen}
+    onOpenChange={handleOpenChange}
+    onValueChange={handleValueChange}
+   />
+  </SelectSearchContext.Provider>
+ );
+};
+
+const SelectGroup = SelectPrimitive.Group;
+const SelectValue = SelectPrimitive.Value;
+
+const SelectTrigger = React.forwardRef<
+ React.ElementRef<typeof SelectPrimitive.Trigger>,
+ React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger> & {
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  error?: boolean;
+  success?: boolean;
+ }
+>(({ className, children, size = 'md', error, success, ...props }, ref) => (
+ <SelectPrimitive.Trigger
+  ref={ref}
+  className={cn(
+   'flex w-full items-center justify-between gap-2 rounded-xl border border-input bg-background transition-[color,box-shadow] focus:outline-none focus:ring-2 focus:ring-[#018752]/20 focus:border-[#018752] disabled:cursor-not-allowed disabled:opacity-50 data-[placeholder]:text-muted-foreground overflow-hidden min-w-0 [&>span]:truncate [&>span]:min-w-0',
+   size === 'xs' && 'h-7 px-2 text-xs',
+   size === 'sm' && 'h-8 px-2.5 text-xs',
+   size === 'md' && 'h-9 px-3 text-sm',
+   size === 'lg' && 'h-10 px-3 text-base',
+   size === 'xl' && 'h-11 px-4 text-lg',
+   error && 'border-destructive focus:ring-destructive',
+   success && 'border-success/50 focus:ring-success',
+   className,
+  )}
+  {...props}
+ >
+  {children}
+  <SelectPrimitive.Icon asChild>
+   <ChevronDown className="size-4 opacity-50" />
+  </SelectPrimitive.Icon>
+ </SelectPrimitive.Trigger>
+));
+SelectTrigger.displayName = SelectPrimitive.Trigger.displayName;
+
+const SelectScrollUpButton = React.forwardRef<
+ React.ElementRef<typeof SelectPrimitive.ScrollUpButton>,
+ React.ComponentPropsWithoutRef<typeof SelectPrimitive.ScrollUpButton>
+>(({ className, ...props }, ref) => (
+ <SelectPrimitive.ScrollUpButton
+  ref={ref}
+  className={cn('flex cursor-default items-center justify-center py-1', className)}
+  {...props}
+ >
+  <ChevronUp className="size-4" />
+ </SelectPrimitive.ScrollUpButton>
+));
+SelectScrollUpButton.displayName = SelectPrimitive.ScrollUpButton.displayName;
+
+const SelectScrollDownButton = React.forwardRef<
+ React.ElementRef<typeof SelectPrimitive.ScrollDownButton>,
+ React.ComponentPropsWithoutRef<typeof SelectPrimitive.ScrollDownButton>
+>(({ className, ...props }, ref) => (
+ <SelectPrimitive.ScrollDownButton
+  ref={ref}
+  className={cn('flex cursor-default items-center justify-center py-1', className)}
+  {...props}
+ >
+  <ChevronDown className="size-4" />
+ </SelectPrimitive.ScrollDownButton>
+));
+SelectScrollDownButton.displayName = SelectPrimitive.ScrollDownButton.displayName;
+
+const SelectContent = React.forwardRef<
+ React.ElementRef<typeof SelectPrimitive.Content>,
+ React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content> & {
+  hideSearch?: boolean;
+ }
+>(({ className, children, position = 'popper', hideSearch = false, ...props }, ref) => {
+ const { searchQuery, setSearchQuery } = React.useContext(SelectSearchContext);
+
+ return (
+  <SelectPrimitive.Portal>
+   <SelectPrimitive.Content
+    ref={ref}
+    className={cn(
+     'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-[9999] max-h-[min(24rem,var(--radix-select-content-available-height))] min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-lg data-[state=closed]:animate-out data-[state=open]:animate-in pointer-events-auto',
+     position === 'popper' &&
+      'data-[side=left]:-translate-x-1 data-[side=top]:-translate-y-1 data-[side=right]:translate-x-1 data-[side=bottom]:translate-y-1',
+     className,
+    )}
+    position={position}
+    {...props}
+   >
+    <SelectScrollUpButton />
+    
+    {!hideSearch && (
+     <div className="p-1.5 sticky top-0 z-10 bg-popover border-b border-border/50 backdrop-blur-md">
+      <div className="relative flex items-center">
+       <Search className="absolute left-2.5 size-3.5 text-muted-foreground opacity-50" />
+       <input
+        className="flex h-8 w-full rounded-md border border-input bg-transparent py-1 pl-8 pr-3 text-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#018752] disabled:cursor-not-allowed disabled:opacity-50"
+        placeholder="Search..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => {
+         if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp' && e.key !== 'Enter' && e.key !== 'Escape') {
+          e.stopPropagation();
+         }
+        }}
+       />
       </div>
+     </div>
+    )}
 
-      {/* Dropdown Menu */}
-      {isOpen && (
-        <div className="absolute z-50 w-full mt-2 origin-top-right bg-white border border-slate-100 rounded-xl shadow-xl outline-none overflow-hidden max-h-60 overflow-y-auto animate-dropdown-fade">
-          <div className="py-1">
-            {placeholder && (
-              <div className="px-4 py-2 text-sm text-slate-400 cursor-default">
-                {placeholder}
-              </div>
-            )}
-            {options.map((opt) => (
-              <button 
-                key={opt.value}
-                onClick={() => handleSelect(opt.value)}
-                type="button"
-                className={`w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between ${
-                  opt.value === value ? 'bg-emerald-50/50 text-emerald-700 font-medium' : 'text-slate-700 hover:bg-slate-50'
-                }`}
-              >
-                {opt.label}
-                {opt.value === value && (
-                  <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-      <style dangerouslySetInnerHTML={{__html: `
-        @keyframes dropdown-fade {
-          from { opacity: 0; transform: scale(0.95); }
-          to { opacity: 1; transform: scale(1); }
-        }
-        .animate-dropdown-fade {
-          animation: dropdown-fade 0.1s ease-out;
-        }
-      `}} />
-    </div>
-  );
+    <SelectPrimitive.Viewport
+     className={cn(
+      'p-1.5',
+      position === 'popper' &&
+       'w-full min-w-[var(--radix-select-trigger-width)]',
+     )}
+    >
+     {children}
+    </SelectPrimitive.Viewport>
+    <SelectScrollDownButton />
+   </SelectPrimitive.Content>
+  </SelectPrimitive.Portal>
+ );
+});
+SelectContent.displayName = SelectPrimitive.Content.displayName;
+
+const SelectLabel = React.forwardRef<
+ React.ElementRef<typeof SelectPrimitive.Label>,
+ React.ComponentPropsWithoutRef<typeof SelectPrimitive.Label>
+>(({ className, ...props }, ref) => (
+ <SelectPrimitive.Label
+  ref={ref}
+  className={cn('px-2 py-1.5 text-sm font-semibold', className)}
+  {...props}
+ />
+));
+SelectLabel.displayName = SelectPrimitive.Label.displayName;
+
+function extractText(node: React.ReactNode): string {
+ if (typeof node === 'string') return node;
+ if (typeof node === 'number') return String(node);
+ if (Array.isArray(node)) return node.map(extractText).join(' ');
+ if (React.isValidElement(node) && node.props && typeof node.props === 'object' && 'children' in node.props) {
+  return extractText(node.props.children as React.ReactNode);
+ }
+ return '';
 }
+
+const SelectItem = React.forwardRef<
+ React.ElementRef<typeof SelectPrimitive.Item>,
+ React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
+>(({ className, children, value, ...props }, ref) => {
+ const { searchQuery, forceSelect } = React.useContext(SelectSearchContext);
+ 
+ if (searchQuery) {
+  const text = extractText(children);
+  const q = searchQuery.toLowerCase();
+  if (!text.toLowerCase().includes(q) && !value?.toLowerCase().includes(q)) {
+   return null;
+  }
+ }
+
+ return (
+  <SelectPrimitive.Item
+   ref={ref}
+   value={value}
+   onPointerUp={(e) => {
+     e.preventDefault();
+     e.stopPropagation();
+     forceSelect(value!);
+     if (props.onPointerUp) props.onPointerUp(e);
+   }}
+   onClick={(e) => {
+     e.preventDefault();
+     e.stopPropagation();
+     forceSelect(value!);
+     if (props.onClick) props.onClick(e);
+   }}
+   className={cn(
+    'relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pr-8 pl-3 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-[#E8F5EE] hover:text-[#018752] focus:bg-[#E8F5EE] focus:text-[#018752] dark:hover:bg-emerald-950/40 dark:focus:bg-emerald-950/40',
+    className,
+   )}
+   {...props}
+  >
+   <span className="absolute right-2.5 flex size-4 items-center justify-center text-[#018752]">
+    <SelectPrimitive.ItemIndicator>
+     <Check className="size-4 stroke-[2.5]" />
+    </SelectPrimitive.ItemIndicator>
+   </span>
+   <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+  </SelectPrimitive.Item>
+ );
+});
+SelectItem.displayName = SelectPrimitive.Item.displayName;
+
+const SelectSeparator = React.forwardRef<
+ React.ElementRef<typeof SelectPrimitive.Separator>,
+ React.ComponentPropsWithoutRef<typeof SelectPrimitive.Separator>
+>(({ className, ...props }, ref) => (
+ <SelectPrimitive.Separator
+  ref={ref}
+  className={cn('-mx-1 my-1 h-px bg-muted', className)}
+  {...props}
+ />
+));
+SelectSeparator.displayName = SelectPrimitive.Separator.displayName;
+
+export {
+ Select,
+ SelectContent,
+ SelectGroup,
+ SelectItem,
+ SelectLabel,
+ SelectScrollDownButton,
+ SelectScrollUpButton,
+ SelectSeparator,
+ SelectTrigger,
+ SelectValue,
+};

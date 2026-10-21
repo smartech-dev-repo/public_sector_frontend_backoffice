@@ -1,0 +1,17 @@
+node_modules
+.next
+.git
+.gitignore
+.kilo
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+Dockerfile
+.dockerignore
+README.md
+AGENTS.md
+CLAUDE.md
+all_routes.txt
+*.postman_collection*.json

@@ -4,11 +4,11 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function Home() {
-  const router = useRouter();
+ const router = useRouter();
 
-  useEffect(() => {
-    router.push('/login');
-  }, [router]);
+ useEffect(() => {
+  router.push('/login');
+ }, [router]);
 
-  return <div>Redirecting to login...</div>;
+ return <div>Redirecting to login...</div>;
 }
