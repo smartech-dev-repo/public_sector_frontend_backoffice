@@ -380,7 +380,7 @@ export default function ClientWalletPage() {
        )}
       </button>
 
-      {client.status === 'MANUAL_REVIEW' && canReview && (
+      {(client.status === 'MANUAL_REVIEW' || client.status === 'PENDING' || client.status === 'SUBMITTED' || client.status === 'PENDING_REVIEW' || client.status === 'IN_REVIEW') && canReview && (
        <>
         <button
          onClick={handleApprove}
