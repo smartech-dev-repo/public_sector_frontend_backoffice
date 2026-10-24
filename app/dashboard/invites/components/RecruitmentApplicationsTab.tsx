@@ -151,14 +151,12 @@ export default function RecruitmentApplicationsTab() {
   };
 
   const handleDelete = async (app: AgentRecruitmentApplication) => {
-    if (app.status === 'SUBMITTED') {
-      addToast('Cannot delete an application that has already been submitted', 'error');
-      return;
-    }
-
+    const isSubmitted = app.status === 'SUBMITTED';
     const confirmed = await confirm({
       title: 'Delete Recruitment Application',
-      message: `Are you sure you want to delete the draft application for ${app.fullName || app.email}? This action cannot be undone.`,
+      message: isSubmitted
+        ? `Are you sure you want to delete the recruitment application for "${app.fullName || app.email}"? Note: If this application has already been processed or converted to an active field agent, the system will prevent its removal.`
+        : `Are you sure you want to delete the recruitment application for "${app.fullName || app.email}"? This action cannot be undone.`,
       confirmText: 'Delete Application'
     });
 
@@ -173,7 +171,7 @@ export default function RecruitmentApplicationsTab() {
       loadApplications();
       loadAnalytics();
     } catch (err: any) {
-      addToast(err.message || 'Failed to delete application', 'error');
+      addToast(err?.message || 'Failed to delete application', 'error');
     }
   };
 
@@ -640,14 +638,14 @@ export default function RecruitmentApplicationsTab() {
                               </>
                             )}
 
-                            {app.status !== 'SUBMITTED' && canManageRecruitment && (
+                            {canManageRecruitment && (
                               <button
                                 type="button"
                                 onClick={() => handleDelete(app)}
                                 className="w-full text-left px-4 py-2.5 text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors flex items-center gap-2.5"
                               >
                                 <Trash2 className="w-4 h-4 text-rose-600 shrink-0" />
-                                Delete Draft
+                                Delete Application
                               </button>
                             )}
                           </TableDropdown>
@@ -1003,14 +1001,14 @@ export default function RecruitmentApplicationsTab() {
 
             {/* Modal Footer */}
             <div className="p-4 border-t border-border bg-muted/30 flex items-center justify-between shrink-0">
-              {selectedApp && selectedApp.status !== 'SUBMITTED' && canManageRecruitment ? (
+              {selectedApp && canManageRecruitment ? (
                 <button
                   type="button"
                   onClick={() => handleDelete(selectedApp)}
                   className="px-4 py-2 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  Delete Draft
+                  Delete Application
                 </button>
               ) : (
                 <div />
