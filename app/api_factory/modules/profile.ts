@@ -26,17 +26,17 @@ export interface AdminProfile {
 
 export const profile_api = {
   getProfile: () => {
-    return GATEWAY_ENDPOINT_WITH_AUTH.get<AdminProfile>('/admin/me');
+    return GATEWAY_ENDPOINT_WITH_AUTH.get('/admin/me');
   },
   updateProfile: (payload: { firstName?: string; lastName?: string }) => {
-    return GATEWAY_ENDPOINT_WITH_AUTH.patch<AdminProfile>('/admin/me', payload);
+    return GATEWAY_ENDPOINT_WITH_AUTH.patch('/admin/me', payload);
   },
   uploadProfileImage: (formData: FormData) => {
-    return GATEWAY_ENDPOINT_WITH_AUTH.post<AdminProfile>('/admin/me/profile-image', formData, {
+    return GATEWAY_ENDPOINT_WITH_AUTH.post('/admin/me/profile-image', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
   },
   deleteProfileImage: () => {
-    return GATEWAY_ENDPOINT_WITH_AUTH.delete<AdminProfile>('/admin/me/profile-image');
+    return GATEWAY_ENDPOINT_WITH_AUTH.delete('/admin/me/profile-image');
   }
 };
