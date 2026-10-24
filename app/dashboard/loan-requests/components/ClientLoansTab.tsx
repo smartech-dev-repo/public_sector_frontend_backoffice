@@ -10,7 +10,7 @@ import { createPortal } from 'react-dom';
 import Pagination from '@/app/components/ui/Pagination';
 import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
-
+import Link from 'next/link';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function ClientLoansTab() {
@@ -235,7 +235,13 @@ function ClientLoansContent() {
       /></div></td></tr>) : (clientLoans.map((loan: any) => (
            <tr key={loan.id} className="hover:bg-muted/30 transition-colors">
             <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground font-mono">{loan.id?.slice(0, 8)}...</td>
-            <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground font-medium">{loan.clientId?.slice(0, 8) || '-'}...</td>
+            <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground font-medium">
+             {loan.clientId ? (
+              <Link href={`/dashboard/clients/${loan.clientId}`} className="text-emerald-700 hover:text-emerald-800 hover:underline">
+               {loan.clientId?.slice(0, 8)}...
+              </Link>
+             ) : '-'}
+            </td>
             <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">₦{loan.amount?.toLocaleString() || loan.principal?.toLocaleString() || '0'}</td>
             <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">₦{loan.outstandingBalance?.toLocaleString() || loan.outstanding?.toLocaleString() || '0'}</td>
             <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{loan.tenor || loan.tenorMonths || '-'} months</td>
