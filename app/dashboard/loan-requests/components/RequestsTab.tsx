@@ -12,6 +12,7 @@ import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 import { useConfirm } from '@/app/composables/useConfirm';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+import Link from 'next/link';
 
 export default function RequestsTab() {
  const { isSuperAdmin, hasPermission } = useAdminPermissions();
@@ -215,24 +216,27 @@ export default function RequestsTab() {
            <td className="px-4 py-4 whitespace-nowrap text-sm">
             <span className="px-2 py-1 bg-muted/50 rounded text-xs font-medium">{req.status}</span>
            </td>
-           {canReview && (
             <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium relative">
              <TableDropdown>
-              {req.status === 'CONFIRMED' && (
+              {req.clientId && (
+               <Link 
+                href={`/dashboard/clients/${req.clientId}`}
+                className="w-full text-left px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted/40 transition-colors flex items-center gap-2"
+               >
+                View Customer
+               </Link>
+              )}
+              {(req.status === 'CONFIRMED' || req.status === 'PENDING' || req.status === 'PENDING_REVIEW' || req.status === 'SUBMITTED') && canReview && (
                <>
-                <button onClick={() => handleApprove(req.id)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 transition-colors">Approve</button>
-                <button onClick={() => openRejectModal(req)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-700 hover:bg-rose-50 transition-colors">Reject</button>
+                <button onClick={() => handleApprove(req.id)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 transition-colors flex items-center gap-2">Approve</button>
+                <button onClick={() => openRejectModal(req)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-700 hover:bg-rose-50 transition-colors flex items-center gap-2">Reject</button>
                </>
               )}
-              {req.status === 'APPROVED' && (
-               <button onClick={() => handleDisburse(req.id)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-blue-700 hover:bg-blue-50 transition-colors">Disburse</button>
-              )}
-              {req.status !== 'CONFIRMED' && req.status !== 'APPROVED' && (
-               <span className="w-full text-left px-4 py-2.5 text-sm font-medium text-muted-foreground/70">No actions</span>
+              {req.status === 'APPROVED' && canReview && (
+               <button onClick={() => handleDisburse(req.id)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-blue-700 hover:bg-blue-50 transition-colors flex items-center gap-2">Disburse</button>
               )}
              </TableDropdown>
             </td>
-           )}
           </tr>
          )))}
 </tbody>

@@ -455,7 +455,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
                 )}
 
                 {/* Resend Credentials */}
-                {canSendCreds && application.mustChangePassword !== false && (
+                {canSendCreds && (
                   <button
                     onClick={() => { setActionsOpen(false); handleResendCredentials(); }}
                     className="w-full text-left px-3.5 py-2.5 text-xs sm:text-sm font-medium text-foreground hover:bg-muted flex items-center gap-2.5 transition-colors cursor-pointer"
@@ -486,7 +486,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
                 )}
 
                 {/* Pending Approval Actions */}
-                {application.status === 'PENDING' && canReviewAgent && (
+                {(application.status === 'PENDING' || application.status === 'PENDING_REVIEW' || application.status === 'SUBMITTED') && canReviewAgent && (
                   <>
                     <div className="h-px bg-border/50 my-1"></div>
                     <button
@@ -528,7 +528,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
       </div>
 
       {/* ================= PENDING APPROVAL ALERT BANNER ================= */}
-      {application.status === 'PENDING' && canReviewAgent && (
+      {(application.status === 'PENDING' || application.status === 'PENDING_REVIEW' || application.status === 'SUBMITTED') && canReviewAgent && (
         <div className="bg-amber-50 dark:bg-amber-950/30 rounded-2xl border border-amber-200 dark:border-amber-900/60 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-start gap-3">
             <div className="p-2 rounded-xl bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400 shrink-0 mt-0.5">

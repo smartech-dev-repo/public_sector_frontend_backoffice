@@ -258,7 +258,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
     </div>
     <div className="px-3.5 py-4 space-y-2 flex-1 overflow-y-auto overflow-x-visible">
       <nav className="space-y-1">
-           {navItems.filter(item => item.visible).map((item) => {
+           {navItems.filter(item => !mounted || item.visible).map((item) => {
             const Icon = item.icon;
             const isActive = item.match(pathname);
             return (

@@ -791,7 +791,7 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
                                 Wallet
                               </button>
                             )}
-                            {canReviewClient && client.status === 'MANUAL_REVIEW' && (
+                            {canReviewClient && (client.status === 'MANUAL_REVIEW' || client.status === 'PENDING' || client.status === 'SUBMITTED' || client.status === 'PENDING_REVIEW' || client.status === 'IN_REVIEW') && (
                               <button 
                                 type="button"
                                 onClick={() => handleApprove(client.id)} 

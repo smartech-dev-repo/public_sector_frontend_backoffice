@@ -10,6 +10,8 @@ import EmptyState from '@/app/components/ui/EmptyState';
 import { useConfirm } from '@/app/composables/useConfirm';
 import TableDropdown from '@/app/components/ui/TableDropdown';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+import { useRoles } from '@/app/composables/modules/useRoles';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 
 export default function AdminsPage() {
  const { isSuperAdmin, hasPermission } = useAdminPermissions();
@@ -19,6 +21,7 @@ export default function AdminsPage() {
  const { confirm } = useConfirm();
 
  const { loading, error, admins, fetchAdmins, assignRole, suspendAdmin, unsuspendAdmin , meta} = useAdmins();
+ const { roles, fetchRoles } = useRoles();
  const { addToast } = useToast();
 
  const [showAssignModal, setShowAssignModal] = useState(false);
@@ -27,12 +30,12 @@ export default function AdminsPage() {
  const [selectedAdmin, setSelectedAdmin] = useState<any>(null);
  const [assignRoleForm, setAssignRoleForm] = useState({ roleId: '' });
 
-
  useEffect(() => {
   if (canManageRoles) {
    fetchAdmins({ page, limit });
+   fetchRoles();
   }
- }, [fetchAdmins, page, limit, canManageRoles]);
+ }, [fetchAdmins, fetchRoles, page, limit, canManageRoles]);
 
  const openAssignRoleModal = (admin: any) => {
   setSelectedAdmin(admin);
@@ -198,14 +201,18 @@ export default function AdminsPage() {
       </div>
       <div className="space-y-4">
        <div>
-        <label className="block text-sm font-medium text-foreground/90 mb-1">Role ID</label>
-        <input 
+        <label className="block text-sm font-medium text-foreground/90 mb-1">Role</label>
+        <Select 
          value={assignRoleForm.roleId}
-         onChange={(e) => setAssignRoleForm({ ...assignRoleForm, roleId: e.target.value })}
-         type="text" 
-         placeholder="Enter role ID" 
-         className="w-full px-4 py-2.5 border border-border rounded-lg text-sm focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 outline-none transition-all" 
-        />
+         onValueChange={(val) => setAssignRoleForm({ ...assignRoleForm, roleId: val })}
+        >
+         <SelectTrigger className="w-full bg-card"><SelectValue placeholder="Select a role" /></SelectTrigger>
+         <SelectContent>
+          {roles.map((r: any) => (
+           <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+          ))}
+         </SelectContent>
+        </Select>
        </div>
       </div>
       <div className="flex gap-3 w-full mt-6">
