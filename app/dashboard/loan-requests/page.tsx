@@ -4,12 +4,11 @@ import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import RequestsTab from './components/RequestsTab';
 import ClientLoansTab from './components/ClientLoansTab';
-import MakerCheckerTab from './components/MakerCheckerTab';
 import DisbursementSummaryTab from './components/DisbursementSummaryTab';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
-type TabId = 'requests' | 'client-loans' | 'maker-checker' | 'disbursement';
+type TabId = 'requests' | 'client-loans' | 'disbursement';
 
 function LoanRequestPageContent() {
   const searchParams = useSearchParams();
@@ -28,11 +27,6 @@ function LoanRequestPageContent() {
         id: 'client-loans', 
         label: 'Client Loans', 
         visible: isSuperAdmin || hasAnyPermission(['client-loans:read', 'clients:read']) 
-      },
-      { 
-        id: 'maker-checker', 
-        label: 'Maker/Checker Queue', 
-        visible: isSuperAdmin || hasPermission('loan-requests:review') 
       },
       { 
         id: 'disbursement', 
@@ -101,7 +95,6 @@ function LoanRequestPageContent() {
         <Suspense fallback={<PulseLoader />}>
           {activeTab === 'requests' && <RequestsTab />}
           {activeTab === 'client-loans' && <ClientLoansTab />}
-          {activeTab === 'maker-checker' && <MakerCheckerTab />}
           {activeTab === 'disbursement' && <DisbursementSummaryTab />}
         </Suspense>
       </div>
