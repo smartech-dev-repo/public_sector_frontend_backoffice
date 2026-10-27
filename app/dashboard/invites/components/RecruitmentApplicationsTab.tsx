@@ -274,6 +274,82 @@ export default function RecruitmentApplicationsTab() {
     ? Number(analytics.averageTimeToSubmitHours).toFixed(1)
     : null;
 
+  const renderOnboardingStatusBadge = (status: string) => {
+    if (status === 'SUBMITTED') {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shadow-2xs">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          Submitted
+        </span>
+      );
+    }
+    if (status === 'EMAIL_VERIFIED') {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 shadow-2xs">
+          <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+          Email Verified
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shadow-2xs">
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+        Email Pending
+      </span>
+    );
+  };
+
+  const renderApplicationStatusBadge = (app: AgentRecruitmentApplication) => {
+    if (app.submittedAgent) {
+      const rawStatus = (app.submittedAgent.status || '').toUpperCase();
+      if (rawStatus === 'APPROVED' || rawStatus === 'ACTIVE') {
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 shadow-2xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            Approved
+          </span>
+        );
+      }
+      if (rawStatus === 'PENDING_REVIEW' || rawStatus === 'PENDING' || rawStatus.startsWith('PENDING')) {
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 shadow-2xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+            Pending Review
+          </span>
+        );
+      }
+      if (rawStatus === 'REJECTED') {
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 shadow-2xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+            Rejected
+          </span>
+        );
+      }
+      if (rawStatus === 'BLOCKED' || rawStatus === 'SUSPENDED') {
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 dark:bg-red-950/50 text-red-800 dark:text-red-300 border border-red-300 dark:border-red-800/60 shadow-2xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-600" />
+            {rawStatus === 'BLOCKED' ? 'Blocked' : 'Suspended'}
+          </span>
+        );
+      }
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-muted text-muted-foreground border border-border/60 shadow-2xs">
+          <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/60" />
+          {app.submittedAgent.status}
+        </span>
+      );
+    }
+
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-muted/60 text-muted-foreground border border-border/50">
+        <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50" />
+        Draft Application
+      </span>
+    );
+  };
+
   return (
     <div className="space-y-6">
       {/* ================= RECRUITMENT FUNNEL ANALYTICS ================= */}
@@ -428,11 +504,11 @@ export default function RecruitmentApplicationsTab() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Application Status</label>
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Onboarding Status</label>
                 <Select value={statusFilter} onValueChange={(val) => { setStatusFilter(val); setCurrentPage(1); }}>
-                  <SelectTrigger className="w-full bg-background"><SelectValue placeholder="All Statuses" /></SelectTrigger>
+                  <SelectTrigger className="w-full bg-background"><SelectValue placeholder="All Onboarding Statuses" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">All Statuses</SelectItem>
+                    <SelectItem value="none">All Onboarding Statuses</SelectItem>
                     <SelectItem value="EMAIL_PENDING">EMAIL PENDING</SelectItem>
                     <SelectItem value="EMAIL_VERIFIED">EMAIL VERIFIED</SelectItem>
                     <SelectItem value="SUBMITTED">SUBMITTED</SelectItem>
@@ -483,7 +559,10 @@ export default function RecruitmentApplicationsTab() {
                     LOCATION
                   </th>
                   <th className="px-5 py-4 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
-                    STATUS
+                    ONBOARDING STATUS
+                  </th>
+                  <th className="px-5 py-4 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
+                    APPLICATION STATUS
                   </th>
                   <th className="px-5 py-4 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
                     ENROLLMENT LINK
@@ -542,33 +621,26 @@ export default function RecruitmentApplicationsTab() {
                         {locationStr}
                       </td>
 
+                      {/* Onboarding Status */}
                       <td className="px-5 py-4 whitespace-nowrap">
-                        {app.status === 'SUBMITTED' ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                            Submitted
-                          </span>
-                        ) : app.status === 'EMAIL_VERIFIED' ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                            Email Verified
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                            Email Pending
-                          </span>
-                        )}
+                        {renderOnboardingStatusBadge(app.status)}
                       </td>
 
+                      {/* Application Status */}
+                      <td className="px-5 py-4 whitespace-nowrap">
+                        {renderApplicationStatusBadge(app)}
+                      </td>
+
+                      {/* Enrollment Link */}
                       <td className="px-5 py-4 whitespace-nowrap">
                         {app.submittedAgent ? (
                           <Link
                             href={`/dashboard/agent/${app.submittedAgent.id}`}
-                            className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:underline"
+                            className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 hover:underline"
                           >
                             <UserCheck className="w-3.5 h-3.5" />
-                            <span>Agent Profile ({app.submittedAgent.status})</span>
+                            <span>Agent Profile</span>
+                            <ExternalLink className="w-3 h-3 opacity-60" />
                           </Link>
                         ) : (
                           <span className="text-xs text-muted-foreground">Draft Application</span>
@@ -608,9 +680,9 @@ export default function RecruitmentApplicationsTab() {
                                       type="button"
                                       disabled={actionLoadingId === app.submittedAgent.id}
                                       onClick={() => openRejectModal(app.submittedAgent!.id, app.fullName || app.email)}
-                                      className="w-full text-left px-4 py-2.5 text-xs font-medium text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors flex items-center gap-2.5 disabled:opacity-50"
+                                      className="w-full text-left px-4 py-2.5 text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors flex items-center gap-2.5 disabled:opacity-50"
                                     >
-                                      <X className="w-4 h-4 text-amber-600 shrink-0" />
+                                      <X className="w-4 h-4 text-rose-600 shrink-0" />
                                       Reject Agent
                                     </button>
                                   </>
@@ -657,7 +729,7 @@ export default function RecruitmentApplicationsTab() {
 
                 {applications.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="p-0 border-b-0">
+                    <td colSpan={8} className="p-0 border-b-0">
                       <div className="p-8">
                         <EmptyState 
                           title="No recruitment applications found" 
@@ -731,21 +803,18 @@ export default function RecruitmentApplicationsTab() {
               ) : (
                 <>
                   {/* Status Banner */}
-                  <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl bg-muted/20 border border-border/60">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-xl bg-muted/20 border border-border/60">
                     <div>
-                      <span className="text-xs text-muted-foreground block mb-1">Application Stage</span>
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                        selectedApp.status === 'SUBMITTED' 
-                          ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200' 
-                          : selectedApp.status === 'EMAIL_VERIFIED'
-                          ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200'
-                          : 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200'
-                      }`}>
-                        {selectedApp.status}
-                      </span>
+                      <span className="text-xs text-muted-foreground block mb-1">Onboarding Status</span>
+                      {renderOnboardingStatusBadge(selectedApp.status)}
                     </div>
 
-                    <div className="text-right">
+                    <div>
+                      <span className="text-xs text-muted-foreground block mb-1">Application Status</span>
+                      {renderApplicationStatusBadge(selectedApp)}
+                    </div>
+
+                    <div className="sm:text-right">
                       <span className="text-xs text-muted-foreground block mb-1">Email Verification</span>
                       <span className="text-xs font-medium text-foreground">
                         {selectedApp.emailVerifiedAt 
