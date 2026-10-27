@@ -34,14 +34,20 @@ export const loans_api = {
   getLoanRequests: (params?: any) => {
     return GATEWAY_ENDPOINT_WITH_AUTH.get('/admin/loan-requests', { params });
   },
-  approveLoanRequest: (id: string) => {
-    return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/loan-requests/${id}/approve`);
+  getLoanRequestById: (id: string) => {
+    return GATEWAY_ENDPOINT_WITH_AUTH.get(`/admin/loan-requests/${id}`);
   },
-  rejectLoanRequest: (id: string, payload: any) => {
+  approveLoanRequest: (id: string, payload?: { disbursedAt?: string }) => {
+    return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/loan-requests/${id}/approve`, payload || {});
+  },
+  confirmLoanRequestCode: (id: string, payload: { code: string }) => {
+    return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/loan-requests/${id}/confirm-code`, payload);
+  },
+  rejectLoanRequest: (id: string, payload: { reason: string }) => {
     return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/loan-requests/${id}/reject`, payload);
   },
-  disburseLoanRequest: (id: string) => {
-    return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/loan-requests/${id}/disburse`);
+  disburseLoanRequest: (id: string, payload?: { disbursedAt?: string }) => {
+    return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/loan-requests/${id}/disburse`, payload || {});
   },
   getDisbursementSummary: (params?: any) => {
     return GATEWAY_ENDPOINT_WITH_AUTH.get('/admin/client-loans/disbursement-summary', { params });
