@@ -33,6 +33,7 @@ export interface AgentRecruitmentApplication {
     id: string;
     status: string;
     mustChangePassword?: boolean;
+    hasLoggedIn?: boolean;
   } | null;
   createdAt: string;
   updatedAt: string;
@@ -51,6 +52,31 @@ export interface RecruitmentAnalytics {
   averageTimeToSubmitHours: number | null;
 }
 
+const unwrapResponse = (res: any, defaultErrMsg = 'Operation failed') => {
+  if (!res) {
+    throw new Error(defaultErrMsg);
+  }
+  if (
+    res.type === 'ERROR' ||
+    (typeof res.status === 'number' && res.status >= 400) ||
+    (typeof res.statusCode === 'number' && res.statusCode >= 400) ||
+    (res.data && typeof res.data.statusCode === 'number' && res.data.statusCode >= 400)
+  ) {
+    const errorMsg =
+      res.data?.message ||
+      res.message ||
+      res.data?.error ||
+      res.error ||
+      defaultErrMsg;
+    const formatted = Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg;
+    const err: any = new Error(formatted);
+    err.response = res;
+    err.statusCode = res.status || res.data?.statusCode || res.statusCode;
+    throw err;
+  }
+  return res;
+};
+
 export const useAgentRecruitment = () => {
   const [loading, setLoading] = useState(false);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
@@ -64,6 +90,7 @@ export const useAgentRecruitment = () => {
     setError(null);
     try {
       const res = await agent_recruitment_api.getApplications(params);
+      unwrapResponse(res, 'Failed to fetch recruitment applications');
       const dataList = Array.isArray(res.data) 
         ? res.data 
         : (res.data?.data || res.data?.result || res.data?.applications || []);
@@ -86,6 +113,7 @@ export const useAgentRecruitment = () => {
     setAnalyticsLoading(true);
     try {
       const res = await agent_recruitment_api.getAnalytics(params);
+      unwrapResponse(res, 'Failed to fetch recruitment analytics');
       const data = res.data?.data || res.data;
       setAnalytics(data);
       return data;
@@ -101,6 +129,7 @@ export const useAgentRecruitment = () => {
     setLoading(true);
     try {
       const res = await agent_recruitment_api.getApplicationById(id);
+      unwrapResponse(res, 'Failed to load application details');
       return (res.data?.data || res.data) as AgentRecruitmentApplication;
     } catch (err: any) {
       const msg = err?.response?.data?.message || err.message || 'Failed to load application details';
@@ -114,6 +143,7 @@ export const useAgentRecruitment = () => {
     setLoading(true);
     try {
       const res = await agent_recruitment_api.deleteApplication(id);
+      unwrapResponse(res, 'Failed to delete application');
       return res.data;
     } catch (err: any) {
       const msg = err?.response?.data?.message || err.message || 'Failed to delete application';

@@ -616,7 +616,7 @@ export default function RecruitmentApplicationsTab() {
                                   </>
                                 )}
 
-                                {app.submittedAgent.status === 'APPROVED' && canSendCreds && (
+                                {app.submittedAgent.status === 'APPROVED' && canSendCreds && app.submittedAgent.mustChangePassword !== false && !app.submittedAgent.hasLoggedIn && (
                                   <button
                                     type="button"
                                     disabled={actionLoadingId === app.submittedAgent.id}
@@ -981,7 +981,7 @@ export default function RecruitmentApplicationsTab() {
                           </>
                         )}
 
-                        {selectedApp.submittedAgent.status === 'APPROVED' && canSendCreds && selectedApp.submittedAgent.mustChangePassword !== false && (
+                        {selectedApp.submittedAgent.status === 'APPROVED' && canSendCreds && selectedApp.submittedAgent.mustChangePassword !== false && !selectedApp.submittedAgent.hasLoggedIn && (
                           <button
                             type="button"
                             disabled={actionLoadingId === selectedApp.submittedAgent.id}
