@@ -390,7 +390,40 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
 
   const agentName = application.fullName || `${application.firstName || ''} ${application.lastName || ''}`.trim() || 'Agent';
   const initial = (agentName.charAt(0) || application.email?.charAt(0) || 'A').toUpperCase();
-  const hasActions = canSendCreds || canManageAccess || canRevokeSessions || canReadDocs || (application.status === 'PENDING' && canReviewAgent);
+  const isAgentPending = application.status === 'PENDING' || application.status === 'PENDING_REVIEW' || application.status === 'SUBMITTED';
+  const hasActions = canSendCreds || canManageAccess || canRevokeSessions || canReadDocs || (isAgentPending && canReviewAgent);
+
+  const getAgentStatusStyle = (status: string) => {
+    const s = (status || '').toUpperCase();
+    if (s === 'APPROVED' || s === 'ACTIVE') {
+      return {
+        badge: 'bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800',
+        dot: 'bg-emerald-600'
+      };
+    }
+    if (s === 'PENDING' || s === 'PENDING_REVIEW' || s === 'SUBMITTED' || s === 'IN_REVIEW' || s.startsWith('PENDING')) {
+      return {
+        badge: 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800',
+        dot: 'bg-amber-500'
+      };
+    }
+    if (s === 'REJECTED') {
+      return {
+        badge: 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900',
+        dot: 'bg-rose-600'
+      };
+    }
+    if (s === 'BLOCKED' || s === 'SUSPENDED') {
+      return {
+        badge: 'bg-red-100 text-red-800 border border-red-300 dark:bg-red-950/50 dark:text-red-300 dark:border-red-800',
+        dot: 'bg-red-600'
+      };
+    }
+    return {
+      badge: 'bg-muted/60 text-muted-foreground border border-border/60',
+      dot: 'bg-muted-foreground/60'
+    };
+  };
 
   return (
     <div className="space-y-6 pb-16">
@@ -574,14 +607,15 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
                   {agentName}
                 </h2>
                 {/* Status Badge */}
-                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
-                  application.status === 'APPROVED' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800' :
-                  application.status === 'PENDING' ? 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300' :
-                  'bg-rose-50 text-rose-700 border border-rose-200'
-                }`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${application.status === 'APPROVED' ? 'bg-emerald-600' : application.status === 'PENDING' ? 'bg-amber-500' : 'bg-rose-600'}`}></span>
-                  {application.status || 'APPROVED'}
-                </span>
+                {(() => {
+                  const style = getAgentStatusStyle(application.status);
+                  return (
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${style.badge}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`}></span>
+                      {application.status || 'APPROVED'}
+                    </span>
+                  );
+                })()}
                 {/* Onboarding Access Badge */}
                 <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
                   application.canOnboardClients === false
@@ -776,14 +810,16 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
             </div>
           </div>
           <div className="mb-2">
-            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold ${
-              application.status === 'APPROVED' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800' :
-              application.status === 'PENDING' ? 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300' :
-              'bg-rose-50 text-rose-700 border border-rose-200'
-            }`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${application.status === 'APPROVED' ? 'bg-emerald-600' : application.status === 'PENDING' ? 'bg-amber-500' : 'bg-rose-600'}`}></span>
-              <span className="capitalize">{application.status?.toLowerCase() || 'Pending'}</span>
-            </span>
+            {(() => {
+              const style = getAgentStatusStyle(application.status);
+              const label = application.status ? application.status.replace(/_/g, ' ').toLowerCase() : 'pending';
+              return (
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold ${style.badge}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`}></span>
+                  <span className="capitalize">{label}</span>
+                </span>
+              );
+            })()}
           </div>
           <span className="text-xs text-muted-foreground">
             {application.canOnboardClients === false ? 'Onboarding restricted' : 'Authorized for customer onboarding'}
@@ -967,7 +1003,13 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
                             {loan.client?.ippisNumber || 'N/A'}
                           </td>
                           <td className="px-6 py-4">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                              loan.status === 'APPROVED' || loan.status === 'DISBURSED' || loan.status === 'ACTIVE'
+                                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50'
+                                : loan.status === 'REJECTED' || loan.status === 'DECLINED'
+                                ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-200/50'
+                                : 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/50'
+                            }`}>
                               {loan.status || 'PENDING'}
                             </span>
                           </td>
@@ -1062,7 +1104,13 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
                             <td className="px-6 py-4 font-mono text-xs text-muted-foreground">{ippis}</td>
                             <td className="px-6 py-4 text-muted-foreground text-xs">{sector}</td>
                             <td className="px-6 py-4">
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                                client.status === 'VERIFIED' || client.status === 'APPROVED' || client.status === 'ACTIVE'
+                                  ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50'
+                                  : client.status === 'REJECTED'
+                                  ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-200/50'
+                                  : 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/50'
+                              }`}>
                                 {client.status || 'VERIFIED'}
                               </span>
                             </td>
