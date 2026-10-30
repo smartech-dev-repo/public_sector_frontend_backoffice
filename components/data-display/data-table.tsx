@@ -69,23 +69,6 @@ export function DataTable<TData, TValue>({
  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
  const [isFiltersExpanded, setIsFiltersExpanded] = React.useState(false);
 
- useEffect(() => {
-  try {
-   const stored = localStorage.getItem('camco_admin_table_page_size');
-   if (stored) {
-    let val = parseInt(stored, 10);
-    if (val > 100) val = 100;
-    if (onPageSizeChange && pageSize !== val) {
-     onPageSizeChange(val);
-    } else if (!manualPagination) {
-     if (table && table.getState().pagination.pageSize !== val) {
-      table.setPageSize(val);
-     }
-    }
-   }
-  } catch (e) {}
- }, []);
-
  const tableRef = useRef<HTMLDivElement>(null);
  const [canScrollLeft, setCanScrollLeft] = useState(false);
  const [canScrollRight, setCanScrollRight] = useState(false);
@@ -176,7 +159,40 @@ export function DataTable<TData, TValue>({
   pageCount: manualPagination ? pageCount : undefined,
  });
 
- const filterCol = filterColumnId ? table.getColumn(filterColumnId) : undefined;
+ const safePageCount = Math.max(1, pageCount ?? 1);
+ const safePageIndex = Math.min(Math.max(0, pageIndex ?? 0), safePageCount - 1);
+ const safePageSize = pageSize ?? table.getState().pagination.pageSize;
+
+ // If a server-side filter shrinks the result set below the current page,
+ // ask the parent to move back to the last valid page.
+ React.useEffect(() => {
+  if (manualPagination && pageIndex !== undefined && pageIndex > safePageCount - 1) {
+   onPageChange?.(safePageCount - 1);
+  }
+ }, [manualPagination, pageIndex, safePageCount, onPageChange]);
+
+ // Restore the user's preferred page size (10-100) once, after the table exists.
+ React.useEffect(() => {
+  try {
+   const stored = localStorage.getItem('camco_admin_table_page_size');
+   if (!stored) return;
+   const parsed = parseInt(stored, 10);
+   if (!Number.isFinite(parsed)) return;
+   const value = Math.min(100, Math.max(5, parsed));
+   if (onPageSizeChange) {
+    if (pageSize !== value) onPageSizeChange(value);
+   } else if (!manualPagination && table.getState().pagination.pageSize !== value) {
+    table.setPageSize(value);
+   }
+  } catch (e) {}
+  // Intentionally run once on mount; adding the changing page size would re-apply.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, []);
+
+ // Client-side text filtering only makes sense when the full dataset is loaded.
+ // With manual pagination we only have one server page, so filtering would
+ // silently search "just this page" and look broken.
+ const filterCol = !manualPagination && filterColumnId ? table.getColumn(filterColumnId) : undefined;
 
  return (
   <div className={cn('space-y-4 w-full min-w-0 max-w-full', className)}>
@@ -291,7 +307,7 @@ export function DataTable<TData, TValue>({
        ))
       ) : (
        <tr>
-        <td colSpan={columns.length} className="h-24 p-6 text-center text-muted-foreground">
+        <td colSpan={finalColumns.length} className="h-24 p-6 text-center text-muted-foreground">
          No results.
         </td>
        </tr>
@@ -330,7 +346,7 @@ export function DataTable<TData, TValue>({
       <p className="text-[13px] text-muted-foreground font-medium" aria-live="polite">
        {loading
         ? loadingText
-        : `Page ${table.getState().pagination.pageIndex + 1} of ${table.getPageCount() || 1}`}
+        : `Page ${manualPagination ? safePageIndex + 1 : table.getState().pagination.pageIndex + 1} of ${manualPagination ? safePageCount : Math.max(1, table.getPageCount())}`}
       </p>
      </div>
      <div className="flex items-center gap-4">
@@ -338,7 +354,7 @@ export function DataTable<TData, TValue>({
        <span className="text-[13px] text-muted-foreground font-medium">Rows per page:</span>
        <select
         className="h-8 w-[65px] rounded-lg border border-border bg-transparent px-2 py-1 text-[13px] font-medium outline-none focus:border-[#156336] focus:ring-1 focus:ring-[#156336]"
-        value={pageSize ?? table.getState().pagination.pageSize}
+        value={safePageSize}
         onChange={(e) => {
          const val = Number(e.target.value);
          try {
@@ -364,13 +380,13 @@ export function DataTable<TData, TValue>({
         variant="outline"
         className="h-8 w-8 p-0 rounded-lg border-border hover:bg-muted/50 text-muted-foreground"
         onClick={() => {
-         if (manualPagination && onPageChange && pageIndex !== undefined) {
-          onPageChange(pageIndex - 1);
+         if (manualPagination && onPageChange) {
+          onPageChange(safePageIndex - 1);
          } else {
           table.previousPage();
          }
         }}
-        disabled={loading || (manualPagination ? (pageIndex ?? 0) === 0 : !table.getCanPreviousPage())}
+        disabled={loading || (manualPagination ? safePageIndex === 0 : !table.getCanPreviousPage())}
         aria-label="Previous page"
        >
         <ChevronLeft className="size-4" />
@@ -380,13 +396,13 @@ export function DataTable<TData, TValue>({
         variant="outline"
         className="h-8 w-8 p-0 rounded-lg border-border hover:bg-muted/50 text-muted-foreground"
         onClick={() => {
-         if (manualPagination && onPageChange && pageIndex !== undefined) {
-          onPageChange(pageIndex + 1);
+         if (manualPagination && onPageChange) {
+          onPageChange(safePageIndex + 1);
          } else {
           table.nextPage();
          }
         }}
-        disabled={loading || (manualPagination ? (pageIndex ?? 0) >= (pageCount ?? 1) - 1 : !table.getCanNextPage())}
+        disabled={loading || (manualPagination ? safePageIndex >= safePageCount - 1 : !table.getCanNextPage())}
         aria-label="Next page"
        >
         <ChevronRight className="size-4" />

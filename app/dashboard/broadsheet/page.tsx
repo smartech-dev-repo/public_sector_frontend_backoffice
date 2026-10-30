@@ -7,7 +7,6 @@ import { useToast } from '@/app/composables/useToast';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { useIppis } from '@/app/composables/modules/useIppis';
-import Pagination from '@/app/components/ui/Pagination';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function BroadsheetPage() {
@@ -116,8 +115,14 @@ export default function BroadsheetPage() {
   if (filterParams.dateRange) {
    const dates = filterParams.dateRange.split(' to ');
    if (dates.length > 0) {
-    const start = new Date(dates[0]).getTime();
-    const end = dates.length === 2 ? new Date(dates[1]).getTime() : start;
+    const startDate = new Date(dates[0]);
+    const endDate = dates.length === 2 ? new Date(dates[1]) : new Date(dates[0]);
+    startDate.setHours(0, 0, 0, 0);
+    // Include the whole end day; midnight-only comparison dropped uploads made
+    // after 00:00 on the selected final date.
+    endDate.setHours(23, 59, 59, 999);
+    const start = startDate.getTime();
+    const end = endDate.getTime();
     result = result.filter(item => {
      return item.rawDate >= start && item.rawDate <= end;
     });
@@ -126,6 +131,12 @@ export default function BroadsheetPage() {
   
   return result;
  };
+
+ // Any filter change starts the incremental lists from the top again.
+ useEffect(() => {
+  setIppisLimit(10);
+  setRepaymentLimit(10);
+ }, [filterParams]);
 
  const filteredIppis = useMemo(() => {
   return filterData(ippisData);

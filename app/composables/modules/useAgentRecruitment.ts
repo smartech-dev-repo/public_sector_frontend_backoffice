@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { 
   agent_recruitment_api, 
   ListRecruitmentApplicationsParams, 
@@ -84,12 +84,15 @@ export const useAgentRecruitment = () => {
   const [applications, setApplications] = useState<AgentRecruitmentApplication[]>([]);
   const [analytics, setAnalytics] = useState<RecruitmentAnalytics | null>(null);
   const [meta, setMeta] = useState({ total: 0, page: 1, limit: 25, totalPages: 1 });
+  const listRequestSeq = useRef(0);
 
   const fetchApplications = useCallback(async (params?: ListRecruitmentApplicationsParams) => {
+    const seq = ++listRequestSeq.current;
     setLoading(true);
     setError(null);
     try {
       const res = await agent_recruitment_api.getApplications(params);
+      if (seq !== listRequestSeq.current) return [];
       unwrapResponse(res, 'Failed to fetch recruitment applications');
       const dataList = Array.isArray(res.data) 
         ? res.data 
@@ -101,11 +104,13 @@ export const useAgentRecruitment = () => {
       setApplications(safeList);
       return safeList;
     } catch (err: any) {
-      const msg = err?.response?.data?.message || err.message || 'Failed to fetch recruitment applications';
-      setError(typeof msg === 'string' ? msg : JSON.stringify(msg));
+      if (seq === listRequestSeq.current) {
+        const msg = err?.response?.data?.message || err.message || 'Failed to fetch recruitment applications';
+        setError(typeof msg === 'string' ? msg : JSON.stringify(msg));
+      }
       return [];
     } finally {
-      setLoading(false);
+      if (seq === listRequestSeq.current) setLoading(false);
     }
   }, []);
 

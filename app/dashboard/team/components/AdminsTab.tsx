@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react'; 
+import { useEffect, useState, useCallback } from 'react'; 
 import Pagination from '@/app/components/ui/Pagination';
 import { useAdmins } from '@/app/composables/modules/useAdmins';
 import { useInvites } from '@/app/composables/modules/useInvites';
@@ -14,6 +14,8 @@ import TableDropdown from '@/app/components/ui/TableDropdown';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { buildAdminsParams } from '@/app/lib/list-params';
 
 export default function AdminsTab() {
  const { hasPermission, isSuperAdmin } = useAdminPermissions();
@@ -43,23 +45,27 @@ export default function AdminsTab() {
  const [assignRoleForm, setAssignRoleForm] = useState({ roleId: '' });
  const [inviteForm, setInviteForm] = useState({ email: '', roleId: '' });
  const { createInvite } = useInvites();
+ const debouncedSearch = useDebouncedValue(search.trim(), 300);
 
+ const buildParams = useCallback(
+  (overrides: { page?: number; limit?: number } = {}) =>
+   buildAdminsParams({
+    page: overrides.page ?? page,
+    limit: overrides.limit ?? limit,
+    q: debouncedSearch,
+    status: statusFilter,
+    createdRange: dateRange,
+   }),
+  [page, limit, debouncedSearch, statusFilter, dateRange],
+ );
 
  useEffect(() => {
   if (!canReadAdmins) return;
-  const params: any = { page, limit };
-  if (search.trim()) params.search = search.trim();
-  if (statusFilter && statusFilter !== 'none') params.status = statusFilter;
-  if (dateRange) {
-   const [from, to] = dateRange.split(' to ');
-   if (from) params.from = from;
-   if (to) params.to = to;
-  }
-  fetchAdmins(params);
+  fetchAdmins(buildParams());
   if (canAssignRole || canInvite) {
    fetchRoles();
   }
- }, [fetchAdmins, fetchRoles, page, limit, search, statusFilter, dateRange, canReadAdmins, canAssignRole, canInvite]);
+ }, [fetchAdmins, fetchRoles, buildParams, canReadAdmins, canAssignRole, canInvite]);
 
  const clearFilters = () => {
   setSearch('');
@@ -83,7 +89,7 @@ export default function AdminsTab() {
    await assignRole(selectedAdmin.id, { roleId: assignRoleForm.roleId.trim() });
    addToast('Role assigned successfully!', 'success');
    setShowAssignModal(false);
-   fetchAdmins({ page, limit });
+   fetchAdmins(buildParams());
   } catch (e: any) {
    addToast(e?.response?.data?.message || 'Failed to assign role', 'error');
   } finally {
@@ -99,7 +105,7 @@ export default function AdminsTab() {
    try {
     await suspendAdmin(admin.id);
     addToast('Admin suspended successfully', 'success');
-    fetchAdmins({ page, limit });
+    fetchAdmins(buildParams());
    } catch (e: any) {
     addToast(e?.response?.data?.message || 'Failed to suspend admin', 'error');
    }
@@ -112,7 +118,7 @@ export default function AdminsTab() {
    try {
     await unsuspendAdmin(admin.id);
     addToast('Admin unsuspended successfully', 'success');
-    fetchAdmins({ page, limit });
+    fetchAdmins(buildParams());
    } catch (e: any) {
     addToast(e?.response?.data?.message || 'Failed to unsuspend admin', 'error');
    }
@@ -160,7 +166,7 @@ export default function AdminsTab() {
       type="text"
       placeholder="Search email or name..."
       value={search}
-      onChange={(e) => setSearch(e.target.value)}
+      onChange={(e) => { setSearch(e.target.value); setPage(1); }}
       className="w-full px-2 py-1.5 bg-transparent border-none outline-none text-sm text-foreground placeholder-slate-400"
      />
     </div>
@@ -168,7 +174,7 @@ export default function AdminsTab() {
       <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
        <div className="space-y-1.5">
         <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Status</label>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select value={statusFilter} onValueChange={(value) => { setStatusFilter(value); setPage(1); }}>
          <SelectTrigger className="w-full bg-card"><SelectValue placeholder="All Statuses" /></SelectTrigger>
          <SelectContent>
           <SelectItem value="none">All Statuses</SelectItem>
@@ -181,7 +187,7 @@ export default function AdminsTab() {
         <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Date Created</label>
         <CustomDateRangePicker 
          value={dateRange} 
-         onChange={setDateRange} 
+         onChange={(value) => { setDateRange(value); setPage(1); }} 
          placeholder="Created Date" 
         />
        </div>
@@ -348,7 +354,7 @@ export default function AdminsTab() {
          addToast('Invite sent successfully!', 'success');
          setShowInviteModal(false);
          setInviteForm({ email: '', roleId: '' });
-         fetchAdmins({ page, limit });
+         fetchAdmins(buildParams());
         } catch (err: any) {
          addToast(err?.response?.data?.message || 'Failed to send invite', 'error');
         } finally {

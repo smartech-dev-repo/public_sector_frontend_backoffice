@@ -7,7 +7,11 @@
     "build": "next build",
     "start": "node --env-file-if-exists=.env node_modules/next/dist/bin/next start",
     "preview": "next build && npm run start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:smoke": "node scripts/filter-pagination-smoke.mjs",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.20",

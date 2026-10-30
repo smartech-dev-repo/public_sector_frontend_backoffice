@@ -9,6 +9,8 @@ import { useConfirm } from '@/app/composables/useConfirm';
 import TableDropdown from '@/app/components/ui/TableDropdown';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+import Pagination from '@/app/components/ui/Pagination';
+import { buildRolesParams } from '@/app/lib/list-params';
 
 export default function RolesPage() {
  const { confirm } = useConfirm();
@@ -17,8 +19,10 @@ export default function RolesPage() {
  const canManagePermissions = isSuperAdmin || hasPermission('permissions:manage');
  const hasActions = canManageRoles || canManagePermissions;
 
- const { loading, error, roles, fetchRoles, deleteRole, createRole, updateRole } = useRoles();
+ const { loading, error, roles, fetchRoles, deleteRole, createRole, updateRole, meta } = useRoles();
  const { addToast } = useToast();
+ const [page, setPage] = useState(1);
+ const [limit, setLimit] = useState(25);
 
  const [showCreateRole, setShowCreateRole] = useState(false);
  const [showViewPermissions, setShowViewPermissions] = useState(false);
@@ -30,9 +34,9 @@ export default function RolesPage() {
 
  useEffect(() => {
   if (canManageRoles) {
-   fetchRoles();
+   fetchRoles(buildRolesParams({ page, limit }));
   }
- }, [fetchRoles, canManageRoles]);
+ }, [fetchRoles, canManageRoles, page, limit]);
 
  const openCreateModal = () => {
   setIsEditing(false);
@@ -72,7 +76,7 @@ export default function RolesPage() {
     addToast('Role created successfully!', 'success');
    }
    setShowCreateRole(false);
-   fetchRoles();
+   fetchRoles(buildRolesParams({ page, limit }));
   } catch (e: any) {
    addToast(e?.response?.data?.message || 'Failed to save role', 'error');
   } finally {
@@ -86,7 +90,7 @@ export default function RolesPage() {
    try {
     await deleteRole(id);
     addToast('Role deleted successfully', 'success');
-    fetchRoles();
+    fetchRoles(buildRolesParams({ page, limit }));
    } catch (e: any) {
     addToast(e?.response?.data?.message || 'Failed to delete role', 'error');
    }
@@ -200,7 +204,13 @@ export default function RolesPage() {
 </tbody>
      </table>
 </div>
-     
+     <Pagination
+      totalItems={meta.total || 0}
+      currentPage={page}
+      itemsPerPage={limit}
+      onPageChange={setPage}
+      onItemsPerPageChange={(value) => { setLimit(value); setPage(1); }}
+     />
     </div>
    )}
 

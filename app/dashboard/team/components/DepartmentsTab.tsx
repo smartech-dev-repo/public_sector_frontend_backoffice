@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react'; 
+import { useEffect, useState, useCallback } from 'react'; 
 import { useDepartments } from '@/app/composables/modules/useDepartments';
 import { useToast } from '@/app/composables/useToast';
 import { createPortal } from 'react-dom';
@@ -10,6 +10,8 @@ import { useConfirm } from '@/app/composables/useConfirm';
 import TableDropdown from '@/app/components/ui/TableDropdown';
 import Pagination from '@/app/components/ui/Pagination';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { buildDepartmentsParams } from '@/app/lib/list-params';
 
 export default function DepartmentsTab() {
  const { hasPermission, isSuperAdmin } = useAdminPermissions();
@@ -18,6 +20,7 @@ export default function DepartmentsTab() {
  const [page, setPage] = useState(1);
  const [limit, setLimit] = useState(25);
  const [q, setQ] = useState('');
+ const debouncedQ = useDebouncedValue(q.trim(), 300);
  const { confirm } = useConfirm();
 
  const { loading, error, departments, meta, fetchDepartments, createDepartment, updateDepartment, deleteDepartment } = useDepartments();
@@ -30,11 +33,24 @@ export default function DepartmentsTab() {
  const [form, setForm] = useState({ name: '', description: '' });
  const [showFilter, setShowFilter] = useState(false);
 
+ const buildParams = useCallback(
+  (overrides: { page?: number; limit?: number } = {}) =>
+   buildDepartmentsParams({
+    page: overrides.page ?? page,
+    limit: overrides.limit ?? limit,
+    q: debouncedQ,
+   }),
+  [page, limit, debouncedQ],
+ );
+
  useEffect(() => {
-  const params: any = { page, limit };
-  if (q.trim()) params.q = q.trim();
-  fetchDepartments(params);
- }, [fetchDepartments, page, limit, q]);
+  fetchDepartments(buildParams());
+ }, [fetchDepartments, buildParams]);
+
+ useEffect(() => {
+  const totalPages = Math.max(1, Math.ceil((meta?.total || 0) / limit));
+  setPage((current) => Math.min(current, totalPages));
+ }, [meta?.total, limit]);
 
  const clearFilters = () => {
   setQ('');
@@ -55,7 +71,7 @@ export default function DepartmentsTab() {
    setShowModal(false);
    setEditingDepartment(null);
    setForm({ name: '', description: '' });
-   fetchDepartments({ page, limit });
+   fetchDepartments(buildParams());
   } catch (err: any) {
    addToast(err.message || 'Failed to save department', 'error');
   } finally {
@@ -82,7 +98,7 @@ export default function DepartmentsTab() {
    try {
     await deleteDepartment(id);
     addToast('Department deleted successfully', 'success');
-    fetchDepartments({ page, limit });
+    fetchDepartments(buildParams());
    } catch (err: any) {
     addToast(err.message || 'Failed to delete department', 'error');
    }
@@ -116,7 +132,7 @@ export default function DepartmentsTab() {
       type="text"
       placeholder="Search departments..."
       value={q}
-      onChange={(e) => setQ(e.target.value)}
+      onChange={(e) => { setQ(e.target.value); setPage(1); }}
       className="w-full px-2 py-1.5 bg-transparent border-none outline-none text-sm text-foreground placeholder-slate-400"
      />
     </div>

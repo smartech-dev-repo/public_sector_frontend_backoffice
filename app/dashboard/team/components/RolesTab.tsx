@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRoles } from '@/app/composables/modules/useRoles';
 import { usePermissions } from '@/app/composables/modules/usePermissions';
 import { useToast } from '@/app/composables/useToast';
@@ -9,8 +9,9 @@ import EmptyState from '@/app/components/ui/EmptyState';
 import { useConfirm } from '@/app/composables/useConfirm';
 import TableDropdown from '@/app/components/ui/TableDropdown';
 import Pagination from '@/app/components/ui/Pagination';
-import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { buildRolesParams } from '@/app/lib/list-params';
 
 export default function RolesTab() {
  const { hasPermission, isSuperAdmin } = useAdminPermissions();
@@ -23,7 +24,7 @@ export default function RolesTab() {
  const [limit, setLimit] = useState(25);
  const [showFilter, setShowFilter] = useState(false);
  const [search, setSearch] = useState('');
- const [dateRange, setDateRange] = useState('');
+ const debouncedSearch = useDebouncedValue(search.trim(), 300);
  const { confirm } = useConfirm();
 
  const { loading, error, roles, fetchRoles, deleteRole, createRole, updateRole, assignBulkPermissions, removePermission, meta } = useRoles();
@@ -39,25 +40,30 @@ export default function RolesTab() {
  const [form, setForm] = useState({ name: '', description: '' });
  const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
 
+ const buildParams = useCallback(
+  (overrides: { page?: number; limit?: number } = {}) =>
+   buildRolesParams({
+    page: overrides.page ?? page,
+    limit: overrides.limit ?? limit,
+    q: debouncedSearch,
+   }),
+  [page, limit, debouncedSearch],
+ );
+
  useEffect(() => {
-  const params: any = { page, limit };
-  if (search.trim()) params.search = search.trim();
-  if (dateRange) {
-   const [from, to] = dateRange.split(' to ');
-   if (from) params.from = from;
-   if (to) params.to = to;
-  }
   if (canManageRoles) {
-   fetchRoles(params);
+   fetchRoles(buildParams());
   }
   if (canManagePermissions) {
-   fetchPermissions();
+   // The permissions endpoint is paginated (default 25) and the catalog has
+   // more entries than that; request the maximum supported page size so the
+   // role editor never silently hides permissions.
+   fetchPermissions({ page: 1, limit: 100 });
   }
- }, [fetchRoles, fetchPermissions, page, limit, search, dateRange, canManageRoles, canManagePermissions]);
+ }, [fetchRoles, fetchPermissions, buildParams, canManageRoles, canManagePermissions]);
 
  const clearFilters = () => {
   setSearch('');
-  setDateRange('');
   setPage(1);
  };
 
@@ -109,7 +115,7 @@ export default function RolesTab() {
     addToast('Role created successfully!', 'success');
    }
    setShowCreateRole(false);
-   fetchRoles({ page, limit });
+   fetchRoles(buildParams());
   } catch (e: any) {
    addToast(e?.response?.data?.message || 'Failed to save role', 'error');
   } finally {
@@ -123,7 +129,7 @@ export default function RolesTab() {
    try {
     await deleteRole(id);
     addToast('Role deleted successfully', 'success');
-    fetchRoles({ page, limit });
+    fetchRoles(buildParams());
    } catch (e: any) {
     addToast(e?.response?.data?.message || 'Failed to delete role', 'error');
    }
@@ -136,7 +142,7 @@ export default function RolesTab() {
    try {
     await removePermission(roleId, permissionId);
     addToast('Permission removed successfully', 'success');
-    fetchRoles({ page, limit });
+    fetchRoles(buildParams());
     setViewingRole((prev: any) => ({ ...prev, permissions: prev.permissions.filter((p: any) => p.permission.id !== permissionId) }));
    } catch (e: any) {
     addToast(e?.response?.data?.message || 'Failed to remove permission', 'error');
@@ -177,25 +183,15 @@ export default function RolesTab() {
       type="text"
       placeholder="Search role name..."
       value={search}
-      onChange={(e) => setSearch(e.target.value)}
+      onChange={(e) => { setSearch(e.target.value); setPage(1); }}
       className="w-full px-2 py-1.5 bg-transparent border-none outline-none text-sm text-foreground placeholder-slate-400"
      />
     </div>
 
-      <div className="grid gap-6 sm:grid-cols-2">
-       <div className="space-y-1.5 z-[70] relative">
-        <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Date Created</label>
-        <CustomDateRangePicker 
-         value={dateRange} 
-         onChange={setDateRange} 
-         placeholder="Created Date" 
-        />
-       </div>
-       <div className="flex items-end">
-        <button onClick={clearFilters} className="px-4 py-2 bg-card text-muted-foreground border border-border rounded-lg text-sm font-medium hover:bg-muted/30 transition-colors w-full">
-         Clear Filters
-        </button>
-       </div>
+      <div className="flex justify-end">
+       <button onClick={clearFilters} className="px-4 py-2 bg-card text-muted-foreground border border-border rounded-lg text-sm font-medium hover:bg-muted/30 transition-colors">
+        Clear Filters
+       </button>
       </div>
      </div>
     )}
@@ -268,8 +264,7 @@ export default function RolesTab() {
 </tbody>
      </table>
 </div>
-     {meta && roles.length > 0 && (
-      <div className="border-t border-border/50 pt-4 mt-4 pb-4">
+     <div className="border-t border-border/50 pt-4 mt-4 pb-4">
        <Pagination
         totalItems={meta.total || 0}
         currentPage={page || 1}
@@ -278,7 +273,6 @@ export default function RolesTab() {
         onItemsPerPageChange={setLimit}
        />
       </div>
-     )}
      
     </div>
    )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useIppis } from '@/app/composables/modules/useIppis';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
@@ -9,6 +9,8 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import SensitiveValue from '@/app/components/ui/SensitiveValue';
 
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { buildIppisParams } from '@/app/lib/list-params';
 
 export default function IppisRecordsTab() {
  const { isSuperAdmin, hasPermission } = useAdminPermissions();
@@ -21,16 +23,24 @@ export default function IppisRecordsTab() {
  const [agency, setAgency] = useState('all');
  const [status, setStatus] = useState('all');
  const [showFilter, setShowFilter] = useState(false);
+ const debouncedQ = useDebouncedValue(q.trim(), 300);
+
+ const buildParams = useCallback(
+  (overrides: { page?: number; limit?: number } = {}) =>
+   buildIppisParams({
+    page: overrides.page ?? page,
+    limit: overrides.limit ?? limit,
+    q: debouncedQ,
+    agency,
+    employeeStatus: status,
+   }),
+  [page, limit, debouncedQ, agency, status],
+ );
 
  useEffect(() => {
   if (!canUploadIppis) return;
-  const params: any = { page, limit };
-  if (q.trim()) params.q = q.trim();
-  if (agency !== 'all') params.agency = agency;
-  if (status !== 'all') params.status = status;
-  
-  fetchIppisRecords(params);
- }, [fetchIppisRecords, page, limit, q, agency, status, canUploadIppis]);
+  fetchIppisRecords(buildParams());
+ }, [fetchIppisRecords, buildParams, canUploadIppis]);
 
  return (
   <main className="w-full">
@@ -63,7 +73,7 @@ export default function IppisRecordsTab() {
       type="text"
       placeholder="Search by name or staff ID..."
       value={q}
-      onChange={(e) => setQ(e.target.value)}
+      onChange={(e) => { setQ(e.target.value); setPage(1); }}
       className="w-full px-2 py-1.5 bg-transparent border-none outline-none text-sm text-foreground placeholder-slate-400"
      />
     </div>
@@ -71,7 +81,7 @@ export default function IppisRecordsTab() {
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
        <div className="space-y-1.5">
         <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Agency</label>
-        <Select value={agency} onValueChange={setAgency}>
+        <Select value={agency} onValueChange={(value) => { setAgency(value); setPage(1); }}>
          <SelectTrigger className="w-full bg-card"><SelectValue placeholder="All Agencies" /></SelectTrigger>
          <SelectContent>
           <SelectItem value="all">All Agencies</SelectItem>
@@ -84,7 +94,7 @@ export default function IppisRecordsTab() {
        </div>
        <div className="space-y-1.5">
         <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Status</label>
-        <Select value={status} onValueChange={setStatus}>
+        <Select value={status} onValueChange={(value) => { setStatus(value); setPage(1); }}>
          <SelectTrigger className="w-full bg-card"><SelectValue placeholder="All Statuses" /></SelectTrigger>
          <SelectContent>
           <SelectItem value="all">All Statuses</SelectItem>

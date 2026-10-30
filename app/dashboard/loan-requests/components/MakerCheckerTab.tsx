@@ -126,8 +126,6 @@ export default function MakerCheckerTab() {
      columns={columns}
      data={loanRequests}
      loading={loading}
-     filterColumnId="customerName"
-     filterPlaceholder="Search by name..."
      manualPagination={true}
      pageCount={meta?.totalPages || 1}
      pageIndex={page - 1}

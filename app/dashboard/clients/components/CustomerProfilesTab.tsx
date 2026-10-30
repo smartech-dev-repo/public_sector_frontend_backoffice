@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import * as xlsx from 'xlsx';
 import { useClients } from '@/app/composables/modules/useClients';
@@ -31,6 +31,8 @@ import {
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { buildClientsParams } from '@/app/lib/list-params';
 
 interface Props {
   onOpenOnboard?: () => void;
@@ -86,6 +88,7 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
   useEffect(() => {
     if (urlAgentId) {
       setAgentIdFilter(urlAgentId);
+      setPage(1);
       if (urlAgentName) setAgentNameDisplay(urlAgentName);
     }
   }, [urlAgentId, urlAgentName]);
@@ -95,6 +98,21 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
   const [createdRange, setCreatedRange] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(25);
+  const debouncedQ = useDebouncedValue(q.trim(), 300);
+  const debouncedAgentId = useDebouncedValue(agentIdFilter.trim(), 400);
+
+  const buildParams = useCallback(
+    (overrides: { page?: number; limit?: number } = {}) =>
+      buildClientsParams({
+        page: overrides.page ?? page,
+        limit: overrides.limit ?? limit,
+        status: statusFilter,
+        q: debouncedQ,
+        agentId: debouncedAgentId,
+        createdRange,
+      }),
+    [page, limit, statusFilter, debouncedQ, debouncedAgentId, createdRange],
+  );
 
   useEffect(() => {
     if (canReadAnalytics) {
@@ -130,17 +148,8 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
 
   useEffect(() => {
     if (!canReviewClient) return;
-    const params: any = { page, limit };
-    if (statusFilter && statusFilter !== 'none') params.status = statusFilter;
-    if (q.trim()) params.q = q.trim();
-    if (agentIdFilter.trim()) params.agentId = agentIdFilter.trim();
-    if (createdRange) {
-      const [from, to] = createdRange.split(' to ');
-      if (from) params.createdFrom = from;
-      if (to) params.createdTo = to;
-    }
-    fetchClients(params);
-  }, [fetchClients, statusFilter, q, agentIdFilter, createdRange, page, limit, canReviewClient]);
+    fetchClients(buildParams());
+  }, [fetchClients, buildParams, canReviewClient]);
 
   const openWalletModal = async (client: any) => {
     setSelectedClient(client);
@@ -208,7 +217,7 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
       try {
         await approveClient(id);
         addToast('Client approved successfully', 'success');
-        fetchClients({ page, limit });
+        fetchClients(buildParams());
       } catch (e: any) {
         addToast(e?.response?.data?.message || 'Failed to approve client', 'error');
       }
@@ -234,7 +243,7 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
       addToast('Verification retry requested successfully', 'success');
       setShowRetryModal(false);
       setRetryNote('');
-      fetchClients({ page, limit });
+      fetchClients(buildParams());
     } catch (e: any) {
       addToast(e?.response?.data?.message || 'Failed to retry client verification', 'error');
     } finally {
@@ -599,7 +608,7 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
                 type="text"
                 placeholder="Search by name, phone or IPPIS..."
                 value={q}
-                onChange={(e) => setQ(e.target.value)}
+                onChange={(e) => { setQ(e.target.value); setPage(1); }}
                 className="w-full px-4 py-2 border rounded-lg text-sm bg-background border-border outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400"
               />
             </div>
@@ -612,13 +621,14 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
                 onChange={(e) => {
                   setAgentIdFilter(e.target.value);
                   setAgentNameDisplay('');
+                  setPage(1);
                 }}
                 className="w-full px-4 py-2 border rounded-lg text-sm bg-background border-border outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 font-mono text-xs"
               />
             </div>
             <div className="space-y-1.5">
               <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Status</label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <Select value={statusFilter} onValueChange={(value) => { setStatusFilter(value); setPage(1); }}>
                 <SelectTrigger className="w-full bg-background"><SelectValue placeholder="All Statuses" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">All Statuses</SelectItem>
@@ -634,14 +644,14 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
               <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Date Range</label>
               <CustomDateRangePicker 
                 value={createdRange}
-                onChange={setCreatedRange}
+                onChange={(value) => { setCreatedRange(value); setPage(1); }}
                 placeholder="Created Date"
               />
             </div>
             <div className="flex items-end">
               <button 
                 type="button"
-                onClick={() => { setQ(''); setStatusFilter('none'); setCreatedRange(''); setAgentIdFilter(''); setAgentNameDisplay(''); }} 
+                onClick={() => { setQ(''); setStatusFilter('none'); setCreatedRange(''); setAgentIdFilter(''); setAgentNameDisplay(''); setPage(1); }} 
                 className="w-full px-5 py-2.5 bg-background border border-border rounded-lg text-sm font-medium text-foreground hover:bg-muted/40 transition-colors"
               >
                 Clear Filters
@@ -844,15 +854,13 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
             </table>
           </div>
 
-          {meta && meta.total > 0 && (
-            <Pagination
-              totalItems={meta.total}
-              currentPage={page}
-              itemsPerPage={limit}
-              onPageChange={(p) => setPage(p)}
-              onItemsPerPageChange={(l) => setLimit(l)}
-            />
-          )}
+          <Pagination
+            totalItems={meta?.total || 0}
+            currentPage={page}
+            itemsPerPage={limit}
+            onPageChange={(p) => setPage(p)}
+            onItemsPerPageChange={(l) => { setLimit(l); setPage(1); }}
+          />
         </div>
       )}
 

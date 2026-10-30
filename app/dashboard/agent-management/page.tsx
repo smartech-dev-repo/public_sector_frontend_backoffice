@@ -17,6 +17,8 @@ import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 import { Users, UserCheck, Clock, ShieldCheck, UserX } from 'lucide-react';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { buildAgentsParams } from '@/app/lib/list-params';
 
 export default function AgentManagementPage() {
  const { confirm } = useConfirm();
@@ -93,24 +95,30 @@ export default function AgentManagementPage() {
  const [qFilter, setQFilter] = useState('');
  const [currentPage, setCurrentPage] = useState(1);
  const [itemsPerPage, setItemsPerPage] = useState(25);
+ const debouncedQ = useDebouncedValue(qFilter.trim(), 300);
+
+ const buildParams = useCallback(
+  (overrides: { page?: number; limit?: number } = {}) =>
+   buildAgentsParams({
+    page: overrides.page ?? currentPage,
+    limit: overrides.limit ?? itemsPerPage,
+    status: statusFilter,
+    q: debouncedQ,
+    createdRange,
+    reviewedRange,
+   }),
+  [currentPage, itemsPerPage, statusFilter, debouncedQ, createdRange, reviewedRange],
+ );
+
+ const updateFilter = useCallback((apply: () => void) => {
+  apply();
+  setCurrentPage(1);
+ }, []);
 
  useEffect(() => {
   if (!canReadAgents) return;
-  const params: any = { page: currentPage, limit: itemsPerPage };
-  if (statusFilter && statusFilter !== 'none') params.status = statusFilter;
-  if (qFilter.trim()) params.q = qFilter.trim();
-  if (createdRange) {
-   const [from, to] = createdRange.split(' to ');
-   if (from) params.createdFrom = from;
-   if (to) params.createdTo = to;
-  }
-  if (reviewedRange) {
-   const [from, to] = reviewedRange.split(' to ');
-   if (from) params.reviewedFrom = from;
-   if (to) params.reviewedTo = to;
-  }
-  fetchAgents(params);
- }, [fetchAgents, currentPage, itemsPerPage, statusFilter, qFilter, createdRange, reviewedRange, canReadAgents]);
+  fetchAgents(buildParams());
+ }, [fetchAgents, buildParams, canReadAgents]);
 
  const handleApprove = async (id: string) => {
   const confirmed = await confirm({ message: 'Are you sure you want to approve this agent?' });
@@ -118,7 +126,7 @@ export default function AgentManagementPage() {
   try {
    await approveAgent(id);
    addToast('Agent approved successfully', 'success');
-   fetchAgents();
+   fetchAgents(buildParams());
    fetchOverallStats();
   } catch (e: any) {
    addToast(e?.response?.data?.message || 'Failed to approve agent', 'error');
@@ -148,7 +156,7 @@ export default function AgentManagementPage() {
   try {
    await updateOnboardingAccess(agent.id, { canOnboardClients: newStatus });
    addToast(`Onboarding access ${newStatus ? 'granted' : 'restricted'} successfully`, 'success');
-   fetchAgents({ page: currentPage, limit: itemsPerPage });
+   fetchAgents(buildParams());
    fetchOverallStats();
   } catch (e: any) {
    addToast(e?.response?.data?.message || 'Failed to update onboarding access', 'error');
@@ -186,7 +194,7 @@ export default function AgentManagementPage() {
    await rejectAgent(selectedAgent.id, { reason: rejectReason });
    addToast('Agent rejected', 'success');
    setShowRejectModal(false);
-   fetchAgents();
+   fetchAgents(buildParams());
    fetchOverallStats();
   } catch (e: any) {
    addToast(e?.response?.data?.message || 'Failed to reject agent', 'error');
@@ -414,13 +422,13 @@ export default function AgentManagementPage() {
          type="text"
          placeholder="Search by name, email, phone..."
          value={qFilter}
-         onChange={(e) => setQFilter(e.target.value)}
+         onChange={(e) => { setQFilter(e.target.value); setCurrentPage(1); }}
          className="w-full px-4 py-2 border rounded-lg text-sm bg-card border-border outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400"
         />
        </div>
        <div className="space-y-1.5">
         <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Status</label>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select value={statusFilter} onValueChange={(value) => { setStatusFilter(value); setCurrentPage(1); }}>
          <SelectTrigger className="w-full bg-card"><SelectValue placeholder="All Statuses" /></SelectTrigger>
          <SelectContent>
           <SelectItem value="none">All Statuses</SelectItem>
@@ -435,7 +443,7 @@ export default function AgentManagementPage() {
         <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Created Date</label>
         <CustomDateRangePicker 
          value={createdRange}
-         onChange={setCreatedRange}
+         onChange={(value) => { setCreatedRange(value); setCurrentPage(1); }}
          placeholder="Select created date"
         />
        </div>
@@ -443,13 +451,13 @@ export default function AgentManagementPage() {
         <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Reviewed Date</label>
         <CustomDateRangePicker 
          value={reviewedRange}
-         onChange={setReviewedRange}
+         onChange={(value) => { setReviewedRange(value); setCurrentPage(1); }}
          placeholder="Select reviewed date"
         />
        </div>
       </div>
       <div className="mt-6 flex justify-end">
-       <button onClick={() => { setQFilter(''); setStatusFilter('none'); setCreatedRange(''); setReviewedRange(''); }} className="px-5 py-2 bg-card border border-border rounded-full text-sm font-medium text-foreground/90 hover:bg-muted/30 transition-colors">Clear Filters</button>
+       <button onClick={() => { setQFilter(''); setStatusFilter('none'); setCreatedRange(''); setReviewedRange(''); setCurrentPage(1); }} className="px-5 py-2 bg-card border border-border rounded-full text-sm font-medium text-foreground/90 hover:bg-muted/30 transition-colors">Clear Filters</button>
       </div>
      </div>
     )}
@@ -528,7 +536,6 @@ export default function AgentManagementPage() {
        </table>
       </div>
      
-     {agents.length > 0 && (
       <Pagination 
        totalItems={meta?.total || 0}
        currentPage={currentPage}
@@ -536,7 +543,6 @@ export default function AgentManagementPage() {
        onPageChange={setCurrentPage}
        onItemsPerPageChange={setItemsPerPage}
       />
-     )}
     </div>
    )}
    </>

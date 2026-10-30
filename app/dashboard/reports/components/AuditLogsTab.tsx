@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useAuditLogs } from '@/app/composables/modules/useAuditLogs';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
@@ -8,6 +8,8 @@ import Pagination from '@/app/components/ui/Pagination';
 import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { buildAuditLogsParams } from '@/app/lib/list-params';
 
 const KNOWN_ACTIONS: { value: string; label: string }[] = [
   { value: 'admin.invite.created', label: 'Admin Invite Created' },
@@ -73,21 +75,26 @@ export default function AuditLogsTab() {
   const [targetTypeFilter, setTargetTypeFilter] = useState('');
   const [targetIdFilter, setTargetIdFilter] = useState('');
   const [createdRange, setCreatedRange] = useState('');
+  const debouncedTargetId = useDebouncedValue(targetIdFilter.trim(), 350);
+
+  const buildParams = useCallback(
+    (overrides: { page?: number; limit?: number } = {}) =>
+      buildAuditLogsParams({
+        page: overrides.page ?? page,
+        limit: overrides.limit ?? limit,
+        action: actionFilter,
+        actorType: actorTypeFilter,
+        targetType: targetTypeFilter,
+        targetId: debouncedTargetId,
+        createdRange,
+      }),
+    [page, limit, actionFilter, actorTypeFilter, targetTypeFilter, debouncedTargetId, createdRange],
+  );
 
   useEffect(() => {
     if (!canAudit) return;
-    const params: any = { page, limit };
-    if (actionFilter && actionFilter !== 'none') params.action = actionFilter;
-    if (actorTypeFilter && actorTypeFilter !== 'none') params.actorType = actorTypeFilter;
-    if (targetTypeFilter && targetTypeFilter !== 'none') params.targetType = targetTypeFilter;
-    if (targetIdFilter && targetIdFilter !== 'none') params.targetId = targetIdFilter;
-    if (createdRange) {
-      const [from, to] = createdRange.split(' to ');
-      if (from) params.createdFrom = from;
-      if (to) params.createdTo = to;
-    }
-    fetchLogs(params);
-  }, [fetchLogs, page, limit, actionFilter, actorTypeFilter, targetTypeFilter, targetIdFilter, createdRange]);
+    fetchLogs(buildParams());
+  }, [fetchLogs, buildParams, canAudit]);
 
   // Dynamically include any additional actions found in fetched logs
   const actionOptions = useMemo(() => {
@@ -241,7 +248,7 @@ export default function AuditLogsTab() {
                 <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
                   Action
                 </label>
-                <Select value={actionFilter || 'none'} onValueChange={setActionFilter}>
+                <Select value={actionFilter || 'none'} onValueChange={(value) => { setActionFilter(value); setPage(1); }}>
                   <SelectTrigger className="w-full bg-card">
                     <SelectValue placeholder="All Actions" />
                   </SelectTrigger>
@@ -261,7 +268,7 @@ export default function AuditLogsTab() {
                 <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
                   Actor Type
                 </label>
-                <Select value={actorTypeFilter || 'none'} onValueChange={setActorTypeFilter}>
+                <Select value={actorTypeFilter || 'none'} onValueChange={(value) => { setActorTypeFilter(value); setPage(1); }}>
                   <SelectTrigger className="w-full bg-card">
                     <SelectValue placeholder="All Actor Types" />
                   </SelectTrigger>
@@ -280,7 +287,7 @@ export default function AuditLogsTab() {
                 <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
                   Target Type
                 </label>
-                <Select value={targetTypeFilter || 'none'} onValueChange={setTargetTypeFilter}>
+                <Select value={targetTypeFilter || 'none'} onValueChange={(value) => { setTargetTypeFilter(value); setPage(1); }}>
                   <SelectTrigger className="w-full bg-card">
                     <SelectValue placeholder="All Target Types" />
                   </SelectTrigger>
@@ -301,7 +308,7 @@ export default function AuditLogsTab() {
                   Target ID / Entity
                 </label>
                 {targetIdOptions.length > 0 ? (
-                  <Select value={targetIdFilter || 'none'} onValueChange={setTargetIdFilter}>
+                  <Select value={targetIdFilter || 'none'} onValueChange={(value) => { setTargetIdFilter(value); setPage(1); }}>
                     <SelectTrigger className="w-full bg-card">
                       <SelectValue placeholder="All Targets" />
                     </SelectTrigger>
@@ -319,7 +326,7 @@ export default function AuditLogsTab() {
                     type="text"
                     placeholder="Search by Target ID..."
                     value={targetIdFilter === 'none' ? '' : targetIdFilter}
-                    onChange={e => setTargetIdFilter(e.target.value)}
+                    onChange={e => { setTargetIdFilter(e.target.value); setPage(1); }}
                     className="w-full px-3 py-2 border rounded-xl text-sm bg-card border-input outline-none focus:ring-2 focus:ring-[#018752]/20 focus:border-[#018752]"
                   />
                 )}
@@ -332,7 +339,7 @@ export default function AuditLogsTab() {
                 </label>
                 <CustomDateRangePicker
                   value={createdRange}
-                  onChange={setCreatedRange}
+                  onChange={(value) => { setCreatedRange(value); setPage(1); }}
                   placeholder="Pick a date range"
                 />
               </div>
@@ -438,17 +445,15 @@ export default function AuditLogsTab() {
               </tbody>
             </table>
           </div>
-          {meta && logs.length > 0 && (
-            <div className="border-t border-border/50 py-4 px-4">
-              <Pagination
-                totalItems={meta.total || 0}
-                currentPage={page || 1}
-                itemsPerPage={limit || 25}
-                onPageChange={setPage}
-                onItemsPerPageChange={setLimit}
-              />
-            </div>
-          )}
+          <div className="border-t border-border/50 py-4 px-4">
+            <Pagination
+              totalItems={meta?.total || 0}
+              currentPage={page || 1}
+              itemsPerPage={limit || 25}
+              onPageChange={setPage}
+              onItemsPerPageChange={(value) => { setLimit(value); setPage(1); }}
+            />
+          </div>
         </div>
       )}
     </main>

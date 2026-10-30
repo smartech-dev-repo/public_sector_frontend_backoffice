@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { loans_api } from '@/app/api_factory/modules/loans';
 
 const unwrapResponse = (res: any, defaultErrMsg = 'Operation failed') => {
@@ -38,11 +38,17 @@ export const useLoans = () => {
   const [loanRequests, setLoanRequests] = useState([] as any[]);
   const [disbursementSummary, setDisbursementSummary] = useState(null as any);
   const [clientLoans, setClientLoans] = useState([] as any[]);
+  const loansRequestSeq = useRef(0);
+  const loanRequestsRequestSeq = useRef(0);
+  const clientLoansRequestSeq = useRef(0);
 
   const fetchLoans = useCallback(async (params?: any) => {
+    const seq = ++loansRequestSeq.current;
     setLoading(true);
+    setError(null);
     try {
       const res = await loans_api.getLoans(params);
+      if (seq !== loansRequestSeq.current) return [];
       unwrapResponse(res, 'Failed to fetch loans');
       let dataList = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || []);
       if (res.data?.meta) setMeta(res.data.meta);
@@ -50,10 +56,10 @@ export const useLoans = () => {
       setLoans(dataList);
       return dataList;
     } catch (err: any) {
-      setError(err.message);
+      if (seq === loansRequestSeq.current) setError(err.message);
       return [];
     } finally {
-      setLoading(false);
+      if (seq === loansRequestSeq.current) setLoading(false);
     }
   }, []);
 
@@ -190,9 +196,12 @@ export const useLoans = () => {
   }, []);
 
   const fetchLoanRequests = useCallback(async (params?: any) => {
+    const seq = ++loanRequestsRequestSeq.current;
     setLoading(true);
+    setError(null);
     try {
       const res = await loans_api.getLoanRequests(params);
+      if (seq !== loanRequestsRequestSeq.current) return [];
       unwrapResponse(res, 'Failed to fetch loan requests');
       let dataList = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || []);
       if (res.data?.meta) setMeta(res.data.meta);
@@ -200,10 +209,10 @@ export const useLoans = () => {
       setLoanRequests(dataList);
       return dataList;
     } catch (err: any) {
-      setError(err.message);
+      if (seq === loanRequestsRequestSeq.current) setError(err.message);
       return [];
     } finally {
-      setLoading(false);
+      if (seq === loanRequestsRequestSeq.current) setLoading(false);
     }
   }, []);
 
@@ -294,13 +303,17 @@ export const useLoans = () => {
 
   const fetchClientLoans = useCallback(async (params?: any) => {
     if (params && !params.clientId) {
+      clientLoansRequestSeq.current += 1;
       setClientLoans([]);
       setMeta({ total: 0, page: 1, limit: params?.limit || 25, totalPages: 1 });
       return [];
     }
+    const seq = ++clientLoansRequestSeq.current;
     setLoading(true);
+    setError(null);
     try {
       const res = await loans_api.getClientLoans(params);
+      if (seq !== clientLoansRequestSeq.current) return [];
       unwrapResponse(res, 'Failed to fetch client loans');
       let dataList = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || []);
       if (res.data?.meta) setMeta(res.data.meta);
@@ -308,10 +321,10 @@ export const useLoans = () => {
       setClientLoans(dataList);
       return dataList;
     } catch (err: any) {
-      setError(err.message);
+      if (seq === clientLoansRequestSeq.current) setError(err.message);
       return [];
     } finally {
-      setLoading(false);
+      if (seq === clientLoansRequestSeq.current) setLoading(false);
     }
   }, []);
 

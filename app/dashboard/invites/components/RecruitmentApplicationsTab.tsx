@@ -36,6 +36,8 @@ import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 import SensitiveValue from '@/app/components/ui/SensitiveValue';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { buildRecruitmentApplicationsParams } from '@/app/lib/list-params';
 
 export default function RecruitmentApplicationsTab() {
   const { confirm } = useConfirm();
@@ -87,6 +89,7 @@ export default function RecruitmentApplicationsTab() {
   const [dateRange, setDateRange] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
+  const debouncedQ = useDebouncedValue(q.trim(), 300);
 
   // Detail Modal state
   const [selectedApp, setSelectedApp] = useState<AgentRecruitmentApplication | null>(null);
@@ -110,16 +113,16 @@ export default function RecruitmentApplicationsTab() {
   // Load applications list
   const loadApplications = useCallback(() => {
     if (!canReadRecruitment) return;
-    const params: any = { page: currentPage, limit: itemsPerPage };
-    if (q.trim()) params.q = q.trim();
-    if (statusFilter && statusFilter !== 'none') params.status = statusFilter;
-    if (dateRange) {
-      const [from, to] = dateRange.split(' to ');
-      if (from) params.createdFrom = from;
-      if (to) params.createdTo = to;
-    }
-    fetchApplications(params);
-  }, [fetchApplications, currentPage, itemsPerPage, q, statusFilter, dateRange, canReadRecruitment]);
+    fetchApplications(
+      buildRecruitmentApplicationsParams({
+        page: currentPage,
+        limit: itemsPerPage,
+        q: debouncedQ,
+        status: statusFilter,
+        createdRange: dateRange,
+      }),
+    );
+  }, [fetchApplications, currentPage, itemsPerPage, debouncedQ, statusFilter, dateRange, canReadRecruitment]);
 
   useEffect(() => {
     loadAnalytics();
@@ -743,15 +746,13 @@ export default function RecruitmentApplicationsTab() {
             </table>
           </div>
 
-          {meta && meta.total > 0 && (
-            <Pagination 
-              totalItems={meta.total}
-              currentPage={currentPage}
-              itemsPerPage={itemsPerPage}
-              onPageChange={setCurrentPage}
-              onItemsPerPageChange={setItemsPerPage}
-            />
-          )}
+          <Pagination 
+            totalItems={meta?.total || 0}
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={(value) => { setItemsPerPage(value); setCurrentPage(1); }}
+          />
         </div>
       )}
         </>

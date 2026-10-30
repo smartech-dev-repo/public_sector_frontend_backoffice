@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useInvites } from '@/app/composables/modules/useInvites';
 import { useRoles } from '@/app/composables/modules/useRoles';
 import { useToast } from '@/app/composables/useToast';
@@ -13,6 +13,8 @@ import Pagination from '@/app/components/ui/Pagination';
 import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { buildInvitesParams } from '@/app/lib/list-params';
 
 export default function InvitesTab() {
  const { hasPermission, isSuperAdmin } = useAdminPermissions();
@@ -35,25 +37,35 @@ export default function InvitesTab() {
  const [q, setQ] = useState('');
  const [createdRange, setCreatedRange] = useState('');
  const [expiresRange, setExpiresRange] = useState('');
+ const debouncedQ = useDebouncedValue(q.trim(), 300);
+
+ const buildParams = useCallback(
+  (overrides: { page?: number; limit?: number } = {}) =>
+   buildInvitesParams({
+    page: overrides.page ?? page,
+    limit: overrides.limit ?? limit,
+    status: statusFilter,
+    q: debouncedQ,
+    createdRange,
+    expiresRange,
+   }),
+  [page, limit, statusFilter, debouncedQ, createdRange, expiresRange],
+ );
+
+ const clampPageToResults = useCallback(() => {
+  const totalPages = Math.max(1, Math.ceil((meta?.total || 0) / limit));
+  setPage((current) => Math.min(current, totalPages));
+ }, [meta?.total, limit]);
 
  useEffect(() => {
   if (!canInvite) return;
-  const params: any = { page, limit };
-  if (statusFilter && statusFilter !== 'none') params.status = statusFilter;
-  if (q.trim()) params.q = q.trim();
-  if (createdRange) {
-   const [from, to] = createdRange.split(' to ');
-   if (from) params.createdFrom = from;
-   if (to) params.createdTo = to;
-  }
-  if (expiresRange) {
-   const [from, to] = expiresRange.split(' to ');
-   if (from) params.expiresFrom = from;
-   if (to) params.expiresTo = to;
-  }
-  fetchInvites(params);
+  fetchInvites(buildParams());
   fetchRoles();
- }, [fetchInvites, fetchRoles, page, limit, statusFilter, q, createdRange, expiresRange, canInvite]);
+ }, [fetchInvites, fetchRoles, buildParams, canInvite]);
+
+ useEffect(() => {
+  clampPageToResults();
+ }, [clampPageToResults]);
 
  const handleCreateInvite = async (e: React.FormEvent) => {
   e.preventDefault();
@@ -67,7 +79,7 @@ export default function InvitesTab() {
    addToast('Invite sent successfully!', 'success');
    setShowInviteModal(false);
    setInviteForm({ email: '', roleId: '' });
-   fetchInvites({ page, limit });
+   fetchInvites(buildParams());
   } catch (e: any) {
    addToast(e?.response?.data?.message || 'Failed to send invite', 'error');
   } finally {
@@ -100,7 +112,7 @@ export default function InvitesTab() {
   try {
    await revokeInvite(id);
    addToast('Invite revoked successfully', 'success');
-   fetchInvites({ page, limit });
+   fetchInvites(buildParams());
   } catch (e: any) {
    addToast(e?.response?.data?.message || 'Failed to revoke invite', 'error');
   }
@@ -116,7 +128,7 @@ export default function InvitesTab() {
   try {
    await deleteInvite(id);
    addToast('Invite deleted successfully', 'success');
-   fetchInvites({ page, limit });
+   fetchInvites(buildParams());
   } catch (e: any) {
    addToast(e?.response?.data?.message || 'Failed to delete invite', 'error');
   }
@@ -207,13 +219,13 @@ export default function InvitesTab() {
          type="text"
          placeholder="Search email..."
          value={q}
-         onChange={(e) => setQ(e.target.value)}
+         onChange={(e) => { setQ(e.target.value); setPage(1); }}
          className="w-full px-4 py-2 border rounded-lg text-sm bg-card border-border outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400"
         />
        </div>
        <div className="space-y-1.5">
         <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Status</label>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select value={statusFilter} onValueChange={(value) => { setStatusFilter(value); setPage(1); }}>
          <SelectTrigger className="w-full bg-card"><SelectValue placeholder="All Statuses" /></SelectTrigger>
          <SelectContent>
           <SelectItem value="none">All Statuses</SelectItem>
@@ -228,7 +240,7 @@ export default function InvitesTab() {
         <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Date Created</label>
         <CustomDateRangePicker 
          value={createdRange} 
-         onChange={setCreatedRange} 
+         onChange={(value) => { setCreatedRange(value); setPage(1); }} 
          placeholder="Created Date" 
         />
        </div>
@@ -236,7 +248,7 @@ export default function InvitesTab() {
         <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Date Expires</label>
         <CustomDateRangePicker 
          value={expiresRange} 
-         onChange={setExpiresRange} 
+         onChange={(value) => { setExpiresRange(value); setPage(1); }} 
          placeholder="Expiry Date" 
         />
        </div>
@@ -288,8 +300,7 @@ export default function InvitesTab() {
 </tbody>
      </table>
 </div>
-     {meta && invites.length > 0 && (
-      <div className="border-t border-border/50 pt-4 mt-4 pb-4">
+     <div className="border-t border-border/50 pt-4 mt-4 pb-4">
        <Pagination
         totalItems={meta.total || 0}
         currentPage={page || 1}
@@ -298,7 +309,6 @@ export default function InvitesTab() {
         onItemsPerPageChange={setLimit}
        />
       </div>
-     )}
      
     </div>
    )}

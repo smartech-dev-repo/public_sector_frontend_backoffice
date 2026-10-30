@@ -234,13 +234,49 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
     }
   }, [id, canReadAgent]);
 
+  // `DatePicker` is a flatpickr range picker: onChange emits Date[], while the
+  // loan API expects disbursedFrom/disbursedTo date strings.
+  const disbursedRange = useMemo(() => {
+    const value = filterParams.dateRange as unknown as Date[] | string | undefined;
+    if (!Array.isArray(value) || value.length === 0) return {};
+    const toIsoDate = (input: Date | string) => {
+      const date = new Date(input);
+      if (Number.isNaN(date.getTime())) return undefined;
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    };
+    return {
+      from: value[0] ? toIsoDate(value[0]) : undefined,
+      to: value[1] ? toIsoDate(value[1]) : undefined,
+    };
+  }, [filterParams.dateRange]);
+
+  // The client-loans API has no free-text search, so search the loaded page
+  // locally (the date filter is still pushed to the server).
+  const visibleClientLoans = useMemo(() => {
+    const term = filterParams.search.trim().toLowerCase();
+    if (!term) return clientLoans;
+    return clientLoans.filter((loan: any) => {
+      const haystack = [
+        loan.client?.firstName,
+        loan.client?.lastName,
+        loan.client?.ippisNumber,
+        loan.ippisNumber,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(term);
+    });
+  }, [clientLoans, filterParams.search]);
+
   useEffect(() => {
     if (canReadLoans && application?.clientId) {
       const params: any = { clientId: application.clientId, page, limit };
-      if (filterParams.search) params.q = filterParams.search;
+      if (disbursedRange.from) params.disbursedFrom = disbursedRange.from;
+      if (disbursedRange.to) params.disbursedTo = disbursedRange.to;
       fetchClientLoans(params);
     }
-  }, [fetchClientLoans, application?.clientId, page, limit, filterParams, canReadLoans]);
+  }, [fetchClientLoans, application?.clientId, page, limit, disbursedRange.from, disbursedRange.to, canReadLoans]);
 
   useEffect(() => {
     if (!canReadLoans && canReadClients) {
@@ -333,13 +369,13 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
   };
 
   const handleExportLoans = () => {
-    if (clientLoans.length === 0) {
+    if (visibleClientLoans.length === 0) {
       addToast('No loan records to export', 'error');
       return;
     }
     try {
       const headers = ['Customer Name', 'IPPIS No', 'Status', 'Loan Amount', 'Date'];
-      const rows = clientLoans.map((l: any) => [
+      const rows = visibleClientLoans.map((l: any) => [
         `"${l.client?.firstName || ''} ${l.client?.lastName || ''}"`.trim(),
         `"${l.client?.ippisNumber || ''}"`,
         `"${l.status || ''}"`,
@@ -889,7 +925,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
             <span className="text-xs sm:text-sm font-medium text-muted-foreground">
               {activeTab === 'loans' && canReadLoans
-                ? `Showing ${clientLoans.length} of ${meta?.total || 0} originated loans`
+                ? `Showing ${visibleClientLoans.length}${filterParams.search.trim() ? ' matching' : ''} of ${meta?.total || 0} originated loans`
                 : activeTab === 'clients' && canReadClients
                 ? `Showing ${onboardedClients.length} of ${clientsMeta?.total || onboardedClients.length} onboarded customers`
                 : ''}
@@ -922,13 +958,13 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
                       />
                       <DatePicker 
                         value={filterParams.dateRange}
-                        onChange={(val) => setFilterParams({ ...filterParams, dateRange: val as any })}
-                        placeholder="Select date range"
+                        onChange={(val) => { setFilterParams({ ...filterParams, dateRange: val as any }); setPage(1); }}
+                        placeholder="Select disbursement date range"
                       />
                     </div>
                     <div className="flex gap-2">
                       <button 
-                        onClick={clearFilters} 
+                        onClick={() => { clearFilters(); setPage(1); }} 
                         className="flex-1 py-2 bg-muted text-muted-foreground rounded-xl text-xs font-semibold hover:bg-muted/80 transition-colors cursor-pointer"
                       >
                         Clear
@@ -979,7 +1015,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
                           </div>
                         </td>
                       </tr>
-                    ) : clientLoans.length === 0 ? (
+                    ) : visibleClientLoans.length === 0 ? (
                       <tr>
                         <td colSpan={6} className="px-6 py-20 text-center">
                           <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
@@ -994,7 +1030,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
                         </td>
                       </tr>
                     ) : (
-                      clientLoans.map((loan: any) => (
+                      visibleClientLoans.map((loan: any) => (
                         <tr key={loan.id} className="hover:bg-muted/40 transition-colors group">
                           <td className="px-6 py-4 font-semibold text-foreground">
                             {loan.client?.firstName} {loan.client?.lastName}
@@ -1036,17 +1072,15 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
               </div>
 
               {/* Pagination */}
-              {meta && meta.total > 0 && (
-                <div className="p-4 border-t border-border/60">
-                  <Pagination 
-                    totalItems={meta.total} 
-                    currentPage={page}
-                    itemsPerPage={limit}
-                    onPageChange={setPage}
-                    onItemsPerPageChange={setLimit}
-                  />
-                </div>
-              )}
+              <div className="p-4 border-t border-border/60">
+                <Pagination 
+                  totalItems={meta?.total || 0} 
+                  currentPage={page}
+                  itemsPerPage={limit}
+                  onPageChange={setPage}
+                  onItemsPerPageChange={(value) => { setLimit(value); setPage(1); }}
+                />
+              </div>
             </div>
           )}
 
@@ -1135,17 +1169,15 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
               </div>
 
               {/* Pagination */}
-              {clientsMeta && clientsMeta.total > 0 && (
-                <div className="p-4 border-t border-border/60">
-                  <Pagination 
-                    totalItems={clientsMeta.total} 
-                    currentPage={clientsPage}
-                    itemsPerPage={clientsLimit}
-                    onPageChange={setClientsPage}
-                    onItemsPerPageChange={setClientsLimit}
-                  />
-                </div>
-              )}
+              <div className="p-4 border-t border-border/60">
+                <Pagination 
+                  totalItems={clientsMeta?.total || 0} 
+                  currentPage={clientsPage}
+                  itemsPerPage={clientsLimit}
+                  onPageChange={setClientsPage}
+                  onItemsPerPageChange={(value) => { setClientsLimit(value); setClientsPage(1); }}
+                />
+              </div>
             </div>
           )}
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useLoans } from '@/app/composables/modules/useLoans';
 import { useToast } from '@/app/composables/useToast';
 import PulseLoader from '@/app/components/ui/PulseLoader';
@@ -12,6 +12,8 @@ import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 import { useConfirm } from '@/app/composables/useConfirm';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { buildLoanRequestsParams } from '@/app/lib/list-params';
 import Link from 'next/link';
 import { 
   CheckCircle, 
@@ -58,29 +60,30 @@ export default function RequestsTab() {
   const [clientIdFilter, setClientIdFilter] = useState('');
   const [createdRange, setCreatedRange] = useState('');
   const [disbursedRange, setDisbursedRange] = useState('');
+  const debouncedClientId = useDebouncedValue(clientIdFilter.trim(), 400);
 
-  const loadData = () => {
+  const buildParams = useCallback(
+    (overrides: { page?: number; limit?: number } = {}) =>
+      buildLoanRequestsParams({
+        page: overrides.page ?? page,
+        limit: overrides.limit ?? limit,
+        clientId: debouncedClientId,
+        status: statusFilter,
+        type: typeFilter,
+        createdRange,
+        disbursedRange,
+      }),
+    [page, limit, debouncedClientId, statusFilter, typeFilter, createdRange, disbursedRange],
+  );
+
+  const loadData = useCallback(() => {
     if (!canReview) return;
-    const params: any = { page, limit };
-    if (statusFilter && statusFilter !== 'none') params.status = statusFilter;
-    if (typeFilter && typeFilter !== 'none') params.type = typeFilter;
-    if (clientIdFilter.trim()) params.clientId = clientIdFilter.trim();
-    if (createdRange) {
-      const [from, to] = createdRange.split(' to ');
-      if (from) params.createdFrom = from;
-      if (to) params.createdTo = to;
-    }
-    if (disbursedRange) {
-      const [from, to] = disbursedRange.split(' to ');
-      if (from) params.disbursedFrom = from;
-      if (to) params.disbursedTo = to;
-    }
-    fetchLoanRequests(params);
-  };
+    fetchLoanRequests(buildParams());
+  }, [canReview, fetchLoanRequests, buildParams]);
 
   useEffect(() => {
     loadData();
-  }, [fetchLoanRequests, statusFilter, typeFilter, clientIdFilter, createdRange, disbursedRange, page, limit, canReview]);
+  }, [loadData]);
 
   const handleApprove = async (id: string) => {
     const confirmed = await confirm({ 
@@ -254,13 +257,13 @@ export default function RequestsTab() {
                   type="text"
                   placeholder="Client ID..."
                   value={clientIdFilter}
-                  onChange={(e) => setClientIdFilter(e.target.value)}
+                  onChange={(e) => { setClientIdFilter(e.target.value); setPage(1); }}
                   className="w-full px-4 py-2 border rounded-lg text-sm bg-card border-border outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400"
                 />
               </div>
               <div className="space-y-1.5">
                 <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Status</label>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <Select value={statusFilter} onValueChange={(value) => { setStatusFilter(value); setPage(1); }}>
                   <SelectTrigger className="w-full bg-card"><SelectValue placeholder="All Statuses" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">All Statuses</SelectItem>
@@ -275,7 +278,7 @@ export default function RequestsTab() {
               </div>
               <div className="space-y-1.5">
                 <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Type</label>
-                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <Select value={typeFilter} onValueChange={(value) => { setTypeFilter(value); setPage(1); }}>
                   <SelectTrigger className="w-full bg-card"><SelectValue placeholder="All Types" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">All Types</SelectItem>
@@ -288,7 +291,7 @@ export default function RequestsTab() {
                 <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Created Date</label>
                 <CustomDateRangePicker 
                   value={createdRange}
-                  onChange={setCreatedRange}
+                  onChange={(value) => { setCreatedRange(value); setPage(1); }}
                   placeholder="Created Date"
                 />
               </div>
@@ -296,7 +299,7 @@ export default function RequestsTab() {
                 <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Disbursed Date</label>
                 <CustomDateRangePicker 
                   value={disbursedRange}
-                  onChange={setDisbursedRange}
+                  onChange={(value) => { setDisbursedRange(value); setPage(1); }}
                   placeholder="Disbursed Date"
                 />
               </div>
@@ -309,6 +312,7 @@ export default function RequestsTab() {
                   setTypeFilter('none'); 
                   setCreatedRange(''); 
                   setDisbursedRange(''); 
+                  setPage(1);
                 }} 
                 className="px-5 py-2 bg-card border border-border rounded-full text-sm font-medium text-foreground/90 hover:bg-muted/30 transition-colors"
               >
@@ -506,17 +510,15 @@ export default function RequestsTab() {
             </table>
           </div>
           
-          {meta && loanRequests.length > 0 && (
-            <div className="border-t border-border/50 pt-4 mt-4 pb-4">
+          <div className="border-t border-border/50 pt-4 mt-4 pb-4">
               <Pagination
                 totalItems={meta.total || 0}
                 currentPage={page || 1}
                 itemsPerPage={limit || 25}
                 onPageChange={setPage}
-                onItemsPerPageChange={setLimit}
+                onItemsPerPageChange={(value) => { setLimit(value); setPage(1); }}
               />
-            </div>
-          )}
+          </div>
         </div>
       )}
 
