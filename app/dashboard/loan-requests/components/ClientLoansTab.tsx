@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, Suspense } from 'react';
+import { useEffect, useState, useRef, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useLoans } from '@/app/composables/modules/useLoans';
 import { useToast } from '@/app/composables/useToast';
@@ -14,6 +14,8 @@ import Link from 'next/link';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 import TableDropdown from '@/app/components/ui/TableDropdown';
 import { FileText, User, CreditCard } from 'lucide-react';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { buildClientLoansParams } from '@/app/lib/list-params';
 
 export default function ClientLoansTab() {
  return (
@@ -70,18 +72,25 @@ function ClientLoansContent() {
   setPage(1);
  };
 
+ const debouncedClientId = useDebouncedValue(clientIdFilter.trim(), 400);
+
+ const buildParams = useCallback(
+  (overrides: { page?: number; limit?: number } = {}) =>
+   buildClientLoansParams({
+    page: overrides.page ?? page,
+    limit: overrides.limit ?? limit,
+    clientId: debouncedClientId,
+    status: statusFilter,
+    agency: agencyFilter,
+    disbursedRange,
+   }),
+  [page, limit, debouncedClientId, statusFilter, agencyFilter, disbursedRange],
+ );
+
  useEffect(() => {
-  if (!canReadClientLoans || !clientIdFilter.trim()) return;
-  const params: any = { page, limit, clientId: clientIdFilter.trim() };
-  if (statusFilter && statusFilter !== 'none') params.status = statusFilter;
-  if (agencyFilter) params.agency = agencyFilter;
-  if (disbursedRange) {
-   const [from, to] = disbursedRange.split(' to ');
-   if (from) params.disbursedFrom = from;
-   if (to) params.disbursedTo = to;
-  }
-  fetchClientLoans(params);
- }, [fetchClientLoans, page, limit, clientIdFilter, statusFilter, agencyFilter, disbursedRange]);
+  if (!canReadClientLoans || !debouncedClientId) return;
+  fetchClientLoans(buildParams());
+ }, [fetchClientLoans, buildParams, canReadClientLoans, debouncedClientId]);
 
  const handleViewRepayment = async (loan: any) => {
   setSelectedLoan(loan);
@@ -339,9 +348,9 @@ function ClientLoansContent() {
         <Pagination
          totalItems={meta.total}
          currentPage={page}
-         itemsPerPage={meta.limit || 25}
+         itemsPerPage={limit}
          onPageChange={(p: number) => setPage(p)}
-         onItemsPerPageChange={() => {}}
+         onItemsPerPageChange={(value) => { setLimit(value); setPage(1); }}
         />
        )}
       </>

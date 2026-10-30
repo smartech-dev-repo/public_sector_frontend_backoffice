@@ -7,6 +7,7 @@ import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import Pagination from '@/app/components/ui/Pagination';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+import { buildDocumentBatchesParams } from '@/app/lib/list-params';
 
 export default function UploadsPage() {
  const { isSuperAdmin, hasPermission } = useAdminPermissions();
@@ -28,7 +29,7 @@ export default function UploadsPage() {
 
  useEffect(() => {
   if (canReadDocuments) {
-   fetchDocumentBatches({ page: currentPage, limit: itemsPerPage }).then(() => setIsLoading(false));
+   fetchDocumentBatches(buildDocumentBatchesParams({ page: currentPage, limit: itemsPerPage })).then(() => setIsLoading(false));
   } else {
    setIsLoading(false);
   }
@@ -57,7 +58,7 @@ export default function UploadsPage() {
     await uploadRepaymentSchedule(formData);
    }
    addToast('File uploaded successfully. Processing started.', 'success');
-   await fetchDocumentBatches();
+   await fetchDocumentBatches(buildDocumentBatchesParams({ page: currentPage, limit: itemsPerPage }));
   } catch (err: any) {
    addToast(err?.response?.data?.message || 'File upload failed', 'error');
   } finally {
@@ -196,15 +197,13 @@ export default function UploadsPage() {
          </tbody>
         </table>
         </div>
-        {batches.length > 0 && (
-         <Pagination 
-          totalItems={meta?.total || 0}
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={setItemsPerPage}
-         />
-        )}
+        <Pagination 
+         totalItems={meta?.total || 0}
+         currentPage={currentPage}
+         itemsPerPage={itemsPerPage}
+         onPageChange={setCurrentPage}
+         onItemsPerPageChange={setItemsPerPage}
+        />
        </div>
       </div>
      )}

@@ -1,12 +1,13 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { clients_api } from '@/app/api_factory/modules/clients';
 
 export const useClients = () => {
  const [loading, setLoading] = useState(false);
  const [meta, setMeta] = useState({ total: 0, page: 1, limit: 25, totalPages: 1 });
- const [error, setError] = useState(null);
+ const [error, setError] = useState<string | null>(null);
   const [clients, setClients] = useState([] as any[]);
   const [analytics, setAnalytics] = useState<any>(null);
+  const listRequestSeq = useRef(0);
 
   const fetchClientAnalytics = useCallback(async () => {
     try {
@@ -21,18 +22,22 @@ export const useClients = () => {
   }, []);
 
   const fetchClients = useCallback(async (params?: any) => {
+  const seq = ++listRequestSeq.current;
   setLoading(true);
+  setError(null);
   try {
    const res = await clients_api.getClients(params);
+   if (seq !== listRequestSeq.current) return [];
    let dataList = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || res.data?.agents || res.data?.clients || res.data?.roles || res.data?.admins || res.data?.logs || res.data?.invites || res.data?.permissions || res.data?.batches || []);
    if (res.data?.meta) setMeta(res.data.meta);
    dataList = Array.isArray(dataList) ? dataList : [];
    setClients(dataList);
    return dataList;
   } catch (err: any) {
-   setError(err.message);
+   if (seq === listRequestSeq.current) setError(err.message);
+   return [];
   } finally {
-   setLoading(false);
+   if (seq === listRequestSeq.current) setLoading(false);
   }
  }, []);
 
@@ -152,10 +157,10 @@ export const useClients = () => {
   }
  }, []);
 
- const getClientActivities = useCallback(async (id: string) => {
+ const getClientActivities = useCallback(async (id: string, params?: any) => {
   setLoading(true);
   try {
-   const res = await clients_api.getClientActivities(id);
+   const res = await clients_api.getClientActivities(id, params);
    return res.data;
   } catch (err: any) {
    setError(err.message);

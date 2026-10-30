@@ -1,25 +1,30 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { departments_api } from '@/app/api_factory/modules/departments';
 
 export const useDepartments = () => {
  const [loading, setLoading] = useState(false);
  const [meta, setMeta] = useState({ total: 0, page: 1, limit: 25, totalPages: 1 });
- const [error, setError] = useState(null);
+ const [error, setError] = useState<string | null>(null);
  const [departments, setDepartments] = useState([] as any[]);
+ const listRequestSeq = useRef(0);
 
  const fetchDepartments = useCallback(async (params?: any) => {
+  const seq = ++listRequestSeq.current;
   setLoading(true);
+  setError(null);
   try {
    const res = await departments_api.getDepartments(params);
+   if (seq !== listRequestSeq.current) return [];
    let dataList = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || res.data?.departments || []);
    if (res.data?.meta) setMeta(res.data.meta);
    dataList = Array.isArray(dataList) ? dataList : [];
    setDepartments(dataList);
    return dataList;
   } catch (err: any) {
-   setError(err.message);
+   if (seq === listRequestSeq.current) setError(err.message);
+   return [];
   } finally {
-   setLoading(false);
+   if (seq === listRequestSeq.current) setLoading(false);
   }
  }, []);
 

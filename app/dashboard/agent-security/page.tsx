@@ -10,6 +10,7 @@ import { useConfirm } from '@/app/composables/useConfirm';
 import TableDropdown from '@/app/components/ui/TableDropdown';
 import Pagination from '@/app/components/ui/Pagination';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+import { buildAgentsParams } from '@/app/lib/list-params';
 
 export default function AgentSecurityPage() {
  const { hasPermission, isSuperAdmin } = useAdminPermissions();
@@ -28,7 +29,9 @@ export default function AgentSecurityPage() {
 
  useEffect(() => {
   if (canReadAgents) {
-   fetchAgents({ page, limit });
+   // Scope the query to approved agents so pagination totals match the table
+   // (previously non-approved rows consumed slots then were filtered out).
+   fetchAgents(buildAgentsParams({ page, limit, status: 'APPROVED' }));
   }
  }, [fetchAgents, page, limit, canReadAgents]);
 
@@ -134,17 +137,15 @@ export default function AgentSecurityPage() {
        </table>
       </div>
      </div>
-     {meta && agents.length > 0 && (
-      <div className="border-t border-border/50 pt-4 mt-4 pb-4">
+     <div className="border-t border-border/50 pt-4 mt-4 pb-4">
        <Pagination
-        totalItems={meta.total || 0}
+        totalItems={meta?.total || 0}
         currentPage={page || 1}
         itemsPerPage={limit || 25}
         onPageChange={setPage}
-        onItemsPerPageChange={setLimit}
+        onItemsPerPageChange={(value) => { setLimit(value); setPage(1); }}
        />
-      </div>
-     )}
+     </div>
     </div>
    )}
   </div>

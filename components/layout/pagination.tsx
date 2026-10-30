@@ -43,7 +43,10 @@ export function Pagination({ page, pageCount, onPageChange, limit, onLimitChange
   try {
    const stored = localStorage.getItem('camco_admin_table_page_size');
    if (stored && onLimitChange) {
-    const val = parseInt(stored, 10);
+    const parsed = parseInt(stored, 10);
+    if (!Number.isFinite(parsed)) return;
+    // The API hard-caps limit at 100; never send a stale/oversized stored value.
+    const val = Math.min(100, Math.max(5, parsed));
     if (limit !== val) {
      onLimitChange(val);
     }
@@ -71,7 +74,6 @@ export function Pagination({ page, pageCount, onPageChange, limit, onLimitChange
        <SelectItem value="20">20</SelectItem>
        <SelectItem value="50">50</SelectItem>
        <SelectItem value="100">100</SelectItem>
-       <SelectItem value="200">200</SelectItem>
       </SelectContent>
      </Select>
     </div>

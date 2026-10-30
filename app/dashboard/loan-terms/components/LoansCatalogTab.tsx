@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useLoans } from '@/app/composables/modules/useLoans';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
@@ -9,6 +9,8 @@ import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { buildLoansParams } from '@/app/lib/list-params';
 
 export default function LoansCatalogTab() {
  const { isSuperAdmin, hasPermission } = useAdminPermissions();
@@ -22,21 +24,25 @@ export default function LoansCatalogTab() {
  const [product, setProduct] = useState('all');
  const [showFilter, setShowFilter] = useState(false);
  const [dateRange, setDateRange] = useState('');
+ const debouncedQ = useDebouncedValue(q.trim(), 300);
+
+ const buildParams = useCallback(
+  (overrides: { page?: number; limit?: number } = {}) =>
+   buildLoansParams({
+    page: overrides.page ?? page,
+    limit: overrides.limit ?? limit,
+    q: debouncedQ,
+    agency,
+    product,
+    disbursedRange: dateRange,
+   }),
+  [page, limit, debouncedQ, agency, product, dateRange],
+ );
 
  useEffect(() => {
   if (!canAccessCatalog) return;
-  const params: any = { page, limit };
-  if (q.trim()) params.q = q.trim();
-  if (agency !== 'all') params.agency = agency;
-  if (product !== 'all') params.product = product;
-  if (dateRange) {
-   const [from, to] = dateRange.split(' to ');
-   if (from) params.dateFrom = from;
-   if (to) params.dateTo = to;
-  }
-  
-  fetchLoans(params);
- }, [fetchLoans, page, limit, q, agency, product, dateRange, canAccessCatalog]);
+  fetchLoans(buildParams());
+ }, [fetchLoans, buildParams, canAccessCatalog]);
 
  return (
   <main className="w-full">
@@ -69,7 +75,7 @@ export default function LoansCatalogTab() {
       type="text"
       placeholder="Search by customer name, account number or IPPIS..."
       value={q}
-      onChange={(e) => setQ(e.target.value)}
+      onChange={(e) => { setQ(e.target.value); setPage(1); }}
       className="w-full px-2 py-1.5 bg-transparent border-none outline-none text-sm text-foreground placeholder-slate-400"
      />
     </div>
@@ -77,7 +83,7 @@ export default function LoansCatalogTab() {
       <div className="grid gap-6 sm:grid-cols-3">
        <div className="space-y-1.5">
         <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Agency</label>
-        <Select value={agency} onValueChange={setAgency}>
+        <Select value={agency} onValueChange={(value) => { setAgency(value); setPage(1); }}>
          <SelectTrigger className="w-full bg-card"><SelectValue placeholder="All Agencies" /></SelectTrigger>
          <SelectContent>
           <SelectItem value="all">All Agencies</SelectItem>
@@ -90,7 +96,7 @@ export default function LoansCatalogTab() {
        </div>
        <div className="space-y-1.5">
         <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Product</label>
-        <Select value={product} onValueChange={setProduct}>
+        <Select value={product} onValueChange={(value) => { setProduct(value); setPage(1); }}>
          <SelectTrigger className="w-full bg-card"><SelectValue placeholder="All Products" /></SelectTrigger>
          <SelectContent>
           <SelectItem value="all">All Products</SelectItem>
@@ -104,7 +110,7 @@ export default function LoansCatalogTab() {
         <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Disbursement Date</label>
         <CustomDateRangePicker 
          value={dateRange} 
-         onChange={setDateRange} 
+         onChange={(value) => { setDateRange(value); setPage(1); }} 
          placeholder="Select date range" 
         />
        </div>

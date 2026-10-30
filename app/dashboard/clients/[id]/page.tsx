@@ -10,6 +10,7 @@ import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import ButtonLoader from '@/app/components/ui/ButtonLoader';
 import SensitiveValue from '@/app/components/ui/SensitiveValue';
+import Pagination from '@/app/components/ui/Pagination';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { 
@@ -73,6 +74,9 @@ export default function ClientWalletPage() {
  const [onboardingLoading, setOnboardingLoading] = useState(false);
  const [activities, setActivities] = useState<any[]>([]);
  const [activitiesLoading, setActivitiesLoading] = useState(false);
+ const [activitiesPage, setActivitiesPage] = useState(1);
+ const [activitiesLimit, setActivitiesLimit] = useState(25);
+ const [activitiesMeta, setActivitiesMeta] = useState<{ total?: number } | null>(null);
  const [loansLoading, setLoansLoading] = useState(false);
  const [activeTab, setActiveTab] = useState<'profile' | 'onboarding' | 'wallet' | 'loans' | 'activities'>('profile');
  
@@ -137,13 +141,14 @@ export default function ClientWalletPage() {
   }
  };
 
- const loadActivities = async () => {
+ const loadActivities = async (page = activitiesPage, limit = activitiesLimit) => {
   setActivitiesLoading(true);
   try {
-   const data = await getClientActivities(clientId);
+   const data = await getClientActivities(clientId, { page, limit });
    let list = Array.isArray(data) ? data : (data?.data || data?.activities || []);
    list = Array.isArray(list) ? list : [];
    setActivities(list);
+   if (data?.meta) setActivitiesMeta(data.meta);
   } catch (e: any) {
    addToast('Failed to load client activities', 'error');
   } finally {
@@ -1571,7 +1576,7 @@ export default function ClientWalletPage() {
       <div className="bg-card rounded-2xl border border-border overflow-hidden">
        <div className="px-6 py-4 border-b border-border flex justify-between items-center">
         <h2 className="text-lg font-semibold text-foreground">Activity History</h2>
-        <button onClick={loadActivities} className="text-sm text-emerald-600 hover:text-emerald-800 font-medium transition-colors">Refresh</button>
+        <button onClick={() => loadActivities(activitiesPage, activitiesLimit)} className="text-sm text-emerald-600 hover:text-emerald-800 font-medium transition-colors">Refresh</button>
        </div>
        {activitiesLoading && <PulseLoader />}
        
@@ -1631,6 +1636,13 @@ export default function ClientWalletPage() {
         </div>
        
 )}
+       <Pagination
+        totalItems={activitiesMeta?.total || 0}
+        currentPage={activitiesPage}
+        itemsPerPage={activitiesLimit}
+        onPageChange={(nextPage) => { setActivitiesPage(nextPage); loadActivities(nextPage, activitiesLimit); }}
+        onItemsPerPageChange={(nextLimit) => { setActivitiesLimit(nextLimit); setActivitiesPage(1); loadActivities(1, nextLimit); }}
+       />
       </div>
      )}
     </>

@@ -27,8 +27,8 @@ export const clients_api = {
   debitClientWallet: (id: string, payload: any) => {
     return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/clients/${id}/wallet/debit`, payload);
   },
-  getClientActivities: (id: string) => {
-    return GATEWAY_ENDPOINT_WITH_AUTH.get(`/admin/clients/${id}/activities`);
+  getClientActivities: (id: string, params?: any) => {
+    return GATEWAY_ENDPOINT_WITH_AUTH.get(`/admin/clients/${id}/activities`, { params });
   },
   clientIppisLookup: (payload: any) => {
     return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/clients/onboarding/ippis-lookup`, payload);

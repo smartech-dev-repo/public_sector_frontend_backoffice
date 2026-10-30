@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import Pagination from '@/app/components/ui/Pagination';
@@ -10,6 +10,8 @@ import TableDropdown from '@/app/components/ui/TableDropdown';
 import { useReconciliation } from '@/app/composables/modules/useReconciliation';
 import { FileSpreadsheet, Eye, Scale, CheckCircle2, AlertTriangle, AlertCircle, Clock } from 'lucide-react';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { buildReconciliationParams } from '@/app/lib/list-params';
 
 export default function ReconciliationTab() {
   const { isSuperAdmin, hasPermission } = useAdminPermissions();
@@ -28,25 +30,36 @@ export default function ReconciliationTab() {
     generatedRange: ''
   });
 
-  useEffect(() => {
-    const params: any = { page: currentPage, limit: itemsPerPage };
-    if (filterParams.agency) params.agency = filterParams.agency;
-    if (filterParams.matchStatus) params.status = filterParams.matchStatus;
-    if (filterParams.period) params.period = filterParams.period;
-    if (filterParams.generatedRange) {
-      const [from, to] = filterParams.generatedRange.split(' to ');
-      if (from) params.generatedFrom = from;
-      if (to) params.generatedTo = to;
-    }
+  const debouncedAgency = useDebouncedValue(filterParams.agency.trim(), 350);
 
-    fetchReconciliation(params).then((data) => {
+  const buildParams = useCallback(
+    (overrides: { page?: number; limit?: number; agency?: string } = {}) =>
+      buildReconciliationParams({
+        page: overrides.page ?? currentPage,
+        limit: overrides.limit ?? itemsPerPage,
+        agency: overrides.agency ?? debouncedAgency,
+        status: filterParams.matchStatus,
+        period: filterParams.period,
+        generatedRange: filterParams.generatedRange,
+      }),
+    [currentPage, itemsPerPage, debouncedAgency, filterParams.matchStatus, filterParams.period, filterParams.generatedRange],
+  );
+
+  const updateFilters = useCallback((patch: Partial<typeof filterParams>) => {
+    setFilterParams((prev) => ({ ...prev, ...patch }));
+    setCurrentPage(1);
+  }, []);
+
+  useEffect(() => {
+    fetchReconciliation(buildParams()).then((data) => {
       setRecordsList(data || []);
       setIsLoading(false);
     });
-  }, [fetchReconciliation, currentPage, itemsPerPage, filterParams]);
+  }, [fetchReconciliation, buildParams]);
 
   const clearFilters = () => {
     setFilterParams({ agency: '', matchStatus: '', period: '', generatedRange: '' });
+    setCurrentPage(1);
   };
 
   const paginatedRecords = useMemo(() => {
@@ -135,14 +148,14 @@ export default function ReconciliationTab() {
                   <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Agency</label>
                   <input 
                     value={filterParams.agency} 
-                    onChange={e => setFilterParams({ ...filterParams, agency: e.target.value })} 
+                    onChange={e => updateFilters({ agency: e.target.value })} 
                     placeholder="e.g. NPF, NSCDC" 
                     className="w-full text-xs h-9 px-3 bg-muted/20 border border-border rounded-lg outline-none focus:border-primary text-foreground"
                   />
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Status</label>
-                  <Select value={filterParams.matchStatus} onValueChange={v => setFilterParams({ ...filterParams, matchStatus: v === 'ALL' ? '' : v })}>
+                  <Select value={filterParams.matchStatus} onValueChange={v => updateFilters({ matchStatus: v === 'ALL' ? '' : v })}>
                     <SelectTrigger className="w-full text-xs h-9 bg-muted/20"><SelectValue placeholder="All Statuses" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="ALL">All Statuses</SelectItem>
@@ -157,7 +170,7 @@ export default function ReconciliationTab() {
                   <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Period (YYYY-MM)</label>
                   <MonthPicker
                     value={filterParams.period}
-                    onChange={(period) => setFilterParams({ ...filterParams, period })}
+                    onChange={(period) => updateFilters({ period })}
                     placeholder="Select Period"
                   />
                 </div>
@@ -245,7 +258,7 @@ export default function ReconciliationTab() {
             currentPage={currentPage}
             itemsPerPage={itemsPerPage}
             onPageChange={setCurrentPage}
-            onItemsPerPageChange={setItemsPerPage}
+            onItemsPerPageChange={(value) => { setItemsPerPage(value); setCurrentPage(1); }}
           />
         </div>
       )}

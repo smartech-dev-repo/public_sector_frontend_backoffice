@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { agents_api } from '@/app/api_factory/modules/agents';
 
 const unwrapResponse = (res: any, defaultErrMsg = 'Operation failed') => {
@@ -33,6 +33,7 @@ export const useAgents = () => {
   const [agents, setAgents] = useState([] as any[]);
   const [agentAnalytics, setAgentAnalytics] = useState<any>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const listRequestSeq = useRef(0);
 
   const fetchAgentAnalytics = useCallback(async (params?: { createdFrom?: string; createdTo?: string }) => {
     setAnalyticsLoading(true);
@@ -50,9 +51,12 @@ export const useAgents = () => {
   }, []);
 
   const fetchAgents = useCallback(async (params?: any) => {
+    const seq = ++listRequestSeq.current;
     setLoading(true);
+    setError(null);
     try {
       const res = await agents_api.getAgents(params);
+      if (seq !== listRequestSeq.current) return [];
       unwrapResponse(res, 'Failed to fetch agents');
       let dataList = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || res.data?.agents || []);
       if (res.data?.meta) setMeta(res.data.meta);
@@ -60,10 +64,10 @@ export const useAgents = () => {
       setAgents(dataList);
       return dataList;
     } catch (err: any) {
-      setError(err.message);
+      if (seq === listRequestSeq.current) setError(err.message);
       return [];
     } finally {
-      setLoading(false);
+      if (seq === listRequestSeq.current) setLoading(false);
     }
   }, []);
 
