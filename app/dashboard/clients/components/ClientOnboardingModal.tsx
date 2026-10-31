@@ -62,6 +62,7 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
 
   // Step 1: IPPIS Lookup
   const [ippisNumber, setIppisNumber] = useState('');
+  const [phone, setPhone] = useState('');
 
   // Step 3: Identity Verification (BVN & NIN)
   const [bvn, setBvn] = useState('');
@@ -86,6 +87,7 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
     setClientId(null);
     setEmployeeRecord(null);
     setIppisNumber('');
+    setPhone('');
     setBvn('');
     setNin('');
     setDocs({
@@ -144,8 +146,11 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
     if (!ippisNumber.trim()) {
       return toast.error('Please enter an IPPIS number');
     }
+    if (!phone.trim()) {
+      return toast.error('Please enter the phone number on the IPPIS record');
+    }
     try {
-      const res: any = await ippisLookup({ ippisNumber: ippisNumber.trim() });
+      const res: any = await ippisLookup({ ippisNumber: ippisNumber.trim(), phone: phone.trim() });
       const foundId = res?.clientId || res?.id;
       if (!foundId) {
         toast.error('Unable to resolve client ID from IPPIS record');
@@ -744,6 +749,19 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
                   />
                 </div>
 
+                <div className="rounded-xl border border-border p-3 sm:p-3.5 bg-background focus-within:border-[#018752] focus-within:ring-2 focus-within:ring-[#018752]/20 transition-all mb-3">
+                  <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">
+                    PHONE NUMBER ON IPPIS RECORD
+                  </label>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="e.g. 08012345678"
+                    className="w-full text-base font-bold text-foreground bg-transparent outline-none placeholder:text-muted-foreground/30 font-mono tracking-wide"
+                  />
+                </div>
+
                 {/* Amber Warning Banner */}
                 <div className="bg-[#FFF9EA] dark:bg-amber-950/20 border border-[#FFE8A3] dark:border-amber-800/40 rounded-xl p-3 flex items-center gap-3 mb-5">
                   <div className="size-5 rounded-full border-2 border-[#D97706] text-[#D97706] flex items-center justify-center shrink-0 font-bold text-[11px] select-none">
@@ -766,7 +784,7 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
                   <button
                     type="button"
                     onClick={handleIppisLookup}
-                    disabled={loading || !ippisNumber.trim()}
+                    disabled={loading || !ippisNumber.trim() || !phone.trim()}
                     className="flex-1 py-2.5 px-5 rounded-xl bg-[#018752] text-white font-semibold text-sm hover:bg-[#016f43] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 whitespace-nowrap shadow-sm"
                   >
                     {loading ? (

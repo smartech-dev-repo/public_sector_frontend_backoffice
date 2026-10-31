@@ -178,7 +178,7 @@ export const useClients = () => {
   }
  }, []);
 
-  const ippisLookup = useCallback(async (payload: { ippisNumber: string }) => {
+  const ippisLookup = useCallback(async (payload: { ippisNumber: string; phone: string }) => {
     setLoading(true);
     try {
       const res = await clients_api.clientIppisLookup(payload);

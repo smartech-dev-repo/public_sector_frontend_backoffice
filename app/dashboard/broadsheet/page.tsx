@@ -9,6 +9,16 @@ import EmptyState from '@/app/components/ui/EmptyState';
 import { useIppis } from '@/app/composables/modules/useIppis';
 import Pagination from '@/app/components/ui/Pagination';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+import UploadWizardModal from './components/UploadWizardModal';
+
+const STATUS_LABELS: Record<string, string> = {
+ ANALYZING: 'Checking',
+ AWAITING_CONFIRMATION: 'Awaiting review',
+ PENDING: 'Queued',
+ PROCESSING: 'Merging',
+ FAILED: 'Failed',
+ CANCELLED: 'Cancelled',
+};
 
 export default function BroadsheetPage() {
  const { isSuperAdmin, hasPermission } = useAdminPermissions();
@@ -17,7 +27,8 @@ export default function BroadsheetPage() {
  const canReadDocuments = isSuperAdmin || hasPermission('documents:read');
 
  const { addToast } = useToast();
- const { fetchBatches, batches, loading, uploadBroadsheet, uploadRepaymentSchedule, downloadFile } = useIppis();
+ const { fetchBatches, batches, loading, downloadFile } = useIppis();
+ const [wizard, setWizard] = useState<{ documentType: string; resumeBatchId?: string } | null>(null);
 
  const [showFilter, setShowFilter] = useState(false);
  const [filterParams, setFilterParams] = useState({
@@ -33,8 +44,6 @@ export default function BroadsheetPage() {
   setFilterParams({ search: '', status: '', dateRange: '' });
  };
 
- const ippisFileInput = useRef<HTMLInputElement>(null);
- const repaymentFileInput = useRef<HTMLInputElement>(null);
  const filterContainerRef = useRef<HTMLDivElement>(null);
 
  useEffect(() => {
@@ -71,7 +80,8 @@ export default function BroadsheetPage() {
   return {
    id: batch.id,
    month: monthLabel,
-   status: batch.status === 'COMPLETED' ? 'Validated' : (batch.status || 'Pending'),
+   status: batch.status === 'COMPLETED' ? 'Validated' : (STATUS_LABELS[batch.status] || batch.status || 'Pending'),
+   rawStatus: batch.status,
    user: batch.uploadedBy?.name || batch.adminId || 'System',
    date: dateFormatter.format(d),
    rawDate: d.getTime(),
@@ -143,49 +153,6 @@ export default function BroadsheetPage() {
   return filteredRepayment.slice(0, repaymentLimit);
  }, [filteredRepayment, repaymentLimit]);
 
- const triggerIppisUpload = () => {
-  ippisFileInput.current?.click();
- };
-
- const triggerRepaymentUpload = () => {
-  repaymentFileInput.current?.click();
- };
-
- const handleIppisUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-  const file = event.target.files?.[0];
-  if (file) {
-   try {
-    const formData = new FormData();
-    formData.append('file', file);
-    await uploadBroadsheet(formData);
-    addToast(`Successfully uploaded ${file.name}`, 'success');
-    fetchBatches();
-   } catch (err: any) {
-    addToast(err.message || 'Failed to upload IPPIS broadsheet', 'error');
-   }
-   event.target.value = '';
-  }
- };
-
- const handleRepaymentUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-  const file = event.target.files?.[0];
-  if (file) {
-   try {
-    const formData = new FormData();
-    formData.append('file', file);
-    const now = new Date();
-    const defaultPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    formData.append('period', defaultPeriod);
-    await uploadRepaymentSchedule(formData);
-    addToast(`Successfully uploaded ${file.name}`, 'success');
-    fetchBatches();
-   } catch (err: any) {
-    addToast(err.message || 'Failed to upload Repayment schedule', 'error');
-   }
-   event.target.value = '';
-  }
- };
-
  const handleDownload = async (item: any, type: string) => {
   if (!item.fileKey) {
    addToast('No file available for download', 'error');
@@ -224,6 +191,14 @@ export default function BroadsheetPage() {
 
  return (
   <div className="space-y-3">
+   <UploadWizardModal
+    isOpen={Boolean(wizard)}
+    onClose={() => setWizard(null)}
+    onChanged={fetchBatches}
+    documentType={wizard?.documentType ?? 'IPPIS_BROADSHEET'}
+    resumeBatchId={wizard?.resumeBatchId}
+   />
+
    {/* Header Actions */}
    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
     <span className="text-xs sm:text-sm text-muted-foreground/70">Showing {filteredIppis.length + filteredRepayment.length} uploads</span>
@@ -295,12 +270,11 @@ export default function BroadsheetPage() {
        <h2 className="text-lg font-semibold text-foreground">IPPIS Broadsheet</h2>
        
        {/* Upload Box */}
-       <div onClick={triggerIppisUpload} className="border border-dashed border-emerald-300 rounded-xl p-8 flex flex-col items-center justify-center text-center bg-emerald-50/30 hover:bg-emerald-50/50 transition-colors cursor-pointer relative overflow-hidden group">
-        <input type="file" ref={ippisFileInput} className="hidden" onChange={handleIppisUpload} accept=".csv, .xlsx" />
+       <button type="button" onClick={() => setWizard({ documentType: 'IPPIS_BROADSHEET' })} className="w-fullborder border-dashed border-emerald-300 rounded-xl p-8 flex flex-col items-center justify-center text-center bg-emerald-50/30 hover:bg-emerald-50/50 transition-colors cursor-pointer relative overflow-hidden group">
         <svg className="w-6 h-6 text-muted-foreground/70 mb-3 group-hover:text-emerald-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-        <p className="text-sm text-muted-foreground/70">Drag and drop or <span className="text-emerald-600 font-medium">choose file</span> to upload</p>
-        <p className="text-xs text-muted-foreground/70 mt-1">.xlsx or .csv</p>
-       </div>
+        <p className="text-sm text-muted-foreground/70"><span className="text-emerald-600 font-medium">Start an upload</span></p>
+        <p className="text-xs text-muted-foreground/70 mt-1">.xlsx or .csv. You will review it before anything is merged.</p>
+       </button>
 
        {/* List */}
        {canReadDocuments && (
@@ -325,6 +299,9 @@ export default function BroadsheetPage() {
             </div>
             <p className="text-[12px] text-muted-foreground/70">{item.user} &bull; {item.date}</p>
            </div>
+           {item.rawStatus === 'AWAITING_CONFIRMATION' && (
+            <button onClick={() => setWizard({ documentType: 'IPPIS_BROADSHEET', resumeBatchId: item.id })} className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 rounded-lg text-white text-xs font-medium transition-colors">Review</button>
+           )}
            {canReadDocuments && (
             <button onClick={() => handleDownload(item, 'IPPIS')} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white text-xs font-medium transition-colors ">
              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -344,12 +321,11 @@ export default function BroadsheetPage() {
        <h2 className="text-lg font-semibold text-foreground">Repayment Schedule</h2>
        
        {/* Upload Box */}
-       <div onClick={triggerRepaymentUpload} className="border border-dashed border-emerald-300 rounded-xl p-8 flex flex-col items-center justify-center text-center bg-emerald-50/30 hover:bg-emerald-50/50 transition-colors cursor-pointer relative overflow-hidden group">
-        <input type="file" ref={repaymentFileInput} className="hidden" onChange={handleRepaymentUpload} accept=".csv, .xlsx" />
+       <button type="button" onClick={() => setWizard({ documentType: 'REPAYMENT_SCHEDULE' })} className="w-fullborder border-dashed border-emerald-300 rounded-xl p-8 flex flex-col items-center justify-center text-center bg-emerald-50/30 hover:bg-emerald-50/50 transition-colors cursor-pointer relative overflow-hidden group">
         <svg className="w-6 h-6 text-muted-foreground/70 mb-3 group-hover:text-emerald-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-        <p className="text-sm text-muted-foreground/70">Drag and drop or <span className="text-emerald-600 font-medium">choose file</span> to upload</p>
-        <p className="text-xs text-muted-foreground/70 mt-1">.xlsx or .csv</p>
-       </div>
+        <p className="text-sm text-muted-foreground/70"><span className="text-emerald-600 font-medium">Start an upload</span></p>
+        <p className="text-xs text-muted-foreground/70 mt-1">.xlsx or .csv. You will review it before anything is merged.</p>
+       </button>
 
        {/* List */}
        {canReadDocuments && (
@@ -374,6 +350,9 @@ export default function BroadsheetPage() {
             </div>
             <p className="text-[12px] text-muted-foreground/70">{item.user} &bull; {item.date}</p>
            </div>
+           {item.rawStatus === 'AWAITING_CONFIRMATION' && (
+            <button onClick={() => setWizard({ documentType: 'REPAYMENT_SCHEDULE', resumeBatchId: item.id })} className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 rounded-lg text-white text-xs font-medium transition-colors">Review</button>
+           )}
            {canReadDocuments && (
             <button onClick={() => handleDownload(item, 'Repayment')} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white text-xs font-medium transition-colors ">
              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>

@@ -34,6 +34,64 @@ export const GATEWAY_ENDPOINT_WITHOUT_VERSION_WITH_AUTH = axios.create({
 export const IMAGE_UPLOAD_ENDPOINT = axios.create({
  baseURL: $IMAGE_UPLOAD_ENDPOINT,
 });
+
+export const SESSION_EXPIRED_EVENT = 'public_sector_session_expired';
+
+const readAccessToken = (): string => {
+ if (typeof window === 'undefined') return '';
+ const match = document.cookie.match(new RegExp('(^| )public_sector_token=([^;]+)'));
+ return match ? decodeURIComponent(match[2]) : localStorage.getItem('token') || '';
+};
+
+let refreshInFlight: Promise<string | null> | null = null;
+
+const rotateTokens = async (staleToken: string): Promise<string | null> => {
+ // Another tab may have rotated while this one waited for the lock.
+ const currentToken = readAccessToken();
+ if (currentToken && currentToken !== staleToken) return currentToken;
+
+ const refreshToken = localStorage.getItem('refreshToken');
+ if (!refreshToken) return null;
+
+ const { data } = await axios.post(`${$GATEWAY_ENDPOINT}/auth/refresh`, { refreshToken }, { timeout: 15000 });
+ document.cookie = `public_sector_token=${encodeURIComponent(data.accessToken)}; path=/; max-age=31536000`;
+ localStorage.setItem('token', data.accessToken);
+ localStorage.setItem('refreshToken', data.refreshToken);
+ return data.accessToken;
+};
+
+/**
+ * Exchanges the refresh token for a new access token and returns it, or null
+ * when the session is dead. Refresh tokens are single use and the backend
+ * revokes every session when one is replayed, so at most one refresh may run
+ * across all tabs: the promise dedupes within a tab, the Web Lock across tabs.
+ * A network failure rejects instead, because the session may still be fine.
+ */
+export const refreshSession = (): Promise<string | null> => {
+ if (!refreshInFlight) {
+  const staleToken = readAccessToken();
+  const run = async () => {
+   try {
+    return await rotateTokens(staleToken);
+   } catch (err: any) {
+    if (err?.response?.status === 401) return null;
+    throw err;
+   }
+  };
+  const pending: Promise<string | null> = typeof navigator !== 'undefined' && navigator.locks
+   ? navigator.locks.request('public_sector_token_refresh', run)
+   : run();
+  refreshInFlight = pending.finally(() => {
+   refreshInFlight = null;
+  });
+ }
+ return refreshInFlight;
+};
+
+export const notifySessionExpired = () => {
+ if (typeof window !== 'undefined') window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+};
+
 export interface CustomAxiosResponse extends AxiosResponse {
  value?: any;
  type?: string;
@@ -52,16 +110,8 @@ const instanceArray = [
 instanceArray.forEach((instance) => {
  instance.defaults.timeout = 15000; // Set global timeout to 15 seconds
  instance.interceptors.request.use((config: any) => {
- let tokenValue = '';
- if (typeof window !== 'undefined') {
- const match = document.cookie.match(new RegExp('(^| )public_sector_token=([^;]+)'));
- if (match) {
- tokenValue = decodeURIComponent(match[2]);
- } else {
- tokenValue = localStorage.getItem('token') || '';
- }
- }
- 
+ const tokenValue = readAccessToken();
+
  if (tokenValue) {
  config.headers = config.headers || {};
  if (typeof config.headers.set === 'function') {
@@ -77,7 +127,7 @@ instanceArray.forEach((instance) => {
  (response: CustomAxiosResponse) => {
  return response;
  },
- (err: any) => {
+ async (err: any) => {
  // Check for timeout or network connection error
  if (err.code === 'ECONNABORTED' || err.message?.includes('timeout') || err.message?.includes('Network Error') || typeof err.response === "undefined") {
  // try {
@@ -91,17 +141,20 @@ instanceArray.forEach((instance) => {
  };
  }
  if (err.response.status === 401) {
- console.log(err.response.data.error)
- // Only log out if we're not already on login page
- // Commented out to prevent frequent logouts based on arbitrary 401s
- // const isOnAuthPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/login')
- // if (!isOnAuthPage && typeof window !== 'undefined') {
- // document.cookie = 'public_sector_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
- // document.cookie = 'public_sector_user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
- // localStorage.removeItem('token');
- // localStorage.removeItem('user');
- // window.location.href = '/login';
- // }
+ // GATEWAY_ENDPOINT carries the public auth routes, where a 401 means bad
+ // credentials rather than an expired session.
+ if (instance !== GATEWAY_ENDPOINT && typeof window !== 'undefined' && !err.config?._retriedAfterRefresh) {
+ try {
+ const newToken = await refreshSession();
+ if (newToken) {
+ return instance.request({ ...err.config, _retriedAfterRefresh: true });
+ }
+ notifySessionExpired();
+ return { type: "ERROR", ...err.response };
+ } catch {
+ // Refresh itself couldn't reach the server: fall through and report the 401.
+ }
+ }
  addToast(
  err?.response?.data?.message || err?.response?.data?.error || "An error occured",
  "error",
