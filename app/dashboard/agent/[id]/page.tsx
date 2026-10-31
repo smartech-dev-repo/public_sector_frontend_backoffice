@@ -1,34 +1,10 @@
 "use client";
 
+import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState, useCallback, useMemo, useRef, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { 
-  Eye, 
-  X, 
-  Users, 
-  Banknote, 
-  ExternalLink,
-  ChevronDown,
-  KeyRound,
-  ShieldCheck,
-  ShieldAlert,
-  UserCheck,
-  UserX,
-  CheckCircle2,
-  XCircle,
-  Phone,
-  Mail,
-  MapPin,
-  Calendar,
-  FileText,
-  Filter,
-  Download,
-  ArrowLeft,
-  Copy,
-  Check,
-  Image as ImageIcon
-} from 'lucide-react';
+import { Eye, X, Users, Banknote, ExternalLink, ChevronDown, KeyRound, ShieldCheck, ShieldAlert, UserCheck, UserX, CheckCircle2, XCircle, Phone, Mail, MapPin, FileText, Download, ArrowLeft, Copy, Check, Image, ImageIcon } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { useAgents } from '@/app/composables/modules/useAgents';
 import { useLoans } from '@/app/composables/modules/useLoans';
@@ -75,9 +51,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
   const [copiedId, setCopiedId] = useState(false);
 
   // Filters for loans table
-  const [showFilter, setShowFilter] = useState(false);
-  const filterRef = useRef<HTMLDivElement>(null);
-  const [filterParams, setFilterParams] = useState({ search: '', dateRange: '' });
+  const [filterParams, setFilterParams] = useState({ status: '', dateRange: '' });
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
 
@@ -181,9 +155,6 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
       if (actionsRef.current && !actionsRef.current.contains(event.target as Node)) {
         setActionsOpen(false);
       }
-      if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
-        setShowFilter(false);
-      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -237,7 +208,8 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
   useEffect(() => {
     if (canReadLoans && application?.clientId) {
       const params: any = { clientId: application.clientId, page, limit };
-      if (filterParams.search) params.q = filterParams.search;
+      if (filterParams.status) params.status = filterParams.status;
+      Object.assign(params, dateRangeParams(filterParams.dateRange, 'disbursedFrom', 'disbursedTo'));
       fetchClientLoans(params);
     }
   }, [fetchClientLoans, application?.clientId, page, limit, filterParams, canReadLoans]);
@@ -250,9 +222,6 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
     }
   }, [canReadLoans, canReadClients]);
 
-  const clearFilters = () => {
-    setFilterParams({ search: '', dateRange: '' });
-  };
 
   const handleCopyId = () => {
     if (!application?.id) return;
@@ -896,52 +865,16 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
             </span>
 
             {activeTab === 'loans' && canReadLoans && (
-              <div className="flex items-center gap-2.5 w-full sm:w-auto relative" ref={filterRef}>
-                <button
-                  onClick={() => setShowFilter(!showFilter)}
-                  className={`flex items-center gap-2 px-3.5 py-2 border rounded-xl text-xs sm:text-sm font-medium transition-colors cursor-pointer ${
-                    showFilter || filterParams.search || filterParams.dateRange
-                      ? 'bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-700'
-                      : 'bg-card border-border text-foreground hover:bg-muted/50'
-                  }`}
-                >
-                  <Filter className="w-3.5 h-3.5" />
-                  <span>Filter</span>
-                </button>
+              <div className="flex items-center gap-2.5 w-full sm:w-auto">
 
-                {showFilter && (
-                  <div className="absolute top-11 right-0 sm:right-auto sm:left-0 w-80 bg-card rounded-2xl border border-border p-4 shadow-xl z-50 animate-in fade-in zoom-in-95 duration-150">
-                    <h3 className="text-sm font-bold text-foreground mb-3">Filter Loans</h3>
-                    <div className="space-y-3 mb-4">
-                      <input 
-                        value={filterParams.search}
-                        onChange={(e) => setFilterParams({ ...filterParams, search: e.target.value })}
-                        type="text" 
-                        placeholder="Search by customer name or IPPIS..." 
-                        className="w-full px-3.5 py-2 border border-border rounded-xl text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#018752]/20 focus:border-[#018752]" 
-                      />
-                      <DatePicker 
-                        value={filterParams.dateRange}
-                        onChange={(val) => setFilterParams({ ...filterParams, dateRange: val as any })}
-                        placeholder="Select date range"
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <button 
-                        onClick={clearFilters} 
-                        className="flex-1 py-2 bg-muted text-muted-foreground rounded-xl text-xs font-semibold hover:bg-muted/80 transition-colors cursor-pointer"
-                      >
-                        Clear
-                      </button>
-                      <button 
-                        onClick={() => setShowFilter(false)} 
-                        className="flex-1 py-2 bg-[#018752] text-white rounded-xl text-xs font-semibold hover:bg-[#017044] transition-colors cursor-pointer"
-                      >
-                        Apply Filters
-                      </button>
-                    </div>
-                  </div>
-                )}
+                <FilterBar
+                  className="mb-0"
+                  onChange={() => setPage(1)}
+                  filters={[
+                    { key: 'status', label: 'Status', type: 'select', value: filterParams.status, options: [{ value: 'ACTIVE', label: 'Active' }, { value: 'CLOSED', label: 'Closed' }, { value: 'DEFAULT', label: 'Default' }], onChange: (status) => setFilterParams({ ...filterParams, status }) },
+                    { key: 'disbursed', label: 'Disbursed', type: 'dateRange', value: filterParams.dateRange, onChange: (dateRange) => setFilterParams({ ...filterParams, dateRange }) },
+                  ]}
+                />
 
                 <button 
                   onClick={handleExportLoans}

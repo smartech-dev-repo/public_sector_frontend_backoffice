@@ -120,7 +120,7 @@ function ProductFormContent() {
     if (!canManageProducts) return;
     if (isEdit && productId) {
       setLoadingData(true);
-      fetchLoanProducts().then((products) => {
+      fetchLoanProducts({ limit: 100 }).then((products) => {
         const found = products?.find((p: any) => p.id === productId);
         if (found) {
           const rawTiers = Array.isArray(found.interestTiers) && found.interestTiers.length > 0

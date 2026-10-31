@@ -1,29 +1,10 @@
 "use client";
 
+import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import { 
-  Users, 
-  Clock, 
-  CheckCircle2, 
-  AlertCircle, 
-  Search, 
-  Eye, 
-  Trash2, 
-  ExternalLink, 
-  Filter, 
-  X, 
-  FileText, 
-  ShieldCheck, 
-  FileCheck2, 
-  ArrowRight,
-  TrendingUp,
-  RefreshCw,
-  UserCheck,
-  KeyRound,
-  Download
-} from 'lucide-react';
+import { Users, Clock, CheckCircle2, Eye, Trash2, ExternalLink, Filter, X, FileText, ShieldCheck, FileCheck2, TrendingUp, RefreshCw, UserCheck, KeyRound, Download } from 'lucide-react';
 import { useAgentRecruitment, AgentRecruitmentApplication } from '@/app/composables/modules/useAgentRecruitment';
 import { useAgents } from '@/app/composables/modules/useAgents';
 import { useConfirm } from '@/app/composables/useConfirm';
@@ -81,7 +62,6 @@ export default function RecruitmentApplicationsTab() {
   });
 
   // Filters state
-  const [showFilter, setShowFilter] = useState(false);
   const [q, setQ] = useState('');
   const [statusFilter, setStatusFilter] = useState('none');
   const [dateRange, setDateRange] = useState('');
@@ -99,11 +79,7 @@ export default function RecruitmentApplicationsTab() {
   // Load analytics
   const loadAnalytics = useCallback(() => {
     if (!canReadAnalytics) return;
-    let params: any = undefined;
-    if (dateRange) {
-      const [from, to] = dateRange.split(' to ');
-      if (from && to) params = { createdFrom: from, createdTo: to };
-    }
+    const params = dateRangeParams(dateRange, 'createdFrom', 'createdTo');
     fetchAnalytics(params);
   }, [fetchAnalytics, dateRange, canReadAnalytics]);
 
@@ -113,11 +89,7 @@ export default function RecruitmentApplicationsTab() {
     const params: any = { page: currentPage, limit: itemsPerPage };
     if (q.trim()) params.q = q.trim();
     if (statusFilter && statusFilter !== 'none') params.status = statusFilter;
-    if (dateRange) {
-      const [from, to] = dateRange.split(' to ');
-      if (from) params.createdFrom = from;
-      if (to) params.createdTo = to;
-    }
+    Object.assign(params, dateRangeParams(dateRange, 'createdFrom', 'createdTo'));
     fetchApplications(params);
   }, [fetchApplications, currentPage, itemsPerPage, q, statusFilter, dateRange, canReadRecruitment]);
 
@@ -129,12 +101,6 @@ export default function RecruitmentApplicationsTab() {
     loadApplications();
   }, [loadApplications]);
 
-  const clearFilters = () => {
-    setQ('');
-    setStatusFilter('none');
-    setDateRange('');
-    setCurrentPage(1);
-  };
 
   const handleOpenDetail = async (appId: string) => {
     setShowDetailModal(true);
@@ -457,15 +423,6 @@ export default function RecruitmentApplicationsTab() {
           </span>
 
           <div className="flex items-center gap-3 justify-end">
-            <button 
-              type="button"
-              onClick={() => setShowFilter(!showFilter)}
-              className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-full text-xs sm:text-sm font-medium text-foreground hover:bg-muted/30 transition-colors shadow-xs"
-            >
-              <Filter className="w-3.5 h-3.5 text-muted-foreground" />
-              <span>Filters</span>
-              <svg className={`w-3.5 h-3.5 transition-transform ${showFilter ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-            </button>
 
             <button
               type="button"
@@ -483,67 +440,21 @@ export default function RecruitmentApplicationsTab() {
         </div>
 
         {/* Filter Drawer */}
-        {showFilter && (
-          <div className="bg-card p-6 rounded-2xl border border-border/70 animate-in fade-in slide-in-from-top-2 duration-200 shadow-xs">
-            <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Search Applicant</label>
-                <div className="relative">
-                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <input
-                    type="text"
-                    placeholder="Search by name or email..."
-                    value={q}
-                    onChange={(e) => {
-                      setQ(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    className="w-full pl-9 pr-4 py-2 border rounded-lg text-sm bg-background border-border outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Onboarding Status</label>
-                <Select value={statusFilter} onValueChange={(val) => { setStatusFilter(val); setCurrentPage(1); }}>
-                  <SelectTrigger className="w-full bg-background"><SelectValue placeholder="All Onboarding Statuses" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">All Onboarding Statuses</SelectItem>
-                    <SelectItem value="EMAIL_PENDING">EMAIL PENDING</SelectItem>
-                    <SelectItem value="EMAIL_VERIFIED">EMAIL VERIFIED</SelectItem>
-                    <SelectItem value="SUBMITTED">SUBMITTED</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1.5 w-full relative sm:col-span-2">
-                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Applied Date Range</label>
-                <CustomDateRangePicker 
-                  value={dateRange}
-                  onChange={(val: any) => { setDateRange(val); setCurrentPage(1); }}
-                  placeholder="Filter by application date range"
-                />
-              </div>
-            </div>
-
-            <div className="mt-5 flex justify-end">
-              <button 
-                type="button"
-                onClick={clearFilters}
-                className="px-5 py-2 bg-background border border-border rounded-full text-xs sm:text-sm font-medium text-foreground hover:bg-muted/40 transition-colors"
-              >
-                Clear Filters
-              </button>
-            </div>
-          </div>
-        )}
+        <FilterBar
+         onChange={() => setCurrentPage(1)}
+         search={{ value: q, onChange: setQ, placeholder: 'Name or email' }}
+         filters={[
+          { key: 'status', label: 'Status', type: 'select', value: statusFilter, emptyValue: 'none', options: [{ value: 'EMAIL_PENDING', label: 'Email Pending' }, { value: 'EMAIL_VERIFIED', label: 'Email Verified' }, { value: 'SUBMITTED', label: 'Submitted' }], onChange: setStatusFilter },
+          { key: 'applied', label: 'Applied', type: 'dateRange', value: dateRange, onChange: setDateRange },
+         ]}
+        />
       </div>
 
       {/* ================= DATA TABLE ================= */}
-      {loading && <PulseLoader />}
+      {loading && applications.length === 0 && <PulseLoader />}
       {!loading && error && <div className="text-red-500 py-12 text-center">{error}</div>}
 
-      {!loading && !error && (
+      {!error && !(loading && applications.length === 0) && (
         <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-xs w-full">
           <div className="overflow-x-auto w-full">
             <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800/40">

@@ -1,10 +1,10 @@
 "use client";
 
+import FilterBar, { AGENCY_FILTER_OPTIONS, dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import Pagination from '@/app/components/ui/Pagination';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 import { MonthPicker } from '@/app/components/ui/MonthPicker';
 import TableDropdown from '@/app/components/ui/TableDropdown';
 import { useReconciliation } from '@/app/composables/modules/useReconciliation';
@@ -15,12 +15,11 @@ export default function ReconciliationTab() {
   const { isSuperAdmin, hasPermission } = useAdminPermissions();
   const canUpload = isSuperAdmin || hasPermission('ippis:upload') || hasPermission('repayments:upload');
   const [isLoading, setIsLoading] = useState(true);
-  const { reconciliation, fetchReconciliation, meta } = useReconciliation();
+  const { reconciliation, summary, fetchReconciliation, meta } = useReconciliation();
 
   const [recordsList, setRecordsList] = useState([] as any[]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [showFilter, setShowFilter] = useState(false);
   const [filterParams, setFilterParams] = useState({
     agency: '',
     matchStatus: '',
@@ -33,11 +32,7 @@ export default function ReconciliationTab() {
     if (filterParams.agency) params.agency = filterParams.agency;
     if (filterParams.matchStatus) params.status = filterParams.matchStatus;
     if (filterParams.period) params.period = filterParams.period;
-    if (filterParams.generatedRange) {
-      const [from, to] = filterParams.generatedRange.split(' to ');
-      if (from) params.generatedFrom = from;
-      if (to) params.generatedTo = to;
-    }
+    Object.assign(params, dateRangeParams(filterParams.generatedRange, 'generatedFrom', 'generatedTo'));
 
     fetchReconciliation(params).then((data) => {
       setRecordsList(data || []);
@@ -45,9 +40,6 @@ export default function ReconciliationTab() {
     });
   }, [fetchReconciliation, currentPage, itemsPerPage, filterParams]);
 
-  const clearFilters = () => {
-    setFilterParams({ agency: '', matchStatus: '', period: '', generatedRange: '' });
-  };
 
   const paginatedRecords = useMemo(() => {
     return recordsList;
@@ -62,10 +54,10 @@ export default function ReconciliationTab() {
   };
 
   // KPI Calculations based on real status enum: MATCHED | UNDER_PAID | OVER_PAID | NO_DEDUCTION_FOUND
-  const matchedCount = recordsList.filter(r => r.status === 'MATCHED').length;
-  const underPaidCount = recordsList.filter(r => r.status === 'UNDER_PAID').length;
-  const overPaidCount = recordsList.filter(r => r.status === 'OVER_PAID').length;
-  const noDeductionCount = recordsList.filter(r => r.status === 'NO_DEDUCTION_FOUND').length;
+  const matchedCount = summary.MATCHED ?? 0;
+  const underPaidCount = summary.UNDER_PAID ?? 0;
+  const overPaidCount = summary.OVER_PAID ?? 0;
+  const noDeductionCount = summary.NO_DEDUCTION_FOUND ?? 0;
 
   return (
     <div className="space-y-4">
@@ -83,14 +75,6 @@ export default function ReconciliationTab() {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <button 
-                onClick={() => setShowFilter(!showFilter)}
-                className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-lg text-xs font-medium text-foreground hover:bg-muted/30 transition-colors shadow-sm"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
-                Filters
-                <svg className={`w-3 h-3 transition-transform ${showFilter ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-              </button>
               {canUpload && (
                 <Link 
                   href="/dashboard/broadsheet" 
@@ -107,7 +91,7 @@ export default function ReconciliationTab() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             <div className="bg-card rounded-2xl p-4 sm:p-5 border border-border">
               <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Total Records</div>
-              <div className="text-2xl font-bold text-foreground">{recordsList.length}</div>
+              <div className="text-2xl font-bold text-foreground">{(meta?.total ?? 0).toLocaleString()}</div>
               <div className="text-[11px] text-muted-foreground mt-1">Variances evaluated</div>
             </div>
             <div className="bg-emerald-50/60 dark:bg-emerald-950/20 rounded-2xl p-4 sm:p-5 border border-emerald-200/60 dark:border-emerald-900/40">
@@ -128,47 +112,15 @@ export default function ReconciliationTab() {
           </div>
           
           {/* Filters Panel */}
-          {showFilter && (
-            <div className="bg-card p-5 rounded-2xl border border-border shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
-              <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Agency</label>
-                  <input 
-                    value={filterParams.agency} 
-                    onChange={e => setFilterParams({ ...filterParams, agency: e.target.value })} 
-                    placeholder="e.g. NPF, NSCDC" 
-                    className="w-full text-xs h-9 px-3 bg-muted/20 border border-border rounded-lg outline-none focus:border-primary text-foreground"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Status</label>
-                  <Select value={filterParams.matchStatus} onValueChange={v => setFilterParams({ ...filterParams, matchStatus: v === 'ALL' ? '' : v })}>
-                    <SelectTrigger className="w-full text-xs h-9 bg-muted/20"><SelectValue placeholder="All Statuses" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ALL">All Statuses</SelectItem>
-                      <SelectItem value="MATCHED">Matched</SelectItem>
-                      <SelectItem value="UNDER_PAID">Under Paid</SelectItem>
-                      <SelectItem value="OVER_PAID">Over Paid</SelectItem>
-                      <SelectItem value="NO_DEDUCTION_FOUND">No Deduction Found</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Period (YYYY-MM)</label>
-                  <MonthPicker
-                    value={filterParams.period}
-                    onChange={(period) => setFilterParams({ ...filterParams, period })}
-                    placeholder="Select Period"
-                  />
-                </div>
-                <div className="flex items-end">
-                  <button onClick={clearFilters} className="h-9 px-4 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30 rounded-lg transition-colors border border-border">
-                    Clear Filters
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+          <FilterBar
+           onChange={() => setCurrentPage(1)}
+           filters={[
+            { key: 'agency', label: 'Agency', type: 'select', value: filterParams.agency, options: AGENCY_FILTER_OPTIONS, onChange: (agency) => setFilterParams({ ...filterParams, agency }) },
+            { key: 'status', label: 'Status', type: 'select', value: filterParams.matchStatus, options: [{ value: 'MATCHED', label: 'Matched' }, { value: 'UNDER_PAID', label: 'Under Paid' }, { value: 'OVER_PAID', label: 'Over Paid' }, { value: 'NO_DEDUCTION_FOUND', label: 'No Deduction Found' }], onChange: (matchStatus) => setFilterParams({ ...filterParams, matchStatus }) },
+            { key: 'period', label: 'Period', type: 'month', value: filterParams.period, onChange: (period) => setFilterParams({ ...filterParams, period }) },
+            { key: 'generated', label: 'Generated', type: 'dateRange', value: filterParams.generatedRange, onChange: (generatedRange) => setFilterParams({ ...filterParams, generatedRange }) },
+           ]}
+          />
 
           {/* Table */}
           <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">

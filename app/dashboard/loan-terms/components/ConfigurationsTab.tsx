@@ -1,5 +1,6 @@
 "use client";
 
+import FilterBar from '@/app/components/ui/FilterBar';
 import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLoans } from '@/app/composables/modules/useLoans';
@@ -52,7 +53,6 @@ export default function ConfigurationsTab() {
   const { addToast } = useToast();
 
   // Filters & Search
-  const [showFilters, setShowFilters] = useState(false);
   const [sectorFilter, setSectorFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -68,7 +68,7 @@ export default function ConfigurationsTab() {
   // Load initial products, sectors, and settings
   useEffect(() => {
     if (canManageProducts) {
-      fetchLoanProducts();
+      fetchLoanProducts({ limit: 100 });
       fetchLoanProductSectors();
     }
     if (canManageSettings) {
@@ -186,18 +186,6 @@ export default function ConfigurationsTab() {
             </button>
           )}
 
-          <button
-            type="button"
-            onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-full border text-sm font-medium transition-colors ${
-              showFilters 
-                ? 'border-[#018752] text-[#018752] bg-[#E8F5EE]' 
-                : 'border-border text-foreground hover:bg-muted'
-            }`}
-          >
-            <Filter className="w-4 h-4" />
-            Filter
-          </button>
 
           {canManageProducts && (
             <button
@@ -213,52 +201,12 @@ export default function ConfigurationsTab() {
       </div>
 
       {/* Filter Popover / Bar */}
-      {showFilters && (
-        <div className="bg-card p-5 rounded-2xl border border-border shadow-sm flex flex-wrap items-center gap-4 animate-in fade-in slide-in-from-top-2 duration-200">
-          <div className="flex-1 min-w-[200px]">
-            <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
-              Filter by Sector
-            </label>
-            <Select value={sectorFilter} onValueChange={(val) => setSectorFilter(val)}>
-              <SelectTrigger className="w-full h-10 bg-muted/40 border-border rounded-xl text-sm">
-                <SelectValue placeholder="All Eligible Sectors" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Eligible Sectors</SelectItem>
-                {availableSectors.map(s => (
-                  <SelectItem key={s.code} value={s.code}>{s.name} ({s.code})</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex-1 min-w-[160px]">
-            <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
-              Filter by Status
-            </label>
-            <Select value={statusFilter} onValueChange={(val) => setStatusFilter(val)}>
-              <SelectTrigger className="w-full h-10 bg-muted/40 border-border rounded-xl text-sm">
-                <SelectValue placeholder="All Statuses" />
-              </SelectTrigger>
-              <SelectContent hideSearch>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="active">Active Only</SelectItem>
-                <SelectItem value="inactive">Inactive Only</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="self-end pt-1">
-            <button
-              type="button"
-              onClick={() => { setSectorFilter('all'); setStatusFilter('all'); }}
-              className="px-4 py-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Clear Filters
-            </button>
-          </div>
-        </div>
-      )}
+      <FilterBar
+       filters={[
+        { key: 'sector', label: 'Sector', type: 'select', value: sectorFilter, emptyValue: 'all', options: availableSectors.map((s) => ({ value: s.code, label: `${s.name} (${s.code})` })), onChange: setSectorFilter },
+        { key: 'status', label: 'Status', type: 'select', value: statusFilter, emptyValue: 'all', options: [{ value: 'active', label: 'Active Only' }, { value: 'inactive', label: 'Inactive Only' }], onChange: setStatusFilter },
+       ]}
+      />
 
       {/* Loading / Error States */}
       {loading && (

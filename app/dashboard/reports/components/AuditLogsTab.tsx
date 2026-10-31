@@ -1,11 +1,11 @@
 "use client";
 
+import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState, useMemo } from 'react';
 import { useAuditLogs } from '@/app/composables/modules/useAuditLogs';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import Pagination from '@/app/components/ui/Pagination';
-import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
@@ -63,7 +63,6 @@ const KNOWN_TARGET_TYPES: { value: string; label: string }[] = [
 export default function AuditLogsTab() {
   const { isSuperAdmin, hasPermission } = useAdminPermissions();
   const canAudit = isSuperAdmin || hasPermission('audit:read');
-  const [showFilter, setShowFilter] = useState(false);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(25);
   const { loading, error, logs, fetchLogs, meta } = useAuditLogs();
@@ -81,11 +80,7 @@ export default function AuditLogsTab() {
     if (actorTypeFilter && actorTypeFilter !== 'none') params.actorType = actorTypeFilter;
     if (targetTypeFilter && targetTypeFilter !== 'none') params.targetType = targetTypeFilter;
     if (targetIdFilter && targetIdFilter !== 'none') params.targetId = targetIdFilter;
-    if (createdRange) {
-      const [from, to] = createdRange.split(' to ');
-      if (from) params.createdFrom = from;
-      if (to) params.createdTo = to;
-    }
+    Object.assign(params, dateRangeParams(createdRange, 'createdFrom', 'createdTo'));
     fetchLogs(params);
   }, [fetchLogs, page, limit, actionFilter, actorTypeFilter, targetTypeFilter, targetIdFilter, createdRange]);
 
@@ -127,22 +122,7 @@ export default function AuditLogsTab() {
     return Array.from(map.entries()).map(([id, label]) => ({ value: id, label }));
   }, [logs]);
 
-  const resetFilters = () => {
-    setActionFilter('');
-    setActorTypeFilter('');
-    setTargetTypeFilter('');
-    setTargetIdFilter('');
-    setCreatedRange('');
-    setPage(1);
-  };
 
-  const hasActiveFilters = Boolean(
-    (actionFilter && actionFilter !== 'none') ||
-    (actorTypeFilter && actorTypeFilter !== 'none') ||
-    (targetTypeFilter && targetTypeFilter !== 'none') ||
-    (targetIdFilter && targetIdFilter !== 'none') ||
-    createdRange
-  );
 
   const formatActionDisplay = (action: string) => {
     if (!action) return '—';
@@ -201,150 +181,27 @@ export default function AuditLogsTab() {
       <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
         <h1 className="text-2xl font-semibold text-foreground hidden">Audit Logs</h1>
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setShowFilter(!showFilter)}
-            className={`flex items-center gap-2 px-4 py-2 border rounded-full text-sm font-medium transition-colors ${
-              hasActiveFilters
-                ? 'bg-emerald-50 dark:bg-emerald-950/40 border-[#018752] text-[#018752]'
-                : 'bg-card border-border text-foreground/90 hover:bg-muted/30'
-            }`}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-            </svg>
-            Filters
-            {hasActiveFilters && (
-              <span className="w-2 h-2 rounded-full bg-[#018752]" />
-            )}
-            <svg className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
 
-          {hasActiveFilters && (
-            <button
-              onClick={resetFilters}
-              className="text-xs text-muted-foreground hover:text-foreground underline transition-colors"
-            >
-              Reset filters
-            </button>
-          )}
         </div>
       </div>
 
       <div className="mb-6 space-y-4">
-        {showFilter && (
-          <div className="bg-card p-6 rounded-2xl border border-border/50 animate-in fade-in slide-in-from-top-2 duration-200 shadow-sm">
-            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-              {/* ACTION DROPDOWN WITH SEARCH */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Action
-                </label>
-                <Select value={actionFilter || 'none'} onValueChange={setActionFilter}>
-                  <SelectTrigger className="w-full bg-card">
-                    <SelectValue placeholder="All Actions" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">All Actions</SelectItem>
-                    {actionOptions.map(opt => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* ACTOR TYPE DROPDOWN */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Actor Type
-                </label>
-                <Select value={actorTypeFilter || 'none'} onValueChange={setActorTypeFilter}>
-                  <SelectTrigger className="w-full bg-card">
-                    <SelectValue placeholder="All Actor Types" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">All Actor Types</SelectItem>
-                    <SelectItem value="ADMIN">ADMIN</SelectItem>
-                    <SelectItem value="AGENT">AGENT</SelectItem>
-                    <SelectItem value="CLIENT">CLIENT</SelectItem>
-                    <SelectItem value="SYSTEM">SYSTEM</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* TARGET TYPE DROPDOWN WITH SEARCH */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Target Type
-                </label>
-                <Select value={targetTypeFilter || 'none'} onValueChange={setTargetTypeFilter}>
-                  <SelectTrigger className="w-full bg-card">
-                    <SelectValue placeholder="All Target Types" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">All Target Types</SelectItem>
-                    {targetTypeOptions.map(opt => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* TARGET ID DROPDOWN / SEARCH */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Target ID / Entity
-                </label>
-                {targetIdOptions.length > 0 ? (
-                  <Select value={targetIdFilter || 'none'} onValueChange={setTargetIdFilter}>
-                    <SelectTrigger className="w-full bg-card">
-                      <SelectValue placeholder="All Targets" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">All Targets</SelectItem>
-                      {targetIdOptions.map(opt => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <input
-                    type="text"
-                    placeholder="Search by Target ID..."
-                    value={targetIdFilter === 'none' ? '' : targetIdFilter}
-                    onChange={e => setTargetIdFilter(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-xl text-sm bg-card border-input outline-none focus:ring-2 focus:ring-[#018752]/20 focus:border-[#018752]"
-                  />
-                )}
-              </div>
-
-              {/* DATE CREATED RANGE PICKER */}
-              <div className="space-y-1.5 relative">
-                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Date Created
-                </label>
-                <CustomDateRangePicker
-                  value={createdRange}
-                  onChange={setCreatedRange}
-                  placeholder="Pick a date range"
-                />
-              </div>
-            </div>
-          </div>
-        )}
+        <FilterBar
+         onChange={() => setPage(1)}
+         filters={[
+          { key: 'action', label: 'Action', type: 'select', value: actionFilter, emptyValue: 'none', options: actionOptions, onChange: setActionFilter },
+          { key: 'actor', label: 'Actor Type', type: 'select', value: actorTypeFilter, emptyValue: 'none', options: [{ value: 'ADMIN', label: 'ADMIN' }, { value: 'AGENT', label: 'AGENT' }, { value: 'CLIENT', label: 'CLIENT' }, { value: 'SYSTEM', label: 'SYSTEM' }], onChange: setActorTypeFilter },
+          { key: 'targetType', label: 'Target Type', type: 'select', value: targetTypeFilter, emptyValue: 'none', options: targetTypeOptions, onChange: setTargetTypeFilter },
+          { key: 'targetId', label: 'Target', type: targetIdOptions.length > 0 ? 'select' : 'text', value: targetIdFilter, emptyValue: 'none', options: targetIdOptions, placeholder: 'Target ID', onChange: setTargetIdFilter },
+          { key: 'created', label: 'Created', type: 'dateRange', value: createdRange, onChange: setCreatedRange },
+         ]}
+        />
       </div>
 
-      {loading && <PulseLoader />}
+      {loading && logs.length === 0 && <PulseLoader />}
       {!loading && error && <div className="text-red-500 py-12 text-center">{error}</div>}
 
-      {!loading && !error && (
+      {!error && !(loading && logs.length === 0) && (
         <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-border">
