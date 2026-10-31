@@ -1,5 +1,6 @@
 "use client";
 
+import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import * as xlsx from 'xlsx';
@@ -10,24 +11,11 @@ import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import ButtonLoader from '@/app/components/ui/ButtonLoader';
 import { useConfirm } from '@/app/composables/useConfirm';
-import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import Pagination from '@/app/components/ui/Pagination';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 import SensitiveValue from '@/app/components/ui/SensitiveValue';
 import TableDropdown from '@/app/components/ui/TableDropdown';
-import { 
-  CreditCard, 
-  Wallet, 
-  CheckCircle2, 
-  RotateCcw, 
-  ShieldAlert, 
-  User, 
-  SlidersHorizontal, 
-  FileSpreadsheet, 
-  Plus,
-  Users,
-  X
-} from 'lucide-react';
+import { CreditCard, Wallet, CheckCircle2, RotateCcw, ShieldAlert, User, FileSpreadsheet, Plus, Users, X } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
@@ -69,7 +57,6 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
   const [retrySubmitting, setRetrySubmitting] = useState(false);
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [wallet, setWallet] = useState<any>(null);
-  const [showFilter, setShowFilter] = useState(false);
   const [amount, setAmount] = useState<number | ''>('');
   const [walletLoading, setWalletLoading] = useState(false);
   const [walletAction, setWalletAction] = useState<'credit' | 'debit' | null>(null);
@@ -134,11 +121,7 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
     if (statusFilter && statusFilter !== 'none') params.status = statusFilter;
     if (q.trim()) params.q = q.trim();
     if (agentIdFilter.trim()) params.agentId = agentIdFilter.trim();
-    if (createdRange) {
-      const [from, to] = createdRange.split(' to ');
-      if (from) params.createdFrom = from;
-      if (to) params.createdTo = to;
-    }
+    Object.assign(params, dateRangeParams(createdRange, 'createdFrom', 'createdTo'));
     fetchClients(params);
   }, [fetchClients, statusFilter, q, agentIdFilter, createdRange, page, limit, canReviewClient]);
 
@@ -510,14 +493,6 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
                 Showing {clients.length} of {meta?.total || clients.length} Customers
               </span>
 
-              <button 
-                type="button"
-                onClick={() => setShowFilter(!showFilter)}
-                className="flex items-center gap-1.5 px-3.5 py-2 bg-card border border-border rounded-lg text-xs font-semibold text-foreground hover:bg-muted/40 transition-colors shadow-xs"
-              >
-                <SlidersHorizontal className="size-3.5 text-muted-foreground" />
-                Filter
-              </button>
 
               <button 
                 type="button"
@@ -590,75 +565,26 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
       )}
 
       {/* ================= FILTERS DRAWER ================= */}
-      {canReviewClient && showFilter && (
-        <div className="bg-card p-6 rounded-2xl border border-border/70 mb-6 animate-in fade-in slide-in-from-top-2 duration-200 shadow-xs">
-          <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Search</label>
-              <input 
-                type="text"
-                placeholder="Search by name, phone or IPPIS..."
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                className="w-full px-4 py-2 border rounded-lg text-sm bg-background border-border outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Agent (UUID)</label>
-              <input 
-                type="text"
-                placeholder="Filter by agent UUID..."
-                value={agentIdFilter}
-                onChange={(e) => {
-                  setAgentIdFilter(e.target.value);
-                  setAgentNameDisplay('');
-                }}
-                className="w-full px-4 py-2 border rounded-lg text-sm bg-background border-border outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 font-mono text-xs"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Status</label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full bg-background"><SelectValue placeholder="All Statuses" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">All Statuses</SelectItem>
-                  <SelectItem value="ACTIVE">Active</SelectItem>
-                  <SelectItem value="VERIFIED">Verified</SelectItem>
-                  <SelectItem value="PENDING_IPPIS">Pending IPPIS</SelectItem>
-                  <SelectItem value="MANUAL_REVIEW">Manual Review</SelectItem>
-                  <SelectItem value="FAILED">Failed</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5 w-full relative">
-              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Date Range</label>
-              <CustomDateRangePicker 
-                value={createdRange}
-                onChange={setCreatedRange}
-                placeholder="Created Date"
-              />
-            </div>
-            <div className="flex items-end">
-              <button 
-                type="button"
-                onClick={() => { setQ(''); setStatusFilter('none'); setCreatedRange(''); setAgentIdFilter(''); setAgentNameDisplay(''); }} 
-                className="w-full px-5 py-2.5 bg-background border border-border rounded-lg text-sm font-medium text-foreground hover:bg-muted/40 transition-colors"
-              >
-                Clear Filters
-              </button>
-            </div>
-          </div>
-        </div>
+      {canReviewClient && (
+       <FilterBar
+        onChange={() => setPage(1)}
+        search={{ value: q, onChange: setQ, placeholder: 'Search customers' }}
+        filters={[
+         { key: 'status', label: 'Status', type: 'select', value: statusFilter, emptyValue: 'none', options: [{ value: 'PHONE_VERIFIED', label: 'Phone Verified' }, { value: 'PENDING_IPPIS', label: 'Pending IPPIS' }, { value: 'MANUAL_REVIEW', label: 'Manual Review' }, { value: 'VERIFIED', label: 'Verified' }], onChange: setStatusFilter },
+         { key: 'agent', label: 'Agent', type: 'text', value: agentIdFilter, placeholder: 'Agent UUID', onChange: (value) => { setAgentIdFilter(value); setAgentNameDisplay(''); } },
+         { key: 'created', label: 'Date', type: 'dateRange', value: createdRange, onChange: setCreatedRange },
+        ]}
+       />
       )}
 
       {/* ================= FULL-WIDTH PULSE LOADER ================= */}
-      {loading && <PulseLoader />}
+      {loading && clients.length === 0 && <PulseLoader />}
 
       {/* ================= ERROR STATE ================= */}
       {!loading && error && <div className="text-red-500 py-12 text-center">{error}</div>}
 
       {/* ================= CUSTOMERS TABLE ================= */}
-      {canReviewClient && !loading && !error && (
+      {canReviewClient && !error && !(loading && clients.length === 0) && (
         <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-xs w-full">
           <div className="overflow-x-auto w-full">
             <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800/40">

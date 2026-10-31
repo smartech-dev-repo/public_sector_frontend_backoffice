@@ -1,5 +1,6 @@
 "use client";
 
+import FilterBar, { AGENCY_FILTER_OPTIONS, dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useLoans } from '@/app/composables/modules/useLoans';
@@ -8,7 +9,6 @@ import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { createPortal } from 'react-dom';
 import Pagination from '@/app/components/ui/Pagination';
-import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 import Link from 'next/link';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
@@ -35,7 +35,6 @@ function ClientLoansContent() {
  const [statusFilter, setStatusFilter] = useState('');
  const [agencyFilter, setAgencyFilter] = useState('');
  const [disbursedRange, setDisbursedRange] = useState('');
- const [showFilter, setShowFilter] = useState(false);
 
  const [repaymentPlan, setRepaymentPlan] = useState<any>(null);
  const [showRepaymentModal, setShowRepaymentModal] = useState(false);
@@ -62,24 +61,13 @@ function ClientLoansContent() {
   return () => window.removeEventListener('resize', checkScroll);
  }, [clientLoans]);
 
- const clearFilters = () => {
-  setClientIdFilter('');
-  setStatusFilter('');
-  setAgencyFilter('');
-  setDisbursedRange('');
-  setPage(1);
- };
 
  useEffect(() => {
   if (!canReadClientLoans || !clientIdFilter.trim()) return;
   const params: any = { page, limit, clientId: clientIdFilter.trim() };
   if (statusFilter && statusFilter !== 'none') params.status = statusFilter;
   if (agencyFilter) params.agency = agencyFilter;
-  if (disbursedRange) {
-   const [from, to] = disbursedRange.split(' to ');
-   if (from) params.disbursedFrom = from;
-   if (to) params.disbursedTo = to;
-  }
+  Object.assign(params, dateRangeParams(disbursedRange, 'disbursedFrom', 'disbursedTo'));
   fetchClientLoans(params);
  }, [fetchClientLoans, page, limit, clientIdFilter, statusFilter, agencyFilter, disbursedRange]);
 
@@ -109,9 +97,8 @@ function ClientLoansContent() {
  const statusColor = (status: string) => {
   switch (status?.toUpperCase()) {
    case 'ACTIVE': return 'bg-emerald-100 text-emerald-800';
-   case 'COMPLETED': return 'bg-blue-100 text-blue-800';
-   case 'DEFAULTED': return 'bg-rose-100 text-rose-800';
-   case 'PENDING': return 'bg-amber-100 text-amber-800';
+   case 'CLOSED': return 'bg-blue-100 text-blue-800';
+   case 'DEFAULT': return 'bg-rose-100 text-rose-800';
    default: return 'bg-muted/50 text-foreground';
   }
  };
@@ -134,61 +121,22 @@ function ClientLoansContent() {
      </div>
     </div>
     <div className="flex items-center gap-3">
-     <button 
-      onClick={() => setShowFilter(!showFilter)}
-      className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-full text-sm font-medium text-foreground/90 hover:bg-muted/30 transition-colors "
-     >
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
-      More Filters
-      <svg className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-     </button>
     </div>
    </div>
 
    <div className="mb-6 space-y-4">
-    {showFilter && (
-     <div className="bg-card p-6 rounded-2xl border border-border/50 animate-in fade-in slide-in-from-top-2 duration-200">
-      <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4">
-       <div className="space-y-1.5">
-        <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Status</label>
-        <Select value={statusFilter} onValueChange={(val) => { setStatusFilter(val === 'none' ? '' : val); setPage(1); }}>
-         <SelectTrigger className="w-full bg-card"><SelectValue placeholder="All Statuses" /></SelectTrigger>
-         <SelectContent>
-          <SelectItem value="none">All Statuses</SelectItem>
-          <SelectItem value="ACTIVE">ACTIVE</SelectItem>
-          <SelectItem value="COMPLETED">COMPLETED</SelectItem>
-          <SelectItem value="DEFAULTED">DEFAULTED</SelectItem>
-          <SelectItem value="PENDING">PENDING</SelectItem>
-         </SelectContent>
-        </Select>
-       </div>
-       <div className="space-y-1.5">
-        <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Agency</label>
-        <input 
-         type="text"
-         placeholder="Agency (e.g. NPF)..."
-         value={agencyFilter}
-         onChange={(e) => { setAgencyFilter(e.target.value); setPage(1); }}
-         className="w-full px-4 py-2 border rounded-lg text-sm bg-card border-border outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400"
-        />
-       </div>
-       <div className="space-y-1.5 w-full relative">
-        <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Disbursed Date</label>
-        <CustomDateRangePicker 
-         value={disbursedRange}
-         onChange={(val: any) => { setDisbursedRange(val); setPage(1); }}
-         placeholder="Disbursed Date"
-        />
-       </div>
-      </div>
-      <div className="mt-6 flex justify-end">
-       <button onClick={clearFilters} className="px-5 py-2 bg-card border border-border rounded-full text-sm font-medium text-foreground/90 hover:bg-muted/30 transition-colors">Clear Filters</button>
-      </div>
-     </div>
-    )}
+    <FilterBar
+     onChange={() => setPage(1)}
+     search={{ value: clientIdFilter, onChange: setClientIdFilter, placeholder: 'Client ID' }}
+     filters={[
+      { key: 'status', label: 'Status', type: 'select', value: statusFilter, options: [{ value: 'ACTIVE', label: 'Active' }, { value: 'CLOSED', label: 'Closed' }, { value: 'DEFAULT', label: 'Default' }], onChange: setStatusFilter },
+      { key: 'agency', label: 'Agency', type: 'select', value: agencyFilter, options: AGENCY_FILTER_OPTIONS, onChange: setAgencyFilter },
+      { key: 'disbursed', label: 'Disbursed', type: 'dateRange', value: disbursedRange, onChange: setDisbursedRange },
+     ]}
+    />
    </div>
 
-   {loading && <PulseLoader />}
+   {loading && clientLoans.length === 0 && <PulseLoader />}
    {!loading && !canReadClientLoans && (
     <div className="p-8">
      <EmptyState
@@ -199,7 +147,7 @@ function ClientLoansContent() {
    )}
    {!loading && error && canReadClientLoans && <div className="text-red-500 py-12 text-center">{error}</div>}
 
-   {!loading && !error && canReadClientLoans && (
+   {!error && canReadClientLoans && !(loading && clientLoans.length === 0) && (
     <div className="bg-card rounded-2xl border border-border overflow-hidden relative w-full max-w-full ">
      
      

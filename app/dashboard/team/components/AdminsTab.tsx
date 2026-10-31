@@ -1,5 +1,6 @@
 "use client";
 
+import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState } from 'react'; 
 import Pagination from '@/app/components/ui/Pagination';
 import { useAdmins } from '@/app/composables/modules/useAdmins';
@@ -12,7 +13,6 @@ import EmptyState from '@/app/components/ui/EmptyState';
 import { useConfirm } from '@/app/composables/useConfirm';
 import TableDropdown from '@/app/components/ui/TableDropdown';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
-import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function AdminsTab() {
@@ -25,7 +25,6 @@ export default function AdminsTab() {
 
  const [page, setPage] = useState(1);
  const [limit, setLimit] = useState(25);
- const [showFilter, setShowFilter] = useState(false);
  const [search, setSearch] = useState('');
  const [statusFilter, setStatusFilter] = useState('');
  const [dateRange, setDateRange] = useState('');
@@ -48,25 +47,15 @@ export default function AdminsTab() {
  useEffect(() => {
   if (!canReadAdmins) return;
   const params: any = { page, limit };
-  if (search.trim()) params.search = search.trim();
-  if (statusFilter && statusFilter !== 'none') params.status = statusFilter;
-  if (dateRange) {
-   const [from, to] = dateRange.split(' to ');
-   if (from) params.from = from;
-   if (to) params.to = to;
-  }
+  if (search.trim()) params.q = search.trim();
+  if (statusFilter && statusFilter !== 'none') params.isActive = statusFilter === 'active';
+  Object.assign(params, dateRangeParams(dateRange, 'createdFrom', 'createdTo'));
   fetchAdmins(params);
   if (canAssignRole || canInvite) {
    fetchRoles();
   }
  }, [fetchAdmins, fetchRoles, page, limit, search, statusFilter, dateRange, canReadAdmins, canAssignRole, canInvite]);
 
- const clearFilters = () => {
-  setSearch('');
-  setStatusFilter('');
-  setDateRange('');
-  setPage(1);
- };
 
  const openAssignRoleModal = (admin: any) => {
   setSelectedAdmin(admin);
@@ -133,14 +122,6 @@ export default function AdminsTab() {
  return (
   <main className="w-full">
    <div className="flex items-center justify-between mb-6">
-     <button 
-      onClick={() => setShowFilter(!showFilter)}
-      className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-full text-sm font-medium text-foreground/90 hover:bg-muted/30 transition-colors "
-     >
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
-      Filters
-      <svg className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-     </button>
      {canInvite && (
       <button onClick={() => setShowInviteModal(true)} className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors whitespace-nowrap shadow-sm">
        Invite Admin
@@ -150,55 +131,20 @@ export default function AdminsTab() {
 
    <div className="mb-6 space-y-4">
 
-    {showFilter && (
-     <div className="bg-card p-6 rounded-2xl border border-border/50 animate-in fade-in slide-in-from-top-2 duration-200">
-    <div className="flex bg-card p-2 rounded-xl border border-border/50 mb-6">
-     <div className="flex items-center pl-3 pr-2 text-muted-foreground/70">
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-     </div>
-     <input 
-      type="text"
-      placeholder="Search email or name..."
-      value={search}
-      onChange={(e) => setSearch(e.target.value)}
-      className="w-full px-2 py-1.5 bg-transparent border-none outline-none text-sm text-foreground placeholder-slate-400"
-     />
-    </div>
-
-      <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
-       <div className="space-y-1.5">
-        <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Status</label>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-         <SelectTrigger className="w-full bg-card"><SelectValue placeholder="All Statuses" /></SelectTrigger>
-         <SelectContent>
-          <SelectItem value="none">All Statuses</SelectItem>
-          <SelectItem value="active">Active</SelectItem>
-          <SelectItem value="suspended">Suspended</SelectItem>
-         </SelectContent>
-        </Select>
-       </div>
-       <div className="space-y-1.5 z-[70] relative">
-        <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Date Created</label>
-        <CustomDateRangePicker 
-         value={dateRange} 
-         onChange={setDateRange} 
-         placeholder="Created Date" 
-        />
-       </div>
-       <div className="flex items-end">
-        <button onClick={clearFilters} className="px-4 py-2 bg-card text-muted-foreground border border-border rounded-lg text-sm font-medium hover:bg-muted/30 transition-colors w-full">
-         Clear Filters
-        </button>
-       </div>
-      </div>
-     </div>
-    )}
+    <FilterBar
+     onChange={() => setPage(1)}
+     search={{ value: search, onChange: setSearch, placeholder: 'Email or name' }}
+     filters={[
+      { key: 'status', label: 'Status', type: 'select', value: statusFilter, emptyValue: 'none', options: [{ value: 'active', label: 'Active' }, { value: 'suspended', label: 'Suspended' }], onChange: setStatusFilter },
+      { key: 'created', label: 'Created', type: 'dateRange', value: dateRange, onChange: setDateRange },
+     ]}
+    />
    </div>
 
-   {loading && <PulseLoader />}
+   {loading && admins.length === 0 && <PulseLoader />}
    {!loading && error && <div className="text-red-500 py-12 text-center">{error}</div>}
    
-   {!loading && !error && (
+   {!error && !(loading && admins.length === 0) && (
     <div className="bg-card rounded-2xl border border-border overflow-hidden">
      
       <div className="overflow-x-auto">
