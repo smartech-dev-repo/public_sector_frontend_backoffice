@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useDocuments } from '@/app/composables/modules/useDocuments';
-import { useToast } from '@/app/composables/useToast';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import Pagination from '@/app/components/ui/Pagination';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+import UploadWizardModal from '@/app/dashboard/broadsheet/components/UploadWizardModal';
 
 export default function UploadsPage() {
  const { isSuperAdmin, hasPermission } = useAdminPermissions();
@@ -15,16 +15,17 @@ export default function UploadsPage() {
  const canUploadRepayments = isSuperAdmin || hasPermission('repayments:upload');
  const canReadDocuments = isSuperAdmin || hasPermission('documents:read');
 
- const { loading, batches, meta, fetchDocumentBatches, uploadIppisBroadsheet, uploadDisbursedLoans, uploadRepaymentSchedule } = useDocuments();
- const { addToast } = useToast();
+ const { batches, meta, fetchDocumentBatches } = useDocuments();
 
  const [isLoading, setIsLoading] = useState(true);
  const [currentPage, setCurrentPage] = useState(1);
  const [itemsPerPage, setItemsPerPage] = useState(25);
 
- const broadsheetInput = useRef<HTMLInputElement>(null);
- const disbursedInput = useRef<HTMLInputElement>(null);
- const repaymentInput = useRef<HTMLInputElement>(null);
+ const [wizard, setWizard] = useState<{ documentType: string; resumeBatchId?: string } | null>(null);
+
+ const reloadBatches = useCallback(() => {
+  if (canReadDocuments) fetchDocumentBatches({ page: currentPage, limit: itemsPerPage });
+ }, [canReadDocuments, fetchDocumentBatches, currentPage, itemsPerPage]);
 
  useEffect(() => {
   if (canReadDocuments) {
@@ -34,48 +35,25 @@ export default function UploadsPage() {
   }
  }, [fetchDocumentBatches, currentPage, itemsPerPage, canReadDocuments]);
 
- const triggerFileSelect = (type: string) => {
-  if (type === 'broadsheet') broadsheetInput.current?.click();
-  else if (type === 'disbursed') disbursedInput.current?.click();
-  else if (type === 'repayment') repaymentInput.current?.click();
- };
-
- const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, type: string) => {
-  const target = event.target;
-  const file = target.files?.[0];
-  if (!file) return;
-
-  const formData = new FormData();
-  formData.append('file', file);
-
-  try {
-   if (type === 'broadsheet') {
-    await uploadIppisBroadsheet(formData);
-   } else if (type === 'disbursed') {
-    await uploadDisbursedLoans(formData);
-   } else if (type === 'repayment') {
-    await uploadRepaymentSchedule(formData);
-   }
-   addToast('File uploaded successfully. Processing started.', 'success');
-   await fetchDocumentBatches();
-  } catch (err: any) {
-   addToast(err?.response?.data?.message || 'File upload failed', 'error');
-  } finally {
-   if (target) target.value = '';
-  }
- };
-
  const statusClass = (status: string) => {
   switch (status) {
    case 'COMPLETED': return 'bg-emerald-100 text-emerald-800';
    case 'PROCESSING': return 'bg-blue-100 text-blue-800';
    case 'FAILED': return 'bg-rose-100 text-rose-800';
+   case 'CANCELLED': return 'bg-muted text-muted-foreground';
    default: return 'bg-amber-100 text-amber-800';
   }
  };
 
  return (
   <main className="px-4 py-6 space-y-3">
+   <UploadWizardModal
+    isOpen={Boolean(wizard)}
+    onClose={() => setWizard(null)}
+    onChanged={reloadBatches}
+    documentType={wizard?.documentType ?? 'IPPIS_BROADSHEET'}
+    resumeBatchId={wizard?.resumeBatchId}
+   />
    {isLoading ? (
     <div className="py-10 text-center text-muted-foreground">
      Loading...
@@ -107,13 +85,12 @@ export default function UploadsPage() {
           </div>
           <div>
            <h3 className="text-foreground font-medium text-sm">IPPIS Broadsheet</h3>
-           <p className="text-xs text-muted-foreground">.csv, .xlsx</p>
+           <p className="text-xs text-muted-foreground">.xlsx, .csv</p>
           </div>
          </div>
-         <div className="mt-auto border-2 border-dashed border-border rounded-xl p-4 text-center hover:border-emerald-500 transition-colors cursor-pointer" onClick={() => triggerFileSelect('broadsheet')}>
-          <div className="text-xs text-muted-foreground font-medium">Select File</div>
+         <div className="mt-auto border-2 border-dashed border-border rounded-xl p-4 text-center hover:border-emerald-500 transition-colors cursor-pointer" onClick={() => setWizard({ documentType: 'IPPIS_BROADSHEET' })}>
+          <div className="text-xs text-muted-foreground font-medium">Start Upload</div>
          </div>
-         <input type="file" ref={broadsheetInput} className="hidden" onChange={(e) => handleFileUpload(e, 'broadsheet')} accept=".csv,.xlsx" />
         </div>
        )}
 
@@ -126,13 +103,12 @@ export default function UploadsPage() {
           </div>
           <div>
            <h3 className="text-foreground font-medium text-sm">Disbursed Loans</h3>
-           <p className="text-xs text-muted-foreground">.csv, .xlsx</p>
+           <p className="text-xs text-muted-foreground">.xlsx, .csv</p>
           </div>
          </div>
-         <div className="mt-auto border-2 border-dashed border-border rounded-xl p-4 text-center hover:border-purple-500 transition-colors cursor-pointer" onClick={() => triggerFileSelect('disbursed')}>
-          <div className="text-xs text-muted-foreground font-medium">Select File</div>
+         <div className="mt-auto border-2 border-dashed border-border rounded-xl p-4 text-center hover:border-purple-500 transition-colors cursor-pointer" onClick={() => setWizard({ documentType: 'DISBURSED_LOANS' })}>
+          <div className="text-xs text-muted-foreground font-medium">Start Upload</div>
          </div>
-         <input type="file" ref={disbursedInput} className="hidden" onChange={(e) => handleFileUpload(e, 'disbursed')} accept=".csv,.xlsx" />
         </div>
        )}
 
@@ -145,13 +121,12 @@ export default function UploadsPage() {
           </div>
           <div>
            <h3 className="text-foreground font-medium text-sm">Repayment Schedule</h3>
-           <p className="text-xs text-muted-foreground">.csv, .xlsx</p>
+           <p className="text-xs text-muted-foreground">.xlsx, .csv</p>
           </div>
          </div>
-         <div className="mt-auto border-2 border-dashed border-border rounded-xl p-4 text-center hover:border-amber-500 transition-colors cursor-pointer" onClick={() => triggerFileSelect('repayment')}>
-          <div className="text-xs text-muted-foreground font-medium">Select File</div>
+         <div className="mt-auto border-2 border-dashed border-border rounded-xl p-4 text-center hover:border-amber-500 transition-colors cursor-pointer" onClick={() => setWizard({ documentType: 'REPAYMENT_SCHEDULE' })}>
+          <div className="text-xs text-muted-foreground font-medium">Start Upload</div>
          </div>
-         <input type="file" ref={repaymentInput} className="hidden" onChange={(e) => handleFileUpload(e, 'repayment')} accept=".csv,.xlsx" />
         </div>
        )}
       </div>
@@ -171,6 +146,7 @@ export default function UploadsPage() {
            <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Total Rows</th>
            <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Processed</th>
            <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Updated At</th>
+           <th className="px-4 py-4" />
           </tr>
          </thead>
          <tbody className="divide-y divide-slate-100">
@@ -180,17 +156,22 @@ export default function UploadsPage() {
             <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground">{batch.documentType}</td>
             <td className="px-4 py-4 whitespace-nowrap text-sm">
              <span className={`px-2.5 py-1 text-xs rounded-full font-medium ${statusClass(batch.status)}`}>
-              {batch.status}
+              {batch.status.replaceAll('_', ' ')}
              </span>
             </td>
             <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{batch.totalRows || 0}</td>
             <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{batch.processedRows || 0}</td>
             <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{new Date(batch.updatedAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+            <td className="px-4 py-4 whitespace-nowrap text-right">
+             {batch.status === 'AWAITING_CONFIRMATION' && (
+              <button onClick={() => setWizard({ documentType: batch.documentType, resumeBatchId: batch.id })} className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 rounded-lg text-white text-xs font-medium transition-colors">Review</button>
+             )}
+            </td>
            </tr>
           ))}
           {batches.length === 0 && (
            <tr>
-            <td colSpan={6} className="p-8 text-center text-muted-foreground/70">No batches found.</td>
+            <td colSpan={7} className="p-8 text-center text-muted-foreground/70">No batches found.</td>
            </tr>
           )}
          </tbody>

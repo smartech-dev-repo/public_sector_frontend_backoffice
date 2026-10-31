@@ -4,6 +4,8 @@ import React, { useEffect, useState, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useLoans } from '@/app/composables/modules/useLoans';
+import { loans_api } from '@/app/api_factory/modules/loans';
+import { formatFeeRange } from '@/app/dashboard/management-fees/formatFeeRange';
 import { useToast } from '@/app/composables/useToast';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
@@ -95,8 +97,11 @@ function ProductFormContent() {
     // Management charge
     managementChargeType: 'PERCENTAGE',
     managementChargeValue: 0 as number | string,
-    managementChargeApplication: 'DEDUCT_FROM_DISBURSEMENT'
+    managementChargeApplication: 'DEDUCT_FROM_DISBURSEMENT',
+    managementFeeId: ''
   });
+  const [managementFees, setManagementFees] = useState<any[]>([]);
+  const [currentFee, setCurrentFee] = useState<any>(null);
 
   const [loadingData, setLoadingData] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -105,6 +110,9 @@ function ProductFormContent() {
   useEffect(() => {
     if (!canManageProducts) return;
     fetchLoanProductSectors();
+    loans_api.getActiveManagementFees().then((res: any) => {
+      setManagementFees(Array.isArray(res?.data) ? res.data : []);
+    });
   }, [fetchLoanProductSectors, canManageProducts]);
 
   // If in Edit mode, load product by ID
@@ -145,13 +153,26 @@ function ProductFormContent() {
             })(),
             managementChargeType: found.managementChargeType || 'PERCENTAGE',
             managementChargeValue: Number(found.managementChargeValue) || 0,
-            managementChargeApplication: found.managementChargeApplication || 'DEDUCT_FROM_DISBURSEMENT'
+            managementChargeApplication: found.managementChargeApplication || 'DEDUCT_FROM_DISBURSEMENT',
+            managementFeeId: found.managementFeeId || ''
           });
+          setCurrentFee(found.managementFee || null);
         }
         setLoadingData(false);
       });
     }
   }, [isEdit, productId, fetchLoanProducts]);
+
+  // A deactivated fee is no longer listed, but a product already using it must still show it.
+  const managementFeeOptions = useMemo(() => {
+    const fees = currentFee && !managementFees.some((fee: any) => fee.id === currentFee.id)
+      ? [currentFee, ...managementFees]
+      : managementFees;
+    return fees.map((fee: any) => ({
+      value: fee.id,
+      label: `${fee.name} (${fee.type === 'PERCENTAGE' ? `${Number(fee.value)}%` : `₦${Number(fee.value).toLocaleString()}`}, ${formatFeeRange(fee)})`
+    }));
+  }, [managementFees, currentFee]);
 
   // Available sectors combined
   const availableSectors = useMemo(() => {
@@ -389,13 +410,8 @@ function ProductFormContent() {
       }
     }
 
-    // Validate management charge
-    const chargeVal = Number(form.managementChargeValue);
-    if (isNaN(chargeVal) || chargeVal < 0) {
-      return addToast('Management charge value cannot be negative', 'error');
-    }
-    if (form.managementChargeType === 'PERCENTAGE' && chargeVal > 100) {
-      return addToast('Management charge percentage cannot exceed 100%', 'error');
+    if (!form.managementFeeId && !(Number(form.managementChargeValue) > 0)) {
+      return addToast('Select a management fee', 'error');
     }
 
     const minT = Number(form.minimumTenorMonths);
@@ -417,8 +433,11 @@ function ProductFormContent() {
       maximumTenorMonths: maxT,
       interestTiers,
       tier1Rate: interestTiers[0]?.interestRatePercent || 0,
-      managementChargeType: form.managementChargeType,
-      managementChargeValue: Number(form.managementChargeValue) || 0,
+      // Products from before the fee catalog keep their stored charge until a fee is picked
+      ...(form.managementFeeId ? { managementFeeId: form.managementFeeId } : {
+        managementChargeType: form.managementChargeType,
+        managementChargeValue: Number(form.managementChargeValue)
+      }),
       managementChargeApplication: form.managementChargeApplication,
       minimumServiceMonthsLeft: Number(form.minimumServiceMonthsLeft),
       maximumMonthsInService: (() => {
@@ -992,72 +1011,43 @@ function ProductFormContent() {
 
           {/* Management Charge */}
           <div className="space-y-3 pt-2">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3">
               <h3 className="text-sm font-bold text-foreground">Management Charge</h3>
-              <span className="text-[11px] font-semibold text-[#018752] bg-[#E8F5EE] px-3 py-1 rounded-full">
-                {form.managementChargeType === 'PERCENTAGE' 
-                  ? `${form.managementChargeValue !== '' && form.managementChargeValue !== undefined ? form.managementChargeValue : 0}%` 
-                  : `₦${Number(form.managementChargeValue || 0).toLocaleString()}`}
-              </span>
+              {(isSuperAdmin || hasPermission('management-fees:manage')) && (
+                <Link href="/dashboard/management-fees" className="text-xs font-semibold text-[#018752] hover:underline">
+                  Manage fees
+                </Link>
+              )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                  Charge Type
+                  Management Fee
                 </label>
                 <Select
-                  value={form.managementChargeType}
-                  onValueChange={(val) => setForm({ ...form, managementChargeType: val })}
+                  value={form.managementFeeId}
+                  onValueChange={(val) => setForm({ ...form, managementFeeId: val })}
                 >
                   <SelectTrigger className="w-full h-11 bg-muted/30 border-border rounded-xl text-sm font-medium">
-                    <SelectValue placeholder="Select type" />
+                    <SelectValue placeholder="Select a management fee" />
                   </SelectTrigger>
-                  <SelectContent hideSearch>
-                    <SelectItem value="PERCENTAGE">Percentage (%)</SelectItem>
-                    <SelectItem value="FIXED">Fixed Amount (₦)</SelectItem>
+                  <SelectContent>
+                    {managementFeeOptions.map((fee) => (
+                      <SelectItem key={fee.value} value={fee.value}>{fee.label}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                  Charge Value ({form.managementChargeType === 'PERCENTAGE' ? '%' : '₦'})
-                </label>
-                <div className="relative flex items-center">
-                  {form.managementChargeType === 'FIXED' && (
-                    <span className="absolute left-4 text-sm font-semibold text-muted-foreground select-none">
-                      ₦
-                    </span>
-                  )}
-                  <input
-                    type="text"
-                    inputMode={form.managementChargeType === 'PERCENTAGE' ? 'decimal' : 'numeric'}
-                    value={form.managementChargeValue !== null && form.managementChargeValue !== undefined ? String(form.managementChargeValue) : ''}
-                    onChange={(e) => {
-                      const input = e.target.value;
-                      if (form.managementChargeType === 'PERCENTAGE') {
-                        // Allow digits and at most one decimal point
-                        const clean = input.replace(/[^\d.]/g, '');
-                        const parts = clean.split('.');
-                        const formatted = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : clean;
-                        const num = parseFloat(formatted);
-                        if (formatted === '' || formatted === '.' || isNaN(num) || num <= 100) {
-                          setForm({ ...form, managementChargeValue: formatted });
-                        }
-                      } else {
-                        const clean = input.replace(/[^\d.]/g, '');
-                        const parts = clean.split('.');
-                        const formatted = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : clean;
-                        setForm({ ...form, managementChargeValue: formatted });
-                      }
-                    }}
-                    placeholder="0"
-                    className={`w-full ${
-                      form.managementChargeType === 'FIXED' ? 'pl-8' : 'px-4'
-                    } py-2.5 bg-muted/30 border border-border rounded-xl text-sm font-semibold focus:ring-2 focus:ring-[#018752]/20 focus:border-[#018752] outline-none transition-all`}
-                  />
-                </div>
+                <p className="text-[11px] text-muted-foreground mt-2">
+                  {managementFeeOptions.length === 0
+                    ? 'No active management fees yet. Add one under Management Fees first.'
+                    : "A fee with an amount range must cover this product's minimum and maximum amount."}
+                </p>
+                {!form.managementFeeId && Number(form.managementChargeValue) > 0 && (
+                  <p className="text-[11px] text-amber-600 mt-1">
+                    Currently charging {form.managementChargeType === 'PERCENTAGE' ? `${form.managementChargeValue}%` : `₦${Number(form.managementChargeValue).toLocaleString()}`} set before fees were introduced.
+                  </p>
+                )}
               </div>
 
               <div>
@@ -1073,7 +1063,7 @@ function ProductFormContent() {
                   </SelectTrigger>
                   <SelectContent hideSearch>
                     <SelectItem value="DEDUCT_FROM_DISBURSEMENT">Deduct from Disbursement</SelectItem>
-                    <SelectItem value="CAPITALIZE_INTO_PRINCIPAL">Capitalize into Principal</SelectItem>
+                    <SelectItem value="ADD_TO_REPAYMENT">Add to Repayment</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

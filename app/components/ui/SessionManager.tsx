@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth, clearAuthStorage } from '@/app/composables/core/useAuth';
-import { auth_api } from '@/app/api_factory/modules/auth';
+import { refreshSession, notifySessionExpired, SESSION_EXPIRED_EVENT } from '@/app/api_factory/axios.config';
 import { createPortal } from 'react-dom';
 import { useToast } from '@/app/composables/useToast';
 import OtpInput from '@/app/components/ui/OtpInput';
@@ -12,6 +12,16 @@ import { Mail, ShieldCheck, ArrowLeft, AlertCircle } from 'lucide-react';
 const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes of real inactivity
 const WARNING_BEFORE_LOGOUT = 60 * 1000; // 1 minute warning
 const TOKEN_REFRESH_THRESHOLD = 3 * 60 * 1000; // Refresh token when 3 minutes remaining and user is active
+const REFRESH_RETRY_INTERVAL = 30 * 1000; // The session check ticks every second; don't retry a failed refresh that often
+const ACTIVITY_PERSIST_INTERVAL = 5 * 1000;
+const LAST_ACTIVITY_KEY = 'public_sector_last_activity';
+
+// Shared across tabs and reloads, so working in one tab keeps the others alive
+// and coming back to a closed tab still counts the time away as inactivity.
+const readStoredActivity = (): number => {
+  if (typeof localStorage === 'undefined') return 0;
+  return Number(localStorage.getItem(LAST_ACTIVITY_KEY)) || 0;
+};
 
 export default function SessionManager() {
   const router = useRouter();
@@ -36,8 +46,9 @@ export default function SessionManager() {
   const [token2fa, setToken2fa] = useState('');
 
   // Track last real activity
-  const [lastActivity, setLastActivity] = useState(Date.now());
-  const isRefreshingRef = useRef(false);
+  const [lastActivity, setLastActivity] = useState(() => readStoredActivity() || Date.now());
+  const lastActivityRef = useRef(lastActivity);
+  const lastRefreshAttemptRef = useRef(0);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -70,32 +81,41 @@ export default function SessionManager() {
   }, []);
 
   const silentRefreshToken = useCallback(async () => {
-    if (isRefreshingRef.current || typeof window === 'undefined') return;
-    const refreshToken = localStorage.getItem('refreshToken');
-    if (!refreshToken) return;
+    if (typeof window === 'undefined') return;
+    if (Date.now() - lastRefreshAttemptRef.current < REFRESH_RETRY_INTERVAL) return;
+    lastRefreshAttemptRef.current = Date.now();
 
     try {
-      isRefreshingRef.current = true;
-      const res: any = await auth_api.refreshToken({ refreshToken });
-      const data = res?.data || {};
-      const newAccessToken = data.accessToken || data.token || data.data?.accessToken;
-      const newRefreshToken = data.refreshToken || data.data?.refreshToken;
-      if (newAccessToken) {
-        document.cookie = `public_sector_token=${encodeURIComponent(newAccessToken)}; path=/; max-age=31536000`;
-        localStorage.setItem('token', newAccessToken);
-      }
-      if (newRefreshToken) {
-        localStorage.setItem('refreshToken', newRefreshToken);
-      }
+      const newToken = await refreshSession();
+      if (!newToken) notifySessionExpired();
     } catch {
-      // Refresh token might have expired or is not configured; will prompt when inactivity expires
-    } finally {
-      isRefreshingRef.current = false;
+      // Offline or the server is unreachable; the session may still be fine, so try again on a later tick
+    }
+  }, []);
+
+  const recordActivity = useCallback((now: number) => {
+    lastActivityRef.current = now;
+    setLastActivity(now);
+    if (now - readStoredActivity() > ACTIVITY_PERSIST_INTERVAL) {
+      localStorage.setItem(LAST_ACTIVITY_KEY, String(now));
     }
   }, []);
 
   const handleActivity = useCallback(() => {
-    setLastActivity(Date.now());
+    const now = Date.now();
+    // The click that wakes a long-idle tab must not count as activity, or it would cancel the timeout it should trigger
+    const last = Math.max(lastActivityRef.current, readStoredActivity());
+    if (now - last >= INACTIVITY_TIMEOUT) return;
+    recordActivity(now);
+  }, [recordActivity]);
+
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      setShowWarning(false);
+      setIsTimedOut(true);
+    };
+    window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
   }, []);
 
   useEffect(() => {
@@ -114,7 +134,7 @@ export default function SessionManager() {
       if (isTimedOut) return;
 
       const now = Date.now();
-      const inactivityRemaining = (lastActivity + INACTIVITY_TIMEOUT) - now;
+      const inactivityRemaining = (Math.max(lastActivity, readStoredActivity()) + INACTIVITY_TIMEOUT) - now;
       const { expiry, email } = getTokenInfo();
 
       if (email && !userEmail) {
@@ -148,7 +168,7 @@ export default function SessionManager() {
   }, [pathname, lastActivity, handleActivity, isTimedOut, userEmail, getTokenInfo, silentRefreshToken]);
 
   const handleKeepLoggedIn = () => {
-    setLastActivity(Date.now());
+    recordActivity(Date.now());
     setShowWarning(false);
     silentRefreshToken();
   };
@@ -177,13 +197,15 @@ export default function SessionManager() {
         setTwoFactorMethod(data.method === 'EMAIL' ? 'EMAIL' : 'TOTP');
         setPendingToken(data.pendingToken || '');
         setShow2fa(true);
-      } else {
+      } else if (res?.accessToken || res?.token) {
         setIsTimedOut(false);
         setPassword('');
         setShow2fa(false);
-        setLastActivity(Date.now());
-        silentRefreshToken();
+        recordActivity(Date.now());
         addToast('Welcome back! Session restored.', 'success');
+      } else {
+        // The axios interceptor resolves failed requests instead of rejecting them
+        setReLoginError(res?.message || 'Invalid email or password. Please try again.');
       }
     } catch (err: any) {
       if (err?.response?.data?.twoFactorRequired || err?.response?.data?.message?.toLowerCase().includes('two-factor')) {
@@ -206,7 +228,11 @@ export default function SessionManager() {
 
     setLoggingIn(true);
     try {
-      await loginVerify2fa({ pendingToken, code: token2fa });
+      const res: any = await loginVerify2fa({ pendingToken, code: token2fa });
+      if (!res?.accessToken && !res?.token) {
+        setReLoginError(res?.message || 'Invalid verification code. Please try again.');
+        return;
+      }
       if (typeof window !== 'undefined') {
         localStorage.setItem('admin_2fa_enabled', 'true');
       }
@@ -214,7 +240,7 @@ export default function SessionManager() {
       setShow2fa(false);
       setPassword('');
       setToken2fa('');
-      setLastActivity(Date.now());
+      recordActivity(Date.now());
       addToast('Welcome back! Session restored.', 'success');
     } catch (err: any) {
       setReLoginError(err?.response?.data?.message || err?.message || 'Invalid verification code. Please try again.');
@@ -254,7 +280,7 @@ export default function SessionManager() {
                 ? (twoFactorMethod === 'EMAIL'
                     ? 'Enter the 6-digit one-time code sent to your email to restore your session.'
                     : 'Enter the 6-digit code from your authenticator app to restore your session.')
-                : 'Your session has expired due to inactivity. Sign in below to resume your work without losing context.'}
+                : 'Your session has expired. Sign in below to resume your work without losing context.'}
             </p>
           </div>
 

@@ -33,6 +33,7 @@ export function clearAuthStorage() {
     localStorage.removeItem('public_sector_user_email');
     localStorage.removeItem('public_sector_token_sub');
     localStorage.removeItem('admin_2fa_enabled');
+    localStorage.removeItem('public_sector_last_activity');
     window.dispatchEvent(new Event('public_sector_profile_updated'));
   }
 }
@@ -63,6 +64,7 @@ export function setAuthToken(data: any) {
 
     document.cookie = `public_sector_token=${encodeURIComponent(token)}; path=/; max-age=31536000`; // 1 year
     localStorage.setItem('token', token);
+    localStorage.setItem('public_sector_last_activity', String(Date.now()));
     window.dispatchEvent(new Event('public_sector_profile_updated'));
   }
   if (refreshToken && typeof window !== 'undefined') {

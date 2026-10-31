@@ -13,6 +13,9 @@ export const loans_api = {
   getLoanProductSectors: () => {
     return GATEWAY_ENDPOINT_WITH_AUTH.get('/admin/loan-products/sectors');
   },
+  getActiveManagementFees: () => {
+    return GATEWAY_ENDPOINT_WITH_AUTH.get('/admin/loan-products/management-fees');
+  },
   getLoanSettings: () => {
     return GATEWAY_ENDPOINT_WITH_AUTH.get('/admin/loan-settings');
   },

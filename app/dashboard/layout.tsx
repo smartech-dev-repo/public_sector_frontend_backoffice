@@ -20,6 +20,7 @@ import {
   UserPlus, 
   Users, 
   Banknote, 
+  Percent,
   User, 
   LineChart, 
   ShieldCheck, 
@@ -112,6 +113,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
   if (pathname === '/dashboard') return 'Platform Overview';
   if (pathname.includes('/dashboard/broadsheet')) return 'Broadsheet and Repayment';
   if (pathname.includes('/dashboard/loan-terms')) return 'Loan Products';
+  if (pathname.includes('/dashboard/management-fees')) return 'Management Fees';
   if (pathname.includes('/dashboard/invites')) return 'Agent Recruitment';
   if (pathname.includes('/dashboard/agent-management')) return 'Agent Management';
   if (pathname.includes('/dashboard/loan-requests')) return 'Loan Management';
@@ -160,6 +162,13 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
    icon: Settings,
    match: (p: string) => p.startsWith('/dashboard/loan-terms') || p.startsWith('/dashboard/catalog/loans') || p.startsWith('/dashboard/loan-products'),
    visible: hasAnyPermission(['loan-products:manage', 'loan-settings:manage', 'loans:upload']),
+  },
+  {
+   href: '/dashboard/management-fees',
+   label: 'Management Fees',
+   icon: Percent,
+   match: (p: string) => p.startsWith('/dashboard/management-fees'),
+   visible: hasAnyPermission(['management-fees:manage']),
   },
   {
    href: '/dashboard/invites',
