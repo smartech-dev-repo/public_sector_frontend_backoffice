@@ -65,6 +65,14 @@ const GROUPS: { name: string; labels: Record<string, string> }[] = [
   },
  },
  {
+  name: 'Approvals',
+  labels: {
+   'approvals:loans': 'Decide loan approvals',
+   'approvals:agents': 'Decide agent approvals',
+   'approvals:wallets': 'Decide wallet changes',
+  },
+ },
+ {
   name: 'Team and access',
   labels: {
    'admins:create': 'Invite admins',
@@ -73,6 +81,7 @@ const GROUPS: { name: string; labels: Record<string, string> }[] = [
    'departments:manage': 'Manage departments',
    'audit:read': 'View audit logs',
    'sessions:manage': 'View and sign out user sessions',
+   'alerts:manage': 'Choose who gets security alerts',
   },
  },
 ];

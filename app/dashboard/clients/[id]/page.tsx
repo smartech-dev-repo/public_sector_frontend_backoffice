@@ -221,7 +221,7 @@ export default function ClientWalletPage() {
   setSubmitting(true);
   try {
    await creditClientWallet(clientId, { amount: Number(amount) });
-   addToast('Wallet credited successfully', 'success');
+   addToast('Sent for approval. Another admin must approve it.', 'success');
    setShowCreditModal(false);
    setAmount('');
    loadData();
@@ -246,7 +246,7 @@ export default function ClientWalletPage() {
   setSubmitting(true);
   try {
    await debitClientWallet(clientId, { amount: Number(amount) });
-   addToast('Wallet debited successfully', 'success');
+   addToast('Sent for approval. Another admin must approve it.', 'success');
    setShowDebitModal(false);
    setAmount('');
    loadData();

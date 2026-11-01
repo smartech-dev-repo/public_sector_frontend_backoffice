@@ -9,6 +9,8 @@ import SessionManager from '@/app/components/ui/SessionManager';
 import ProfileDropdown from '@/app/components/ui/ProfileDropdown';
 import { useProfile } from '@/app/composables/modules/useProfile';
 import { useTheme } from 'next-themes';
+import NotificationBell from '@/app/components/ui/NotificationBell';
+import { useNotificationSummary } from '@/app/composables/modules/useNotificationSummary';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 import { clearAuthStorage } from '@/app/composables/core/useAuth';
 import { 
@@ -28,7 +30,8 @@ import {
   ShieldAlert,
   LayoutDashboard,
  SlidersHorizontal,
- MonitorSmartphone
+ MonitorSmartphone,
+ ClipboardCheck
 } from 'lucide-react';
 
 export default function CreditRiskLayout({ children }: { children: React.ReactNode }) {
@@ -117,13 +120,14 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
   if (pathname.includes('/dashboard/loan-terms')) return 'Loan Products';
   if (pathname.includes('/dashboard/configuration') || pathname.includes('/dashboard/management-fees')) return 'Configuration';
   if (pathname.includes('/dashboard/sessions')) return 'User Sessions';
+  if (pathname.includes('/dashboard/approvals')) return 'Approvals';
+  if (pathname.includes('/dashboard/notifications')) return 'Notifications';
   if (pathname.includes('/dashboard/invites')) return 'Agent Recruitment';
-  if (pathname.includes('/dashboard/agent-management')) return 'Agent Management';
-  if (pathname.includes('/dashboard/loan-requests')) return 'Loan Management';
-  if (pathname.includes('/dashboard/clients')) return 'Customer Management';
-  if (pathname.includes('/dashboard/reports')) return 'System Reports';
-  if (pathname.includes('/dashboard/team') || pathname.includes('/dashboard/roles') || pathname.includes('/dashboard/admins')) return 'Role & User Management';
-  if (pathname.includes('/dashboard/maker-checker')) return 'Maker/Checker Queue';
+  if (pathname.includes('/dashboard/agent-management')) return 'Agents';
+  if (pathname.includes('/dashboard/loan-requests')) return 'Loan Requests';
+  if (pathname.includes('/dashboard/clients')) return 'Customers';
+  if (pathname.includes('/dashboard/reports')) return 'Reports';
+  if (pathname.includes('/dashboard/team') || pathname.includes('/dashboard/roles') || pathname.includes('/dashboard/admins')) return 'Team and Roles';
   if (pathname.includes('/dashboard/agent-security')) return 'Agent Security & Suspension';
   if (pathname.includes('/dashboard/agent')) return 'Agent Application Details';
   if (pathname.includes('/dashboard/audit-logs')) return 'Audit Trail Log';
@@ -144,6 +148,18 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
   router.push('/login');
  };
 
+ const notificationSummary = useNotificationSummary();
+
+ // What each menu item counts: its own unread notifications, or for Approvals what awaits this admin.
+ const menuCounts: Record<string, number> = {
+  '/dashboard/approvals': notificationSummary.pendingApprovals,
+  '/dashboard/loan-requests': notificationSummary.byCategory.loans ?? 0,
+  '/dashboard/clients': notificationSummary.byCategory.clients ?? 0,
+  '/dashboard/agent-management': notificationSummary.byCategory.agents ?? 0,
+  '/dashboard/broadsheet': notificationSummary.byCategory.uploads ?? 0,
+  '/dashboard/reports': notificationSummary.byCategory.security ?? 0,
+ };
+
  const navItems = useMemo(() => [
   {
    href: '/dashboard',
@@ -153,76 +169,108 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
    visible: true,
   },
   {
-   href: '/dashboard/broadsheet',
-   label: 'Broadsheet and Repayment',
-   icon: Folder,
-   match: (p: string) => p.startsWith('/dashboard/broadsheet') || p.startsWith('/dashboard/uploads'),
-   visible: hasAnyPermission(['loans:upload', 'repayments:upload', 'ippis:upload', 'documents:read']),
+   href: '/dashboard/approvals',
+   label: 'Approvals',
+   icon: ClipboardCheck,
+   match: (p: string) => p.startsWith('/dashboard/approvals'),
+   // Anyone can be assigned a request, so a waiting item shows this whatever their role.
+   visible: hasAnyPermission(['approvals:loans', 'approvals:agents', 'approvals:wallets', 'loan-requests:review', 'agents:review', 'wallets:manage']) || notificationSummary.pendingApprovals > 0,
+  },
+  {
+   href: '/dashboard/loan-requests',
+   label: 'Loan Requests',
+   section: 'Lending',
+   icon: Banknote,
+   match: (p: string) => p.startsWith('/dashboard/loan-requests') || p.startsWith('/dashboard/client-loans') || p.startsWith('/dashboard/disbursement-summary'),
+   visible: hasAnyPermission(['loan-requests:review', 'client-loans:read', 'clients:read']),
   },
   {
    href: '/dashboard/loan-terms',
    label: 'Loan Products',
+   section: 'Lending',
    icon: Settings,
    match: (p: string) => p.startsWith('/dashboard/loan-terms') || p.startsWith('/dashboard/catalog/loans') || p.startsWith('/dashboard/loan-products'),
    visible: hasAnyPermission(['loan-products:manage', 'loans:upload']),
   },
   {
-   href: '/dashboard/configuration',
-   label: 'Configuration',
-   icon: SlidersHorizontal,
-   match: (p: string) => p.startsWith('/dashboard/configuration') || p.startsWith('/dashboard/management-fees'),
-   visible: hasAnyPermission(['management-fees:manage', 'loan-settings:manage']),
-  },
-  {
-   href: '/dashboard/invites',
-   label: 'Agent Recruitment',
-   icon: UserPlus,
-   match: (p: string) => p.startsWith('/dashboard/invites'),
-   visible: hasAnyPermission(['agents:recruitment:read', 'agents:recruitment:manage', 'agents:recruitment:analytics:read']),
-  },
-  {
-   href: '/dashboard/agent-management',
-   label: 'Agent Management',
-   icon: Users,
-   match: (p: string) => p.startsWith('/dashboard/agent-management') || p.startsWith('/dashboard/agent/') || p.startsWith('/dashboard/agent-security'),
-   visible: hasAnyPermission(['agents:read', 'agents:review', 'agents:sessions:revoke', 'agents:onboarding-access:manage', 'agents:analytics:read']),
-  },
-  {
-   href: '/dashboard/loan-requests',
-   label: 'Loan Request',
-   icon: Banknote,
-   match: (p: string) => p.startsWith('/dashboard/loan-requests') || p.startsWith('/dashboard/client-loans') || p.startsWith('/dashboard/disbursement-summary') || p.startsWith('/dashboard/maker-checker'),
-   visible: hasAnyPermission(['loan-requests:review', 'client-loans:read', 'clients:read']),
+   href: '/dashboard/broadsheet',
+   label: 'Broadsheet and Repayment',
+   section: 'Lending',
+   icon: Folder,
+   match: (p: string) => p.startsWith('/dashboard/broadsheet') || p.startsWith('/dashboard/uploads'),
+   visible: hasAnyPermission(['loans:upload', 'repayments:upload', 'ippis:upload', 'documents:read']),
   },
   {
    href: '/dashboard/clients',
-   label: 'Customer Management',
+   label: 'Customers',
+   section: 'People',
    icon: User,
    match: (p: string) => p.startsWith('/dashboard/clients') || p.startsWith('/dashboard/catalog/ippis'),
    visible: hasAnyPermission(['clients:read', 'clients:review', 'clients:onboard', 'clients:analytics:read', 'ippis:upload', 'wallets:read', 'wallets:manage']),
   },
   {
+   href: '/dashboard/agent-management',
+   label: 'Agents',
+   section: 'People',
+   icon: Users,
+   match: (p: string) => p.startsWith('/dashboard/agent-management') || p.startsWith('/dashboard/agent/') || p.startsWith('/dashboard/agent-security'),
+   visible: hasAnyPermission(['agents:read', 'agents:review', 'agents:sessions:revoke', 'agents:onboarding-access:manage', 'agents:analytics:read']),
+  },
+  {
+   href: '/dashboard/invites',
+   label: 'Agent Recruitment',
+   section: 'People',
+   icon: UserPlus,
+   match: (p: string) => p.startsWith('/dashboard/invites'),
+   visible: hasAnyPermission(['agents:recruitment:read', 'agents:recruitment:manage', 'agents:recruitment:analytics:read']),
+  },
+  {
    href: '/dashboard/reports',
-   label: 'Report',
+   label: 'Reports',
+   section: 'Insights',
    icon: LineChart,
    match: (p: string) => p.startsWith('/dashboard/reports') || p.startsWith('/dashboard/analytics') || p.startsWith('/dashboard/reconciliation') || p.startsWith('/dashboard/audit-logs'),
    visible: hasAnyPermission(['audit:read', 'reconciliation:read', 'clients:analytics:read', 'agents:analytics:read']),
   },
   {
    href: '/dashboard/team',
-   label: 'Role Management',
+   label: 'Team and Roles',
+   section: 'Administration',
    icon: ShieldCheck,
-   match: (p: string) => p.startsWith('/dashboard/team') || p.startsWith('/dashboard/roles') || p.startsWith('/dashboard/admins') || p.startsWith('/dashboard/permissions'),
+   match: (p: string) => p.startsWith('/dashboard/team') || p.startsWith('/dashboard/roles') || p.startsWith('/dashboard/admins'),
    visible: hasAnyPermission(['roles:manage', 'admins:create', 'permissions:manage', 'departments:manage']),
   },
   {
    href: '/dashboard/sessions',
    label: 'User Sessions',
+   section: 'Administration',
    icon: MonitorSmartphone,
    match: (p: string) => p.startsWith('/dashboard/sessions'),
    visible: hasAnyPermission(['sessions:manage']),
   },
- ], [hasAnyPermission]);
+  {
+   href: '/dashboard/configuration',
+   label: 'Configuration',
+   section: 'Administration',
+   icon: SlidersHorizontal,
+   match: (p: string) => p.startsWith('/dashboard/configuration') || p.startsWith('/dashboard/management-fees'),
+   visible: hasAnyPermission(['management-fees:manage', 'loan-settings:manage', 'alerts:manage']),
+  },
+ ], [hasAnyPermission, notificationSummary.pendingApprovals]);
+
+ // Hidden items drop out first, so a section with nothing to show loses its heading too.
+ const navSections = useMemo(() => {
+  const sections: { title?: string; items: typeof navItems }[] = [];
+  navItems.filter((item) => !mounted || item.visible).forEach((item) => {
+   const current = sections[sections.length - 1];
+   if (current && current.title === item.section) {
+    current.items.push(item);
+   } else {
+    sections.push({ title: item.section, items: [item] });
+   }
+  });
+  return sections;
+ }, [navItems, mounted]);
 
  return (
   <div className="h-screen overflow-hidden bg-background font-sans flex text-foreground">
@@ -276,8 +324,13 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
      )}
     </div>
     <div className="px-3.5 py-4 space-y-2 flex-1 overflow-y-auto overflow-x-visible">
-      <nav className="space-y-1">
-           {navItems.filter(item => !mounted || item.visible).map((item) => {
+      <nav className="space-y-4">
+           {navSections.map((section) => (
+            <div key={section.title ?? 'home'} role="group" aria-label={section.title} className="space-y-1">
+             {section.title && (isSidebarMinimized
+              ? <div aria-hidden="true" className="mx-2 mb-2 border-t border-border" />
+              : <h2 className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{section.title}</h2>)}
+             {section.items.map((item) => {
             const Icon = item.icon;
             const isActive = item.match(pathname);
             return (
@@ -293,7 +346,10 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
               }`}
              >
               <Icon className="w-[18px] h-[18px] shrink-0 transition-colors" />
-              {!isSidebarMinimized && <span className="whitespace-nowrap">{item.label}</span>}
+              {!isSidebarMinimized && <span className="whitespace-nowrap flex-1">{item.label}</span>}
+              {menuCounts[item.href] > 0 && (isSidebarMinimized
+               ? <span aria-label={`${menuCounts[item.href]} waiting`} className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-600" />
+               : <span aria-label={`${menuCounts[item.href]} waiting`} className={`min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full text-[11px] font-bold ${isActive ? 'bg-white text-[#016B41]' : 'bg-rose-600 text-white'}`}>{menuCounts[item.href] > 99 ? '99+' : menuCounts[item.href]}</span>)}
               {isSidebarMinimized && (
                <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded whitespace-nowrap z-50">
                 {item.label}
@@ -302,6 +358,8 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
              </Link>
             );
            })}
+            </div>
+           ))}
           </nav>
     </div>
 
@@ -351,6 +409,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
       </div>
      </div>
      <div className="flex items-center gap-4 shrink-0 relative">
+      <NotificationBell unread={notificationSummary.unread} />
       {/* Theme toggle with dropdown */}
       <div className="relative" ref={themeDropdownRef}>
        <button 

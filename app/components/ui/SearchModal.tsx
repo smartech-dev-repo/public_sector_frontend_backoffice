@@ -11,15 +11,17 @@ interface SearchModalProps {
 }
 
 const SYSTEM_ROUTES = [
-  { name: 'Customer Management', href: '/dashboard/clients', description: 'View and manage all customer profiles.', icon: User, keywords: 'clients users customers kyc onboarding' },
+  { name: 'Customers', href: '/dashboard/clients', description: 'View and manage all customer profiles.', icon: User, keywords: 'clients users customers kyc onboarding' },
   { name: 'Broadsheet & Repayment', href: '/dashboard/broadsheet', description: 'Monitor loan broadsheets, disbursement batches, and repayments.', icon: Folder, keywords: 'broadsheet repayment ippis batch upload excel schedule' },
   { name: 'Loan Products', href: '/dashboard/loan-terms', description: 'Configure loan products, interest tiers, sectors, and settings.', icon: Settings, keywords: 'loan products terms interest rates sectors settings' },
   { name: 'Loan Requests', href: '/dashboard/loan-requests', description: 'Review, approve, and disburse customer loan requests.', icon: Banknote, keywords: 'loan requests approval disbursement applications' },
+  { name: 'Approvals', href: '/dashboard/approvals', description: 'Decide requests waiting for a second admin.', icon: ClipboardList, keywords: 'approvals maker checker approve pending decide' },
+  { name: 'Notifications', href: '/dashboard/notifications', description: 'See everything that needs your attention.', icon: Search, keywords: 'notifications alerts bell unread' },
+  { name: 'Configuration', href: '/dashboard/configuration', description: 'Loan settings, management fees and security alerts.', icon: Settings, keywords: 'configuration settings loan fees management security alerts' },
+  { name: 'User Sessions', href: '/dashboard/sessions', description: 'View who is signed in and sign users out.', icon: ShieldCheck, keywords: 'sessions devices revoke sign out logout' },
   { name: 'Agent Recruitment', href: '/dashboard/invites', description: 'Manage new agent recruitment, invites, and invitations.', icon: UserPlus, keywords: 'agent recruitment invites invitations onboarding' },
-  { name: 'Agent Management', href: '/dashboard/agent-management', description: 'Monitor active agents, credentials, and onboarding access.', icon: Users, keywords: 'agents field officers agents directory' },
-  { name: 'Role Management', href: '/dashboard/team', description: 'Configure administrators, system roles, and access.', icon: UserCog, keywords: 'roles admins users team staff' },
-  { name: 'Permissions Management', href: '/dashboard/permissions', description: 'Create and edit permission configurations.', icon: ShieldCheck, keywords: 'permissions rbac access control capabilities' },
-  { name: 'Maker/Checker Queue', href: '/dashboard/maker-checker', description: 'Review and approve pending administrative actions.', icon: ClipboardList, keywords: 'maker checker pending approvals dual control' },
+  { name: 'Agents', href: '/dashboard/agent-management', description: 'Monitor active agents, credentials, and onboarding access.', icon: Users, keywords: 'agents field officers agents directory' },
+  { name: 'Team and Roles', href: '/dashboard/team', description: 'Configure administrators, system roles, and access.', icon: UserCog, keywords: 'roles admins users team staff' },
   { name: 'System Reports & Analytics', href: '/dashboard/reports', description: 'View client onboarding analytics, finance reconciliation, and audit logs.', icon: LineChart, keywords: 'reports analytics reconciliation audit logs kpi growth' }
 ];
 

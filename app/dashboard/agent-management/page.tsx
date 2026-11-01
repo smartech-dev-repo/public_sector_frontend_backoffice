@@ -105,7 +105,7 @@ export default function AgentManagementPage() {
   if (!confirmed) return;
   try {
    await approveAgent(id);
-   addToast('Agent approved successfully', 'success');
+   addToast('Sent for approval. Another admin must approve it.', 'success');
    fetchAgents();
    fetchOverallStats();
   } catch (e: any) {
@@ -118,7 +118,7 @@ export default function AgentManagementPage() {
   if (!confirmed) return;
   try {
    await resendCredentials(id);
-   addToast('Credentials resent successfully', 'success');
+   addToast('Sent for approval. Another admin must approve it.', 'success');
   } catch (e: any) {
    addToast(e?.response?.data?.message || 'Failed to resend credentials', 'error');
   }

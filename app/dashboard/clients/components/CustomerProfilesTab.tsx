@@ -150,7 +150,7 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
     setWalletAction('credit');
     try {
       await creditClientWallet(selectedClient.id, { amount: Number(amount), reference: 'REF-' + Date.now(), description: note || 'Credit' });
-      addToast('Wallet credited successfully', 'success');
+      addToast('Sent for approval. Another admin must approve it.', 'success');
       setAmount('');
       setNote('');
       const data = await getClientWallet(selectedClient.id);
@@ -169,7 +169,7 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
     setWalletAction('debit');
     try {
       await debitClientWallet(selectedClient.id, { amount: Number(amount), reference: 'REF-' + Date.now(), description: note || 'Debit' });
-      addToast('Wallet debited successfully', 'success');
+      addToast('Sent for approval. Another admin must approve it.', 'success');
       setAmount('');
       setNote('');
       const data = await getClientWallet(selectedClient.id);
