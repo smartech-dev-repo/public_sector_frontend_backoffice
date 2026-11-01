@@ -1,5 +1,6 @@
 "use client";
 
+import { useDataVersion } from '@/app/composables/useDataVersion';
 import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useAgents } from '@/app/composables/modules/useAgents';
@@ -20,6 +21,7 @@ import { Users, UserCheck, Clock, ShieldCheck, UserX } from 'lucide-react';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function AgentManagementPage() {
+ const dataVersion = useDataVersion();
  const { confirm } = useConfirm();
  const { hasPermission, hasAnyPermission, isSuperAdmin } = useAdminPermissions();
 
@@ -68,7 +70,7 @@ export default function AgentManagementPage() {
   if (canReadClientAnalytics) {
    fetchClientAnalytics();
   }
- }, [fetchOverallStats, fetchClientAnalytics, canReadAnalytics, canReadClientAnalytics]);
+ }, [fetchOverallStats, fetchClientAnalytics, canReadAnalytics, canReadClientAnalytics, dataVersion]);
 
  const totalAgentsCount = agentAnalytics?.totalApplications ?? (meta?.total || agents.length);
  const activeApprovedCount = agentAnalytics?.byStatus?.APPROVED ?? agents.filter(a => a.status === 'APPROVED').length;
@@ -98,7 +100,7 @@ export default function AgentManagementPage() {
   Object.assign(params, dateRangeParams(createdRange, 'createdFrom', 'createdTo'));
   Object.assign(params, dateRangeParams(reviewedRange, 'reviewedFrom', 'reviewedTo'));
   fetchAgents(params);
- }, [fetchAgents, currentPage, itemsPerPage, statusFilter, qFilter, createdRange, reviewedRange, canReadAgents]);
+ }, [fetchAgents, currentPage, itemsPerPage, statusFilter, qFilter, createdRange, reviewedRange, canReadAgents, dataVersion]);
 
  const handleApprove = async (id: string) => {
   const confirmed = await confirm({ message: 'Are you sure you want to approve this agent?' });
@@ -106,8 +108,6 @@ export default function AgentManagementPage() {
   try {
    await approveAgent(id);
    addToast('Sent for approval. Another admin must approve it.', 'success');
-   fetchAgents();
-   fetchOverallStats();
   } catch (e: any) {
    addToast(e?.response?.data?.message || 'Failed to approve agent', 'error');
   }
@@ -136,8 +136,6 @@ export default function AgentManagementPage() {
   try {
    await updateOnboardingAccess(agent.id, { canOnboardClients: newStatus });
    addToast(`Onboarding access ${newStatus ? 'granted' : 'restricted'} successfully`, 'success');
-   fetchAgents({ page: currentPage, limit: itemsPerPage });
-   fetchOverallStats();
   } catch (e: any) {
    addToast(e?.response?.data?.message || 'Failed to update onboarding access', 'error');
   }
@@ -174,8 +172,6 @@ export default function AgentManagementPage() {
    await rejectAgent(selectedAgent.id, { reason: rejectReason });
    addToast('Agent rejected', 'success');
    setShowRejectModal(false);
-   fetchAgents();
-   fetchOverallStats();
   } catch (e: any) {
    addToast(e?.response?.data?.message || 'Failed to reject agent', 'error');
   } finally {
@@ -428,10 +424,11 @@ export default function AgentManagementPage() {
            <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground">{agent.phone || '-'}</td>
            <td className="px-4 py-4 whitespace-nowrap text-sm">
             {renderAgentStatusBadge(agent.status || agent.reviewStatus)}
+            {agent.pendingApproval && <Link href={`/dashboard/approvals/${agent.pendingApproval.id}`} className="block mt-1 text-xs font-semibold text-amber-800 dark:text-amber-400 hover:underline">Waiting for approval</Link>}
            </td>
            <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
             <TableDropdown>
-             {(agent.status === 'PENDING_REVIEW' || agent.status === 'PENDING' || agent.status === 'SUBMITTED') && canReviewAgent && (
+             {(agent.status === 'PENDING_REVIEW' || agent.status === 'PENDING' || agent.status === 'SUBMITTED') && !agent.pendingApproval && canReviewAgent && (
               <>
                <button onClick={() => handleApprove(agent.id)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 transition-colors flex items-center gap-2">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>

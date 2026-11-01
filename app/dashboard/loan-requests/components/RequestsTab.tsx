@@ -1,5 +1,6 @@
 "use client";
 
+import { useDataVersion } from '@/app/composables/useDataVersion';
 import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState } from 'react';
 import { useLoans } from '@/app/composables/modules/useLoans';
@@ -16,6 +17,7 @@ import Link from 'next/link';
 import { CheckCircle, XCircle, KeyRound, Send, User, FileText, CreditCard } from 'lucide-react';
 
 export default function RequestsTab() {
+ const dataVersion = useDataVersion();
   const { isSuperAdmin, hasPermission } = useAdminPermissions();
   const canReview = isSuperAdmin || hasPermission('loan-requests:review');
   const [page, setPage] = useState(1);
@@ -60,7 +62,7 @@ export default function RequestsTab() {
 
   useEffect(() => {
     loadData();
-  }, [fetchLoanRequests, statusFilter, typeFilter, clientIdFilter, createdRange, disbursedRange, page, limit, canReview]);
+  }, [fetchLoanRequests, statusFilter, typeFilter, clientIdFilter, createdRange, disbursedRange, page, limit, canReview, dataVersion]);
 
   const handleApprove = async (id: string) => {
     const confirmed = await confirm({ 
@@ -72,7 +74,6 @@ export default function RequestsTab() {
     try {
       await approveLoanRequest(id);
       addToast('Sent for approval. Another admin must approve it.', 'success');
-      loadData();
     } catch (e: any) {
       const msg = e?.message || e?.response?.data?.message || 'Failed to approve loan request';
       addToast(msg, 'error');
@@ -89,7 +90,6 @@ export default function RequestsTab() {
     try {
       await disburseLoanRequest(id);
       addToast('Sent for approval. Another admin must approve it.', 'success');
-      loadData();
     } catch (e: any) {
       const msg = e?.message || e?.response?.data?.message || 'Failed to disburse loan request';
       addToast(msg, 'error');
@@ -112,7 +112,6 @@ export default function RequestsTab() {
       await rejectLoanRequest(selectedRequest.id, { reason: rejectReason });
       addToast('Loan request rejected', 'success');
       setShowRejectModal(false);
-      loadData();
     } catch (e: any) {
       const msg = e?.message || e?.response?.data?.message || 'Failed to reject loan request';
       addToast(msg, 'error');
@@ -137,7 +136,6 @@ export default function RequestsTab() {
       await confirmLoanRequestCode(selectedRequest.id, confirmationCode.trim());
       addToast('Sent for approval. Another admin must approve it.', 'success');
       setShowConfirmCodeModal(false);
-      loadData();
     } catch (e: any) {
       const msg = e?.message || e?.response?.data?.message || 'Failed to confirm code. Verify code is valid and request is PENDING.';
       addToast(msg, 'error');
@@ -272,14 +270,15 @@ export default function RequestsTab() {
                     const availableActions: string[] = Array.isArray(req.availableActions) ? req.availableActions : [];
 
                     // 1. Confirm with Code: on PENDING loan requests
-                    const canConfirmCode = canReview && (
+                    const waiting = !!req.pendingApproval;
+                    const canConfirmCode = canReview && !waiting && (
                       availableActions.includes('confirm-code') || 
                       availableActions.includes('confirm') || 
                       reqStatus === 'PENDING'
                     );
 
                     // 2. Approve: on CONFIRMED loan requests
-                    const canApprove = canReview && (
+                    const canApprove = canReview && !waiting && (
                       availableActions.includes('approve') || 
                       reqStatus === 'CONFIRMED'
                     );
@@ -292,7 +291,7 @@ export default function RequestsTab() {
                     );
 
                     // 4. Disburse: on APPROVED loan requests
-                    const canDisburse = canReview && (
+                    const canDisburse = canReview && !waiting && (
                       availableActions.includes('disburse') || 
                       reqStatus === 'APPROVED'
                     );
@@ -337,6 +336,7 @@ export default function RequestsTab() {
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-sm">
                           {renderStatusBadge(req.status)}
+                          {waiting && <Link href={`/dashboard/approvals/${req.pendingApproval.id}`} className="block mt-1 text-xs font-semibold text-amber-800 dark:text-amber-400 hover:underline">Waiting for approval</Link>}
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium relative">
                           <TableDropdown>

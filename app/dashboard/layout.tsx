@@ -174,7 +174,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
    icon: ClipboardCheck,
    match: (p: string) => p.startsWith('/dashboard/approvals'),
    // Anyone can be assigned a request, so a waiting item shows this whatever their role.
-   visible: hasAnyPermission(['approvals:loans', 'approvals:agents', 'approvals:wallets', 'loan-requests:review', 'agents:review', 'wallets:manage']) || notificationSummary.pendingApprovals > 0,
+   visible: hasAnyPermission(['approvals:loans', 'approvals:agents', 'approvals:wallets', 'loan-requests:review', 'agents:review', 'wallets:manage']) || notificationSummary.pendingApprovals + notificationSummary.myPendingRequests > 0,
   },
   {
    href: '/dashboard/loan-requests',
@@ -256,7 +256,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
    match: (p: string) => p.startsWith('/dashboard/configuration') || p.startsWith('/dashboard/management-fees'),
    visible: hasAnyPermission(['management-fees:manage', 'loan-settings:manage', 'alerts:manage']),
   },
- ], [hasAnyPermission, notificationSummary.pendingApprovals]);
+ ], [hasAnyPermission, notificationSummary.pendingApprovals, notificationSummary.myPendingRequests]);
 
  // Hidden items drop out first, so a section with nothing to show loses its heading too.
  const navSections = useMemo(() => {
@@ -347,6 +347,9 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
              >
               <Icon className="w-[18px] h-[18px] shrink-0 transition-colors" />
               {!isSidebarMinimized && <span className="whitespace-nowrap flex-1">{item.label}</span>}
+              {item.href === '/dashboard/approvals' && !menuCounts[item.href] && notificationSummary.myPendingRequests > 0 && !isSidebarMinimized && (
+               <span title="Your requests waiting for another admin" aria-label={`${notificationSummary.myPendingRequests} of your requests waiting`} className={`min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full text-[11px] font-bold ${isActive ? 'bg-white text-[#016B41]' : 'bg-muted text-foreground'}`}>{notificationSummary.myPendingRequests}</span>
+              )}
               {menuCounts[item.href] > 0 && (isSidebarMinimized
                ? <span aria-label={`${menuCounts[item.href]} waiting`} className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-600" />
                : <span aria-label={`${menuCounts[item.href]} waiting`} className={`min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full text-[11px] font-bold ${isActive ? 'bg-white text-[#016B41]' : 'bg-rose-600 text-white'}`}>{menuCounts[item.href] > 99 ? '99+' : menuCounts[item.href]}</span>)}

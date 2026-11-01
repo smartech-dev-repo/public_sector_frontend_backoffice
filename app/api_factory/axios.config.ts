@@ -1,3 +1,4 @@
+import { announceDataChanged } from '@/app/composables/useDataVersion';
 import axios, { type AxiosResponse } from "axios";
 import { addToast } from '@/app/composables/useToast'
 
@@ -125,6 +126,7 @@ instanceArray.forEach((instance) => {
 
  instance.interceptors.response.use(
  (response: CustomAxiosResponse) => {
+ if (changesData(response.config)) announceDataChanged();
  return response;
  },
  async (err: any) => {
@@ -211,6 +213,12 @@ instanceArray.forEach((instance) => {
  }
  );
 });
+
+// Logging a reveal or marking a notification read changes nothing a list shows.
+const QUIET_PATHS = /\/(auth|admin\/audit-logs\/data-access|admin\/notifications)\b/;
+
+const changesData = (config?: { method?: string; url?: string }) =>
+ !!config?.method && config.method !== 'get' && !QUIET_PATHS.test(config.url ?? '');
 
 const statusCodeStartsWith = (
  statusCode: number,

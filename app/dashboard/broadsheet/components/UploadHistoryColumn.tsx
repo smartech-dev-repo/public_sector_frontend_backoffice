@@ -1,5 +1,6 @@
 "use client";
 
+import { useDataVersion } from '@/app/composables/useDataVersion';
 import { useEffect, useRef, useState } from 'react';
 import { Download, UploadCloud } from 'lucide-react';
 import EmptyState from '@/app/components/ui/EmptyState';
@@ -30,6 +31,7 @@ interface UploadHistoryColumnProps {
 }
 
 export default function UploadHistoryColumn({ title, documentType, filters, refreshKey, canUpload, canRead, onUpload, onReview, onTotal }: UploadHistoryColumnProps) {
+ const dataVersion = useDataVersion();
   const { addToast } = useToast();
   const [batches, setBatches] = useState<any[]>([]);
   const [page, setPage] = useState(1);
@@ -56,7 +58,7 @@ export default function UploadHistoryColumn({ title, documentType, filters, refr
   useEffect(() => {
     if (canRead) load(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canRead, filters, refreshKey]);
+  }, [canRead, filters, refreshKey, dataVersion]);
 
   // The API returns a signed URL on cloud storage, and a path ending in the file key on local storage.
   const handleDownload = async (batch: any) => {

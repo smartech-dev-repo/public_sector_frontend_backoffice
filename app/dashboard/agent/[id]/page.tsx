@@ -1,5 +1,6 @@
 "use client";
 
+import { useDataVersion } from '@/app/composables/useDataVersion';
 import { auditLogs_api } from '@/app/api_factory/modules/auditLogs';
 import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState, useCallback, useMemo, useRef, use } from 'react';
@@ -19,6 +20,7 @@ import { useConfirm } from '@/app/composables/useConfirm';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function AgentPage({ params }: { params: Promise<{ id: string }> }) {
+ const dataVersion = useDataVersion();
   const { confirm } = useConfirm();
   const router = useRouter();
   const { id } = use(params);
@@ -180,7 +182,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
     if (canReadClients) {
       fetchAgentClients();
     }
-  }, [fetchAgentClients, canReadClients]);
+  }, [fetchAgentClients, canReadClients, dataVersion]);
 
   const fetchAgentDetails = async () => {
     if (!canReadAgent) {
@@ -204,7 +206,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
     } else {
       setLoading(false);
     }
-  }, [id, canReadAgent]);
+  }, [id, canReadAgent, dataVersion]);
 
   useEffect(() => {
     if (canReadLoans && application?.clientId) {
@@ -239,7 +241,6 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
     try {
       await approveAgent(application.id);
       addToast('Sent for approval. Another admin must approve it.', 'success');
-      await fetchAgentDetails();
     } catch (err: any) {
       addToast(err?.response?.data?.message || 'Failed to approve', 'error');
     } finally {
@@ -254,7 +255,6 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
     try {
       await rejectAgent(application.id, { reason: 'Rejected by admin' });
       addToast('Application rejected successfully', 'success');
-      await fetchAgentDetails();
     } catch (err: any) {
       addToast(err?.response?.data?.message || 'Failed to reject', 'error');
     } finally {
@@ -296,7 +296,6 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
     try {
       await updateOnboardingAccess(application.id, { canOnboardClients: newStatus });
       addToast(`Onboarding access ${newStatus ? 'granted' : 'restricted'} successfully`, 'success');
-      await fetchAgentDetails();
     } catch (err: any) {
       addToast(err?.response?.data?.message || 'Failed to update onboarding access', 'error');
     }
@@ -331,7 +330,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
     }
   };
 
-  if (loading) {
+  if (loading && !application) {
     return <PulseLoader />;
   }
 
@@ -361,7 +360,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
 
   const agentName = application.fullName || `${application.firstName || ''} ${application.lastName || ''}`.trim() || 'Agent';
   const initial = (agentName.charAt(0) || application.email?.charAt(0) || 'A').toUpperCase();
-  const isAgentPending = application.status === 'PENDING' || application.status === 'PENDING_REVIEW' || application.status === 'SUBMITTED';
+  const isAgentPending = !application.pendingApproval && (application.status === 'PENDING' || application.status === 'PENDING_REVIEW' || application.status === 'SUBMITTED');
   const hasActions = canSendCreds || canManageAccess || canRevokeSessions || canReadDocs || (isAgentPending && canReviewAgent);
 
   const getAgentStatusStyle = (status: string) => {
@@ -490,7 +489,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
                 )}
 
                 {/* Pending Approval Actions */}
-                {(application.status === 'PENDING' || application.status === 'PENDING_REVIEW' || application.status === 'SUBMITTED') && canReviewAgent && (
+                {isAgentPending && canReviewAgent && (
                   <>
                     <div className="h-px bg-border/50 my-1"></div>
                     <button
@@ -532,7 +531,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
       </div>
 
       {/* ================= PENDING APPROVAL ALERT BANNER ================= */}
-      {(application.status === 'PENDING' || application.status === 'PENDING_REVIEW' || application.status === 'SUBMITTED') && canReviewAgent && (
+      {isAgentPending && canReviewAgent && (
         <div className="bg-amber-50 dark:bg-amber-950/30 rounded-2xl border border-amber-200 dark:border-amber-900/60 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-start gap-3">
             <div className="p-2 rounded-xl bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400 shrink-0 mt-0.5">

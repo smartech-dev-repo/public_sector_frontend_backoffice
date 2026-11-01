@@ -1,5 +1,6 @@
 "use client";
 
+import { useDataVersion } from '@/app/composables/useDataVersion';
 import { auditLogs_api } from '@/app/api_factory/modules/auditLogs';
 import { useEffect, useState } from 'react';
 import { useLoans } from '@/app/composables/modules/useLoans';
@@ -11,6 +12,7 @@ import { GATEWAY_ENDPOINT_WITH_AUTH } from '@/app/api_factory/axios.config';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function DisbursementSummaryTab() {
+ const dataVersion = useDataVersion();
  const { isSuperAdmin, hasPermission } = useAdminPermissions();
  const canReadDisbursement = isSuperAdmin || hasPermission('client-loans:read');
  const { loading, error, disbursementSummary, fetchDisbursementSummary } = useLoans();
@@ -25,7 +27,7 @@ export default function DisbursementSummaryTab() {
   if (month && canReadDisbursement) {
    fetchDisbursementSummary({ month });
   }
- }, [fetchDisbursementSummary, month, canReadDisbursement]);
+ }, [fetchDisbursementSummary, month, canReadDisbursement, dataVersion]);
 
  const handleExportCSV = async () => {
   if (!month) return;

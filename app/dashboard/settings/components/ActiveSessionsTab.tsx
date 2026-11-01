@@ -1,5 +1,6 @@
 "use client";
 
+import { useDataVersion } from '@/app/composables/useDataVersion';
 import { useEffect, useState } from 'react';
 import { Laptop } from 'lucide-react';
 import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
@@ -15,6 +16,7 @@ const dateTime = (value: string) =>
  new Date(value).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
 export default function ActiveSessionsTab({ onCountChange }: { onCountChange?: (count: number) => void }) {
+ const dataVersion = useDataVersion();
  const { loading, sessions, meta, fetchSessions, deleteSession } = useSessions();
  const { confirm } = useConfirm();
  const { addToast } = useToast();
@@ -29,7 +31,7 @@ export default function ActiveSessionsTab({ onCountChange }: { onCountChange?: (
   return fetchSessions(params);
  };
 
- useEffect(() => { load(); }, [page, limit, search, signedIn]); // eslint-disable-line react-hooks/exhaustive-deps
+ useEffect(() => { load(); }, [page, limit, search, signedIn, dataVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
  useEffect(() => {
   if (!search.trim() && !signedIn) onCountChange?.(meta.total);
@@ -41,7 +43,6 @@ export default function ActiveSessionsTab({ onCountChange }: { onCountChange?: (
   try {
    await deleteSession(id);
    addToast('Device signed out', 'success');
-   load();
   } catch (err: any) {
    addToast(err?.response?.data?.message || 'Failed to sign out this device', 'error');
   }

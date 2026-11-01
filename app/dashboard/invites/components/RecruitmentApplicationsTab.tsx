@@ -1,5 +1,6 @@
 "use client";
 
+import { useDataVersion } from '@/app/composables/useDataVersion';
 import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
@@ -19,6 +20,7 @@ import SensitiveValue from '@/app/components/ui/SensitiveValue';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function RecruitmentApplicationsTab() {
+ const dataVersion = useDataVersion();
   const { confirm } = useConfirm();
   const { addToast } = useToast();
   const { hasPermission, isSuperAdmin } = useAdminPermissions();
@@ -95,11 +97,11 @@ export default function RecruitmentApplicationsTab() {
 
   useEffect(() => {
     loadAnalytics();
-  }, [loadAnalytics]);
+  }, [loadAnalytics, dataVersion]);
 
   useEffect(() => {
     loadApplications();
-  }, [loadApplications]);
+  }, [loadApplications, dataVersion]);
 
 
   const handleOpenDetail = async (appId: string) => {
@@ -134,8 +136,6 @@ export default function RecruitmentApplicationsTab() {
       if (selectedApp?.id === app.id) {
         setShowDetailModal(false);
       }
-      loadApplications();
-      loadAnalytics();
     } catch (err: any) {
       addToast(err?.message || 'Failed to delete application', 'error');
     }
@@ -153,8 +153,6 @@ export default function RecruitmentApplicationsTab() {
     try {
       await approveAgent(agentId);
       addToast('Sent for approval. Another admin must approve it.', 'success');
-      loadApplications();
-      loadAnalytics();
       if (selectedApp && selectedApp.submittedAgent && selectedApp.submittedAgent.id === agentId) {
         setSelectedApp({
           ...selectedApp,
@@ -212,8 +210,6 @@ export default function RecruitmentApplicationsTab() {
       await rejectAgent(rejectModal.agentId, { reason: rejectModal.reason.trim() });
       addToast('Agent application rejected', 'success');
       setRejectModal({ isOpen: false, agentId: '', applicantName: '', reason: '', submitting: false });
-      loadApplications();
-      loadAnalytics();
       if (selectedApp && selectedApp.submittedAgent && selectedApp.submittedAgent.id === rejectModal.agentId) {
         setSelectedApp({
           ...selectedApp,
@@ -427,8 +423,6 @@ export default function RecruitmentApplicationsTab() {
             <button
               type="button"
               onClick={() => {
-                loadApplications();
-                loadAnalytics();
                 addToast('Applications refreshed', 'info');
               }}
               className="p-2 bg-card border border-border hover:bg-muted/30 text-foreground rounded-full transition-colors shadow-xs"
@@ -540,6 +534,9 @@ export default function RecruitmentApplicationsTab() {
                       {/* Application Status */}
                       <td className="px-5 py-4 whitespace-nowrap">
                         {renderApplicationStatusBadge(app)}
+                        {app.pendingApproval && (
+                          <Link href={`/dashboard/approvals/${app.pendingApproval.id}`} className="block mt-1 text-xs font-semibold text-amber-800 dark:text-amber-400 hover:underline">Waiting for approval</Link>
+                        )}
                       </td>
 
                       {/* Enrollment Link */}
@@ -576,7 +573,7 @@ export default function RecruitmentApplicationsTab() {
 
                             {app.submittedAgent && (
                               <>
-                                {app.submittedAgent.status === 'PENDING_REVIEW' && canReviewAgent && (
+                                {app.submittedAgent.status === 'PENDING_REVIEW' && !app.pendingApproval && canReviewAgent && (
                                   <>
                                     <button
                                       type="button"

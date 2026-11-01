@@ -1,5 +1,6 @@
 "use client";
 
+import { useDataVersion } from '@/app/composables/useDataVersion';
 import FilterBar, { AGENCY_FILTER_OPTIONS, dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState } from 'react';
 import { useLoans } from '@/app/composables/modules/useLoans';
@@ -11,6 +12,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function LoansCatalogTab() {
+ const dataVersion = useDataVersion();
  const { isSuperAdmin, hasPermission } = useAdminPermissions();
  const canAccessCatalog = isSuperAdmin || hasPermission('loans:upload');
  const { loading, error, loans, fetchLoans, meta } = useLoans();
@@ -31,7 +33,7 @@ export default function LoansCatalogTab() {
   Object.assign(params, dateRangeParams(dateRange, 'disbursedFrom', 'disbursedTo'));
   
   fetchLoans(params);
- }, [fetchLoans, page, limit, q, agency, product, dateRange, canAccessCatalog]);
+ }, [fetchLoans, page, limit, q, agency, product, dateRange, canAccessCatalog, dataVersion]);
 
  return (
   <main className="w-full">

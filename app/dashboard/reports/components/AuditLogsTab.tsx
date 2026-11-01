@@ -1,5 +1,6 @@
 "use client";
 
+import { useDataVersion } from '@/app/composables/useDataVersion';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ChevronDown, X } from 'lucide-react';
@@ -42,6 +43,7 @@ const DetailRow = ({ label, value, mono }: { label: string; value: React.ReactNo
 );
 
 export default function AuditLogsTab() {
+ const dataVersion = useDataVersion();
  const { isSuperAdmin, hasPermission } = useAdminPermissions();
  const canAudit = isSuperAdmin || hasPermission('audit:read');
  const [page, setPage] = useState(1);
@@ -78,7 +80,7 @@ export default function AuditLogsTab() {
  useEffect(() => {
   if (!canAudit) return;
   fetchLogs({ page, limit, ...filterParams });
- }, [fetchLogs, canAudit, page, limit, filterParams]);
+ }, [fetchLogs, canAudit, page, limit, filterParams, dataVersion]);
 
  const handleExport = async () => {
   setExporting(true);

@@ -1,5 +1,6 @@
 "use client";
 
+import { useDataVersion } from '@/app/composables/useDataVersion';
 import FilterBar from '@/app/components/ui/FilterBar';
 import { useEffect, useState } from 'react'; 
 import { useDepartments } from '@/app/composables/modules/useDepartments';
@@ -13,6 +14,7 @@ import Pagination from '@/app/components/ui/Pagination';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function DepartmentsTab() {
+ const dataVersion = useDataVersion();
  const { hasPermission, isSuperAdmin } = useAdminPermissions();
  const canManage = isSuperAdmin || hasPermission('departments:manage');
 
@@ -34,7 +36,7 @@ export default function DepartmentsTab() {
   const params: any = { page, limit };
   if (q.trim()) params.q = q.trim();
   fetchDepartments(params);
- }, [fetchDepartments, page, limit, q]);
+ }, [fetchDepartments, page, limit, q, dataVersion]);
 
 
  const handleSubmit = async (e: React.FormEvent) => {
@@ -51,7 +53,6 @@ export default function DepartmentsTab() {
    setShowModal(false);
    setEditingDepartment(null);
    setForm({ name: '', description: '' });
-   fetchDepartments({ page, limit });
   } catch (err: any) {
    addToast(err.message || 'Failed to save department', 'error');
   } finally {
@@ -78,7 +79,6 @@ export default function DepartmentsTab() {
    try {
     await deleteDepartment(id);
     addToast('Department deleted successfully', 'success');
-    fetchDepartments({ page, limit });
    } catch (err: any) {
     addToast(err.message || 'Failed to delete department', 'error');
    }

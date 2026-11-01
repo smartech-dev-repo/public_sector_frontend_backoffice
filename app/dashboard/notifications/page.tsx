@@ -1,5 +1,6 @@
 "use client";
 
+import { useDataVersion } from '@/app/composables/useDataVersion';
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import FilterBar from '@/app/components/ui/FilterBar';
@@ -20,6 +21,7 @@ const CATEGORIES = [
 ];
 
 export default function NotificationsPage() {
+ const dataVersion = useDataVersion();
  const router = useRouter();
  const [page, setPage] = useState(1);
  const [limit, setLimit] = useState(25);
@@ -43,7 +45,7 @@ export default function NotificationsPage() {
   setState('ready');
  }, [page, limit, category, read]);
 
- useEffect(() => { load(); }, [load]);
+ useEffect(() => { load(); }, [load, dataVersion]);
 
  const openItem = async (item: any) => {
   if (!item.readAt) {
@@ -56,7 +58,6 @@ export default function NotificationsPage() {
  const markAll = async () => {
   await notifications_api.markAllRead();
   announceNotificationsChanged();
-  load();
  };
 
  return (

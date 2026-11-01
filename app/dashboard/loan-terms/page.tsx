@@ -1,5 +1,8 @@
 "use client";
 
+import TabCount from '@/app/components/ui/TabCount';
+import { useListTotals } from '@/app/composables/useListTotals';
+import { loans_api } from '@/app/api_factory/modules/loans';
 import { useState, useEffect } from 'react';
 import ConfigurationsTab from './components/ConfigurationsTab';
 import LoansCatalogTab from './components/LoansCatalogTab';
@@ -10,6 +13,11 @@ export default function LoanProductsPage() {
  const { isSuperAdmin, hasPermission } = useAdminPermissions();
  const canAccessConfigs = isSuperAdmin || hasPermission('loan-products:manage');
  const canAccessCatalog = isSuperAdmin || hasPermission('loans:upload');
+
+ const totals = useListTotals({
+  configs: canAccessConfigs ? () => loans_api.getLoanProducts({ limit: 1 }) : null,
+  catalog: canAccessCatalog ? () => loans_api.getLoans({ limit: 1 }) : null,
+ });
 
  const tabs = [
   ...(canAccessConfigs ? [{ id: 'configs' as const, label: 'Loan Products' }] : []),
@@ -52,6 +60,7 @@ export default function LoanProductsPage() {
        `}
       >
        {tab.label}
+       <TabCount count={totals[tab.id]} active={activeTab === tab.id} />
       </button>
      ))}
     </nav>

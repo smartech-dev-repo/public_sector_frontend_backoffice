@@ -1,5 +1,8 @@
 "use client";
 
+import TabCount from '@/app/components/ui/TabCount';
+import { useListTotals } from '@/app/composables/useListTotals';
+import { auditLogs_api } from '@/app/api_factory/modules/auditLogs';
 import { useState, useMemo, useEffect } from 'react';
 import ReconciliationTab from './components/ReconciliationTab';
 import AuditLogsTab from './components/AuditLogsTab';
@@ -13,6 +16,10 @@ export default function SystemReportsPage() {
   const canAnalytics = isSuperAdmin || hasAnyPermission(['clients:analytics:read', 'agents:analytics:read']);
   const canReconciliation = isSuperAdmin || hasPermission('reconciliation:read');
   const canAudit = isSuperAdmin || hasPermission('audit:read');
+
+  const totals: Record<string, number> = useListTotals({
+    audit: canAudit ? () => auditLogs_api.getLogs({ limit: 1 }) : null,
+  });
 
   const availableTabs = useMemo(() => {
     const list: { id: 'analytics' | 'reconciliation' | 'audit'; label: string }[] = [];
@@ -60,6 +67,7 @@ export default function SystemReportsPage() {
               `}
             >
               {tab.label}
+              <TabCount count={totals[tab.id]} active={activeTab === tab.id} />
             </button>
           ))}
         </nav>

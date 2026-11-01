@@ -1,5 +1,9 @@
 "use client";
 
+import TabCount from '@/app/components/ui/TabCount';
+import { useListTotals } from '@/app/composables/useListTotals';
+import { clients_api } from '@/app/api_factory/modules/clients';
+import { ippis_api } from '@/app/api_factory/modules/ippis';
 import { useState, Suspense, useEffect } from 'react';
 import CustomerProfilesTab from './components/CustomerProfilesTab';
 import ClientOnboardingModal from './components/ClientOnboardingModal';
@@ -17,6 +21,11 @@ export default function CustomerManagementPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [activeTab, setActiveTab] = useState<'profiles' | 'ippis'>('profiles');
   const [onboardingOpen, setOnboardingOpen] = useState(false);
+
+  const totals = useListTotals({
+    profiles: canReadProfiles ? () => clients_api.getClients({ limit: 1 }) : null,
+    ippis: canUploadIppis ? () => ippis_api.getIppisRecords({ limit: 1 }) : null,
+  });
 
   const tabs = [
     ...(canReadProfiles ? [{ id: 'profiles' as const, label: 'Customer Profiles' }] : []),
@@ -57,6 +66,7 @@ export default function CustomerManagementPage() {
               `}
             >
               {tab.label}
+              <TabCount count={totals[tab.id]} active={activeTab === tab.id} />
             </button>
           ))}
         </nav>

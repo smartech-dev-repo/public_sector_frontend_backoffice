@@ -1,5 +1,11 @@
 "use client";
 
+import TabCount from '@/app/components/ui/TabCount';
+import { useListTotals } from '@/app/composables/useListTotals';
+import { admins_api } from '@/app/api_factory/modules/admins';
+import { roles_api } from '@/app/api_factory/modules/roles';
+import { departments_api } from '@/app/api_factory/modules/departments';
+import { invites_api } from '@/app/api_factory/modules/invites';
 import { useState, useMemo, useEffect } from 'react';
 import AdminsTab from './components/AdminsTab';
 import RolesTab from './components/RolesTab';
@@ -47,6 +53,14 @@ export default function TeamManagementPage() {
    setActiveTab(tabs[0].id);
   }
  }, [tabs, activeTab]);
+ const shows = (id: TabId) => tabs.some((tab) => tab.id === id);
+ const totals = useListTotals({
+  admins: shows('admins') ? () => admins_api.getAdmins({ limit: 1 }) : null,
+  roles: shows('roles') ? () => roles_api.getRoles({ limit: 1 }) : null,
+  departments: shows('departments') ? () => departments_api.getDepartments({ limit: 1 }) : null,
+  invites: shows('invites') ? () => invites_api.getInvites({ limit: 1 }) : null,
+ });
+
 
  if (tabs.length === 0) {
   return (
@@ -75,6 +89,7 @@ export default function TeamManagementPage() {
        `}
       >
        {tab.label}
+       <TabCount count={totals[tab.id]} active={activeTab === tab.id} />
       </button>
      ))}
     </nav>

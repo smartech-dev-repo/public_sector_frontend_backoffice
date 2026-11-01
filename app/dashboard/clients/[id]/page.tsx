@@ -1,5 +1,10 @@
 "use client";
 
+import TabCount from '@/app/components/ui/TabCount';
+import { useListTotals } from '@/app/composables/useListTotals';
+import { clients_api } from '@/app/api_factory/modules/clients';
+import { loans_api } from '@/app/api_factory/modules/loans';
+import { useDataVersion } from '@/app/composables/useDataVersion';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useClients } from '@/app/composables/modules/useClients';
@@ -38,6 +43,7 @@ import {
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function ClientWalletPage() {
+ const dataVersion = useDataVersion();
  const { isSuperAdmin, hasPermission } = useAdminPermissions();
  const canReadClient = isSuperAdmin || hasPermission(['clients:read', 'clients:review']);
  const canReview = isSuperAdmin || hasPermission('clients:review');
@@ -122,7 +128,7 @@ export default function ClientWalletPage() {
   if (clientId && canReadClient) {
    loadData();
   }
- }, [clientId, canReadClient]);
+ }, [clientId, canReadClient, dataVersion]);
 
  const loadData = async () => {
   if (!canReadClient) return;
@@ -174,6 +180,13 @@ export default function ClientWalletPage() {
    setOnboardingLoading(false);
   }
  };
+
+ // These two load on first open, so a change while one is showing must reload it.
+ useEffect(() => {
+  if (activeTab === 'activities') loadActivities();
+  if (activeTab === 'loans') loadClientLoans();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [dataVersion]);
 
  const handleTabChange = (tab: 'profile' | 'onboarding' | 'wallet' | 'loans' | 'activities') => {
   setActiveTab(tab);
@@ -337,6 +350,12 @@ export default function ClientWalletPage() {
   }
  };
 
+ const totals = useListTotals({
+  wallet: canReadWallet ? () => clients_api.getClientWallet(clientId).then((res: any) => (res?.type === 'ERROR' ? res : { data: res.data?.entries })) : null,
+  loans: canReadLoans ? () => loans_api.getClientLoans({ clientId, limit: 1 }) : null,
+  activities: canReadActivities ? () => clients_api.getClientActivities(clientId) : null,
+ });
+
  const tabs = [
   { key: 'profile' as const, label: 'Profile' },
   { key: 'onboarding' as const, label: 'Onboarding' },
@@ -450,6 +469,7 @@ export default function ClientWalletPage() {
         }`}
        >
         {tab.label}
+        <TabCount count={totals[tab.key]} active={activeTab === tab.key} />
        </button>
       ))}
      </div>
@@ -1457,6 +1477,12 @@ export default function ClientWalletPage() {
           <p className="text-muted-foreground text-sm font-medium mb-1">Available Balance</p>
           <p className="text-3xl font-bold text-foreground">₦{wallet.balance?.toLocaleString() || 0}</p>
          </div>
+         {wallet.pendingRequests > 0 && (
+          <p className="text-sm text-amber-900 dark:text-amber-300">
+           {wallet.pendingRequests} wallet {wallet.pendingRequests === 1 ? 'request is' : 'requests are'} waiting for approval, so the balance may change.{' '}
+           <Link href="/dashboard/approvals" className="font-semibold underline">View approvals</Link>
+          </p>
+         )}
          {canManageWallet && (
           <div className="flex gap-3">
            <button onClick={() => setShowCreditModal(true)} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">Credit Wallet</button>

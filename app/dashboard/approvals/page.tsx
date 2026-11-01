@@ -1,5 +1,8 @@
 "use client";
 
+import TabCount from '@/app/components/ui/TabCount';
+import { useListTotals } from '@/app/composables/useListTotals';
+import { useDataVersion } from '@/app/composables/useDataVersion';
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import FilterBar from '@/app/components/ui/FilterBar';
@@ -19,6 +22,7 @@ const VIEWS: { id: View; label: string }[] = [
 ];
 
 export default function ApprovalsPage() {
+ const dataVersion = useDataVersion();
  const [view, setView] = useState<View>('to_decide');
  const [status, setStatus] = useState('');
  const [page, setPage] = useState(1);
@@ -26,6 +30,12 @@ export default function ApprovalsPage() {
  const [rows, setRows] = useState<any[]>([]);
  const [total, setTotal] = useState(0);
  const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading');
+
+ const totals = useListTotals({
+  to_decide: () => approvals_api.list({ view: 'to_decide', limit: 1 }),
+  mine: () => approvals_api.list({ view: 'mine', limit: 1 }),
+  all: () => approvals_api.list({ limit: 1 }),
+ });
 
  const load = useCallback(async () => {
   setState('loading');
@@ -42,7 +52,7 @@ export default function ApprovalsPage() {
   setState('ready');
  }, [view, status, page, limit]);
 
- useEffect(() => { load(); }, [load]);
+ useEffect(() => { load(); }, [load, dataVersion]);
 
  const switchView = (next: View) => {
   setView(next);
@@ -57,6 +67,7 @@ export default function ApprovalsPage() {
      {VIEWS.map((tab) => (
       <button key={tab.id} onClick={() => switchView(tab.id)} aria-current={view === tab.id ? 'page' : undefined} className={`whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-sm transition-colors ${view === tab.id ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'}`}>
        {tab.label}
+       <TabCount count={totals[tab.id]} active={view === tab.id} />
       </button>
      ))}
     </nav>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useDataVersion } from '@/app/composables/useDataVersion';
 import { useEffect, useState } from 'react'; 
 import Pagination from '@/app/components/ui/Pagination';
 import { useAdmins } from '@/app/composables/modules/useAdmins';
@@ -15,6 +16,7 @@ import { useRoles } from '@/app/composables/modules/useRoles';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 
 export default function AdminsPage() {
+ const dataVersion = useDataVersion();
  const { isSuperAdmin, hasPermission } = useAdminPermissions();
  const canManageRoles = isSuperAdmin || hasPermission('roles:manage');
  const [page, setPage] = useState(1);
@@ -36,7 +38,7 @@ export default function AdminsPage() {
    fetchAdmins({ page, limit });
    fetchRoles();
   }
- }, [fetchAdmins, fetchRoles, page, limit, canManageRoles]);
+ }, [fetchAdmins, fetchRoles, page, limit, canManageRoles, dataVersion]);
 
  const openAssignRoleModal = (admin: any) => {
   setSelectedAdmin(admin);
@@ -53,7 +55,6 @@ export default function AdminsPage() {
    await assignRole(selectedAdmin.id, { roleId: assignRoleForm.roleId.trim() });
    addToast('Role assigned successfully!', 'success');
    setShowAssignModal(false);
-   fetchAdmins({ page, limit });
   } catch (e: any) {
    addToast(e?.response?.data?.message || 'Failed to assign role', 'error');
   } finally {
@@ -69,7 +70,6 @@ export default function AdminsPage() {
    try {
     await suspendAdmin(admin.id);
     addToast('Admin suspended successfully', 'success');
-    fetchAdmins({ page, limit });
    } catch (e: any) {
     addToast(e?.response?.data?.message || 'Failed to suspend admin', 'error');
    }
@@ -82,7 +82,6 @@ export default function AdminsPage() {
    try {
     await unsuspendAdmin(admin.id);
     addToast('Admin unsuspended successfully', 'success');
-    fetchAdmins({ page, limit });
    } catch (e: any) {
     addToast(e?.response?.data?.message || 'Failed to unsuspend admin', 'error');
    }
