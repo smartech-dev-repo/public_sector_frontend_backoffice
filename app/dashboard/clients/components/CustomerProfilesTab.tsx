@@ -7,6 +7,7 @@ import * as xlsx from 'xlsx';
 import { useClients } from '@/app/composables/modules/useClients';
 import { useSessions } from '@/app/composables/modules/useSessions';
 import { useToast } from '@/app/composables/useToast';
+import Avatar from '@/app/components/ui/Avatar';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import ButtonLoader from '@/app/components/ui/ButtonLoader';
@@ -633,8 +634,13 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-foreground">
                         <Link 
                            href={`/dashboard/clients/${client.id}`}
-                          className="hover:text-[#018752] transition-colors"
+                          className="inline-flex items-center gap-2.5 hover:text-[#018752] transition-colors"
                         >
+                          <Avatar
+                            name={clientName}
+                            sources={[client.onboarding?.liveSelfieUrl, client.onboarding?.ninSelfieUrl, client.onboarding?.bvnSelfieUrl]}
+                            size="sm"
+                          />
                           {clientName}
                         </Link>
                       </td>

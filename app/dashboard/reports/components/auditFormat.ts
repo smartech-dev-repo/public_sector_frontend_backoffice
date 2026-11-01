@@ -1,0 +1,151 @@
+const ACTION_LABELS: Record<string, string> = {
+ 'admin.login.succeeded': 'Admin signed in',
+ 'admin.login.failed': 'Admin sign-in failed',
+ 'admin.logout': 'Admin signed out',
+ 'admin.logout_all': 'Admin signed out everywhere',
+ 'admin.password.reset_requested': 'Admin requested password reset',
+ 'admin.password.reset': 'Admin password reset',
+ 'admin.password.changed': 'Admin changed password',
+ 'admin.password.change_failed': 'Admin password change failed',
+ 'admin.2fa.enabled': 'Admin turned on 2FA',
+ 'admin.2fa.disabled': 'Admin turned off 2FA',
+ 'agent.login.succeeded': 'Agent signed in',
+ 'agent.login.failed': 'Agent sign-in failed',
+ 'agent.logout': 'Agent signed out',
+ 'agent.logout_all': 'Agent signed out everywhere',
+ 'agent.password.reset_requested': 'Agent requested password reset',
+ 'agent.password.reset': 'Agent password reset',
+ 'agent.password.changed': 'Agent changed password',
+ 'agent.password.change_failed': 'Agent password change failed',
+ 'agent.2fa.enabled': 'Agent turned on 2FA',
+ 'agent.2fa.disabled': 'Agent turned off 2FA',
+ 'agent.onboarding_access.changed': 'Agent onboarding access changed',
+ 'client.login.succeeded': 'Client signed in',
+ 'client.login.failed': 'Client sign-in failed',
+ 'client.logout': 'Client signed out',
+ 'client.logout_all': 'Client signed out everywhere',
+ 'document.upload.submitted': 'File uploaded',
+ 'document.upload.reviewed': 'File review finished',
+ 'document.upload.confirmed': 'File merge confirmed',
+ 'document.upload.cancelled': 'File upload cancelled',
+ 'document.upload.completed': 'File merged',
+ 'document.upload.failed': 'File processing failed',
+ 'loan-product.created': 'Loan product created',
+ 'loan-product.updated': 'Loan product edited',
+ 'loan-settings.updated': 'Loan settings changed',
+ 'management-fee.created': 'Management fee created',
+ 'management-fee.updated': 'Management fee edited',
+ 'management-fee.deleted': 'Management fee deleted',
+ 'admin.invite.created': 'Admin invited',
+ 'admin.invite.resent': 'Admin invite resent',
+ 'admin.invite.deleted': 'Admin invite deleted',
+ 'admin.role.set': 'Admin role changed',
+ 'admin.suspended': 'Admin deactivated',
+ 'admin.unsuspended': 'Admin reactivated',
+ 'agent.approved': 'Agent approved',
+ 'agent.rejected': 'Agent rejected',
+ 'agent.credentials_resent': 'Agent credentials resent',
+ 'agent.sessions.revoked': 'Agent logged out by admin',
+ 'agent_recruitment_application.deleted': 'Recruitment application deleted',
+ 'client.review.approved': 'Client approved',
+ 'client.review.retried': 'Client review retried',
+ 'client.sessions.revoked': 'Client logged out by admin',
+ 'department.created': 'Department created',
+ 'department.deleted': 'Department deleted',
+ 'loan-request.approve': 'Loan request approved',
+ 'loan-request.confirm-code': 'Loan confirmation code entered',
+ 'loan-request.reject': 'Loan request rejected',
+ 'loan-request.disburse': 'Loan disbursed',
+ 'permission.created': 'Permission created',
+ 'permission.deleted': 'Permission deleted',
+ 'role.created': 'Role created',
+ 'role.updated': 'Role details edited',
+ 'role.deleted': 'Role deleted',
+ 'role.permission.assigned': 'Permission added to role',
+ 'role.permission.removed': 'Permission removed from role',
+ 'role.permissions.bulk_assigned': 'Permissions added to role',
+ 'role.permissions.replaced': 'Role permissions changed',
+ 'session.reuse_detected': 'Stolen session suspected',
+ 'wallet.credit': 'Wallet credited',
+ 'wallet.debit': 'Wallet debited',
+};
+
+export const ACTION_OPTIONS = Object.entries(ACTION_LABELS)
+ .map(([value, label]) => ({ value, label }))
+ .sort((a, b) => a.label.localeCompare(b.label));
+
+export const TARGET_TYPE_OPTIONS = [
+ { value: 'AdminInvite', label: 'Admin invite' },
+ { value: 'AdminUser', label: 'Admin' },
+ { value: 'Agent', label: 'Agent' },
+ { value: 'AgentApplication', label: 'Agent application' },
+ { value: 'Client', label: 'Client' },
+ { value: 'Department', label: 'Department' },
+ { value: 'LoanProduct', label: 'Loan product' },
+ { value: 'LoanRequest', label: 'Loan request' },
+ { value: 'ManagementFee', label: 'Management fee' },
+ { value: 'DocumentUploadBatch', label: 'Uploaded file' },
+ { value: 'Permission', label: 'Permission' },
+ { value: 'Role', label: 'Role' },
+];
+
+const METHOD_VERBS: Record<string, string> = { POST: 'Created', PUT: 'Updated', PATCH: 'Updated', DELETE: 'Deleted' };
+const IS_ID = /^[0-9a-f]{8}-[0-9a-f-]{27}$/i;
+
+export interface AuditRequest {
+ method: string;
+ path: string;
+ status: number;
+}
+
+export const parseRequest = (action: string): AuditRequest | null => {
+ const match = action?.match(/^(GET|POST|PUT|PATCH|DELETE)\s+(\S+)\s+\((\d+)\)$/);
+ return match ? { method: match[1], path: match[2], status: Number(match[3]) } : null;
+};
+
+// "/admin/management-fees/<id>?x=1" reads as "management fees", "/admin/me/profile-image" as "profile image".
+const areaOf = (path: string) =>
+ path.split('?')[0].split('/').filter((part) => part && part !== 'admin' && part !== 'me' && !IS_ID.test(part)).join(' ').replace(/[-_]/g, ' ');
+
+export const describeAction = (action: string) => {
+ const request = parseRequest(action);
+ if (!request) return ACTION_LABELS[action] || action;
+ const label = `${METHOD_VERBS[request.method] ?? request.method} ${areaOf(request.path)}`.trim();
+ return request.status >= 400 ? `Failed: ${label.toLowerCase()}` : label;
+};
+
+export const describeDevice = (userAgent?: string | null) => {
+ if (!userAgent) return null;
+ const browser = /Edg\//.test(userAgent) ? 'Edge'
+  : /OPR\//.test(userAgent) ? 'Opera'
+   : /Chrome\//.test(userAgent) ? 'Chrome'
+    : /Firefox\//.test(userAgent) ? 'Firefox'
+     : /Safari\//.test(userAgent) ? 'Safari'
+      : 'Unknown browser';
+ const system = /Windows/.test(userAgent) ? 'Windows'
+  : /Android/.test(userAgent) ? 'Android'
+   : /iPhone|iPad/.test(userAgent) ? 'iOS'
+    : /Mac OS X/.test(userAgent) ? 'macOS'
+     : /Linux/.test(userAgent) ? 'Linux'
+      : null;
+ return system ? `${browser} on ${system}` : browser;
+};
+
+export const principalName = (principal: any) =>
+ principal?.fullName || principal?.onboarding?.employeeName || principal?.employeeName || principal?.name || principal?.productName || principal?.originalFileName || principal?.email || principal?.key || principal?.phone || null;
+
+export const formatDetailValue = (value: unknown) => {
+ if (value === null || value === undefined || value === '') return '—';
+ if (Array.isArray(value)) return value.length ? value.join(', ') : 'None';
+ if (typeof value === 'object') return JSON.stringify(value);
+ return String(value);
+};
+
+// Actions that deserve attention, whether they failed or changed how someone gets in.
+const ALERT_ACTION = /\.(login\.failed|password\.change_failed|2fa\.disabled|reuse_detected)$|^document\.upload\.failed$/;
+export const isAlertAction = (action: string) => ALERT_ACTION.test(action);
+
+export const humanizeKey = (key: string) => {
+ const words = key.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[-_]/g, ' ').toLowerCase();
+ return words.charAt(0).toUpperCase() + words.slice(1);
+};

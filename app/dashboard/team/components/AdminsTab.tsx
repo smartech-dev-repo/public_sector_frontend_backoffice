@@ -8,6 +8,7 @@ import { useInvites } from '@/app/composables/modules/useInvites';
 import { useRoles } from '@/app/composables/modules/useRoles';
 import { useToast } from '@/app/composables/useToast';
 import { createPortal } from 'react-dom';
+import Avatar from '@/app/components/ui/Avatar';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { useConfirm } from '@/app/composables/useConfirm';
@@ -168,7 +169,12 @@ export default function AdminsTab() {
           <tr key={admin.id} className="hover:bg-muted/30 transition-colors">
            <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground font-mono">{new Date(admin.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
            <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground">{admin.email}</td>
-           <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{admin.fullName}</td>
+           <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">
+            <span className="flex items-center gap-2.5">
+             <Avatar name={admin.fullName} sources={[admin.profileImageUrl]} size="sm" />
+             {admin.fullName}
+            </span>
+           </td>
            <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">
             {admin.role ? (
              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
