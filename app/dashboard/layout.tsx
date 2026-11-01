@@ -20,13 +20,15 @@ import {
   UserPlus, 
   Users, 
   Banknote, 
-  Percent,
+ 
   User, 
   LineChart, 
   ShieldCheck, 
   ChevronDown, 
   ShieldAlert,
-  LayoutDashboard 
+  LayoutDashboard,
+ SlidersHorizontal,
+ MonitorSmartphone
 } from 'lucide-react';
 
 export default function CreditRiskLayout({ children }: { children: React.ReactNode }) {
@@ -113,7 +115,8 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
   if (pathname === '/dashboard') return 'Platform Overview';
   if (pathname.includes('/dashboard/broadsheet')) return 'Broadsheet and Repayment';
   if (pathname.includes('/dashboard/loan-terms')) return 'Loan Products';
-  if (pathname.includes('/dashboard/management-fees')) return 'Management Fees';
+  if (pathname.includes('/dashboard/configuration') || pathname.includes('/dashboard/management-fees')) return 'Configuration';
+  if (pathname.includes('/dashboard/sessions')) return 'User Sessions';
   if (pathname.includes('/dashboard/invites')) return 'Agent Recruitment';
   if (pathname.includes('/dashboard/agent-management')) return 'Agent Management';
   if (pathname.includes('/dashboard/loan-requests')) return 'Loan Management';
@@ -161,14 +164,14 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
    label: 'Loan Products',
    icon: Settings,
    match: (p: string) => p.startsWith('/dashboard/loan-terms') || p.startsWith('/dashboard/catalog/loans') || p.startsWith('/dashboard/loan-products'),
-   visible: hasAnyPermission(['loan-products:manage', 'loan-settings:manage', 'loans:upload']),
+   visible: hasAnyPermission(['loan-products:manage', 'loans:upload']),
   },
   {
-   href: '/dashboard/management-fees',
-   label: 'Management Fees',
-   icon: Percent,
-   match: (p: string) => p.startsWith('/dashboard/management-fees'),
-   visible: hasAnyPermission(['management-fees:manage']),
+   href: '/dashboard/configuration',
+   label: 'Configuration',
+   icon: SlidersHorizontal,
+   match: (p: string) => p.startsWith('/dashboard/configuration') || p.startsWith('/dashboard/management-fees'),
+   visible: hasAnyPermission(['management-fees:manage', 'loan-settings:manage']),
   },
   {
    href: '/dashboard/invites',
@@ -211,6 +214,13 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
    icon: ShieldCheck,
    match: (p: string) => p.startsWith('/dashboard/team') || p.startsWith('/dashboard/roles') || p.startsWith('/dashboard/admins') || p.startsWith('/dashboard/permissions'),
    visible: hasAnyPermission(['roles:manage', 'admins:create', 'permissions:manage', 'departments:manage']),
+  },
+  {
+   href: '/dashboard/sessions',
+   label: 'User Sessions',
+   icon: MonitorSmartphone,
+   match: (p: string) => p.startsWith('/dashboard/sessions'),
+   visible: hasAnyPermission(['sessions:manage']),
   },
  ], [hasAnyPermission]);
 

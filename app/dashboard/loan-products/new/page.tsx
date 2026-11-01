@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useLoans } from '@/app/composables/modules/useLoans';
 import { loans_api } from '@/app/api_factory/modules/loans';
-import { formatFeeRange } from '@/app/dashboard/management-fees/formatFeeRange';
+import { formatFeeRange } from '@/app/dashboard/configuration/components/formatFeeRange';
 import { useToast } from '@/app/composables/useToast';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
@@ -1014,7 +1014,7 @@ function ProductFormContent() {
             <div className="flex items-center justify-between gap-3">
               <h3 className="text-sm font-bold text-foreground">Management Charge</h3>
               {(isSuperAdmin || hasPermission('management-fees:manage')) && (
-                <Link href="/dashboard/management-fees" className="text-xs font-semibold text-[#018752] hover:underline">
+                <Link href="/dashboard/configuration?tab=fees" className="text-xs font-semibold text-[#018752] hover:underline">
                   Manage fees
                 </Link>
               )}

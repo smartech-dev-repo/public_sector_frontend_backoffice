@@ -36,18 +36,14 @@ const SECTOR_OPTIONS = [
 export default function ConfigurationsTab() {
   const { isSuperAdmin, hasPermission } = useAdminPermissions();
   const canManageProducts = isSuperAdmin || hasPermission('loan-products:manage');
-  const canManageSettings = isSuperAdmin || hasPermission('loan-settings:manage');
   const router = useRouter();
   const { 
     loading, 
     error, 
     loanProducts, 
     loanProductSectors,
-    loanSettings,
     fetchLoanProducts, 
-    fetchLoanProductSectors,
-    fetchLoanSettings,
-    updateLoanSettings
+    fetchLoanProductSectors
   } = useLoans();
 
   const { addToast } = useToast();
@@ -55,13 +51,7 @@ export default function ConfigurationsTab() {
   // Filters & Search
   const [sectorFilter, setSectorFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
-  // Settings form state
-  const [settingsForm, setSettingsForm] = useState({
-    retirementAgeYears: 60,
-    maxServiceYears: 35
-  });
 
   const [submitting, setSubmitting] = useState(false);
 
@@ -71,19 +61,7 @@ export default function ConfigurationsTab() {
       fetchLoanProducts({ limit: 100 });
       fetchLoanProductSectors();
     }
-    if (canManageSettings) {
-      fetchLoanSettings().then(res => {
-        if (res) {
-          const rawMax = res.maximumMonths ?? res.maximumMonth ?? res.MaximumMonth ?? res.maxServiceMonths ?? res.maxServiceYears ?? 35;
-          const maxYears = Number(rawMax) > 50 ? Math.round(Number(rawMax) / 12) : Number(rawMax) || 35;
-          setSettingsForm({
-            retirementAgeYears: Number(res.retirementAgeYears) || 60,
-            maxServiceYears: maxYears
-          });
-        }
-      });
-    }
-  }, [fetchLoanProducts, fetchLoanProductSectors, fetchLoanSettings, canManageProducts, canManageSettings]);
+  }, [fetchLoanProducts, fetchLoanProductSectors, canManageProducts]);
 
   // Available sectors combined
   const availableSectors = useMemo(() => {
@@ -122,29 +100,6 @@ export default function ConfigurationsTab() {
     router.push(`/dashboard/loan-products/new?id=${product.id}`);
   };
 
-  // Save Loan Settings
-  const handleSaveSettings = async () => {
-    setSubmitting(true);
-    try {
-      const years = Number(settingsForm.maxServiceYears) || 35;
-      const months = years > 50 ? years : years * 12;
-      await updateLoanSettings({
-        retirementAgeYears: Number(settingsForm.retirementAgeYears),
-        maxServiceYears: years,
-        maxServiceMonths: months,
-        maximumMonths: months,
-        maximumMonth: months,
-        MaximumMonth: months
-      });
-      addToast('Loan settings updated successfully', 'success');
-      setShowSettingsModal(false);
-    } catch (err: any) {
-      addToast(err?.response?.data?.message || 'Failed to update loan settings', 'error');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   // Format Helper for Currency
   const formatNaira = (val: number | string) => {
     const num = Number(val) || 0;
@@ -175,18 +130,6 @@ export default function ConfigurationsTab() {
         </div>
 
         <div className="flex items-center gap-3 self-end sm:self-auto">
-          {canManageSettings && (
-            <button
-              type="button"
-              onClick={() => setShowSettingsModal(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-border text-foreground hover:bg-muted text-sm font-medium transition-colors"
-            >
-              <SettingsIcon className="w-4 h-4 text-muted-foreground" />
-              Statutory Settings
-            </button>
-          )}
-
-
           {canManageProducts && (
             <button
               type="button"
@@ -319,91 +262,6 @@ export default function ConfigurationsTab() {
       )}
 
       {/* Global Loan Settings Modal */}
-      {canManageSettings && showSettingsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div 
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm"
-            onClick={() => setShowSettingsModal(false)}
-          />
-          <div className="relative bg-card rounded-3xl p-6 sm:p-8 w-full max-w-md border border-border shadow-xl space-y-6 animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold text-foreground">Global Loan Settings</h3>
-              <button 
-                onClick={() => setShowSettingsModal(false)}
-                className="p-1 rounded-lg text-muted-foreground hover:text-foreground"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <p className="text-xs text-muted-foreground">
-              These statutory limits govern loan eligibility rules across all sectors and departments.
-            </p>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
-                  Retirement Age (Years)
-                </label>
-                <Select
-                  value={String(settingsForm.retirementAgeYears)}
-                  onValueChange={(val) => setSettingsForm({ ...settingsForm, retirementAgeYears: Number(val) })}
-                >
-                  <SelectTrigger className="w-full h-10 bg-muted/30 border-border rounded-xl text-sm font-medium">
-                    <SelectValue placeholder="Select retirement age" />
-                  </SelectTrigger>
-                  <SelectContent hideSearch>
-                    {[50, 55, 60, 65, 70].map(age => (
-                      <SelectItem key={age} value={String(age)}>
-                        {age} years {age === 60 ? '(Public Service Standard)' : age === 65 ? '(Professors / Judges)' : ''}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
-                  Maximum Service (Years)
-                </label>
-                <Select
-                  value={String(settingsForm.maxServiceYears)}
-                  onValueChange={(val) => setSettingsForm({ ...settingsForm, maxServiceYears: Number(val) })}
-                >
-                  <SelectTrigger className="w-full h-10 bg-muted/30 border-border rounded-xl text-sm font-medium">
-                    <SelectValue placeholder="Select maximum service years" />
-                  </SelectTrigger>
-                  <SelectContent hideSearch>
-                    {[25, 30, 35, 40].map(yrs => (
-                      <SelectItem key={yrs} value={String(yrs)}>
-                        {yrs} years ({yrs * 12} months) {yrs === 35 ? '(Public Service Standard)' : ''}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="flex gap-3 justify-end pt-2">
-              <button
-                type="button"
-                onClick={() => setShowSettingsModal(false)}
-                className="px-4 py-2 text-sm font-medium rounded-xl border border-border hover:bg-muted"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleSaveSettings}
-                disabled={submitting}
-                className="px-6 py-2 text-sm font-semibold rounded-xl bg-[#018752] hover:bg-[#017044] text-white"
-              >
-                {submitting ? 'Saving...' : 'Save Settings'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
     </div>
   );
