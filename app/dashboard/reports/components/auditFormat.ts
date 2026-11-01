@@ -20,6 +20,7 @@ const ACTION_LABELS: Record<string, string> = {
  'agent.2fa.enabled': 'Agent turned on 2FA',
  'agent.2fa.disabled': 'Agent turned off 2FA',
  'agent.onboarding_access.changed': 'Agent onboarding access changed',
+ 'agent.client_access.denied': 'Agent blocked from another agent\'s client',
  'client.login.succeeded': 'Client signed in',
  'client.login.failed': 'Client sign-in failed',
  'client.logout': 'Client signed out',
@@ -161,7 +162,7 @@ export const formatDetailValue = (value: unknown) => {
 };
 
 // Actions that deserve attention, whether they failed or changed how someone gets in.
-const ALERT_ACTION = /\.failed$|\.(password\.change_failed|2fa\.disabled|reuse_detected)$/;
+const ALERT_ACTION = /\.(failed|denied)$|\.(password\.change_failed|2fa\.disabled|reuse_detected)$/;
 export const isAlertAction = (action: string) => ALERT_ACTION.test(action);
 
 export const humanizeKey = (key: string) => {
