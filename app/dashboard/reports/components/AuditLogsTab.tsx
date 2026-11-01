@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useAuditLogs } from '@/app/composables/modules/useAuditLogs';
@@ -9,6 +9,8 @@ import EmptyState from '@/app/components/ui/EmptyState';
 import Pagination from '@/app/components/ui/Pagination';
 import Avatar from '@/app/components/ui/Avatar';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+import { useToast } from '@/app/composables/useToast';
+import { auditLogs_api } from '@/app/api_factory/modules/auditLogs';
 import {
  ACTION_OPTIONS,
  TARGET_TYPE_OPTIONS,
@@ -50,19 +52,41 @@ export default function AuditLogsTab() {
  const [targetIdFilter, setTargetIdFilter] = useState('');
  const [createdRange, setCreatedRange] = useState('');
  const [expandedId, setExpandedId] = useState('');
+ const [exporting, setExporting] = useState(false);
+ const { addToast } = useToast();
 
- useEffect(() => {
-  if (!canAudit) return;
-  const params: any = { page, limit };
+ const filterParams = useMemo(() => {
+  const params: any = {};
   if (kindFilter && kindFilter !== 'none') params.kind = kindFilter;
   if (actionFilter && actionFilter !== 'none') params.action = actionFilter;
   if (actorTypeFilter && actorTypeFilter !== 'none') params.actorType = actorTypeFilter;
   if (actorIdFilter.trim()) params.actorId = actorIdFilter.trim();
   if (targetTypeFilter && targetTypeFilter !== 'none') params.targetType = targetTypeFilter;
   if (targetIdFilter.trim()) params.targetId = targetIdFilter.trim();
-  Object.assign(params, dateRangeParams(createdRange, 'createdFrom', 'createdTo'));
-  fetchLogs(params);
- }, [fetchLogs, canAudit, page, limit, kindFilter, actionFilter, actorTypeFilter, actorIdFilter, targetTypeFilter, targetIdFilter, createdRange]);
+  return { ...params, ...dateRangeParams(createdRange, 'createdFrom', 'createdTo') };
+ }, [kindFilter, actionFilter, actorTypeFilter, actorIdFilter, targetTypeFilter, targetIdFilter, createdRange]);
+
+ useEffect(() => {
+  if (!canAudit) return;
+  fetchLogs({ page, limit, ...filterParams });
+ }, [fetchLogs, canAudit, page, limit, filterParams]);
+
+ const handleExport = async () => {
+  setExporting(true);
+  const res: any = await auditLogs_api.exportLogs(filterParams);
+  setExporting(false);
+  if (res?.type === 'ERROR') {
+   addToast('The export failed. Please try again.', 'error');
+   return;
+  }
+  const url = URL.createObjectURL(res.data);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `audit-trail-${new Date().toISOString().slice(0, 10)}.xlsx`;
+  link.click();
+  URL.revokeObjectURL(url);
+  addToast('Audit trail exported', 'success');
+ };
 
  const showEverythingBy = (actorId: string) => {
   setActorIdFilter(actorId);
@@ -87,6 +111,11 @@ export default function AuditLogsTab() {
 
  return (
   <main className="w-full space-y-4">
+   <div className="flex justify-end">
+    <button type="button" onClick={handleExport} disabled={exporting} className="h-11 px-4 border border-border bg-card rounded-lg text-sm font-medium text-foreground hover:bg-muted/50 disabled:opacity-50">
+     {exporting ? 'Exporting...' : 'Export as Excel'}
+    </button>
+   </div>
    <FilterBar
     onChange={() => setPage(1)}
     filters={[

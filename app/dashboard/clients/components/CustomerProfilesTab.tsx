@@ -8,6 +8,7 @@ import { useClients } from '@/app/composables/modules/useClients';
 import { useSessions } from '@/app/composables/modules/useSessions';
 import { useToast } from '@/app/composables/useToast';
 import Avatar from '@/app/components/ui/Avatar';
+import { auditLogs_api } from '@/app/api_factory/modules/auditLogs';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import ButtonLoader from '@/app/components/ui/ButtonLoader';
@@ -456,6 +457,7 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
       const workbook = xlsx.utils.book_new();
       xlsx.utils.book_append_sheet(workbook, worksheet, 'Customers');
       xlsx.writeFile(workbook, `Customer_Profiles_${new Date().toISOString().split('T')[0]}.xlsx`);
+      auditLogs_api.reportDataAccess({ kind: 'export', resource: 'Customer profiles', recordCount: dataToExport.length });
       addToast('Customers exported to Excel successfully', 'success');
     } catch (err: any) {
       addToast('Failed to export to Excel', 'error');

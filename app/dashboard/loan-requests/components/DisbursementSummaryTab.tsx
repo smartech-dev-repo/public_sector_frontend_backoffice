@@ -1,5 +1,6 @@
 "use client";
 
+import { auditLogs_api } from '@/app/api_factory/modules/auditLogs';
 import { useEffect, useState } from 'react';
 import { useLoans } from '@/app/composables/modules/useLoans';
 import { useToast } from '@/app/composables/useToast';
@@ -40,6 +41,7 @@ export default function DisbursementSummaryTab() {
    link.setAttribute('download', `disbursement-summary-${month}.csv`);
    document.body.appendChild(link);
    link.click();
+   auditLogs_api.reportDataAccess({ kind: 'export', resource: 'Disbursement summary' });
    link.remove();
    addToast('Exported CSV successfully', 'success');
   } catch (e: any) {

@@ -10,6 +10,7 @@ import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import ButtonLoader from '@/app/components/ui/ButtonLoader';
 import SensitiveValue from '@/app/components/ui/SensitiveValue';
+import { auditLogs_api } from '@/app/api_factory/modules/auditLogs';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { 
@@ -363,7 +364,12 @@ export default function ClientWalletPage() {
      <div className="flex flex-wrap items-center gap-2">
       <button
        type="button"
-       onClick={() => setRevealAllSensitive((prev) => !prev)}
+       onClick={() => {
+        if (!revealAllSensitive) {
+         auditLogs_api.reportDataAccess({ kind: 'reveal', resource: 'All client details', targetType: 'Client', targetId: client.id });
+        }
+        setRevealAllSensitive((prev) => !prev);
+       }}
        className="px-3.5 py-1.5 bg-card hover:bg-muted/60 text-foreground border border-border rounded-lg text-xs font-semibold shadow-xs transition-colors flex items-center gap-1.5"
        title={revealAllSensitive ? 'Mask all sensitive data' : 'Reveal all sensitive data'}
       >
@@ -558,6 +564,8 @@ export default function ClientWalletPage() {
            <span className="text-xs text-muted-foreground block mb-0.5">Salary Account Number</span>
            <SensitiveValue 
             value={client.onboarding?.accountNumber || client.onboarding?.ippisRecord?.accountNumber} 
+            auditResource="Salary account number"
+            auditTargetId={client.id}
             forceRevealed={revealAllSensitive ? true : undefined}
             allowCopy 
            />
@@ -642,6 +650,8 @@ export default function ClientWalletPage() {
            <span className="text-xs text-muted-foreground block mb-0.5">BVN (Bank Verification Number)</span>
            <SensitiveValue 
             value={client.onboarding?.bvn} 
+            auditResource="BVN"
+            auditTargetId={client.id}
             forceRevealed={revealAllSensitive ? true : undefined}
             allowCopy 
            />
@@ -650,6 +660,8 @@ export default function ClientWalletPage() {
            <span className="text-xs text-muted-foreground block mb-0.5">NIN (National Identity Number)</span>
            <SensitiveValue 
             value={client.onboarding?.nin} 
+            auditResource="NIN"
+            auditTargetId={client.id}
             forceRevealed={revealAllSensitive ? true : undefined}
             allowCopy 
            />
@@ -1163,6 +1175,8 @@ export default function ClientWalletPage() {
            <span className="text-xs text-muted-foreground block mb-0.5">Salary Account Number</span>
            <SensitiveValue 
             value={client.onboarding?.accountNumber || client.onboarding?.ippisRecord?.accountNumber} 
+            auditResource="Salary account number"
+            auditTargetId={client.id}
             forceRevealed={revealAllSensitive ? true : undefined}
             allowCopy 
            />
@@ -1195,6 +1209,8 @@ export default function ClientWalletPage() {
            <span className="text-xs text-muted-foreground block mb-0.5">BVN (Bank Verification Number)</span>
            <SensitiveValue 
             value={client.onboarding?.bvn} 
+            auditResource="BVN"
+            auditTargetId={client.id}
             forceRevealed={revealAllSensitive ? true : undefined}
             allowCopy 
            />
@@ -1203,6 +1219,8 @@ export default function ClientWalletPage() {
            <span className="text-xs text-muted-foreground block mb-0.5">NIN (National Identity Number)</span>
            <SensitiveValue 
             value={client.onboarding?.nin} 
+            auditResource="NIN"
+            auditTargetId={client.id}
             forceRevealed={revealAllSensitive ? true : undefined}
             allowCopy 
            />

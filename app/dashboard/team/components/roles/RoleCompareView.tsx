@@ -51,6 +51,7 @@ export default function RoleCompareView({ roles, groups }: { roles: any[]; group
        {roles.map((role) => (
         <th key={role.id} scope="col" className="sticky top-0 z-10 bg-[#E9F4EE] dark:bg-emerald-950 px-3 py-3 text-center text-xs font-medium text-emerald-700 dark:text-emerald-400 min-w-[120px]">
          <span className="block">{role.name}</span>
+         <span className="block font-normal text-muted-foreground">{role.department?.name || 'No department'}</span>
          <span className="block font-normal text-muted-foreground">{holders[roles.indexOf(role)].size} of {groups.reduce((sum, group) => sum + group.items.length, 0)}</span>
         </th>
        ))}
