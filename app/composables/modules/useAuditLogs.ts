@@ -12,6 +12,8 @@ export const useAuditLogs = () => {
   setError(null);
   try {
    const res = await auditLogs_api.getLogs(params);
+   // The axios layer resolves failures, so a rejected filter would otherwise read as "no results".
+   if ((res as any)?.type === 'ERROR') throw new Error((res as any).data?.message || 'Error fetching audit logs');
    let dataList = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || res.data?.agents || res.data?.clients || res.data?.roles || res.data?.admins || res.data?.logs || res.data?.invites || res.data?.permissions || res.data?.batches || []);
    if (res.data?.meta) setMeta(res.data.meta);
    dataList = Array.isArray(dataList) ? dataList : [];

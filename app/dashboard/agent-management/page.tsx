@@ -6,6 +6,7 @@ import { useAgents } from '@/app/composables/modules/useAgents';
 import { useClients } from '@/app/composables/modules/useClients';
 import { agents_api } from '@/app/api_factory/modules/agents';
 import { useToast } from '@/app/composables/useToast';
+import Avatar from '@/app/components/ui/Avatar';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import ButtonLoader from '@/app/components/ui/ButtonLoader';
@@ -417,7 +418,12 @@ export default function AgentManagementPage() {
  {agents.length === 0 ? (<tr><td colSpan={6} className="p-8"><div className="flex justify-center w-full"><EmptyState title="No agents found." /></div></td></tr>) : (agents.map((agent: any) => (
           <tr key={agent.id} className="hover:bg-muted/30 transition-colors">
            <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground font-mono">{new Date(agent.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-           <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground">{agent.fullName || `${agent.firstName} ${agent.lastName}`}</td>
+           <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground">
+            <span className="flex items-center gap-2.5">
+             <Avatar name={agent.fullName || `${agent.firstName} ${agent.lastName}`} sources={[agent.passportPhotoUrl]} size="sm" />
+             {agent.fullName || `${agent.firstName} ${agent.lastName}`}
+            </span>
+           </td>
            <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground">{agent.email}</td>
            <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground">{agent.phone || '-'}</td>
            <td className="px-4 py-4 whitespace-nowrap text-sm">
