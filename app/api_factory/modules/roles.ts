@@ -25,6 +25,9 @@ export const roles_api = {
  assignBulkPermissionsToRole: (roleId: string, payload: { permissionIds: string[] }) => {
   return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/roles/${roleId}/permissions/bulk`, payload);
  },
+ getDepartmentOptions: () => {
+  return GATEWAY_ENDPOINT_WITH_AUTH.get('/admin/roles/department-options');
+ },
  getPermissionOptions: () => {
   return GATEWAY_ENDPOINT_WITH_AUTH.get('/admin/roles/permission-options');
  },

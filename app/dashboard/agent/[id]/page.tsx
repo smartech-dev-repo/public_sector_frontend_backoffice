@@ -1,5 +1,6 @@
 "use client";
 
+import { auditLogs_api } from '@/app/api_factory/modules/auditLogs';
 import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState, useCallback, useMemo, useRef, use } from 'react';
 import { useRouter } from 'next/navigation';
@@ -322,6 +323,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
       link.setAttribute('download', `agent_${id}_loans.csv`);
       document.body.appendChild(link);
       link.click();
+      auditLogs_api.reportDataAccess({ kind: 'export', resource: 'Agent client loans', recordCount: clientLoans.length });
       document.body.removeChild(link);
       addToast('Loans exported successfully', 'success');
     } catch {

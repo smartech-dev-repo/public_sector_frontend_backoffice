@@ -61,6 +61,10 @@ export const useRoles = () => {
   return (unwrap(await roles_api.getPermissionOptions()) || []) as any[];
  }, []);
 
+ const fetchDepartmentOptions = useCallback(async () => {
+  return (unwrap(await roles_api.getDepartmentOptions()) || []) as { id: string; name: string }[];
+ }, []);
+
  const setRolePermissions = useCallback(async (roleId: string, permissionIds: string[]) => {
   return unwrap(await roles_api.setRolePermissions(roleId, { permissionIds }));
  }, []);
@@ -137,5 +141,5 @@ export const useRoles = () => {
   }
  }, []);
 
- return { loading, error, roles, fetchRoles, fetchAllRoles, fetchPermissionOptions, setRolePermissions, createRole, updateRole, deleteRole, assignPermission, removePermission, assignBulkPermissions, meta };
+ return { loading, error, roles, fetchRoles, fetchAllRoles, fetchPermissionOptions, fetchDepartmentOptions, setRolePermissions, createRole, updateRole, deleteRole, assignPermission, removePermission, assignBulkPermissions, meta };
 };

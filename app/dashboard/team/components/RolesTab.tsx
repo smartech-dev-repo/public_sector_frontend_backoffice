@@ -28,11 +28,12 @@ export default function RolesTab() {
  const canManageRoles = isSuperAdmin || hasPermission('roles:manage');
  const canViewHistory = isSuperAdmin || hasPermission('audit:read');
 
- const { loading, error, roles, fetchAllRoles, fetchPermissionOptions, createRole, updateRole, deleteRole, setRolePermissions } = useRoles();
+ const { loading, error, roles, fetchAllRoles, fetchPermissionOptions, fetchDepartmentOptions, createRole, updateRole, deleteRole, setRolePermissions } = useRoles();
  const { addToast } = useToast();
  const { confirm } = useConfirm();
 
  const [options, setOptions] = useState<PermissionOption[]>([]);
+ const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
  const [selectedId, setSelectedId] = useState('');
  // null means "no unsaved edits", so reloading the role never overwrites ticks in progress.
  const [draft, setDraft] = useState<string[] | null>(null);
@@ -45,7 +46,8 @@ export default function RolesTab() {
  const load = useCallback(() => {
   fetchAllRoles();
   fetchPermissionOptions().then(setOptions).catch(() => setOptions([]));
- }, [fetchAllRoles, fetchPermissionOptions]);
+  fetchDepartmentOptions().then(setDepartments).catch(() => setDepartments([]));
+ }, [fetchAllRoles, fetchPermissionOptions, fetchDepartmentOptions]);
 
  useEffect(() => {
   if (canManageRoles) load();
@@ -129,11 +131,11 @@ export default function RolesTab() {
  const handleModalSubmit = async (values: RoleFormValues) => {
   try {
    if (modal?.mode === 'edit' && selectedRole) {
-    await updateRole(selectedRole.id, isLocked ? { description: values.description } : values);
+    await updateRole(selectedRole.id, isLocked ? { description: values.description, departmentId: values.departmentId } : values);
     await fetchAllRoles();
     addToast('Role details updated.', 'success');
    } else {
-    const created = await createRole(values);
+    const created = await createRole({ ...values, departmentId: values.departmentId ?? undefined });
     let copyFailed = false;
     if (modal?.mode === 'duplicate' && currentIds.length > 0) {
      copyFailed = await setRolePermissions(created.id, currentIds).then(() => false, () => true);
@@ -159,10 +161,10 @@ export default function RolesTab() {
 
  const modalInitial: RoleFormValues =
   modal?.mode === 'edit'
-   ? { name: selectedRole?.name ?? '', description: selectedRole?.description ?? '' }
+   ? { name: selectedRole?.name ?? '', description: selectedRole?.description ?? '', departmentId: selectedRole?.departmentId ?? null }
    : modal?.mode === 'duplicate'
-    ? { name: `Copy of ${selectedRole?.name ?? ''}`, description: selectedRole?.description ?? '' }
-    : { name: '', description: '' };
+    ? { name: `Copy of ${selectedRole?.name ?? ''}`, description: selectedRole?.description ?? '', departmentId: selectedRole?.departmentId ?? null }
+    : { name: '', description: '', departmentId: null };
 
  const tabs: { id: RoleTab; label: string }[] = [
   { id: 'permissions', label: `Permissions ${currentIds.length} of ${options.length}` },
@@ -221,6 +223,7 @@ export default function RolesTab() {
          className={`w-full min-h-[60px] px-3 py-2 text-left rounded-lg border transition-colors ${role.id === selectedId ? 'border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/20' : 'border-transparent hover:bg-muted/50'}`}
         >
          <span className="block text-sm font-semibold text-foreground truncate">{role.name}</span>
+         <span className="block text-xs text-muted-foreground truncate">{role.department?.name || 'No department'}</span>
          <span className="block text-xs text-muted-foreground">
           {permissionIdsOf(role).length} of {options.length} · {role.name === SUPER_ADMIN ? 'locked' : adminLabel(adminCount(role))}
          </span>
@@ -236,9 +239,9 @@ export default function RolesTab() {
          <div className="min-w-0">
           <h2 className="text-lg font-bold text-foreground break-words">{selectedRole.name}</h2>
           <p className="text-sm text-muted-foreground">{selectedRole.description || 'No description'}</p>
+          <p className="text-sm text-foreground/90 mt-1"><span className="text-muted-foreground">Department:</span> {selectedRole.department?.name || 'None'}</p>
           <p className="text-xs text-muted-foreground mt-1">
            Updated {new Date(selectedRole.updatedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-           {selectedRole.department?.name ? ` · ${selectedRole.department.name}` : ''}
           </p>
          </div>
          <div className="flex flex-wrap gap-2">
@@ -310,6 +313,8 @@ export default function RolesTab() {
      title={modal.mode === 'edit' ? 'Edit role details' : modal.mode === 'duplicate' ? `Duplicate ${selectedRole?.name}` : 'Create role'}
      initial={modalInitial}
      nameLocked={modal.mode === 'edit' && isLocked}
+     departments={departments}
+     holderCount={modal.mode === 'edit' ? adminCount(selectedRole) : 0}
      onCancel={() => setModal(null)}
      onSubmit={handleModalSubmit}
     />

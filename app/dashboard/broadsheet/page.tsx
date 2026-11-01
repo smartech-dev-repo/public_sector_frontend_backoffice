@@ -1,5 +1,6 @@
 "use client";
 
+import { auditLogs_api } from '@/app/api_factory/modules/auditLogs';
 import { useEffect, useRef, useState } from 'react';
 import { ChevronDown, FileSpreadsheet, Loader2 } from 'lucide-react';
 import { useToast } from '@/app/composables/useToast';
@@ -44,6 +45,7 @@ export default function BroadsheetPage() {
     setExporting(true);
     try {
       const count = await exportUploads(option.documentTypes, option.fileLabel, filters);
+      if (count > 0) auditLogs_api.reportDataAccess({ kind: 'export', resource: option.label, recordCount: count });
       addToast(count > 0 ? `Exported ${count.toLocaleString()} ${option.label}` : 'No uploads match these filters', count > 0 ? 'success' : 'error');
     } catch {
       addToast('The export failed. Please try again.', 'error');

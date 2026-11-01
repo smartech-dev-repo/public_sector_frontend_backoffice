@@ -36,6 +36,21 @@ const ACTION_LABELS: Record<string, string> = {
  'management-fee.created': 'Management fee created',
  'management-fee.updated': 'Management fee edited',
  'management-fee.deleted': 'Management fee deleted',
+ 'audit.exported': 'Audit trail exported',
+ 'data.exported': 'Data exported',
+ 'data.revealed': 'Sensitive value revealed',
+ 'client.profile.viewed': 'Client profile viewed',
+ 'client.onboarding.started': 'Client onboarding started',
+ 'client.onboarding.ippis_linked': 'IPPIS record linked',
+ 'client.onboarding.identity_submitted': 'BVN and NIN submitted',
+ 'client.onboarding.face_match': 'Face match run',
+ 'client.onboarding.marital_status_updated': 'Marital status updated',
+ 'client.onboarding.document_uploaded': 'Client document uploaded',
+ 'loan-request.created': 'Loan request created',
+ 'loan-request.topup_created': 'Top-up request created',
+ 'loan-request.code_resent': 'Loan confirmation code resent',
+ 'loan-request.code_confirmed': 'Loan confirmed with code',
+ 'wallet.applied_to_loan': 'Wallet applied to loan',
  'admin.invite.created': 'Admin invited',
  'admin.invite.resent': 'Admin invite resent',
  'admin.invite.deleted': 'Admin invite deleted',
@@ -109,7 +124,11 @@ const areaOf = (path: string) =>
 
 export const describeAction = (action: string) => {
  const request = parseRequest(action);
- if (!request) return ACTION_LABELS[action] || action;
+ if (!request) {
+  const refused = action?.match(/^(.+)\.failed$/)?.[1];
+  if (!ACTION_LABELS[action] && refused && ACTION_LABELS[refused]) return `Failed: ${ACTION_LABELS[refused].toLowerCase()}`;
+  return ACTION_LABELS[action] || action;
+ }
  const label = `${METHOD_VERBS[request.method] ?? request.method} ${areaOf(request.path)}`.trim();
  return request.status >= 400 ? `Failed: ${label.toLowerCase()}` : label;
 };
@@ -142,7 +161,7 @@ export const formatDetailValue = (value: unknown) => {
 };
 
 // Actions that deserve attention, whether they failed or changed how someone gets in.
-const ALERT_ACTION = /\.(login\.failed|password\.change_failed|2fa\.disabled|reuse_detected)$|^document\.upload\.failed$/;
+const ALERT_ACTION = /\.failed$|\.(password\.change_failed|2fa\.disabled|reuse_detected)$/;
 export const isAlertAction = (action: string) => ALERT_ACTION.test(action);
 
 export const humanizeKey = (key: string) => {

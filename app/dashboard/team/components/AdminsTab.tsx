@@ -153,7 +153,6 @@ export default function AdminsTab() {
         <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
          <tr>
           <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Date Created</th>
-          <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Email</th>
           <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Name</th>
           <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Role</th>
           <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Department</th>
@@ -165,14 +164,16 @@ export default function AdminsTab() {
          </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
- {admins.length === 0 ? (<tr><td colSpan={hasActions ? 8 : 7} className="p-8"><div className="flex justify-center w-full"><EmptyState title="No admins found." /></div></td></tr>) : (admins.map((admin: any) => (
+ {admins.length === 0 ? (<tr><td colSpan={hasActions ? 7 : 6} className="p-8"><div className="flex justify-center w-full"><EmptyState title="No admins found." /></div></td></tr>) : (admins.map((admin: any) => (
           <tr key={admin.id} className="hover:bg-muted/30 transition-colors">
            <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground font-mono">{new Date(admin.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-           <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground">{admin.email}</td>
-           <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">
+           <td className="px-4 py-4 whitespace-nowrap text-sm">
             <span className="flex items-center gap-2.5">
-             <Avatar name={admin.fullName} sources={[admin.profileImageUrl]} size="sm" />
-             {admin.fullName}
+             <Avatar name={admin.fullName} sources={[admin.profileImageUrl]} />
+             <span className="min-w-0">
+              <span className="block font-medium text-foreground">{admin.fullName}</span>
+              <span className="block text-xs text-muted-foreground">{admin.email}</span>
+             </span>
             </span>
            </td>
            <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">

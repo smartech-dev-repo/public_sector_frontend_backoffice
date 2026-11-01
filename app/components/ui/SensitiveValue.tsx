@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Eye, EyeOff, Copy, Check } from 'lucide-react';
+import { auditLogs_api } from '@/app/api_factory/modules/auditLogs';
 
 interface SensitiveValueProps {
   value?: string | number | null;
@@ -9,6 +10,9 @@ interface SensitiveValueProps {
   className?: string;
   allowCopy?: boolean;
   forceRevealed?: boolean;
+  /** Names this value in the audit trail when an admin reveals or copies it. Leave out for values that need no record. */
+  auditResource?: string;
+  auditTargetId?: string;
 }
 
 export default function SensitiveValue({
@@ -16,7 +20,9 @@ export default function SensitiveValue({
   visibleCount = 4,
   className = '',
   allowCopy = false,
-  forceRevealed
+  forceRevealed,
+  auditResource,
+  auditTargetId
 }: SensitiveValueProps) {
   const [isRevealed, setIsRevealed] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -44,11 +50,18 @@ export default function SensitiveValue({
     return `${maskedPart} ${visiblePart}`;
   };
 
+  const reportAccess = () => {
+    if (auditResource) {
+      auditLogs_api.reportDataAccess({ kind: 'reveal', resource: auditResource, targetType: auditTargetId ? 'Client' : undefined, targetId: auditTargetId });
+    }
+  };
+
   const handleCopy = async (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
     try {
       await navigator.clipboard.writeText(cleanStr);
+      if (!effectiveRevealed) reportAccess();
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
@@ -67,6 +80,7 @@ export default function SensitiveValue({
         onClick={(e) => {
           e.stopPropagation();
           e.preventDefault();
+          if (!effectiveRevealed) reportAccess();
           setIsRevealed((prev) => !prev);
         }}
         className="p-1 rounded-md text-muted-foreground/70 hover:text-foreground hover:bg-muted/60 transition-colors focus:outline-none"
