@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/app/composables/modules/useAuth';
 import { useSessions } from '@/app/composables/modules/useSessions';
-import { useLoans } from '@/app/composables/modules/useLoans';
+import ActiveSessionsTab from './components/ActiveSessionsTab';
 import { useToast } from '@/app/composables/useToast';
 import { useConfirm } from '@/app/composables/useConfirm';
 import PulseLoader from '@/app/components/ui/PulseLoader';
@@ -16,7 +16,6 @@ import {
   ShieldCheck, 
   ShieldAlert,
   MonitorSmartphone, 
-  Sliders,
   Mail, 
   QrCode, 
   Copy, 
@@ -26,7 +25,6 @@ import {
   Eye,
   EyeOff,
   Clock,
-  Laptop,
   CheckCircle2,
   User,
   Camera,
@@ -38,8 +36,7 @@ import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function ProfileAndSecurityPage() {
   const { hasPermission, isSuperAdmin } = useAdminPermissions();
-  const canManageLoanSettings = isSuperAdmin || hasPermission('loan-settings:manage');
-  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'password' | 'settings' | 'sessions'>('security');
+  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'password' | 'sessions'>('security');
   
   const { 
     loading: authLoading, 
@@ -61,18 +58,8 @@ export default function ProfileAndSecurityPage() {
     deleteProfileImage 
   } = useProfile();
 
-  const { 
-    loading: sessionsLoading, 
-    sessions, 
-    fetchSessions, 
-    deleteSession 
-  } = useSessions();
-
-  const {
-    loanSettings,
-    fetchLoanSettings,
-    updateLoanSettings
-  } = useLoans();
+  const { fetchSessions, meta: sessionsMeta } = useSessions();
+  const [sessionCount, setSessionCount] = useState<number | null>(null);
 
   const { addToast } = useToast();
   const { confirm } = useConfirm();
@@ -106,11 +93,6 @@ export default function ProfileAndSecurityPage() {
   const [setupSubmitting, setSetupSubmitting] = useState(false);
 
   // Loan Settings Form
-  const [settingsForm, setSettingsForm] = useState({
-    retirementAgeYears: 60,
-    maxServiceYears: 35
-  });
-  const [settingsLoading, setSettingsLoading] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -143,24 +125,12 @@ export default function ProfileAndSecurityPage() {
       // Graceful fallback when admin profile endpoint is unavailable
     });
 
-    fetchSessions();
-    if (canManageLoanSettings) {
-      fetchLoanSettings().then(res => {
-        if (res) {
-          setSettingsForm({
-            retirementAgeYears: res.retirementAgeYears || 60,
-            maxServiceYears: res.maxServiceYears || 35
-          });
-        }
-      });
-    }
-  }, [fetchProfile, fetchSessions, fetchLoanSettings, canManageLoanSettings]);
+    fetchSessions({ limit: 1 }).then(() => undefined);
+  }, [fetchProfile, fetchSessions]);
 
   useEffect(() => {
-    if (activeTab === 'settings' && !canManageLoanSettings) {
-      setActiveTab('security');
-    }
-  }, [activeTab, canManageLoanSettings]);
+    if (sessionsMeta.total > 0) setSessionCount(sessionsMeta.total);
+  }, [sessionsMeta.total]);
 
   // Handle Password Change
   const handlePasswordChange = async (e: React.FormEvent) => {
@@ -251,38 +221,6 @@ export default function ProfileAndSecurityPage() {
       addToast(err?.response?.data?.message || 'Current password is incorrect', 'error');
     } finally {
       setSetupSubmitting(false);
-    }
-  };
-
-  // Revoke Session
-  const handleRevokeSession = async (id: string) => {
-    const confirmed = await confirm({ 
-      message: 'Are you sure you want to revoke this session? The device will be signed out immediately.' 
-    });
-    if (!confirmed) return;
-    try {
-      await deleteSession(id);
-      addToast('Session revoked successfully', 'success');
-      fetchSessions();
-    } catch (err: any) {
-      addToast(err?.response?.data?.message || 'Failed to revoke session', 'error');
-    }
-  };
-
-  // Save Loan Settings
-  const handleSaveLoanSettings = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSettingsLoading(true);
-    try {
-      await updateLoanSettings({
-        retirementAgeYears: Number(settingsForm.retirementAgeYears),
-        maxServiceYears: Number(settingsForm.maxServiceYears)
-      });
-      addToast('Global loan settings saved successfully', 'success');
-    } catch (err: any) {
-      addToast(err?.response?.data?.message || 'Failed to update loan settings', 'error');
-    } finally {
-      setSettingsLoading(false);
     }
   };
 
@@ -473,20 +411,6 @@ export default function ProfileAndSecurityPage() {
           Password Management
         </button>
 
-        {canManageLoanSettings && (
-          <button
-            onClick={() => setActiveTab('settings')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${
-              activeTab === 'settings'
-                ? 'bg-[#018752] text-white shadow-sm'
-                : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-            }`}
-          >
-            <Sliders className="w-4 h-4" />
-            Institutional Loan Settings
-          </button>
-        )}
-
         <button
           onClick={() => setActiveTab('sessions')}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${
@@ -496,7 +420,7 @@ export default function ProfileAndSecurityPage() {
           }`}
         >
           <MonitorSmartphone className="w-4 h-4" />
-          Active Sessions ({sessions?.length || 1})
+          Active Sessions{sessionCount !== null ? ` (${sessionCount})` : ''}
         </button>
       </div>
 
@@ -873,149 +797,7 @@ export default function ProfileAndSecurityPage() {
         </div>
       )}
 
-      {/* ======================================================== */}
-      {/* TAB 3: INSTITUTIONAL LOAN SETTINGS                      */}
-      {/* ======================================================== */}
-      {activeTab === 'settings' && canManageLoanSettings && (
-        <div className="max-w-2xl bg-card border border-border rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm">
-          <div>
-            <h3 className="text-lg font-bold text-foreground">Institutional Loan Settings</h3>
-            <p className="text-xs text-muted-foreground mt-1">
-              Configure baseline statutory eligibility requirements applied globally across public sector loan products.
-            </p>
-          </div>
-
-          <form onSubmit={handleSaveLoanSettings} className="space-y-5">
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                Mandatory Retirement Age (Years)
-              </label>
-              <input
-                type="number"
-                min="45"
-                max="75"
-                required
-                value={settingsForm.retirementAgeYears}
-                onChange={(e) => setSettingsForm({ ...settingsForm, retirementAgeYears: Number(e.target.value) })}
-                className="w-full px-4 py-2.5 bg-muted/30 border border-border rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#018752]/20 focus:border-[#018752]"
-              />
-              <span className="text-[11px] text-muted-foreground mt-1 block">
-                Loans will not be approved if the repayment tenor exceeds applicant retirement age.
-              </span>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                Maximum Service Years Allowed
-              </label>
-              <input
-                type="number"
-                min="10"
-                max="45"
-                required
-                value={settingsForm.maxServiceYears}
-                onChange={(e) => setSettingsForm({ ...settingsForm, maxServiceYears: Number(e.target.value) })}
-                className="w-full px-4 py-2.5 bg-muted/30 border border-border rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#018752]/20 focus:border-[#018752]"
-              />
-              <span className="text-[11px] text-muted-foreground mt-1 block">
-                Maximum tenure in public service before compulsory pension transition.
-              </span>
-            </div>
-
-            <div className="pt-2">
-              <button
-                type="submit"
-                disabled={settingsLoading}
-                className="px-8 py-2.5 bg-[#018752] hover:bg-[#017044] text-white font-semibold text-sm rounded-xl transition-all shadow-sm disabled:opacity-50 flex items-center justify-center gap-2 min-w-[180px]"
-              >
-                <ButtonLoader loading={settingsLoading} loadingText="Saving Settings...">
-                  Save Loan Settings
-                </ButtonLoader>
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* ======================================================== */}
-      {/* TAB 4: ACTIVE SESSIONS & DEVICES                        */}
-      {/* ======================================================== */}
-      {activeTab === 'sessions' && (
-        <div className="bg-card border border-border rounded-3xl shadow-sm overflow-hidden">
-          <div className="p-6 sm:p-8 border-b border-border">
-            <h3 className="text-lg font-bold text-foreground">Active Administrative Sessions</h3>
-            <p className="text-xs text-muted-foreground mt-1">
-              Devices currently signed into your administrative account. Revoke any unrecognized access.
-            </p>
-          </div>
-
-          <div className="overflow-x-auto">
-            {sessionsLoading ? (
-              <div className="w-full"><PulseLoader /></div>
-            ) : (
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="bg-muted/40 border-b border-border text-xs font-semibold text-muted-foreground uppercase">
-                    <th className="py-4 px-6">Device & IP</th>
-                    <th className="py-4 px-6">Location</th>
-                    <th className="py-4 px-6">Last Active</th>
-                    <th className="py-4 px-6 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {(!sessions || sessions.length === 0) ? (
-                    <tr>
-                      <td colSpan={4} className="py-10 text-center text-muted-foreground text-sm">
-                        1 active session (Current device)
-                      </td>
-                    </tr>
-                  ) : (
-                    sessions.map((session: any) => (
-                      <tr key={session.id} className="hover:bg-muted/30 transition-colors">
-                        <td className="py-4 px-6">
-                          <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-xl bg-[#E8F5EE] text-[#018752] flex items-center justify-center shrink-0">
-                              <Laptop className="w-4 h-4" />
-                            </div>
-                            <div>
-                              <div className="font-semibold text-foreground">
-                                {session.device || session.userAgent || 'Chrome on macOS'}
-                              </div>
-                              <div className="text-xs text-muted-foreground font-mono">
-                                {session.ipAddress || '127.0.0.1'}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-4 px-6 text-muted-foreground text-xs">
-                          {session.location || 'Lagos, Nigeria'}
-                        </td>
-                        <td className="py-4 px-6 text-muted-foreground text-xs whitespace-nowrap">
-                          {new Date(session.lastActive || session.createdAt || Date.now()).toLocaleString()}
-                        </td>
-                        <td className="py-4 px-6 text-right">
-                          {session.isCurrent ? (
-                            <span className="px-3 py-1 bg-[#E8F5EE] text-[#018752] text-xs font-semibold rounded-full">
-                              Current Session
-                            </span>
-                          ) : (
-                            <button
-                              onClick={() => handleRevokeSession(session.id)}
-                              className="px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                            >
-                              Revoke
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </div>
-      )}
+      {activeTab === 'sessions' && <ActiveSessionsTab onCountChange={setSessionCount} />}
 
       {/* ======================================================== */}
       {/* LOADING MODAL: INITIATING 2FA (TOTP / EMAIL OTP)         */}

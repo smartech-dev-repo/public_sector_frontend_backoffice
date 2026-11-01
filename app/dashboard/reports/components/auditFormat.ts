@@ -37,6 +37,11 @@ const ACTION_LABELS: Record<string, string> = {
  'management-fee.created': 'Management fee created',
  'management-fee.updated': 'Management fee edited',
  'management-fee.deleted': 'Management fee deleted',
+ 'access.denied': 'Access denied',
+ 'admin.login.denied': 'Admin sign-in blocked',
+ 'agent.login.denied': 'Agent sign-in blocked',
+ 'session.revoked': 'User signed out by admin',
+ 'sessions.revoked_for_user': 'User signed out everywhere by admin',
  'audit.exported': 'Audit trail exported',
  'data.exported': 'Data exported',
  'data.revealed': 'Sensitive value revealed',
@@ -161,9 +166,31 @@ export const formatDetailValue = (value: unknown) => {
  return String(value);
 };
 
-// Actions that deserve attention, whether they failed or changed how someone gets in.
-const ALERT_ACTION = /\.(failed|denied)$|\.(password\.change_failed|2fa\.disabled|reuse_detected)$/;
-export const isAlertAction = (action: string) => ALERT_ACTION.test(action);
+export const OUTCOME_LABELS: Record<string, string> = { success: 'Successful', failed: 'Failed', blocked: 'Blocked' };
+
+export const OUTCOME_STYLES: Record<string, string> = {
+ success: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300',
+ failed: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300',
+ blocked: 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300',
+};
+
+const ID_VALUE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+const HIDDEN_DETAILS = new Set(['changes', 'error', 'reason', 'status', 'filters', 'email', 'phone']);
+
+// Internal ids mean nothing to a reader, and a record is reached through its link.
+export const visibleDetails = (metadata: unknown) =>
+ Object.entries((metadata ?? {}) as Record<string, unknown>).filter(
+  ([key, value]) => !HIDDEN_DETAILS.has(key) && !/ids?$/i.test(key) && !ID_VALUE.test(JSON.stringify(value) ?? '') && value !== null,
+ );
+
+const RECORD_ROUTES: Record<string, string> = {
+ Client: '/dashboard/clients',
+ Agent: '/dashboard/agent',
+ LoanRequest: '/dashboard/loan-requests',
+};
+
+export const recordHref = (targetType?: string | null, targetId?: string | null) =>
+ targetType && targetId && RECORD_ROUTES[targetType] ? `${RECORD_ROUTES[targetType]}/${targetId}` : null;
 
 export const humanizeKey = (key: string) => {
  const words = key.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[-_]/g, ' ').toLowerCase();

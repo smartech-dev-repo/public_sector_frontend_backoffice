@@ -72,6 +72,7 @@ const GROUPS: { name: string; labels: Record<string, string> }[] = [
    'permissions:manage': 'Manage permission definitions',
    'departments:manage': 'Manage departments',
    'audit:read': 'View audit logs',
+   'sessions:manage': 'View and sign out user sessions',
   },
  },
 ];

@@ -20,6 +20,7 @@ export type AdminPermission =
   | 'permissions:manage'
   | 'wallets:read'
   | 'wallets:manage'
+  | 'sessions:manage'
   | 'loan-products:manage'
   | 'management-fees:manage'
   | 'loan-settings:manage'
@@ -52,6 +53,7 @@ export const ALL_PERMISSIONS: AdminPermission[] = [
   'permissions:manage',
   'wallets:read',
   'wallets:manage',
+  'sessions:manage',
   'loan-products:manage',
   'management-fees:manage',
   'loan-settings:manage',
@@ -76,9 +78,11 @@ export const ROUTE_PERMISSIONS: Record<string, AdminPermission[]> = {
   '/dashboard/broadsheet': ['loans:upload', 'repayments:upload', 'ippis:upload', 'documents:read'],
   '/dashboard/uploads': ['documents:read', 'loans:upload', 'repayments:upload', 'ippis:upload'],
   '/dashboard/ippis': ['ippis:upload'],
-  '/dashboard/loan-terms': ['loan-products:manage', 'loan-settings:manage', 'loans:upload'],
+  '/dashboard/loan-terms': ['loan-products:manage', 'loans:upload'],
   '/dashboard/loan-products': ['loan-products:manage'],
   '/dashboard/management-fees': ['management-fees:manage'],
+  '/dashboard/configuration': ['management-fees:manage', 'loan-settings:manage'],
+  '/dashboard/sessions': ['sessions:manage'],
   '/dashboard/invites': ['agents:recruitment:read', 'agents:recruitment:manage', 'agents:recruitment:analytics:read'],
   '/dashboard/agent': ['agents:read', 'agents:review'],
   '/dashboard/agent-details': ['agents:read', 'agents:review'],

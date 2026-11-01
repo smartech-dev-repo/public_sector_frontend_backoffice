@@ -1,7 +1,8 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import Link from 'next/link';
+import { ChevronDown, X } from 'lucide-react';
 import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useAuditLogs } from '@/app/composables/modules/useAuditLogs';
 import PulseLoader from '@/app/components/ui/PulseLoader';
@@ -16,11 +17,14 @@ import {
  TARGET_TYPE_OPTIONS,
  describeAction,
  describeDevice,
+ OUTCOME_LABELS,
+ OUTCOME_STYLES,
  formatDetailValue,
  humanizeKey,
- isAlertAction,
  parseRequest,
  principalName,
+ recordHref,
+ visibleDetails,
 } from './auditFormat';
 
 const TH = 'px-4 py-3.5 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider';
@@ -47,9 +51,10 @@ export default function AuditLogsTab() {
  const [kindFilter, setKindFilter] = useState('');
  const [actionFilter, setActionFilter] = useState('');
  const [actorTypeFilter, setActorTypeFilter] = useState('');
- const [actorIdFilter, setActorIdFilter] = useState('');
+ const [actorFilter, setActorFilter] = useState('');
+ const [outcomeFilter, setOutcomeFilter] = useState('');
  const [targetTypeFilter, setTargetTypeFilter] = useState('');
- const [targetIdFilter, setTargetIdFilter] = useState('');
+ const [recordFocus, setRecordFocus] = useState<{ type: string; id: string; name: string } | null>(null);
  const [createdRange, setCreatedRange] = useState('');
  const [expandedId, setExpandedId] = useState('');
  const [exporting, setExporting] = useState(false);
@@ -60,11 +65,15 @@ export default function AuditLogsTab() {
   if (kindFilter && kindFilter !== 'none') params.kind = kindFilter;
   if (actionFilter && actionFilter !== 'none') params.action = actionFilter;
   if (actorTypeFilter && actorTypeFilter !== 'none') params.actorType = actorTypeFilter;
-  if (actorIdFilter.trim()) params.actorId = actorIdFilter.trim();
+  if (actorFilter.trim()) params.actor = actorFilter.trim();
+  if (outcomeFilter && outcomeFilter !== 'none') params.outcome = outcomeFilter;
   if (targetTypeFilter && targetTypeFilter !== 'none') params.targetType = targetTypeFilter;
-  if (targetIdFilter.trim()) params.targetId = targetIdFilter.trim();
+  if (recordFocus) {
+   params.targetType = recordFocus.type;
+   params.targetId = recordFocus.id;
+  }
   return { ...params, ...dateRangeParams(createdRange, 'createdFrom', 'createdTo') };
- }, [kindFilter, actionFilter, actorTypeFilter, actorIdFilter, targetTypeFilter, targetIdFilter, createdRange]);
+ }, [kindFilter, actionFilter, actorTypeFilter, actorFilter, outcomeFilter, targetTypeFilter, recordFocus, createdRange]);
 
  useEffect(() => {
   if (!canAudit) return;
@@ -88,15 +97,14 @@ export default function AuditLogsTab() {
   addToast('Audit trail exported', 'success');
  };
 
- const showEverythingBy = (actorId: string) => {
-  setActorIdFilter(actorId);
+ const showEverythingBy = (person: string) => {
+  setActorFilter(person);
   setExpandedId('');
   setPage(1);
  };
 
  const showHistoryOf = (log: any) => {
-  setTargetTypeFilter(log.targetType);
-  setTargetIdFilter(log.targetId);
+  setRecordFocus({ type: log.targetType, id: log.targetId, name: principalName(log.target) || targetTypeLabel(log.targetType) || 'this record' });
   setExpandedId('');
   setPage(1);
  };
@@ -119,15 +127,22 @@ export default function AuditLogsTab() {
    <FilterBar
     onChange={() => setPage(1)}
     filters={[
+     { key: 'actor', label: 'Admin email', type: 'text', value: actorFilter, placeholder: 'Email, name or phone', onChange: setActorFilter },
+     { key: 'outcome', label: 'Status', type: 'select', value: outcomeFilter, emptyValue: 'none', options: [{ value: 'success', label: 'Successful' }, { value: 'failed', label: 'Failed' }, { value: 'blocked', label: 'Blocked' }], onChange: setOutcomeFilter },
      { key: 'kind', label: 'Entry type', type: 'select', value: kindFilter, emptyValue: 'none', options: [{ value: 'event', label: 'Named events' }, { value: 'request', label: 'Automatic records' }], onChange: setKindFilter },
      { key: 'action', label: 'Action', type: 'select', value: actionFilter, emptyValue: 'none', options: ACTION_OPTIONS, onChange: setActionFilter },
      { key: 'actorType', label: 'Done by', type: 'select', value: actorTypeFilter, emptyValue: 'none', options: [{ value: 'ADMIN', label: 'Admin' }, { value: 'AGENT', label: 'Agent' }, { value: 'CLIENT', label: 'Client' }, { value: 'SYSTEM', label: 'System' }], onChange: setActorTypeFilter },
-     { key: 'actorId', label: 'Person ID', type: 'text', value: actorIdFilter, placeholder: 'Person ID', onChange: setActorIdFilter },
      { key: 'targetType', label: 'Record type', type: 'select', value: targetTypeFilter, emptyValue: 'none', options: TARGET_TYPE_OPTIONS, onChange: setTargetTypeFilter },
-     { key: 'targetId', label: 'Record ID', type: 'text', value: targetIdFilter, placeholder: 'Record ID', onChange: setTargetIdFilter },
      { key: 'created', label: 'Date', type: 'dateRange', value: createdRange, onChange: setCreatedRange },
     ]}
    />
+
+   {recordFocus && (
+    <div className="flex items-center justify-between gap-3 px-4 py-2 rounded-lg bg-muted/50 text-sm text-foreground">
+     <span>Showing the history of <strong>{recordFocus.name}</strong></span>
+     <button type="button" onClick={() => { setRecordFocus(null); setPage(1); }} aria-label="Clear record history filter" className="w-10 h-10 inline-flex items-center justify-center rounded-lg hover:bg-muted"><X className="w-4 h-4" /></button>
+    </div>
+   )}
 
    {loading && logs.length === 0 && <PulseLoader />}
    {!loading && error && <div className="text-red-500 py-12 text-center">{error}</div>}
@@ -141,25 +156,26 @@ export default function AuditLogsTab() {
          <th scope="col" className={TH}>When</th>
          <th scope="col" className={TH}>Who</th>
          <th scope="col" className={TH}>What happened</th>
-         <th scope="col" className={TH}>On</th>
+         <th scope="col" className={TH}>Status</th>
+         <th scope="col" className={TH}>Record</th>
          <th scope="col" className={TH}>From</th>
          <th scope="col" aria-label="Details" className={TH}></th>
         </tr>
        </thead>
        <tbody className="divide-y divide-border">
         {logs.length === 0 && (
-         <tr><td colSpan={6} className="p-8"><div className="flex justify-center w-full"><EmptyState title="No audit logs found." /></div></td></tr>
+         <tr><td colSpan={7} className="p-8"><div className="flex justify-center w-full"><EmptyState title="No audit logs found." /></div></td></tr>
         )}
         {logs.map((log: any) => {
          const request = parseRequest(log.action);
-         const failed = (request?.status ?? 0) >= 400 || isAlertAction(log.action);
          const actorName = principalName(log.actor) || log.metadata?.email || log.metadata?.phone || (log.actorType === 'SYSTEM' ? 'System' : null);
          const targetName = principalName(log.target) || log.metadata?.email;
          const device = describeDevice(log.userAgent);
          const expanded = expandedId === log.id;
-         const { changes, ...otherDetails } = log.metadata ?? {};
-         const details = Object.entries(otherDetails);
-         const changeList = Object.entries((changes ?? {}) as Record<string, { from: unknown; to: unknown }>);
+         const details = visibleDetails(log.metadata);
+         const changeList = Object.entries((log.metadata?.changes ?? {}) as Record<string, { from: unknown; to: unknown }>);
+         const href = recordHref(log.targetType, log.targetId);
+         const person = log.actor?.email || log.actor?.phone || log.metadata?.email || log.metadata?.phone;
          return (
           <Fragment key={log.id}>
            <tr className="hover:bg-muted/30 transition-colors">
@@ -174,13 +190,19 @@ export default function AuditLogsTab() {
              </span>
             </td>
             <td className="px-4 py-3 text-sm">
-             <span className={`block font-medium ${failed ? 'text-rose-700 dark:text-rose-400' : 'text-foreground'}`}>{describeAction(log.action)}</span>
-             <span className="block text-xs text-muted-foreground">{request ? `Automatic record · ${request.status}` : 'Named event'}</span>
+             <span className="block font-medium text-foreground">{describeAction(log.action)}</span>
+             <span className="block text-xs text-muted-foreground">{request ? 'Automatic record' : 'Named event'}</span>
+            </td>
+            <td className="px-4 py-3 text-sm max-w-[220px]">
+             <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${OUTCOME_STYLES[log.outcome]}`}>{OUTCOME_LABELS[log.outcome]}</span>
+             {log.reason && <span className="block text-xs text-muted-foreground mt-1">{log.reason}</span>}
             </td>
             <td className="px-4 py-3 text-sm">
              {log.targetType ? (
               <>
-               <span className="block text-foreground truncate max-w-[200px]">{targetName || `${log.targetId?.slice(0, 8) ?? ''}...`}</span>
+               {href
+                ? <Link href={href} className="block font-medium text-[#016B41] dark:text-emerald-400 hover:underline truncate max-w-[200px]">{targetName || 'Open record'}</Link>
+                : <span className="block text-foreground truncate max-w-[200px]">{targetName || 'Removed record'}</span>}
                <span className="block text-xs text-muted-foreground">{targetTypeLabel(log.targetType)}</span>
               </>
              ) : <span className="text-muted-foreground/60">—</span>}
@@ -207,13 +229,11 @@ export default function AuditLogsTab() {
            </tr>
            {expanded && (
             <tr>
-             <td colSpan={6} className="px-4 py-4 bg-muted/30">
+             <td colSpan={7} className="px-4 py-4 bg-muted/30">
               <dl className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
-               <DetailRow label="Entry ID" value={log.id} mono />
-               <DetailRow label="Exact action" value={log.action} mono />
-               <DetailRow label="Done by" value={log.actor?.email || log.actor?.phone || actorName || 'Unknown'} />
-               <DetailRow label="Person ID" value={log.actorId || '—'} mono />
-               {log.targetId && <DetailRow label="Record ID" value={log.targetId} mono />}
+               <DetailRow label="Done by" value={person || actorName || 'Unknown'} />
+               <DetailRow label="Status" value={OUTCOME_LABELS[log.outcome]} />
+               {log.reason && <DetailRow label="Reason" value={log.reason} />}
                {details.map(([key, value]) => <DetailRow key={key} label={humanizeKey(key)} value={formatDetailValue(value)} />)}
                <DetailRow label="Device details" value={log.userAgent || 'Not recorded'} mono />
               </dl>
@@ -230,7 +250,7 @@ export default function AuditLogsTab() {
                </div>
               )}
               <div className="flex flex-wrap gap-2 mt-4">
-               {log.actorId && <button type="button" onClick={() => showEverythingBy(log.actorId)} className="h-10 px-3.5 border border-border bg-card rounded-lg text-sm font-medium text-foreground hover:bg-muted/50">Everything by this person</button>}
+               {person && <button type="button" onClick={() => showEverythingBy(person)} className="h-10 px-3.5 border border-border bg-card rounded-lg text-sm font-medium text-foreground hover:bg-muted/50">Everything by this person</button>}
                {log.targetType && log.targetId && <button type="button" onClick={() => showHistoryOf(log)} className="h-10 px-3.5 border border-border bg-card rounded-lg text-sm font-medium text-foreground hover:bg-muted/50">Full history of this record</button>}
               </div>
              </td>

@@ -11,7 +11,7 @@ export const useSessions = () => {
  const fetchSessions = useCallback(async (params?: any) => {
   setLoading(true);
   try {
-   const res = await auth_api.getSessions();
+   const res = await auth_api.getSessions(params);
    let dataList = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.sessions || []);
    if (res.data?.meta) setMeta(res.data.meta);
    dataList = Array.isArray(dataList) ? dataList : [];
