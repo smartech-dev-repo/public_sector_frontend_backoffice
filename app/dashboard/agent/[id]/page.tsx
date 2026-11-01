@@ -238,7 +238,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
     setSubmitting(true);
     try {
       await approveAgent(application.id);
-      addToast('Agent approved successfully', 'success');
+      addToast('Sent for approval. Another admin must approve it.', 'success');
       await fetchAgentDetails();
     } catch (err: any) {
       addToast(err?.response?.data?.message || 'Failed to approve', 'error');
@@ -267,7 +267,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
     if (!confirmed) return;
     try {
       await resendCredentials(application.id);
-      addToast('Credentials resent successfully', 'success');
+      addToast('Sent for approval. Another admin must approve it.', 'success');
     } catch (err: any) {
       addToast(err?.response?.data?.message || 'Failed to resend credentials', 'error');
     }
@@ -353,7 +353,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
         <h3 className="text-lg font-bold text-foreground mb-1">Agent Not Found</h3>
         <p className="text-sm text-muted-foreground mb-4">The agent record could not be found or has been removed.</p>
         <Link href="/dashboard/agent-management" className="text-sm font-semibold text-[#018752] hover:underline">
-          &larr; Back to Agent Management
+          &larr; Back to Agents
         </Link>
       </div>
     );
@@ -404,7 +404,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
           <Link
             href="/dashboard/agent-management"
             className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 border border-border/60 transition-colors"
-            title="Back to Agent Management"
+            title="Back to Agents"
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>

@@ -6,8 +6,9 @@ import EmptyState from '@/app/components/ui/EmptyState';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 import LoanSettingsTab from './components/LoanSettingsTab';
 import ManagementFeesTab from './components/ManagementFeesTab';
+import SecurityAlertsTab from './components/SecurityAlertsTab';
 
-type TabId = 'loan-settings' | 'fees';
+type TabId = 'loan-settings' | 'fees' | 'alerts';
 
 function ConfigurationTabs() {
  const { isSuperAdmin, hasPermission } = useAdminPermissions();
@@ -17,6 +18,7 @@ function ConfigurationTabs() {
  const tabs: { id: TabId; label: string }[] = [
   ...(isSuperAdmin || hasPermission('loan-settings:manage') ? [{ id: 'loan-settings' as const, label: 'Loan Settings' }] : []),
   ...(isSuperAdmin || hasPermission('management-fees:manage') ? [{ id: 'fees' as const, label: 'Management Fees' }] : []),
+  ...(isSuperAdmin || hasPermission('alerts:manage') ? [{ id: 'alerts' as const, label: 'Security Alerts' }] : []),
  ];
 
  if (tabs.length === 0) {
@@ -44,6 +46,7 @@ function ConfigurationTabs() {
    <div className="pt-1">
     {activeTab === 'loan-settings' && <LoanSettingsTab />}
     {activeTab === 'fees' && <ManagementFeesTab />}
+    {activeTab === 'alerts' && <SecurityAlertsTab />}
    </div>
   </div>
  );

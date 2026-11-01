@@ -152,7 +152,7 @@ export default function RecruitmentApplicationsTab() {
     setActionLoadingId(agentId);
     try {
       await approveAgent(agentId);
-      addToast('Agent approved successfully', 'success');
+      addToast('Sent for approval. Another admin must approve it.', 'success');
       loadApplications();
       loadAnalytics();
       if (selectedApp && selectedApp.submittedAgent && selectedApp.submittedAgent.id === agentId) {

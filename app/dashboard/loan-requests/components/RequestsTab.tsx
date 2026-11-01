@@ -65,13 +65,13 @@ export default function RequestsTab() {
   const handleApprove = async (id: string) => {
     const confirmed = await confirm({ 
       title: 'Approve Loan Request',
-      message: 'Are you sure you want to approve this loan request? This will approve and immediately disburse the loan.',
-      confirmText: 'Approve & Disburse'
+      message: 'This sends the loan for approval. Another admin must approve it before any money moves.',
+      confirmText: 'Send for approval'
     });
     if (!confirmed) return;
     try {
       await approveLoanRequest(id);
-      addToast('Loan request approved and disbursed successfully', 'success');
+      addToast('Sent for approval. Another admin must approve it.', 'success');
       loadData();
     } catch (e: any) {
       const msg = e?.message || e?.response?.data?.message || 'Failed to approve loan request';
@@ -82,13 +82,13 @@ export default function RequestsTab() {
   const handleDisburse = async (id: string) => {
     const confirmed = await confirm({ 
       title: 'Disburse Loan Request',
-      message: 'Are you sure you want to disburse this approved loan?',
-      confirmText: 'Disburse Now'
+      message: 'This sends the disbursement for approval. Another admin must approve it before any money moves.',
+      confirmText: 'Send for approval'
     });
     if (!confirmed) return;
     try {
       await disburseLoanRequest(id);
-      addToast('Loan request disbursed successfully', 'success');
+      addToast('Sent for approval. Another admin must approve it.', 'success');
       loadData();
     } catch (e: any) {
       const msg = e?.message || e?.response?.data?.message || 'Failed to disburse loan request';
@@ -135,7 +135,7 @@ export default function RequestsTab() {
     setSubmitting(true);
     try {
       await confirmLoanRequestCode(selectedRequest.id, confirmationCode.trim());
-      addToast('Loan request confirmed successfully. It can now be approved.', 'success');
+      addToast('Sent for approval. Another admin must approve it.', 'success');
       setShowConfirmCodeModal(false);
       loadData();
     } catch (e: any) {

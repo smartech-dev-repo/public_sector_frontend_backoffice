@@ -21,6 +21,10 @@ export type AdminPermission =
   | 'wallets:read'
   | 'wallets:manage'
   | 'sessions:manage'
+  | 'alerts:manage'
+  | 'approvals:loans'
+  | 'approvals:agents'
+  | 'approvals:wallets'
   | 'loan-products:manage'
   | 'management-fees:manage'
   | 'loan-settings:manage'
@@ -54,6 +58,10 @@ export const ALL_PERMISSIONS: AdminPermission[] = [
   'wallets:read',
   'wallets:manage',
   'sessions:manage',
+  'alerts:manage',
+  'approvals:loans',
+  'approvals:agents',
+  'approvals:wallets',
   'loan-products:manage',
   'management-fees:manage',
   'loan-settings:manage',
@@ -81,7 +89,7 @@ export const ROUTE_PERMISSIONS: Record<string, AdminPermission[]> = {
   '/dashboard/loan-terms': ['loan-products:manage', 'loans:upload'],
   '/dashboard/loan-products': ['loan-products:manage'],
   '/dashboard/management-fees': ['management-fees:manage'],
-  '/dashboard/configuration': ['management-fees:manage', 'loan-settings:manage'],
+  '/dashboard/configuration': ['management-fees:manage', 'loan-settings:manage', 'alerts:manage'],
   '/dashboard/sessions': ['sessions:manage'],
   '/dashboard/invites': ['agents:recruitment:read', 'agents:recruitment:manage', 'agents:recruitment:analytics:read'],
   '/dashboard/agent': ['agents:read', 'agents:review'],
@@ -203,7 +211,13 @@ export const useAdminPermissions = () => {
   const canAccessRoute = useCallback((pathname: string): boolean => {
     if (isSuperAdmin) return true;
     // Allow basic non-permission authenticated pages
-    if (pathname === '/dashboard' || pathname === '/dashboard/settings' || pathname === '/dashboard/me') {
+    if (
+      pathname === '/dashboard' ||
+      pathname === '/dashboard/settings' ||
+      pathname === '/dashboard/me' ||
+      pathname.startsWith('/dashboard/notifications') ||
+      pathname.startsWith('/dashboard/approvals')
+    ) {
       return true;
     }
     if (permissions.length === 0) return false;

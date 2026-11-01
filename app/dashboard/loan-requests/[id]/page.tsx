@@ -79,14 +79,14 @@ export default function LoanRequestDetailPage({ params }: { params: Promise<{ id
   const handleApprove = async () => {
     const confirmed = await confirm({
       title: 'Approve Loan Request',
-      message: 'Are you sure you want to approve this loan request? This will transition the request to disbursed status and establish the client loan.',
-      confirmText: 'Approve & Disburse'
+      message: 'This sends the loan for approval. Another admin must approve it before any money moves.',
+      confirmText: 'Send for approval'
     });
     if (!confirmed) return;
     setActionLoading(true);
     try {
       await approveLoanRequest(id);
-      addToast('Loan request approved and disbursed successfully', 'success');
+      addToast('Sent for approval. Another admin must approve it.', 'success');
       fetchDetail();
     } catch (e: any) {
       const msg = e?.message || e?.response?.data?.message || 'Failed to approve loan request';
@@ -99,14 +99,14 @@ export default function LoanRequestDetailPage({ params }: { params: Promise<{ id
   const handleDisburse = async () => {
     const confirmed = await confirm({
       title: 'Disburse Loan Request',
-      message: 'Are you sure you want to disburse this approved loan?',
-      confirmText: 'Disburse Now'
+      message: 'This sends the disbursement for approval. Another admin must approve it before any money moves.',
+      confirmText: 'Send for approval'
     });
     if (!confirmed) return;
     setActionLoading(true);
     try {
       await disburseLoanRequest(id);
-      addToast('Loan request disbursed successfully', 'success');
+      addToast('Sent for approval. Another admin must approve it.', 'success');
       fetchDetail();
     } catch (e: any) {
       const msg = e?.message || e?.response?.data?.message || 'Failed to disburse loan request';
@@ -143,7 +143,7 @@ export default function LoanRequestDetailPage({ params }: { params: Promise<{ id
     setActionLoading(true);
     try {
       await confirmLoanRequestCode(id, confirmationCode.trim());
-      addToast('Loan request confirmed successfully. It is now ready for approval.', 'success');
+      addToast('Sent for approval. Another admin must approve it.', 'success');
       setShowConfirmCodeModal(false);
       fetchDetail();
     } catch (e: any) {
@@ -270,7 +270,7 @@ export default function LoanRequestDetailPage({ params }: { params: Promise<{ id
               className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-colors"
             >
               <CheckCircle className="w-3.5 h-3.5" />
-              Approve & Disburse
+              Send for approval
             </button>
           )}
 
