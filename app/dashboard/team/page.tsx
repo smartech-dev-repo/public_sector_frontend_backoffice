@@ -10,7 +10,7 @@ import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 type TabId = 'admins' | 'roles' | 'departments' | 'invites';
 
 export default function TeamManagementPage() {
- const { hasPermission, hasAnyPermission, isSuperAdmin } = useAdminPermissions();
+ const { hasPermission, isSuperAdmin } = useAdminPermissions();
 
  const tabs = useMemo(() => {
   const allTabs: { id: TabId; label: string; visible: boolean }[] = [
@@ -22,7 +22,7 @@ export default function TeamManagementPage() {
    { 
      id: 'roles', 
      label: 'Roles', 
-     visible: isSuperAdmin || hasAnyPermission(['roles:manage', 'permissions:manage']) 
+     visible: isSuperAdmin || hasPermission('roles:manage') 
    },
    { 
      id: 'departments', 
@@ -36,7 +36,7 @@ export default function TeamManagementPage() {
    },
   ];
   return allTabs.filter(t => t.visible);
- }, [hasPermission, hasAnyPermission, isSuperAdmin]);
+ }, [hasPermission, isSuperAdmin]);
 
  const [activeTab, setActiveTab] = useState<TabId>(() => {
   return tabs[0]?.id || 'admins';

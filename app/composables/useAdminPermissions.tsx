@@ -93,7 +93,7 @@ export const ROUTE_PERMISSIONS: Record<string, AdminPermission[]> = {
   '/dashboard/reconciliation': ['reconciliation:read'],
   '/dashboard/analytics': ['clients:analytics:read', 'agents:analytics:read'],
   '/dashboard/team': ['roles:manage', 'admins:create', 'permissions:manage', 'departments:manage'],
-  '/dashboard/roles': ['roles:manage', 'permissions:manage'],
+  '/dashboard/roles': ['roles:manage'],
   '/dashboard/admins': ['admins:create', 'roles:manage'],
 };
 

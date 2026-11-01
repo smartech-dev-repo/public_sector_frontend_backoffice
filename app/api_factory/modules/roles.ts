@@ -24,5 +24,11 @@ export const roles_api = {
  },
  assignBulkPermissionsToRole: (roleId: string, payload: { permissionIds: string[] }) => {
   return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/roles/${roleId}/permissions/bulk`, payload);
+ },
+ getPermissionOptions: () => {
+  return GATEWAY_ENDPOINT_WITH_AUTH.get('/admin/roles/permission-options');
+ },
+ setRolePermissions: (roleId: string, payload: { permissionIds: string[] }) => {
+  return GATEWAY_ENDPOINT_WITH_AUTH.put(`/admin/roles/${roleId}/permissions`, payload);
  }
 };
