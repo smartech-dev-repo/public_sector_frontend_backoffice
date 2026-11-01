@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useLayoutEffect, useState, useEffect, useCallback, useMemo } from 'react';
 import { useProfile } from './modules/useProfile';
 import { decodeJwtPayload } from './core/useAuth';
 
@@ -116,60 +116,37 @@ export const normalizePermissionList = (raw: any): string[] => {
   }).filter((s: string) => s.length > 0);
 };
 
+const readCachedPermissions = (): string[] => {
+  try {
+    const token = localStorage.getItem('token');
+    const decoded = token ? decodeJwtPayload(token) : null;
+    if (Array.isArray(decoded?.permissions)) {
+      return normalizePermissionList(decoded.permissions);
+    }
+    const stored = localStorage.getItem('public_sector_permissions');
+    return stored ? normalizePermissionList(JSON.parse(stored)) : [];
+  } catch {
+    return [];
+  }
+};
+
 export const useAdminPermissions = () => {
   const { profile, fetchProfile, loading } = useProfile();
 
-  const [cachedPermissions, setCachedPermissions] = useState<string[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const token = localStorage.getItem('token');
-        if (token) {
-          const decoded = decodeJwtPayload(token);
-          if (Array.isArray(decoded?.permissions)) {
-            return normalizePermissionList(decoded.permissions);
-          }
-        }
-        const stored = localStorage.getItem('public_sector_permissions');
-        if (stored) return normalizePermissionList(JSON.parse(stored));
-      } catch {}
-    }
-    return [];
-  });
+  // Both start empty so the first browser render matches the server's, which has no
+  // localStorage. The layout effect fills them in before the page is painted.
+  const [cachedPermissions, setCachedPermissions] = useState<string[]>([]);
+  const [cachedRole, setCachedRole] = useState<string>('');
 
-  const [cachedRole, setCachedRole] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('public_sector_role') || '';
-    }
-    return '';
-  });
-
-  useEffect(() => {
-    const handleProfileUpdate = () => {
-      if (typeof window !== 'undefined') {
-        try {
-          const token = localStorage.getItem('token');
-          if (token) {
-            const decoded = decodeJwtPayload(token);
-            if (Array.isArray(decoded?.permissions)) {
-              setCachedPermissions(normalizePermissionList(decoded.permissions));
-            } else {
-              const stored = localStorage.getItem('public_sector_permissions');
-              setCachedPermissions(stored ? normalizePermissionList(JSON.parse(stored)) : []);
-            }
-          } else {
-            setCachedPermissions([]);
-          }
-          const r = localStorage.getItem('public_sector_role');
-          setCachedRole(r || '');
-        } catch {
-          setCachedPermissions([]);
-          setCachedRole('');
-        }
-      }
+  useLayoutEffect(() => {
+    const readCachedSession = () => {
+      setCachedPermissions(readCachedPermissions());
+      setCachedRole(localStorage.getItem('public_sector_role') || '');
     };
 
-    window.addEventListener('public_sector_profile_updated', handleProfileUpdate);
-    return () => window.removeEventListener('public_sector_profile_updated', handleProfileUpdate);
+    readCachedSession();
+    window.addEventListener('public_sector_profile_updated', readCachedSession);
+    return () => window.removeEventListener('public_sector_profile_updated', readCachedSession);
   }, []);
 
   const permissions = useMemo(() => {

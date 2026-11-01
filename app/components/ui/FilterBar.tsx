@@ -53,14 +53,19 @@ interface DebouncedInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>
 // Typing stays instant here, while the list only refetches once the user pauses.
 function DebouncedInput({ value, onValueChange, ...props }: DebouncedInputProps) {
   const [text, setText] = useState(value);
-  const latest = useRef(onValueChange);
-  latest.current = onValueChange;
+  const latest = useRef({ onValueChange, text, value });
+  latest.current = { onValueChange, text, value };
 
   useEffect(() => setText(value), [value]);
 
+  // Closing a chip's popover right after typing must not lose the value.
+  useEffect(() => () => {
+    if (latest.current.text !== latest.current.value) latest.current.onValueChange(latest.current.text);
+  }, []);
+
   useEffect(() => {
     if (text === value) return;
-    const timer = setTimeout(() => latest.current(text), TYPING_DEBOUNCE_MS);
+    const timer = setTimeout(() => latest.current.onValueChange(text), TYPING_DEBOUNCE_MS);
     return () => clearTimeout(timer);
   }, [text, value]);
 
@@ -170,6 +175,7 @@ export default function FilterBar({ search, filters: filterProps, onChange, chil
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [draftKey, setDraftKey] = useState<string | null>(null);
+  const pendingKey = useRef<string | null>(null);
 
   const shown = filters.filter((filter) => isActive(filter) || filter.key === draftKey);
   const available = filters.filter((filter) => !shown.includes(filter));
@@ -208,14 +214,25 @@ export default function FilterBar({ search, filters: filterProps, onChange, chil
               <Plus className="w-3.5 h-3.5" /> Add filter
             </button>
           </PopoverTrigger>
-          <PopoverContent align="start" className="w-56 p-1.5">
+          <PopoverContent
+            align="start"
+            className="w-56 p-1.5"
+            // Opening the new chip's popover any earlier loses it: focus returning to
+            // this button reads as a click outside that popover and closes it at once.
+            onCloseAutoFocus={(event) => {
+              if (!pendingKey.current) return;
+              event.preventDefault();
+              setDraftKey(pendingKey.current);
+              pendingKey.current = null;
+            }}
+          >
             <div role="menu" aria-label="Add filter">
               {available.map((filter) => (
                 <button
                   key={filter.key}
                   type="button"
                   role="menuitem"
-                  onClick={() => { setMenuOpen(false); setDraftKey(filter.key); }}
+                  onClick={() => { pendingKey.current = filter.key; setMenuOpen(false); }}
                   className="w-full min-h-10 px-2.5 rounded-lg text-left text-sm text-foreground hover:bg-muted/50"
                 >
                   {filter.label}
