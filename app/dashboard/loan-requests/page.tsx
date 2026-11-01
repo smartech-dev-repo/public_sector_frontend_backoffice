@@ -1,5 +1,8 @@
 "use client";
 
+import TabCount from '@/app/components/ui/TabCount';
+import { useListTotals } from '@/app/composables/useListTotals';
+import { loans_api } from '@/app/api_factory/modules/loans';
 import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import RequestsTab from './components/RequestsTab';
@@ -36,6 +39,11 @@ function LoanRequestPageContent() {
     ];
     return allTabs.filter(t => t.visible);
   }, [hasPermission, hasAnyPermission, isSuperAdmin]);
+
+  const totals = useListTotals({
+    requests: tabs.some((tab) => tab.id === 'requests') ? () => loans_api.getLoanRequests({ limit: 1 }) : null,
+    'client-loans': tabs.some((tab) => tab.id === 'client-loans') ? () => loans_api.getClientLoans({ limit: 1 }) : null,
+  });
 
   const [activeTab, setActiveTab] = useState<TabId>(() => {
     if (tabParam && tabs.some(t => t.id === tabParam)) {
@@ -86,6 +94,7 @@ function LoanRequestPageContent() {
               `}
             >
               {tab.label}
+              <TabCount count={totals[tab.id]} active={activeTab === tab.id} />
             </button>
           ))}
         </nav>

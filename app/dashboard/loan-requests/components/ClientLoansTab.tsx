@@ -1,5 +1,6 @@
 "use client";
 
+import { useDataVersion } from '@/app/composables/useDataVersion';
 import FilterBar, { AGENCY_FILTER_OPTIONS, dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -24,6 +25,7 @@ export default function ClientLoansTab() {
 }
 
 function ClientLoansContent() {
+ const dataVersion = useDataVersion();
  const { isSuperAdmin, hasPermission } = useAdminPermissions();
  const canReadClientLoans = isSuperAdmin || hasPermission('clients:read');
  const canReadPlan = isSuperAdmin || hasPermission('client-loans:read');
@@ -63,13 +65,14 @@ function ClientLoansContent() {
 
 
  useEffect(() => {
-  if (!canReadClientLoans || !clientIdFilter.trim()) return;
-  const params: any = { page, limit, clientId: clientIdFilter.trim() };
+  if (!canReadClientLoans) return;
+  const params: any = { page, limit };
+  if (clientIdFilter.trim()) params.clientId = clientIdFilter.trim();
   if (statusFilter && statusFilter !== 'none') params.status = statusFilter;
   if (agencyFilter) params.agency = agencyFilter;
   Object.assign(params, dateRangeParams(disbursedRange, 'disbursedFrom', 'disbursedTo'));
   fetchClientLoans(params);
- }, [fetchClientLoans, page, limit, clientIdFilter, statusFilter, agencyFilter, disbursedRange]);
+ }, [fetchClientLoans, page, limit, clientIdFilter, statusFilter, agencyFilter, disbursedRange, dataVersion]);
 
  const handleViewRepayment = async (loan: any) => {
   setSelectedLoan(loan);
@@ -110,7 +113,7 @@ function ClientLoansContent() {
      <div className="relative">
       <input
        type="text"
-       placeholder="Enter Client ID (UUID) to search loans..."
+       placeholder="Client ID (optional)"
        value={clientIdFilter}
        onChange={(e) => { setClientIdFilter(e.target.value); setPage(1); }}
        className="w-full pl-10 pr-4 py-2 border rounded-full text-sm bg-card border-border outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400"
@@ -186,30 +189,10 @@ function ClientLoansContent() {
            <tr>
             <td colSpan={canReadPlan ? 8 : 7} className="p-8">
              <div className="flex flex-col items-center justify-center w-full py-8 text-center">
-              {!clientIdFilter.trim() ? (
-               <div className="max-w-md mx-auto space-y-4">
-                <div className="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 flex items-center justify-center mx-auto">
-                 <CreditCard className="w-6 h-6" />
-                </div>
-                <div>
-                 <h3 className="text-base font-semibold text-foreground">Search for Client Loans</h3>
-                 <p className="text-sm text-muted-foreground mt-1">
-                  Client loans are scoped per client. Enter a Client ID in the search bar above, or click &quot;View Existing Loans&quot; from any loan request row.
-                 </p>
-                </div>
-                <Link 
-                 href="/dashboard/loan-requests?tab=requests"
-                 className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition-colors"
-                >
-                 Go to Loan Requests
-                </Link>
-               </div>
-              ) : (
                <EmptyState 
                 title="No client loans found"
-                description="No loans were found for this Client ID matching the applied filters."
+                description="No loans match these filters."
                />
-              )}
              </div>
             </td>
            </tr>

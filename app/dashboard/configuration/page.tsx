@@ -1,5 +1,9 @@
 "use client";
 
+import TabCount from '@/app/components/ui/TabCount';
+import { useListTotals } from '@/app/composables/useListTotals';
+import { management_fees_api } from '@/app/api_factory/modules/managementFees';
+import { alertRecipients_api } from '@/app/api_factory/modules/alertRecipients';
 import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import EmptyState from '@/app/components/ui/EmptyState';
@@ -14,6 +18,11 @@ function ConfigurationTabs() {
  const { isSuperAdmin, hasPermission } = useAdminPermissions();
  const requested = useSearchParams().get('tab');
  const [chosen, setChosen] = useState<TabId | null>(null);
+
+ const totals = useListTotals({
+  fees: isSuperAdmin || hasPermission('management-fees:manage') ? () => management_fees_api.list({ limit: 1 }) : null,
+  alerts: isSuperAdmin || hasPermission('alerts:manage') ? () => alertRecipients_api.list() : null,
+ });
 
  const tabs: { id: TabId; label: string }[] = [
   ...(isSuperAdmin || hasPermission('loan-settings:manage') ? [{ id: 'loan-settings' as const, label: 'Loan Settings' }] : []),
@@ -39,6 +48,7 @@ function ConfigurationTabs() {
        className={`whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-sm transition-colors ${activeTab === tab.id ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'}`}
       >
        {tab.label}
+       <TabCount count={totals[tab.id]} active={activeTab === tab.id} />
       </button>
      ))}
     </nav>

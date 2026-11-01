@@ -1,5 +1,6 @@
 "use client";
 
+import { useDataVersion } from '@/app/composables/useDataVersion';
 import FilterBar from '@/app/components/ui/FilterBar';
 import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
@@ -34,6 +35,7 @@ const SECTOR_OPTIONS = [
 ];
 
 export default function ConfigurationsTab() {
+ const dataVersion = useDataVersion();
   const { isSuperAdmin, hasPermission } = useAdminPermissions();
   const canManageProducts = isSuperAdmin || hasPermission('loan-products:manage');
   const router = useRouter();
@@ -61,7 +63,7 @@ export default function ConfigurationsTab() {
       fetchLoanProducts({ limit: 100 });
       fetchLoanProductSectors();
     }
-  }, [fetchLoanProducts, fetchLoanProductSectors, canManageProducts]);
+  }, [fetchLoanProducts, fetchLoanProductSectors, canManageProducts, dataVersion]);
 
   // Available sectors combined
   const availableSectors = useMemo(() => {

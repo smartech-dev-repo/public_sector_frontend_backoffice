@@ -1,5 +1,6 @@
 "use client";
 
+import { useDataVersion } from '@/app/composables/useDataVersion';
 import FilterBar, { AGENCY_FILTER_OPTIONS } from '@/app/components/ui/FilterBar';
 import { useCallback, useEffect, useState } from 'react';
 import { useIppis } from '@/app/composables/modules/useIppis';
@@ -15,6 +16,7 @@ const HEADER_CLASS = 'px-4 py-4 text-left text-xs font-medium text-emerald-700 d
 const HEADER_RIGHT_CLASS = HEADER_CLASS.replace('text-left', 'text-right');
 
 export default function IppisRecordsTab() {
+ const dataVersion = useDataVersion();
  const { isSuperAdmin, hasPermission } = useAdminPermissions();
  const canUploadIppis = isSuperAdmin || hasPermission('ippis:upload');
  const { loading, error, ippisRecords, fetchIppisRecords, meta } = useIppis();
@@ -34,7 +36,7 @@ export default function IppisRecordsTab() {
   if (status !== 'all') params.employeeStatus = status;
   
   fetchIppisRecords(params);
- }, [fetchIppisRecords, page, limit, q, agency, status, canUploadIppis]);
+ }, [fetchIppisRecords, page, limit, q, agency, status, canUploadIppis, dataVersion]);
 
  const closeDetail = useCallback(() => setViewing(null), []);
 

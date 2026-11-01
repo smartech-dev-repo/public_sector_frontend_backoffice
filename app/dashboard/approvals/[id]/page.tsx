@@ -1,5 +1,6 @@
 "use client";
 
+import { useDataVersion } from '@/app/composables/useDataVersion';
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -23,6 +24,7 @@ const Detail = ({ label, children }: { label: string; children: React.ReactNode 
 );
 
 export default function ApprovalDetailPage() {
+ const dataVersion = useDataVersion();
  const { id } = useParams<{ id: string }>();
  const { confirm } = useConfirm();
  const { addToast } = useToast();
@@ -47,7 +49,7 @@ export default function ApprovalDetailPage() {
   }
  }, [id]);
 
- useEffect(() => { load(); }, [load]);
+ useEffect(() => { load(); }, [load, dataVersion]);
 
  // The API layer shows the server's message for a refused action.
  const act = async (run: () => Promise<any>, success: string) => {
@@ -58,7 +60,6 @@ export default function ApprovalDetailPage() {
   setRejecting(false);
   setNote('');
   announceNotificationsChanged();
-  load();
  };
 
  const handleApprove = async () => {

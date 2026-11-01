@@ -1,5 +1,6 @@
 "use client";
 
+import { useDataVersion } from '@/app/composables/useDataVersion';
 import { useEffect, useState } from 'react';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import Modal from '@/app/components/ui/Modal';
@@ -19,6 +20,7 @@ const inputClass = 'w-full px-4 py-2.5 bg-muted/30 border border-border rounded-
 const labelClass = 'block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2';
 
 export default function ManagementFeesTab() {
+ const dataVersion = useDataVersion();
   const { isSuperAdmin, hasPermission } = useAdminPermissions();
   const canManage = isSuperAdmin || hasPermission('management-fees:manage');
 
@@ -38,7 +40,7 @@ export default function ManagementFeesTab() {
   useEffect(() => {
     if (canManage) reload();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canManage, page, limit, query]);
+  }, [canManage, page, limit, query, dataVersion]);
 
   const openCreate = () => {
     setEditingId(null);
@@ -77,7 +79,6 @@ export default function ManagementFeesTab() {
     if (await saveFee(editingId, payload)) {
       addToast(editingId ? 'Management fee updated' : 'Management fee created', 'success');
       setIsFormOpen(false);
-      reload();
     }
   };
 
@@ -85,7 +86,6 @@ export default function ManagementFeesTab() {
     const ok = await confirm({ title: 'Delete management fee', message: `Delete "${fee.name}"? This cannot be undone.`, confirmText: 'Delete' });
     if (ok && (await removeFee(fee.id))) {
       addToast('Management fee deleted', 'success');
-      reload();
     }
   };
 

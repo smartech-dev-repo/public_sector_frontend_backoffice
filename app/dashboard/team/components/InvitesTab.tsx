@@ -1,5 +1,6 @@
 "use client";
 
+import { useDataVersion } from '@/app/composables/useDataVersion';
 import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState } from 'react';
 import { useInvites } from '@/app/composables/modules/useInvites';
@@ -15,6 +16,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function InvitesTab() {
+ const dataVersion = useDataVersion();
  const { hasPermission, isSuperAdmin } = useAdminPermissions();
  const canInvite = isSuperAdmin || hasPermission('admins:create');
 
@@ -44,7 +46,7 @@ export default function InvitesTab() {
   Object.assign(params, dateRangeParams(expiresRange, 'expiresFrom', 'expiresTo'));
   fetchInvites(params);
   fetchRoles();
- }, [fetchInvites, fetchRoles, page, limit, statusFilter, q, createdRange, expiresRange, canInvite]);
+ }, [fetchInvites, fetchRoles, page, limit, statusFilter, q, createdRange, expiresRange, canInvite, dataVersion]);
 
  const handleCreateInvite = async (e: React.FormEvent) => {
   e.preventDefault();
@@ -58,7 +60,6 @@ export default function InvitesTab() {
    addToast('Invite sent successfully!', 'success');
    setShowInviteModal(false);
    setInviteForm({ email: '', roleId: '' });
-   fetchInvites({ page, limit });
   } catch (e: any) {
    addToast(e?.response?.data?.message || 'Failed to send invite', 'error');
   } finally {
@@ -91,7 +92,6 @@ export default function InvitesTab() {
   try {
    await revokeInvite(id);
    addToast('Invite revoked successfully', 'success');
-   fetchInvites({ page, limit });
   } catch (e: any) {
    addToast(e?.response?.data?.message || 'Failed to revoke invite', 'error');
   }
@@ -107,7 +107,6 @@ export default function InvitesTab() {
   try {
    await deleteInvite(id);
    addToast('Invite deleted successfully', 'success');
-   fetchInvites({ page, limit });
   } catch (e: any) {
    addToast(e?.response?.data?.message || 'Failed to delete invite', 'error');
   }

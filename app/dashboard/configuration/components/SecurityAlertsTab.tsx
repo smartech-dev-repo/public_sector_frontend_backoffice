@@ -1,5 +1,6 @@
 "use client";
 
+import { useDataVersion } from '@/app/composables/useDataVersion';
 import { useCallback, useEffect, useState } from 'react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import PulseLoader from '@/app/components/ui/PulseLoader';
@@ -23,6 +24,7 @@ const ALERT_TYPES = [
 type EditorState = { id?: string; email: string; name: string } | null;
 
 export default function SecurityAlertsTab() {
+ const dataVersion = useDataVersion();
  const { confirm } = useConfirm();
  const { addToast } = useToast();
  const [recipients, setRecipients] = useState<any[]>([]);
@@ -40,7 +42,7 @@ export default function SecurityAlertsTab() {
   setState('ready');
  }, []);
 
- useEffect(() => { load(); }, [load]);
+ useEffect(() => { load(); }, [load, dataVersion]);
 
  const handleSave = async (e: React.FormEvent) => {
   e.preventDefault();
@@ -53,13 +55,11 @@ export default function SecurityAlertsTab() {
   if (res?.type === 'ERROR') return;
   addToast(editor.id ? 'Recipient updated' : 'Recipient added', 'success');
   setEditor(null);
-  load();
  };
 
  const handleToggle = async (recipient: any) => {
   const res: any = await alertRecipients_api.update(recipient.id, { isActive: !recipient.isActive });
   if (res?.type !== 'ERROR') addToast(recipient.isActive ? `Alerts turned off for ${recipient.email}` : `Alerts turned on for ${recipient.email}`, 'success');
-  load();
  };
 
  const handleRemove = async (recipient: any) => {
@@ -67,7 +67,6 @@ export default function SecurityAlertsTab() {
   if (!proceed) return;
   const res: any = await alertRecipients_api.remove(recipient.id);
   if (res?.type !== 'ERROR') addToast('Recipient removed', 'success');
-  load();
  };
 
  const activeCount = recipients.filter((recipient) => recipient.isActive).length;

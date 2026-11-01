@@ -1,5 +1,6 @@
 "use client";
 
+import { useDataVersion } from '@/app/composables/useDataVersion';
 import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState } from 'react'; 
 import Pagination from '@/app/components/ui/Pagination';
@@ -17,6 +18,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function AdminsTab() {
+ const dataVersion = useDataVersion();
  const { hasPermission, isSuperAdmin } = useAdminPermissions();
  const canReadAdmins = isSuperAdmin || hasPermission('roles:manage');
  const canInvite = isSuperAdmin || hasPermission('admins:create');
@@ -55,7 +57,7 @@ export default function AdminsTab() {
   if (canAssignRole || canInvite) {
    fetchRoles();
   }
- }, [fetchAdmins, fetchRoles, page, limit, search, statusFilter, dateRange, canReadAdmins, canAssignRole, canInvite]);
+ }, [fetchAdmins, fetchRoles, page, limit, search, statusFilter, dateRange, canReadAdmins, canAssignRole, canInvite, dataVersion]);
 
 
  const openAssignRoleModal = (admin: any) => {
@@ -73,7 +75,6 @@ export default function AdminsTab() {
    await assignRole(selectedAdmin.id, { roleId: assignRoleForm.roleId.trim() });
    addToast('Role assigned successfully!', 'success');
    setShowAssignModal(false);
-   fetchAdmins({ page, limit });
   } catch (e: any) {
    addToast(e?.response?.data?.message || 'Failed to assign role', 'error');
   } finally {
@@ -89,7 +90,6 @@ export default function AdminsTab() {
    try {
     await suspendAdmin(admin.id);
     addToast('Admin suspended successfully', 'success');
-    fetchAdmins({ page, limit });
    } catch (e: any) {
     addToast(e?.response?.data?.message || 'Failed to suspend admin', 'error');
    }
@@ -102,7 +102,6 @@ export default function AdminsTab() {
    try {
     await unsuspendAdmin(admin.id);
     addToast('Admin unsuspended successfully', 'success');
-    fetchAdmins({ page, limit });
    } catch (e: any) {
     addToast(e?.response?.data?.message || 'Failed to unsuspend admin', 'error');
    }
@@ -301,7 +300,6 @@ export default function AdminsTab() {
          addToast('Invite sent successfully!', 'success');
          setShowInviteModal(false);
          setInviteForm({ email: '', roleId: '' });
-         fetchAdmins({ page, limit });
         } catch (err: any) {
          addToast(err?.response?.data?.message || 'Failed to send invite', 'error');
         } finally {

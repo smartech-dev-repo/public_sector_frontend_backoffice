@@ -1,5 +1,6 @@
 "use client";
 
+import { useDataVersion } from '@/app/composables/useDataVersion';
 import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -29,6 +30,7 @@ import {
 } from 'lucide-react';
 
 export default function LoanRequestDetailPage({ params }: { params: Promise<{ id: string }> }) {
+ const dataVersion = useDataVersion();
   const resolvedParams = use(params);
   const id = resolvedParams.id;
   const router = useRouter();
@@ -74,7 +76,7 @@ export default function LoanRequestDetailPage({ params }: { params: Promise<{ id
     if (id) {
       fetchDetail();
     }
-  }, [id]);
+  }, [id, dataVersion]);
 
   const handleApprove = async () => {
     const confirmed = await confirm({
@@ -154,7 +156,7 @@ export default function LoanRequestDetailPage({ params }: { params: Promise<{ id
     }
   };
 
-  if (loading) {
+  if (loading && !loanRequest) {
     return (
       <div className="py-20 flex flex-col items-center justify-center space-y-4">
         <PulseLoader />
@@ -192,14 +194,14 @@ export default function LoanRequestDetailPage({ params }: { params: Promise<{ id
   const availableActions: string[] = Array.isArray(loanRequest.availableActions) ? loanRequest.availableActions : [];
 
   // 1. Confirm with Code: on PENDING loan requests
-  const canConfirmCode = canReview && (
+  const canConfirmCode = canReview && !loanRequest.pendingApproval && (
     availableActions.includes('confirm-code') || 
     availableActions.includes('confirm') || 
     reqStatus === 'PENDING'
   );
 
   // 2. Approve: on CONFIRMED loan requests
-  const canApprove = canReview && (
+  const canApprove = canReview && !loanRequest.pendingApproval && (
     availableActions.includes('approve') || 
     reqStatus === 'CONFIRMED'
   );
@@ -212,7 +214,7 @@ export default function LoanRequestDetailPage({ params }: { params: Promise<{ id
   );
 
   // 4. Disburse: on APPROVED loan requests
-  const canDisburse = canReview && (
+  const canDisburse = canReview && !loanRequest.pendingApproval && (
     availableActions.includes('disburse') || 
     reqStatus === 'APPROVED'
   );
@@ -345,6 +347,7 @@ export default function LoanRequestDetailPage({ params }: { params: Promise<{ id
               <span className="w-1.5 h-1.5 rounded-full bg-current" />
               {loanRequest.status}
             </span>
+            {loanRequest.pendingApproval && <Link href={`/dashboard/approvals/${loanRequest.pendingApproval.id}`} className="ml-2 text-xs font-semibold text-amber-800 dark:text-amber-400 hover:underline">Waiting for approval</Link>}
           </div>
           <span className="text-[11px] text-muted-foreground mt-2 block">
             Available actions: {availableActions && availableActions.length > 0 ? availableActions.join(', ') : 'None'}

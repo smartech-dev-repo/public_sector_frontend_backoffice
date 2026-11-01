@@ -1,5 +1,6 @@
 "use client";
 
+import { useDataVersion } from '@/app/composables/useDataVersion';
 import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
@@ -27,6 +28,7 @@ interface Props {
 }
 
 export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
+ const dataVersion = useDataVersion();
   const { isSuperAdmin, hasPermission } = useAdminPermissions();
   const canReadAnalytics = isSuperAdmin || hasPermission('clients:analytics:read');
   const canOnboard = isSuperAdmin || hasPermission('clients:onboard');
@@ -89,7 +91,7 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
     if (canReadAnalytics) {
       fetchClientAnalytics();
     }
-  }, [fetchClientAnalytics, canReadAnalytics]);
+  }, [fetchClientAnalytics, canReadAnalytics, dataVersion]);
 
   const totalCustomers = useMemo(() => {
     if (analytics?.totalClients) return analytics.totalClients;
@@ -125,7 +127,7 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
     if (agentIdFilter.trim()) params.agentId = agentIdFilter.trim();
     Object.assign(params, dateRangeParams(createdRange, 'createdFrom', 'createdTo'));
     fetchClients(params);
-  }, [fetchClients, statusFilter, q, agentIdFilter, createdRange, page, limit, canReviewClient]);
+  }, [fetchClients, statusFilter, q, agentIdFilter, createdRange, page, limit, canReviewClient, dataVersion]);
 
   const openWalletModal = async (client: any) => {
     setSelectedClient(client);
@@ -193,7 +195,6 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
       try {
         await approveClient(id);
         addToast('Client approved successfully', 'success');
-        fetchClients({ page, limit });
       } catch (e: any) {
         addToast(e?.response?.data?.message || 'Failed to approve client', 'error');
       }
@@ -219,7 +220,6 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
       addToast('Verification retry requested successfully', 'success');
       setShowRetryModal(false);
       setRetryNote('');
-      fetchClients({ page, limit });
     } catch (e: any) {
       addToast(e?.response?.data?.message || 'Failed to retry client verification', 'error');
     } finally {

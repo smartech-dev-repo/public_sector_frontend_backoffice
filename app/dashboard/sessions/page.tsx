@@ -1,5 +1,6 @@
 "use client";
 
+import { useDataVersion } from '@/app/composables/useDataVersion';
 import { useCallback, useEffect, useState } from 'react';
 import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import Pagination from '@/app/components/ui/Pagination';
@@ -17,6 +18,7 @@ const TH = 'px-4 py-3.5 text-left text-xs font-semibold text-emerald-800 dark:te
 const USER_TYPE_LABELS: Record<string, string> = { ADMIN: 'Admin', AGENT: 'Agent', CLIENT: 'Client' };
 
 export default function UserSessionsPage() {
+ const dataVersion = useDataVersion();
  const { isSuperAdmin, hasPermission } = useAdminPermissions();
  const canManage = isSuperAdmin || hasPermission('sessions:manage');
  const { confirm } = useConfirm();
@@ -50,7 +52,7 @@ export default function UserSessionsPage() {
 
  useEffect(() => {
   if (canManage) load();
- }, [canManage, load]);
+ }, [canManage, load, dataVersion]);
 
  const handleRevoke = async (session: any) => {
   const name = principalName(session.user) || 'this user';
@@ -58,7 +60,6 @@ export default function UserSessionsPage() {
   if (!proceed) return;
   const res: any = await sessions_api.revokeUserSession(session.id);
   if (res?.type !== 'ERROR') addToast('Session signed out', 'success');
-  load();
  };
 
  if (!canManage) {
