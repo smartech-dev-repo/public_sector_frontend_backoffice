@@ -111,7 +111,7 @@ export default function IppisRecordsTab() {
           </td>
           <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground/90">{formatIppisDate(record.hireDate)}</td>
           <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground/90 font-mono">
-           <SensitiveValue value={record.phone} allowCopy />
+           <SensitiveValue value={record.phone} allowCopy forceRevealed />
           </td>
           <td className="px-4 py-4 whitespace-nowrap">
            <div className="text-sm text-foreground/90">{record.bankName || 'N/A'}</div>
