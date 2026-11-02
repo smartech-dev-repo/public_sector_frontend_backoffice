@@ -98,7 +98,7 @@ export default function IppisRecordDetailModal({ record, onClose }: { record: an
             ['Date of Birth', formatIppisDate(record.dateOfBirth)],
             ['Gender', text(record.gender)],
             ['Marital Status', text(record.maritalStatus)],
-            ['Telephone Number', sensitive(record.phone)],
+            ['Telephone Number', <SensitiveValue key="phone" value={record.phone} allowCopy forceRevealed />],
             ['BVN', sensitive(record.bvn)],
           ]} />
 

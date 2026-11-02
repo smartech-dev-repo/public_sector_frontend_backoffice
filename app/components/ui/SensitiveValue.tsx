@@ -75,24 +75,27 @@ export default function SensitiveValue({
         {effectiveRevealed ? cleanStr : getMaskedText(cleanStr, visibleCount)}
       </span>
 
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          e.preventDefault();
-          if (!effectiveRevealed) reportAccess();
-          setIsRevealed((prev) => !prev);
-        }}
-        className="p-1 rounded-md text-muted-foreground/70 hover:text-foreground hover:bg-muted/60 transition-colors focus:outline-none"
-        title={effectiveRevealed ? 'Hide sensitive data' : 'Reveal sensitive data'}
-        aria-label={effectiveRevealed ? 'Hide sensitive data' : 'Reveal sensitive data'}
-      >
-        {effectiveRevealed ? (
-          <EyeOff className="size-3.5 text-muted-foreground hover:text-foreground" />
-        ) : (
-          <Eye className="size-3.5 text-muted-foreground hover:text-foreground" />
-        )}
-      </button>
+      {/* A forced value can't be toggled, so the eye would do nothing. */}
+      {forceRevealed !== true && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            if (!effectiveRevealed) reportAccess();
+            setIsRevealed((prev) => !prev);
+          }}
+          className="p-1 rounded-md text-muted-foreground/70 hover:text-foreground hover:bg-muted/60 transition-colors focus:outline-none"
+          title={effectiveRevealed ? 'Hide sensitive data' : 'Reveal sensitive data'}
+          aria-label={effectiveRevealed ? 'Hide sensitive data' : 'Reveal sensitive data'}
+        >
+          {effectiveRevealed ? (
+            <EyeOff className="size-3.5 text-muted-foreground hover:text-foreground" />
+          ) : (
+            <Eye className="size-3.5 text-muted-foreground hover:text-foreground" />
+          )}
+        </button>
+      )}
 
       {allowCopy && (
         <button
