@@ -31,7 +31,7 @@ const SECTOR_OPTIONS = [
   { code: 'NSCDC', name: 'Military & Paramilitary' },
   { code: 'IMMIGRATION', name: 'Nigeria Immigration Service' },
   { code: 'CORRECTIONAL', name: 'Nigerian Correctional Service' },
-  { code: 'CUSTOM', name: 'Nigeria Customs Service' }
+  { code: 'CUSTOMS', name: 'Nigeria Customs Service' }
 ];
 
 export default function ConfigurationsTab() {

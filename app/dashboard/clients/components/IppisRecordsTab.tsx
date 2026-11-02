@@ -1,7 +1,8 @@
 "use client";
 
+import { useSectorOptions } from '@/app/composables/modules/useSectorOptions';
 import { useDataVersion } from '@/app/composables/useDataVersion';
-import FilterBar, { AGENCY_FILTER_OPTIONS } from '@/app/components/ui/FilterBar';
+import FilterBar from '@/app/components/ui/FilterBar';
 import { useCallback, useEffect, useState } from 'react';
 import { useIppis } from '@/app/composables/modules/useIppis';
 import PulseLoader from '@/app/components/ui/PulseLoader';
@@ -16,6 +17,7 @@ const HEADER_CLASS = 'px-4 py-4 text-left text-xs font-medium text-emerald-700 d
 const HEADER_RIGHT_CLASS = HEADER_CLASS.replace('text-left', 'text-right');
 
 export default function IppisRecordsTab() {
+ const agencyOptions = useSectorOptions();
  const dataVersion = useDataVersion();
  const { isSuperAdmin, hasPermission } = useAdminPermissions();
  const canUploadIppis = isSuperAdmin || hasPermission('ippis:upload');
@@ -58,7 +60,7 @@ export default function IppisRecordsTab() {
      onChange={() => setPage(1)}
      search={{ value: q, onChange: setQ, placeholder: 'Name or staff ID' }}
      filters={[
-      { key: 'agency', label: 'Agency', type: 'select', value: agency, emptyValue: 'all', options: AGENCY_FILTER_OPTIONS, onChange: setAgency },
+      { key: 'agency', label: 'Agency', type: 'select', value: agency, emptyValue: 'all', options: agencyOptions, onChange: setAgency },
       { key: 'status', label: 'Status', type: 'select', value: status, emptyValue: 'all', options: [{ value: 'ACTIVE', label: 'Active Employee' }, { value: 'INACTIVE', label: 'Ex Employee' }], onChange: setStatus },
      ]}
     />

@@ -11,8 +11,10 @@ import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 import LoanSettingsTab from './components/LoanSettingsTab';
 import ManagementFeesTab from './components/ManagementFeesTab';
 import SecurityAlertsTab from './components/SecurityAlertsTab';
+import SectorsTab from './components/SectorsTab';
+import { sectors_api } from '@/app/api_factory/modules/sectors';
 
-type TabId = 'loan-settings' | 'fees' | 'alerts';
+type TabId = 'sectors' | 'loan-settings' | 'fees' | 'alerts';
 
 function ConfigurationTabs() {
  const { isSuperAdmin, hasPermission } = useAdminPermissions();
@@ -20,11 +22,13 @@ function ConfigurationTabs() {
  const [chosen, setChosen] = useState<TabId | null>(null);
 
  const totals = useListTotals({
+  sectors: isSuperAdmin || hasPermission('sectors:manage') ? () => sectors_api.list() : null,
   fees: isSuperAdmin || hasPermission('management-fees:manage') ? () => management_fees_api.list({ limit: 1 }) : null,
   alerts: isSuperAdmin || hasPermission('alerts:manage') ? () => alertRecipients_api.list() : null,
  });
 
  const tabs: { id: TabId; label: string }[] = [
+  ...(isSuperAdmin || hasPermission('sectors:manage') ? [{ id: 'sectors' as const, label: 'Sectors' }] : []),
   ...(isSuperAdmin || hasPermission('loan-settings:manage') ? [{ id: 'loan-settings' as const, label: 'Loan Settings' }] : []),
   ...(isSuperAdmin || hasPermission('management-fees:manage') ? [{ id: 'fees' as const, label: 'Management Fees' }] : []),
   ...(isSuperAdmin || hasPermission('alerts:manage') ? [{ id: 'alerts' as const, label: 'Security Alerts' }] : []),
@@ -55,6 +59,7 @@ function ConfigurationTabs() {
    </div>
    <div className="pt-1">
     {activeTab === 'loan-settings' && <LoanSettingsTab />}
+    {activeTab === 'sectors' && <SectorsTab />}
     {activeTab === 'fees' && <ManagementFeesTab />}
     {activeTab === 'alerts' && <SecurityAlertsTab />}
    </div>

@@ -82,6 +82,7 @@ const GROUPS: { name: string; labels: Record<string, string> }[] = [
    'audit:read': 'View audit logs',
    'sessions:manage': 'View and sign out user sessions',
    'alerts:manage': 'Choose who gets security alerts',
+   'sectors:manage': 'Add and remove sectors',
   },
  },
 ];

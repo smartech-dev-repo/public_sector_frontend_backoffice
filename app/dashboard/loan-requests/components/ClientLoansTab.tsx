@@ -1,7 +1,8 @@
 "use client";
 
+import { useSectorOptions } from '@/app/composables/modules/useSectorOptions';
 import { useDataVersion } from '@/app/composables/useDataVersion';
-import FilterBar, { AGENCY_FILTER_OPTIONS, dateRangeParams } from '@/app/components/ui/FilterBar';
+import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useLoans } from '@/app/composables/modules/useLoans';
@@ -25,6 +26,7 @@ export default function ClientLoansTab() {
 }
 
 function ClientLoansContent() {
+ const agencyOptions = useSectorOptions();
  const dataVersion = useDataVersion();
  const { isSuperAdmin, hasPermission } = useAdminPermissions();
  const canReadClientLoans = isSuperAdmin || hasPermission('clients:read');
@@ -133,7 +135,7 @@ function ClientLoansContent() {
      search={{ value: clientIdFilter, onChange: setClientIdFilter, placeholder: 'Client ID' }}
      filters={[
       { key: 'status', label: 'Status', type: 'select', value: statusFilter, options: [{ value: 'ACTIVE', label: 'Active' }, { value: 'CLOSED', label: 'Closed' }, { value: 'DEFAULT', label: 'Default' }], onChange: setStatusFilter },
-      { key: 'agency', label: 'Agency', type: 'select', value: agencyFilter, options: AGENCY_FILTER_OPTIONS, onChange: setAgencyFilter },
+      { key: 'agency', label: 'Agency', type: 'select', value: agencyFilter, options: agencyOptions, onChange: setAgencyFilter },
       { key: 'disbursed', label: 'Disbursed', type: 'dateRange', value: disbursedRange, onChange: setDisbursedRange },
      ]}
     />

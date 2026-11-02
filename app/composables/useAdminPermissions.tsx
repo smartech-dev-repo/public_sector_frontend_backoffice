@@ -22,6 +22,7 @@ export type AdminPermission =
   | 'wallets:manage'
   | 'sessions:manage'
   | 'alerts:manage'
+  | 'sectors:manage'
   | 'approvals:loans'
   | 'approvals:agents'
   | 'approvals:wallets'
@@ -59,6 +60,7 @@ export const ALL_PERMISSIONS: AdminPermission[] = [
   'wallets:manage',
   'sessions:manage',
   'alerts:manage',
+  'sectors:manage',
   'approvals:loans',
   'approvals:agents',
   'approvals:wallets',
@@ -89,7 +91,7 @@ export const ROUTE_PERMISSIONS: Record<string, AdminPermission[]> = {
   '/dashboard/loan-terms': ['loan-products:manage', 'loans:upload'],
   '/dashboard/loan-products': ['loan-products:manage'],
   '/dashboard/management-fees': ['management-fees:manage'],
-  '/dashboard/configuration': ['management-fees:manage', 'loan-settings:manage', 'alerts:manage'],
+  '/dashboard/configuration': ['management-fees:manage', 'loan-settings:manage', 'alerts:manage', 'sectors:manage'],
   '/dashboard/sessions': ['sessions:manage'],
   '/dashboard/invites': ['agents:recruitment:read', 'agents:recruitment:manage', 'agents:recruitment:analytics:read'],
   '/dashboard/agent': ['agents:read', 'agents:review'],

@@ -254,7 +254,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
    section: 'Administration',
    icon: SlidersHorizontal,
    match: (p: string) => p.startsWith('/dashboard/configuration') || p.startsWith('/dashboard/management-fees'),
-   visible: hasAnyPermission(['management-fees:manage', 'loan-settings:manage', 'alerts:manage']),
+   visible: hasAnyPermission(['management-fees:manage', 'loan-settings:manage', 'alerts:manage', 'sectors:manage']),
   },
  ], [hasAnyPermission, notificationSummary.pendingApprovals, notificationSummary.myPendingRequests]);
 
