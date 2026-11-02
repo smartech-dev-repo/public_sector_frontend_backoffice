@@ -9,7 +9,11 @@ import FilterBar from '@/app/components/ui/FilterBar';
 import Pagination from '@/app/components/ui/Pagination';
 import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
+import Modal from '@/app/components/ui/Modal';
 import { approvals_api } from '@/app/api_factory/modules/approvals';
+import { announceNotificationsChanged } from '@/app/composables/modules/useNotificationSummary';
+import { useConfirm } from '@/app/composables/useConfirm';
+import { useToast } from '@/app/composables/useToast';
 import { APPROVAL_STATUS_LABELS, APPROVAL_STATUS_STYLES, formatApprovalDate } from './approvalLabels';
 
 const TH = 'px-4 py-3.5 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider whitespace-nowrap';
@@ -21,8 +25,20 @@ const VIEWS: { id: View; label: string }[] = [
  { id: 'all', label: 'All' },
 ];
 
+/** Why a pending row has no Approve button, so it never looks like a fault. */
+const waitingOn = (row: any): string | null => {
+ if (row.status !== 'PENDING') return null;
+ if (row.isMine) return 'Another admin must decide this';
+ return row.assignedTo ? 'Assigned to another admin' : 'Needs the approval permission';
+};
+
 export default function ApprovalsPage() {
  const dataVersion = useDataVersion();
+ const { confirm } = useConfirm();
+ const { addToast } = useToast();
+ const [busyId, setBusyId] = useState<string | null>(null);
+ const [rejecting, setRejecting] = useState<any>(null);
+ const [reason, setReason] = useState('');
  const [view, setView] = useState<View>('to_decide');
  const [status, setStatus] = useState('');
  const [page, setPage] = useState(1);
@@ -54,6 +70,29 @@ export default function ApprovalsPage() {
 
  useEffect(() => { load(); }, [load, dataVersion]);
 
+ const decide = async (id: string, run: () => Promise<any>, success: string) => {
+  setBusyId(id);
+  const res = await run();
+  setBusyId(null);
+  if (res?.type !== 'ERROR') addToast(success, 'success');
+  announceNotificationsChanged();
+ };
+
+ const handleApprove = async (row: any) => {
+  const proceed = await confirm({ title: 'Approve this request?', message: `${row.summary?.title} will run straight away.`, confirmText: 'Approve' });
+  if (proceed) decide(row.id, () => approvals_api.approve(row.id), 'Approved and carried out');
+ };
+
+ const handleReject = () => {
+  if (!reason.trim()) {
+   addToast('Enter a reason for rejecting', 'error');
+   return;
+  }
+  decide(rejecting.id, () => approvals_api.reject(rejecting.id, reason.trim()), 'Request rejected');
+  setRejecting(null);
+  setReason('');
+ };
+
  const switchView = (next: View) => {
   setView(next);
   setStatus('');
@@ -63,7 +102,7 @@ export default function ApprovalsPage() {
  return (
   <main className="w-full space-y-4">
    <div className="border-b border-border">
-    <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+    <nav className="-mb-px flex gap-4 sm:gap-8 overflow-x-auto overflow-y-hidden [scrollbar-width:none]" aria-label="Tabs">
      {VIEWS.map((tab) => (
       <button key={tab.id} onClick={() => switchView(tab.id)} aria-current={view === tab.id ? 'page' : undefined} className={`whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-sm transition-colors ${view === tab.id ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'}`}>
        {tab.label}
@@ -91,11 +130,12 @@ export default function ApprovalsPage() {
          <th scope="col" className={TH}>Assigned to</th>
          <th scope="col" className={TH}>Date</th>
          <th scope="col" className={TH}>Status</th>
+         <th scope="col" className={TH}>Actions</th>
         </tr>
        </thead>
        <tbody className="divide-y divide-border">
         {rows.length === 0 && (
-         <tr><td colSpan={5} className="p-8"><div className="flex justify-center"><EmptyState title={view === 'to_decide' ? 'Nothing is waiting for you.' : 'No requests found.'} /></div></td></tr>
+         <tr><td colSpan={6} className="p-8"><div className="flex justify-center"><EmptyState title={view === 'to_decide' ? 'Nothing is waiting for you.' : 'No requests found.'} description={view === 'to_decide' && totals.mine ? 'Requests you sent need another admin to decide them. Find them under My requests.' : undefined} /></div></td></tr>
         )}
         {rows.map((row) => (
          <tr key={row.id} className="hover:bg-muted/30 transition-colors">
@@ -107,6 +147,19 @@ export default function ApprovalsPage() {
           <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">{row.assignedTo?.fullName || <span className="text-muted-foreground">Any approver</span>}</td>
           <td className="px-4 py-3 text-xs text-foreground whitespace-nowrap">{formatApprovalDate(row.createdAt)}</td>
           <td className="px-4 py-3 whitespace-nowrap"><span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${APPROVAL_STATUS_STYLES[row.status]}`}>{APPROVAL_STATUS_LABELS[row.status]}</span></td>
+          <td className="px-4 py-3 whitespace-nowrap">
+           {row.canDecide ? (
+            <div className="flex items-center gap-2">
+             <button type="button" onClick={() => handleApprove(row)} disabled={busyId === row.id} aria-label={`Approve ${row.summary?.title}`} className="h-9 px-3 rounded-lg text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50">Approve</button>
+             <button type="button" onClick={() => setRejecting(row)} disabled={busyId === row.id} aria-label={`Reject ${row.summary?.title}`} className="h-9 px-3 border border-border rounded-lg text-xs font-semibold text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20">Reject</button>
+            </div>
+           ) : (
+            <>
+             <Link href={`/dashboard/approvals/${row.id}`} className="text-xs font-semibold text-[#016B41] dark:text-emerald-400 hover:underline">View</Link>
+             {waitingOn(row) && <span className="block text-xs text-muted-foreground">{waitingOn(row)}</span>}
+            </>
+           )}
+          </td>
          </tr>
         ))}
        </tbody>
@@ -119,6 +172,12 @@ export default function ApprovalsPage() {
      )}
     </div>
    )}
+   <Modal isOpen={!!rejecting} onClose={() => { setRejecting(null); setReason(''); }} onConfirm={handleReject} title="Reject this request?" confirmText="Reject request">
+    <label className="block text-sm font-medium text-foreground/90">
+     Reason for rejecting
+     <textarea value={reason} onChange={(e) => setReason(e.target.value)} maxLength={500} rows={3} autoFocus className="mt-1 w-full px-4 py-2.5 border border-border rounded-lg text-sm font-normal outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400" />
+    </label>
+   </Modal>
   </main>
  );
 }

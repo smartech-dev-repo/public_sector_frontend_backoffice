@@ -263,7 +263,7 @@ export default function SessionManager() {
   if ((!showWarning && !isTimedOut) || typeof document === 'undefined') return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-session flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-black/40 backdrop-blur-md dark:bg-black/60"></div>
 
       {isTimedOut ? (

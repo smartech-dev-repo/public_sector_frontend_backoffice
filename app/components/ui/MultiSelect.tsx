@@ -180,7 +180,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
               align="start"
               sideOffset={6}
               className={cn(
-                "z-[9999] w-[var(--radix-popover-trigger-width)] min-w-[280px] max-w-[500px] rounded-2xl border border-border bg-card p-0 text-card-foreground shadow-2xl outline-none",
+                "z-popup w-[var(--radix-popover-trigger-width)] min-w-[280px] max-w-[500px] rounded-2xl border border-border bg-card p-0 text-card-foreground shadow-2xl outline-none",
                 "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
                 "data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2"
               )}

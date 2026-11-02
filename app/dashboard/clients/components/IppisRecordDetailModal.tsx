@@ -60,7 +60,7 @@ export default function IppisRecordDetailModal({ record, onClose }: { record: an
   const extraFields = Object.entries(record.rawFields ?? {});
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-modal flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-foreground/50 backdrop-blur-sm" onClick={onClose} />
 
       <div role="dialog" aria-modal="true" aria-label={`IPPIS record for ${record.employeeName}`} className="relative bg-card rounded-2xl border border-border w-full max-w-3xl max-h-[90vh] flex flex-col">

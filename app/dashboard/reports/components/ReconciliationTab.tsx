@@ -206,7 +206,7 @@ export default function ReconciliationTab() {
 
       {/* Details Modal */}
       {showDetailsModal && selectedRecord && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-modal p-4">
           <div className="bg-card rounded-2xl max-w-xl w-full p-6 border border-border shadow-2xl animate-in fade-in zoom-in-95 duration-150">
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-border/50">
               <h3 className="text-base font-bold text-foreground">Reconciliation Variance Details</h3>

@@ -119,7 +119,7 @@ export default function Pagination({
       </button>
       
       {isDropdownOpen && (
-       <div className="absolute bottom-full right-0 mb-1 w-16 rounded-lg bg-popover ring-1 ring-border z-50 overflow-hidden py-1">
+       <div className="absolute bottom-full right-0 mb-1 w-16 rounded-lg bg-popover ring-1 ring-border z-30 overflow-hidden py-1">
         {[5, 10, 25, 50, 100].map(option => (
          <button
           key={option}

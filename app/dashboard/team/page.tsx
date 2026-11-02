@@ -75,7 +75,7 @@ export default function TeamManagementPage() {
  return (
   <div className="space-y-3">
    <div className="border-b border-border">
-    <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+    <nav className="-mb-px flex gap-4 sm:gap-8 overflow-x-auto overflow-y-hidden [scrollbar-width:none]" aria-label="Tabs">
      {tabs.map((tab) => (
       <button
        key={tab.id}

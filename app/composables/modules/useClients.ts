@@ -130,7 +130,7 @@ export const useClients = () => {
   setLoading(true);
   try {
    const res = await clients_api.creditClientWallet(id, payload);
-   return res.data;
+   return unwrapResponse(res);
   } catch (err: any) {
    setError(err.message);
    throw err;
@@ -143,7 +143,7 @@ export const useClients = () => {
   setLoading(true);
   try {
    const res = await clients_api.debitClientWallet(id, payload);
-   return res.data;
+   return unwrapResponse(res);
   } catch (err: any) {
    setError(err.message);
    throw err;

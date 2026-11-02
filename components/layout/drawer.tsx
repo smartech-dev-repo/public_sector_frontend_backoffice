@@ -18,7 +18,7 @@ const DrawerOverlay = React.forwardRef<
  React.ElementRef<typeof Vaul.Overlay>,
  React.ComponentPropsWithoutRef<typeof Vaul.Overlay>
 >(({ className, ...props }, ref) => (
- <Vaul.Overlay ref={ref} className={cn('fixed inset-0 z-50 bg-black/40', className)} {...props} />
+ <Vaul.Overlay ref={ref} className={cn('fixed inset-0 z-modal bg-black/40', className)} {...props} />
 ));
 DrawerOverlay.displayName = Vaul.Overlay.displayName;
 
@@ -31,7 +31,7 @@ const DrawerContent = React.forwardRef<
   <Vaul.Content
    ref={ref}
    className={cn(
-    'fixed inset-x-0 bottom-0 z-50 mt-24 flex h-[96%] max-h-[96%] flex-col rounded-t-[10px] border bg-background',
+    'fixed inset-x-0 bottom-0 z-modal mt-24 flex h-[96%] max-h-[96%] flex-col rounded-t-[10px] border bg-background',
     className,
    )}
    {...props}

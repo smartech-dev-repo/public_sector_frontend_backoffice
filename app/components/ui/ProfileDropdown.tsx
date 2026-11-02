@@ -353,7 +353,7 @@ export default function ProfileDropdown({ isOpen, onClose, onLogout }: ProfileDr
       {/* QUICK CHANGE PASSWORD MODAL                              */}
       {/* ======================================================== */}
       {mounted && typeof document !== 'undefined' && showPasswordModal && createPortal(
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-modal-2 flex items-center justify-center p-4">
           <div 
             className="fixed inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setShowPasswordModal(false)}
@@ -444,7 +444,7 @@ export default function ProfileDropdown({ isOpen, onClose, onLogout }: ProfileDr
       {/* 2FA SETUP MODAL (TOTP & EMAIL OTP)                       */}
       {/* ======================================================== */}
       {mounted && typeof document !== 'undefined' && show2faModal && createPortal(
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-modal-2 flex items-center justify-center p-4">
           <div 
             className="fixed inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setShow2faModal(false)}
@@ -571,7 +571,7 @@ export default function ProfileDropdown({ isOpen, onClose, onLogout }: ProfileDr
       {/* DISABLE 2FA CONFIRMATION MODAL                           */}
       {/* ======================================================== */}
       {mounted && typeof document !== 'undefined' && showDisable2faModal && createPortal(
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-modal-2 flex items-center justify-center p-4">
           <div 
             className="fixed inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setShowDisable2faModal(false)}

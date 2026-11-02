@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import Modal from '@/app/components/ui/Modal';
+import ApprovalAssignDialog from '@/app/components/ui/ApprovalAssignDialog';
 import SearchModal from '@/app/components/ui/SearchModal';
 import SessionManager from '@/app/components/ui/SessionManager';
 import ProfileDropdown from '@/app/components/ui/ProfileDropdown';
@@ -277,6 +278,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
    {/* Global Components */}
    <SessionManager />
    <SearchModal isOpen={showSearchModal} onClose={() => setShowSearchModal(false)} />
+   <ApprovalAssignDialog />
    <Modal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} onConfirm={confirmLogout} title="Confirm Logout">
     Are you sure you want to securely log out of the Admin Portal?
    </Modal>
@@ -285,12 +287,12 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
    {isMobileSidebarOpen && (
     <div 
      onClick={() => setIsMobileSidebarOpen(false)}
-     className="fixed inset-0 bg-foreground/50 z-30 md:hidden backdrop-blur-sm transition-opacity"
+     className="fixed inset-0 bg-foreground/50 z-scrim md:hidden backdrop-blur-sm transition-opacity"
     />
    )}
 
    <aside className={`
-    bg-card border-r border-border text-foreground flex-shrink-0 flex flex-col z-40 transition-all duration-300
+    bg-card border-r border-border text-foreground flex-shrink-0 flex flex-col z-sidebar transition-all duration-300
     fixed inset-y-0 left-0 md:relative md:translate-x-0
     ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
     ${isSidebarMinimized ? 'w-20' : 'w-[275px]'}
@@ -347,12 +349,18 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
              >
               <Icon className="w-[18px] h-[18px] shrink-0 transition-colors" />
               {!isSidebarMinimized && <span className="whitespace-nowrap flex-1">{item.label}</span>}
-              {item.href === '/dashboard/approvals' && !menuCounts[item.href] && notificationSummary.myPendingRequests > 0 && !isSidebarMinimized && (
-               <span title="Your requests waiting for another admin" aria-label={`${notificationSummary.myPendingRequests} of your requests waiting`} className={`min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full text-[11px] font-bold ${isActive ? 'bg-white text-[#016B41]' : 'bg-muted text-foreground'}`}>{notificationSummary.myPendingRequests}</span>
-              )}
-              {menuCounts[item.href] > 0 && (isSidebarMinimized
-               ? <span aria-label={`${menuCounts[item.href]} waiting`} className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-600" />
-               : <span aria-label={`${menuCounts[item.href]} waiting`} className={`min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full text-[11px] font-bold ${isActive ? 'bg-white text-[#016B41]' : 'bg-rose-600 text-white'}`}>{menuCounts[item.href] > 99 ? '99+' : menuCounts[item.href]}</span>)}
+              {(() => {
+               const waiting = menuCounts[item.href] || 0;
+               const mine = item.href === '/dashboard/approvals' ? notificationSummary.myPendingRequests : 0;
+               const count = waiting || mine;
+               if (!count) return null;
+               const label = waiting ? `${count} waiting` : `${count} of your requests waiting for another admin`;
+               return (
+                <span title={label} aria-label={label} className={`flex items-center justify-center rounded-full bg-red-600 text-white font-bold leading-none tabular-nums shrink-0 ${isActive ? 'ring-1 ring-white/80' : ''} ${isSidebarMinimized ? 'absolute top-0.5 right-0.5 min-w-4 h-4 px-1 text-[9px]' : 'min-w-5 h-5 px-1.5 text-[11px]'}`}>
+                 {count > 99 ? '99+' : count}
+                </span>
+               );
+              })()}
               {isSidebarMinimized && (
                <div className="hidden group-hover:block absolute left-14 bg-slate-800 text-white text-[11px] px-2 py-1 rounded whitespace-nowrap z-50">
                 {item.label}
@@ -385,7 +393,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
    </aside>
 
    <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
-    <header className="h-16 bg-card/80 backdrop-blur-md border-b border-border flex items-center justify-between px-4 sm:px-6 sticky top-0 z-20">
+    <header className="h-16 bg-card/80 backdrop-blur-md border-b border-border flex items-center justify-between px-4 sm:px-6 sticky top-0 z-header">
      <div className="flex items-center gap-3 sm:gap-8 flex-1">
       <button 
        onClick={() => setIsMobileSidebarOpen(true)}

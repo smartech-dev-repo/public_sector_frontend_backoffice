@@ -14,6 +14,19 @@ export default {
       },
     },
     extend: {
+      // Layers, lowest to highest. Use these names, not raw numbers, so a dialog can't end up behind another.
+      zIndex: {
+        header: '40',
+        scrim: '42',
+        sidebar: '45',
+        modal: '100',
+        'modal-2': '120',
+        'modal-3': '130',
+        'modal-4': '140',
+        confirm: '150',
+        popup: '160',
+        session: '200',
+      },
       fontFamily: {
         sans: ['Satoshi', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
         heading: ['"Clash Display"', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],

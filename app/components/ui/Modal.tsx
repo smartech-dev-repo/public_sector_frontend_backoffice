@@ -9,6 +9,11 @@ export interface ModalProps {
  onConfirm?: () => void;
  title?: string;
  children?: React.ReactNode;
+ confirmText?: string;
+ /** null hides the button. */
+ cancelText?: string | null;
+ /** Layer class, for a dialog that can open over another one. */
+ layer?: string;
 }
 
 export default function Modal({
@@ -16,7 +21,10 @@ export default function Modal({
  onClose,
  onConfirm,
  title = 'Confirm Action',
- children
+ children,
+ confirmText = 'Confirm',
+ cancelText = 'Cancel',
+ layer = 'z-modal'
 }: ModalProps) {
  const [mounted, setMounted] = useState(false);
 
@@ -28,7 +36,7 @@ export default function Modal({
  if (!isOpen) return null;
 
  return createPortal(
-  <div className="fixed inset-0 z-[100] flex items-center justify-center">
+  <div role="dialog" aria-modal="true" aria-label={title} className={`fixed inset-0 ${layer} flex items-center justify-center`}>
    <div 
     className="fixed inset-0 bg-foreground/50 backdrop-blur-sm transition-opacity" 
     onClick={onClose}
@@ -47,11 +55,13 @@ export default function Modal({
     </div>
     
     <div className="flex items-center gap-3 justify-end">
-     <button onClick={onClose} className="px-5 py-2.5 rounded-xl text-sm font-medium text-foreground bg-muted hover:bg-muted/80 transition-colors">
-      Cancel
-     </button>
+     {cancelText !== null && (
+      <button onClick={onClose} className="px-5 py-2.5 rounded-xl text-sm font-medium text-foreground bg-muted hover:bg-muted/80 transition-colors">
+       {cancelText}
+      </button>
+     )}
      <button onClick={onConfirm} className="px-5 py-2.5 rounded-xl text-sm font-medium text-primary-foreground bg-primary hover:opacity-90 transition-colors">
-      Confirm
+      {confirmText}
      </button>
     </div>
    </div>

@@ -87,7 +87,7 @@ export default function UserSessionsPanel({ session, onClose, onChanged }: UserS
  };
 
  return (
-  <div className="fixed inset-0 z-40">
+  <div className="fixed inset-0 z-modal">
    <div className="fixed inset-0 bg-black/30" onClick={onClose}></div>
    <aside aria-label={`${name}'s sessions and activity`} className="fixed top-0 right-0 bottom-0 w-full sm:w-[520px] bg-card border-l border-border flex flex-col">
     <div className="p-5 border-b border-border space-y-3">

@@ -432,7 +432,7 @@ export default function RequestsTab() {
 
       {/* Reject Modal */}
       {showRejectModal && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+        <div className="fixed inset-0 z-modal flex items-center justify-center">
           <div className="fixed inset-0 bg-black/40 backdrop-blur-xs" onClick={() => setShowRejectModal(false)}></div>
           <div className="relative bg-card rounded-2xl p-6 w-full max-w-md mx-4 animate-in fade-in zoom-in-95 duration-200 border border-border shadow-2xl">
             <h3 className="text-lg font-semibold text-foreground mb-1">Reject Loan Request</h3>
@@ -474,7 +474,7 @@ export default function RequestsTab() {
 
       {/* Confirm Code Modal (POST /admin/loan-requests/:id/confirm-code) */}
       {showConfirmCodeModal && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+        <div className="fixed inset-0 z-modal flex items-center justify-center">
           <div className="fixed inset-0 bg-black/40 backdrop-blur-xs" onClick={() => setShowConfirmCodeModal(false)}></div>
           <div className="relative bg-card rounded-2xl p-6 w-full max-w-md mx-4 animate-in fade-in zoom-in-95 duration-200 border border-border shadow-2xl">
             <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 flex items-center justify-center mb-3">

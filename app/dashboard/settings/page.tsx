@@ -803,7 +803,7 @@ export default function ProfileAndSecurityPage() {
       {/* LOADING MODAL: INITIATING 2FA (TOTP / EMAIL OTP)         */}
       {/* ======================================================== */}
       {initiatingMethod && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-modal flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
           <div className="relative bg-card rounded-3xl p-6 sm:p-8 w-full max-w-sm border border-border shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150 text-center">
             <div className="w-14 h-14 rounded-2xl bg-[#E8F5EE] dark:bg-emerald-950/40 text-[#018752] flex items-center justify-center mx-auto shadow-xs">
@@ -835,7 +835,7 @@ export default function ProfileAndSecurityPage() {
       {/* MODAL 1: SETUP AUTHENTICATOR APP (TOTP)                  */}
       {/* ======================================================== */}
       {setupMode === 'TOTP' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-modal flex items-center justify-center p-4">
           <div 
             className="fixed inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setSetupMode('none')}
@@ -939,7 +939,7 @@ export default function ProfileAndSecurityPage() {
       {/* MODAL 2: SETUP EMAIL OTP VERIFICATION                    */}
       {/* ======================================================== */}
       {setupMode === 'EMAIL' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-modal flex items-center justify-center p-4">
           <div 
             className="fixed inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setSetupMode('none')}
@@ -1021,7 +1021,7 @@ export default function ProfileAndSecurityPage() {
       {/* MODAL 3: DISABLE 2FA CONFIRMATION                        */}
       {/* ======================================================== */}
       {showDisableModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-modal flex items-center justify-center p-4">
           <div 
             className="fixed inset-0 bg-black/40 backdrop-blur-sm"
             onClick={() => setShowDisableModal(false)}
