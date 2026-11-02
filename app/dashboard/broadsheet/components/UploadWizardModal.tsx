@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 const STEPS = ['Template', 'Upload', 'Review', 'Confirmation'];
 const POLL_INTERVAL_MS = 1500;
+const MAX_POLL_FAILURES = 5;
+const MAX_POLL_MS = 15 * 60 * 1000;
 const VISIBLE_ISSUES = 50;
 
 const SLUG_BY_TYPE: Record<string, DocumentSlug> = {
@@ -74,6 +76,10 @@ export default function UploadWizardModal({ isOpen, onClose, onChanged, document
 
   const inputRef = useRef<HTMLInputElement>(null);
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Held in a ref: the page passes a new function each render, and the opening effect
+  // below must not re-run because of it, or it resets the wizard and reloads forever.
+  const onChangedRef = useRef(onChanged);
+  onChangedRef.current = onChanged;
 
   const stopPolling = useCallback(() => {
     if (pollRef.current) clearTimeout(pollRef.current);
@@ -81,15 +87,43 @@ export default function UploadWizardModal({ isOpen, onClose, onChanged, document
   }, []);
 
   const poll = useCallback((id: string, isDone: (status: string) => boolean, onDone: (batch: any) => void) => {
-    pollRef.current = setTimeout(async () => {
-      const res: any = await documents_api.getDocumentBatchById(id);
-      // A failed poll is usually a network blip; the batch is still running server-side.
-      if (res?.type === 'ERROR' || !isDone(res.data?.status)) {
-        poll(id, isDone, onDone);
-        return;
-      }
-      onDone(res.data);
-    }, POLL_INTERVAL_MS);
+    const startedAt = Date.now();
+    let failures = 0;
+
+    const giveUp = (message: string) => {
+      setPhase('idle');
+      setError(message);
+    };
+
+    const check = () => {
+      pollRef.current = setTimeout(async () => {
+        const res: any = await documents_api.getDocumentBatchById(id);
+        if (res?.type === 'ERROR') {
+          // One failure is usually a network blip; the batch is still running server-side.
+          failures += 1;
+          if (failures >= MAX_POLL_FAILURES) {
+            giveUp('We could not check on this upload. It may still finish, so look for it in the upload history.');
+            onChangedRef.current();
+            return;
+          }
+          check();
+          return;
+        }
+        failures = 0;
+        if (isDone(res.data?.status)) {
+          onDone(res.data);
+          return;
+        }
+        if (Date.now() - startedAt > MAX_POLL_MS) {
+          giveUp('This is taking longer than expected. It will keep running, so look for it in the upload history.');
+          onChangedRef.current();
+          return;
+        }
+        check();
+      }, POLL_INTERVAL_MS);
+    };
+
+    check();
   }, []);
 
   const showReview = useCallback((reviewed: any) => {
@@ -101,8 +135,8 @@ export default function UploadWizardModal({ isOpen, onClose, onChanged, document
     } else {
       setStep(2);
     }
-    onChanged();
-  }, [onChanged]);
+    onChangedRef.current();
+  }, []);
 
   const reset = useCallback(() => {
     stopPolling();
