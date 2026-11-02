@@ -256,7 +256,7 @@ export default function UploadWizardModal({ isOpen, onClose, onChanged, document
   const needsAgency = Boolean(file?.name.toLowerCase().endsWith('.csv') && template?.csvAgencies.length);
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-modal flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-foreground/50 backdrop-blur-sm" onClick={busy ? undefined : onClose} />
 
       <div role="dialog" aria-modal="true" aria-label={`Upload ${template?.title ?? 'document'}`} className="relative bg-card rounded-2xl border border-border w-full max-w-3xl max-h-[90vh] flex flex-col">

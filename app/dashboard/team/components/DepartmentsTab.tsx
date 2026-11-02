@@ -180,7 +180,7 @@ export default function DepartmentsTab() {
    )}
 
    {showModal && createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-modal flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
      <div className="bg-card w-full max-w-md rounded-xl border border-border overflow-hidden animate-in fade-in zoom-in-95 duration-200">
       <div className="px-6 py-2 border-b border-border flex justify-between items-center">
        <h3 className="text-lg font-semibold text-foreground">

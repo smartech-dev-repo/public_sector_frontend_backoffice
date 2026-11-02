@@ -677,7 +677,7 @@ export default function RecruitmentApplicationsTab() {
 
       {/* ================= APPLICATION DETAIL MODAL ================= */}
       {showDetailModal && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div className="fixed inset-0 z-modal-2 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
           <div 
             className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
             onClick={() => setShowDetailModal(false)} 
@@ -1006,7 +1006,7 @@ export default function RecruitmentApplicationsTab() {
 
       {/* ================= REJECT REASON MODAL ================= */}
       {rejectModal.isOpen && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[140] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-modal-4 flex items-center justify-center p-4">
           <div 
             className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
             onClick={() => !rejectModal.submitting && setRejectModal(prev => ({ ...prev, isOpen: false }))}
@@ -1082,7 +1082,7 @@ export default function RecruitmentApplicationsTab() {
 
       {/* ================= IN-APP DOCUMENT VIEWER LIGHTBOX ================= */}
       {previewDoc && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 sm:p-6">
+        <div className="fixed inset-0 z-modal-3 flex items-center justify-center p-4 sm:p-6">
           <div 
             className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity" 
             onClick={() => setPreviewDoc(null)} 

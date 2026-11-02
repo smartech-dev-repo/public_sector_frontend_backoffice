@@ -37,6 +37,7 @@ export const IMAGE_UPLOAD_ENDPOINT = axios.create({
 });
 
 export const SESSION_EXPIRED_EVENT = 'public_sector_session_expired';
+export const APPROVAL_SENT_EVENT = 'public_sector_approval_sent';
 
 const readAccessToken = (): string => {
  if (typeof window === 'undefined') return '';
@@ -127,6 +128,10 @@ instanceArray.forEach((instance) => {
  instance.interceptors.response.use(
  (response: CustomAxiosResponse) => {
  if (changesData(response.config)) announceDataChanged();
+ // Every action sent for approval answers this way, so its maker can pick an approver.
+ if (response.data?.pendingApproval && response.data.approvalId && typeof window !== 'undefined') {
+ window.dispatchEvent(new CustomEvent(APPROVAL_SENT_EVENT, { detail: response.data.approvalId }));
+ }
  return response;
  },
  async (err: any) => {

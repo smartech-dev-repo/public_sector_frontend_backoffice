@@ -55,7 +55,7 @@ const Table = React.forwardRef<
    {canScrollLeft && (
     <button
      onClick={(e) => { e.preventDefault(); e.stopPropagation(); scrollLeft(); }}
-     className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background border flex items-center justify-center z-50 text-muted-foreground hover:text-foreground"
+     className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background border flex items-center justify-center z-30 text-muted-foreground hover:text-foreground"
      type="button"
      aria-label="Scroll to left end"
     >
@@ -78,7 +78,7 @@ const Table = React.forwardRef<
    {canScrollRight && (
     <button
      onClick={(e) => { e.preventDefault(); e.stopPropagation(); scrollRight(); }}
-     className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background border flex items-center justify-center z-50 text-muted-foreground hover:text-foreground"
+     className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background border flex items-center justify-center z-30 text-muted-foreground hover:text-foreground"
      type="button"
      aria-label="Scroll to right end"
     >

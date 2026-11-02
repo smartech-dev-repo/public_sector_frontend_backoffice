@@ -88,6 +88,7 @@ export default function ClientWalletPage() {
  const [showRetryModal, setShowRetryModal] = useState(false);
  const [retryNote, setRetryNote] = useState('');
  const [amount, setAmount] = useState('');
+ const [walletNote, setWalletNote] = useState('');
  const [submitting, setSubmitting] = useState(false);
 
  // Repayment plan state
@@ -225,6 +226,10 @@ export default function ClientWalletPage() {
    addToast('Please enter a valid amount', 'error');
    return;
   }
+  if (!walletNote.trim()) {
+   addToast('Please enter a description', 'error');
+   return;
+  }
   const confirmed = await confirm({
    title: 'Confirm Credit',
    message: `Are you sure you want to credit ₦${Number(amount).toLocaleString()} to this client's wallet?`,
@@ -233,10 +238,11 @@ export default function ClientWalletPage() {
   if (!confirmed) return;
   setSubmitting(true);
   try {
-   await creditClientWallet(clientId, { amount: Number(amount) });
+   await creditClientWallet(clientId, { amount: Number(amount), description: walletNote.trim() });
    addToast('Sent for approval. Another admin must approve it.', 'success');
    setShowCreditModal(false);
    setAmount('');
+   setWalletNote('');
    loadData();
   } catch (e: any) {
    addToast(e?.response?.data?.message || 'Failed to credit wallet', 'error');
@@ -250,6 +256,10 @@ export default function ClientWalletPage() {
    addToast('Please enter a valid amount', 'error');
    return;
   }
+  if (!walletNote.trim()) {
+   addToast('Please enter a description', 'error');
+   return;
+  }
   const confirmed = await confirm({
    title: 'Confirm Debit',
    message: `Are you sure you want to debit ₦${Number(amount).toLocaleString()} from this client's wallet?`,
@@ -258,10 +268,11 @@ export default function ClientWalletPage() {
   if (!confirmed) return;
   setSubmitting(true);
   try {
-   await debitClientWallet(clientId, { amount: Number(amount) });
+   await debitClientWallet(clientId, { amount: Number(amount), description: walletNote.trim() });
    addToast('Sent for approval. Another admin must approve it.', 'success');
    setShowDebitModal(false);
    setAmount('');
+   setWalletNote('');
    loadData();
   } catch (e: any) {
    addToast(e?.response?.data?.message || 'Failed to debit wallet', 'error');
@@ -1682,7 +1693,7 @@ export default function ClientWalletPage() {
 
    {/* Credit/Debit Modals */}
    {(showCreditModal || showDebitModal) && typeof document !== 'undefined' && createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center">
+    <div className="fixed inset-0 z-modal flex items-center justify-center">
      <div className="fixed inset-0 bg-white/30 dark:bg-white/10 backdrop-blur-md" onClick={() => { setShowCreditModal(false); setShowDebitModal(false); }}></div>
      <div className="relative bg-card rounded-2xl p-6 w-full max-w-md mx-4 animate-in fade-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-800 shadow-2xl shadow-black/10">
       <div className="flex items-start justify-between mb-4">
@@ -1702,6 +1713,17 @@ export default function ClientWalletPage() {
          placeholder="Enter amount..."
         />
        </div>
+       <div>
+        <label htmlFor="wallet-description" className="block text-sm font-medium text-foreground/90 mb-1">Description</label>
+        <input
+         id="wallet-description"
+         value={walletNote}
+         onChange={(e) => setWalletNote(e.target.value)}
+         maxLength={200}
+         className="w-full px-4 py-2.5 border border-border rounded-lg text-sm focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 outline-none transition-all"
+         placeholder="Why is this being done?"
+        />
+       </div>
       </div>
       <div className="flex gap-3 mt-6 w-full">
        <button onClick={() => { setShowCreditModal(false); setShowDebitModal(false); }} className="flex-1 px-5 py-2.5 rounded-lg text-sm text-foreground/90 bg-muted/50 hover:bg-slate-200 transition-colors">Cancel</button>
@@ -1718,7 +1740,7 @@ export default function ClientWalletPage() {
 
    {/* Retry Verification Modal */}
    {showRetryModal && typeof document !== 'undefined' && createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center">
+    <div className="fixed inset-0 z-modal flex items-center justify-center">
      <div className="fixed inset-0 bg-white/30 dark:bg-white/10 backdrop-blur-md" onClick={() => setShowRetryModal(false)}></div>
      <div className="relative bg-card rounded-2xl p-6 w-full max-w-md mx-4 animate-in fade-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-800 shadow-2xl shadow-black/10">
       <div className="flex items-start justify-between mb-4">
@@ -1758,7 +1780,7 @@ export default function ClientWalletPage() {
 
    {/* Document & Image Lightbox Modal */}
    {previewImage && typeof document !== 'undefined' && createPortal(
-    <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 sm:p-6">
+    <div className="fixed inset-0 z-modal-3 flex items-center justify-center p-4 sm:p-6">
      <div 
       className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity" 
       onClick={() => setPreviewImage(null)} 

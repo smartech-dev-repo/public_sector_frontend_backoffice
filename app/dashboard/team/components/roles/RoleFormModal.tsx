@@ -38,7 +38,7 @@ export default function RoleFormModal({ title, initial, nameLocked, departments,
  };
 
  return (
-  <div className="fixed inset-0 z-[100] flex items-center justify-center">
+  <div className="fixed inset-0 z-modal flex items-center justify-center">
    <div className="fixed inset-0 bg-white/30 dark:bg-white/10 backdrop-blur-md" onClick={onCancel}></div>
    <div role="dialog" aria-modal="true" aria-label={title} className="relative bg-card rounded-2xl p-6 w-full max-w-md mx-4 border border-slate-200 dark:border-slate-800 shadow-2xl shadow-black/10">
     <h3 className="text-lg font-semibold text-foreground mb-4">{title}</h3>

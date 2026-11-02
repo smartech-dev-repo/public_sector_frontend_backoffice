@@ -434,7 +434,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
             </button>
 
             {actionsOpen && (
-              <div className="absolute right-0 top-full mt-2 w-64 bg-card border border-border rounded-2xl shadow-xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+              <div className="absolute right-0 top-full mt-2 w-64 bg-card border border-border rounded-2xl shadow-xl py-1.5 z-30 animate-in fade-in zoom-in-95 duration-150">
                 <div className="px-3.5 py-2 border-b border-border/50 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                   Agent Actions
                 </div>
@@ -1087,7 +1087,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
 
       {/* ================= AGENT UPLOADED DOCUMENTS MODAL ================= */}
       {showDocsModal && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[125] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div className="fixed inset-0 z-modal-2 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
           <div 
             className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
             onClick={() => setShowDocsModal(false)} 
@@ -1214,7 +1214,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
 
       {/* ================= DOCUMENT LIGHTBOX MODAL ================= */}
       {previewDoc && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 sm:p-6">
+        <div className="fixed inset-0 z-modal-3 flex items-center justify-center p-4 sm:p-6">
           <div 
             className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity" 
             onClick={() => setPreviewDoc(null)} 

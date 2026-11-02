@@ -22,7 +22,7 @@ export function LoadingOverlay({ show, label = 'Loading', className }: LoadingOv
      aria-busy="true"
      aria-label={label}
      className={cn(
-      'fixed inset-0 z-[100] flex items-center justify-center bg-background/70 backdrop-blur-sm',
+      'fixed inset-0 z-modal flex items-center justify-center bg-background/70 backdrop-blur-sm',
       className,
      )}
      initial={reduce ? undefined : { opacity: 0 }}
