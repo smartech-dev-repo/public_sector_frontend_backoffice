@@ -351,7 +351,7 @@ export default function UploadWizardModal({ isOpen, onClose, onChanged, document
                 <div className="max-w-xs">
                   <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Agency in this CSV</label>
                   <Select value={agency} onValueChange={setAgency}>
-                    <SelectTrigger className="w-full h-11 bg-muted/30 border-border rounded-xl text-sm font-medium"><SelectValue placeholder="Select agency" /></SelectTrigger>
+                    <SelectTrigger className="w-full h-11 bg-muted/30 border-border rounded-xl text-sm font-medium"><SelectValue placeholder="Choose a sector" /></SelectTrigger>
                     <SelectContent hideSearch>
                       {template.csvAgencies.map((name: string) => <SelectItem key={name} value={name}>{name}</SelectItem>)}
                     </SelectContent>
@@ -414,6 +414,25 @@ export default function UploadWizardModal({ isOpen, onClose, onChanged, document
 
           {step === 2 && analysis && (
             <>
+              {analysis.unknownSectors?.length > 0 && (
+                <div className="p-4 rounded-xl border border-amber-300 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30">
+                  <p className="text-sm font-bold text-amber-900 dark:text-amber-200">
+                    {analysis.unknownSectors.length === 1 ? '1 sheet' : `${analysis.unknownSectors.length} sheets`} will not be merged
+                  </p>
+                  <ul className="mt-2 space-y-1">
+                    {analysis.unknownSectors.map((item: any) => (
+                      <li key={item.sheet} className="text-xs text-amber-900 dark:text-amber-200">
+                        <span className="font-semibold">{item.sheet}</span> ({item.rows.toLocaleString()} {item.rows === 1 ? 'row' : 'rows'}):{' '}
+                        {item.likelyTypoOf ? `this looks like a typo of ${item.likelyTypoOf}` : 'this is not a set-up sector'}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="text-xs mt-2 text-amber-900 dark:text-amber-200">
+                    Rename the sheet to a sector, or add the sector in{' '}
+                    <a href="/dashboard/configuration?tab=sectors" className="font-semibold underline">Configuration</a>, then upload again.
+                  </p>
+                </div>
+              )}
               <div className={`p-4 rounded-xl border ${VERDICT_STYLES[analysis.verdict].className}`}>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-sm font-bold">{VERDICT_STYLES[analysis.verdict].label}</p>

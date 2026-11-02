@@ -30,8 +30,6 @@ export interface FilterBarProps {
   className?: string;
 }
 
-export const AGENCY_FILTER_OPTIONS: FilterOption[] = ['NPF', 'NSCDC', 'IMMIGRATION', 'CORRECTIONAL', 'CUSTOM', 'LASG'].map((value) => ({ value, label: value }));
-
 const TYPING_DEBOUNCE_MS = 300;
 
 // A date-only "to" would mean midnight at the start of that day and drop the whole

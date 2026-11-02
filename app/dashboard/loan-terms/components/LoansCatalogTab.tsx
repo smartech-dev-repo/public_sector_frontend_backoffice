@@ -1,7 +1,8 @@
 "use client";
 
+import { useSectorOptions } from '@/app/composables/modules/useSectorOptions';
 import { useDataVersion } from '@/app/composables/useDataVersion';
-import FilterBar, { AGENCY_FILTER_OPTIONS, dateRangeParams } from '@/app/components/ui/FilterBar';
+import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState } from 'react';
 import { useLoans } from '@/app/composables/modules/useLoans';
 import PulseLoader from '@/app/components/ui/PulseLoader';
@@ -12,6 +13,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function LoansCatalogTab() {
+ const agencyOptions = useSectorOptions();
  const dataVersion = useDataVersion();
  const { isSuperAdmin, hasPermission } = useAdminPermissions();
  const canAccessCatalog = isSuperAdmin || hasPermission('loans:upload');
@@ -52,7 +54,7 @@ export default function LoansCatalogTab() {
      onChange={() => setPage(1)}
      search={{ value: q, onChange: setQ, placeholder: 'Customer, account or IPPIS' }}
      filters={[
-      { key: 'agency', label: 'Agency', type: 'select', value: agency, emptyValue: 'all', options: AGENCY_FILTER_OPTIONS, onChange: setAgency },
+      { key: 'agency', label: 'Agency', type: 'select', value: agency, emptyValue: 'all', options: agencyOptions, onChange: setAgency },
       { key: 'product', label: 'Product', type: 'text', value: product, emptyValue: 'all', placeholder: 'Exact product name', onChange: setProduct },
       { key: 'disbursed', label: 'Disbursed', type: 'dateRange', value: dateRange, onChange: setDateRange },
      ]}

@@ -1,6 +1,7 @@
 "use client";
 
-import FilterBar, { AGENCY_FILTER_OPTIONS, dateRangeParams } from '@/app/components/ui/FilterBar';
+import { useSectorOptions } from '@/app/composables/modules/useSectorOptions';
+import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import PulseLoader from '@/app/components/ui/PulseLoader';
@@ -12,6 +13,7 @@ import { FileSpreadsheet, Eye, Scale, CheckCircle2, AlertTriangle, AlertCircle, 
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 export default function ReconciliationTab() {
+ const agencyOptions = useSectorOptions();
   const { isSuperAdmin, hasPermission } = useAdminPermissions();
   const canUpload = isSuperAdmin || hasPermission('ippis:upload') || hasPermission('repayments:upload');
   const [isLoading, setIsLoading] = useState(true);
@@ -115,7 +117,7 @@ export default function ReconciliationTab() {
           <FilterBar
            onChange={() => setCurrentPage(1)}
            filters={[
-            { key: 'agency', label: 'Agency', type: 'select', value: filterParams.agency, options: AGENCY_FILTER_OPTIONS, onChange: (agency) => setFilterParams({ ...filterParams, agency }) },
+            { key: 'agency', label: 'Agency', type: 'select', value: filterParams.agency, options: agencyOptions, onChange: (agency) => setFilterParams({ ...filterParams, agency }) },
             { key: 'status', label: 'Status', type: 'select', value: filterParams.matchStatus, options: [{ value: 'MATCHED', label: 'Matched' }, { value: 'UNDER_PAID', label: 'Under Paid' }, { value: 'OVER_PAID', label: 'Over Paid' }, { value: 'NO_DEDUCTION_FOUND', label: 'No Deduction Found' }], onChange: (matchStatus) => setFilterParams({ ...filterParams, matchStatus }) },
             { key: 'period', label: 'Period', type: 'month', value: filterParams.period, onChange: (period) => setFilterParams({ ...filterParams, period }) },
             { key: 'generated', label: 'Generated', type: 'dateRange', value: filterParams.generatedRange, onChange: (generatedRange) => setFilterParams({ ...filterParams, generatedRange }) },

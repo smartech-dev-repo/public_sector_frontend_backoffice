@@ -38,6 +38,9 @@ const ACTION_LABELS: Record<string, string> = {
  'management-fee.updated': 'Management fee edited',
  'management-fee.deleted': 'Management fee deleted',
  'access.denied': 'Access denied',
+ 'sector.created': 'Sector added',
+ 'sector.updated': 'Sector renamed',
+ 'sector.deleted': 'Sector removed',
  'approval.requested': 'Sent for approval',
  'approval.approved': 'Approval given',
  'approval.rejected': 'Approval rejected',
@@ -121,6 +124,7 @@ export const TARGET_TYPE_OPTIONS = [
  { value: 'DocumentUploadBatch', label: 'Uploaded file' },
  { value: 'Permission', label: 'Permission' },
  { value: 'Role', label: 'Role' },
+ { value: 'Sector', label: 'Sector' },
 ];
 
 const METHOD_VERBS: Record<string, string> = { POST: 'Created', PUT: 'Updated', PATCH: 'Updated', DELETE: 'Deleted' };
