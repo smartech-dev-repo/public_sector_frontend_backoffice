@@ -41,6 +41,7 @@ import {
  CreditCard
 } from 'lucide-react';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+import ClientEligibilityPanel from '../components/ClientEligibilityPanel';
 
 export default function ClientWalletPage() {
  const dataVersion = useDataVersion();
@@ -81,7 +82,7 @@ export default function ClientWalletPage() {
  const [activities, setActivities] = useState<any[]>([]);
  const [activitiesLoading, setActivitiesLoading] = useState(false);
  const [loansLoading, setLoansLoading] = useState(false);
- const [activeTab, setActiveTab] = useState<'profile' | 'onboarding' | 'wallet' | 'loans' | 'activities'>('profile');
+ const [activeTab, setActiveTab] = useState<'profile' | 'onboarding' | 'wallet' | 'loans' | 'eligibility' | 'activities'>('profile');
  
  const [showCreditModal, setShowCreditModal] = useState(false);
  const [showDebitModal, setShowDebitModal] = useState(false);
@@ -189,7 +190,7 @@ export default function ClientWalletPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
  }, [dataVersion]);
 
- const handleTabChange = (tab: 'profile' | 'onboarding' | 'wallet' | 'loans' | 'activities') => {
+ const handleTabChange = (tab: 'profile' | 'onboarding' | 'wallet' | 'loans' | 'eligibility' | 'activities') => {
   setActiveTab(tab);
   if (tab === 'activities' && activities.length === 0) {
    loadActivities();
@@ -372,6 +373,7 @@ export default function ClientWalletPage() {
   { key: 'onboarding' as const, label: 'Onboarding' },
   ...(canReadWallet ? [{ key: 'wallet' as const, label: 'Wallet' }] : []),
   ...(canReadLoans ? [{ key: 'loans' as const, label: 'Loans' }] : []),
+  ...(canReadClient ? [{ key: 'eligibility' as const, label: 'Eligibility' }] : []),
   ...(canReadActivities ? [{ key: 'activities' as const, label: 'Activities' }] : []),
  ];
 
@@ -1622,6 +1624,10 @@ export default function ClientWalletPage() {
      )}
 
      {/* Activities Tab */}
+     {activeTab === 'eligibility' && (
+      <ClientEligibilityPanel clientId={clientId} canManage={isSuperAdmin || hasPermission('loan-settings:manage')} />
+     )}
+
      {activeTab === 'activities' && (
       <div className="bg-card rounded-2xl border border-border overflow-hidden">
        <div className="px-6 py-4 border-b border-border flex justify-between items-center">
