@@ -13,6 +13,7 @@ import RoleHistoryPanel from './roles/RoleHistoryPanel';
 import RoleCompareView from './roles/RoleCompareView';
 import RoleFormModal, { RoleFormValues } from './roles/RoleFormModal';
 import { groupPermissions, PermissionOption } from './roles/permissionGroups';
+import { useReportTabTotal } from '@/app/composables/useTabTotals';
 
 const SUPER_ADMIN = 'SUPER_ADMIN';
 
@@ -63,6 +64,7 @@ export default function RolesTab() {
   const term = search.trim().toLowerCase();
   return term ? roles.filter((role) => role.name.toLowerCase().includes(term)) : roles;
  }, [roles, search]);
+ useReportTabTotal(visibleRoles.length);
 
  const isLocked = selectedRole?.name === SUPER_ADMIN;
  const savedIds = useMemo(() => permissionIdsOf(selectedRole), [selectedRole]);

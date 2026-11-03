@@ -227,7 +227,7 @@ export default function AdminsTab() {
        </table>
        {meta && (
         <div className="mt-4 border-t border-border/50 pt-4">
-         <Pagination
+         <Pagination tabTotal
           totalItems={meta.total || 0}
           currentPage={page || 1}
           itemsPerPage={limit || 25}

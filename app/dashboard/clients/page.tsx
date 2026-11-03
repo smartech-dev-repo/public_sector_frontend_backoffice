@@ -1,6 +1,7 @@
 "use client";
 
 import TabCount from '@/app/components/ui/TabCount';
+import { TabTotalScope, useTabTotals } from '@/app/composables/useTabTotals';
 import { useListTotals } from '@/app/composables/useListTotals';
 import { clients_api } from '@/app/api_factory/modules/clients';
 import { ippis_api } from '@/app/api_factory/modules/ippis';
@@ -49,6 +50,8 @@ export default function CustomerManagementPage() {
     );
   }
 
+  const { shown: shownTotals, report: reportTabTotal } = useTabTotals(totals, activeTab);
+
   return (
     <div className="space-y-3">
       <div className="border-b border-border">
@@ -66,7 +69,7 @@ export default function CustomerManagementPage() {
               `}
             >
               {tab.label}
-              <TabCount count={totals[tab.id]} active={activeTab === tab.id} />
+              <TabCount count={shownTotals[tab.id]} active={activeTab === tab.id} />
             </button>
           ))}
         </nav>
@@ -80,6 +83,7 @@ export default function CustomerManagementPage() {
         />
       )}
 
+      <TabTotalScope value={reportTabTotal}>
       <div className="pt-1">
         {activeTab === 'profiles' && canReadProfiles && (
           <Suspense fallback={<PulseLoader />}>
@@ -88,6 +92,7 @@ export default function CustomerManagementPage() {
         )}
         {activeTab === 'ippis' && canUploadIppis && <IppisRecordsTab />}
       </div>
+      </TabTotalScope>
     </div>
   );
 }

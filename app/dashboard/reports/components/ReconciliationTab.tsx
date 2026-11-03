@@ -194,7 +194,7 @@ export default function ReconciliationTab() {
           </div>
 
           {/* Pagination */}
-          <Pagination 
+          <Pagination tabTotal 
             totalItems={meta?.total || 0} 
             currentPage={currentPage}
             itemsPerPage={itemsPerPage}

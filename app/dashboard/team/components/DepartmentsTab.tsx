@@ -167,7 +167,7 @@ export default function DepartmentsTab() {
      </div>
      {meta && (
       <div className="border-t border-border pt-4 mt-4 pb-4">
-       <Pagination
+       <Pagination tabTotal
         totalItems={meta.total || 0}
         currentPage={page}
         itemsPerPage={limit}

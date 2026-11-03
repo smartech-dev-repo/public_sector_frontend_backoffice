@@ -150,7 +150,7 @@ export default function ManagementFeesTab() {
                 </tbody>
               </table>
             </div>
-            <Pagination totalItems={meta?.total || 0} currentPage={page} itemsPerPage={limit} onPageChange={setPage} onItemsPerPageChange={setLimit} />
+            <Pagination tabTotal totalItems={meta?.total || 0} currentPage={page} itemsPerPage={limit} onPageChange={setPage} onItemsPerPageChange={setLimit} />
           </>
         )}
       </div>

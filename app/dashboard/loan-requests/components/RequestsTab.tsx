@@ -418,7 +418,7 @@ export default function RequestsTab() {
           
           {meta && loanRequests.length > 0 && (
             <div className="border-t border-border/50 pt-4 mt-4 pb-4">
-              <Pagination
+              <Pagination tabTotal
                 totalItems={meta.total || 0}
                 currentPage={page || 1}
                 itemsPerPage={limit || 25}

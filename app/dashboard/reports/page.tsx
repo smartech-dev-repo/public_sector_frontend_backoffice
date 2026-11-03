@@ -1,6 +1,7 @@
 "use client";
 
 import TabCount from '@/app/components/ui/TabCount';
+import { TabTotalScope, useTabTotals } from '@/app/composables/useTabTotals';
 import { useListTotals } from '@/app/composables/useListTotals';
 import { auditLogs_api } from '@/app/api_factory/modules/auditLogs';
 import { useState, useMemo, useEffect } from 'react';
@@ -50,6 +51,8 @@ export default function SystemReportsPage() {
     );
   }
 
+  const { shown: shownTotals, report: reportTabTotal } = useTabTotals(totals, activeTab);
+
   return (
     <div className="space-y-4">
       <div className="border-b border-border">
@@ -67,17 +70,19 @@ export default function SystemReportsPage() {
               `}
             >
               {tab.label}
-              <TabCount count={totals[tab.id]} active={activeTab === tab.id} />
+              <TabCount count={shownTotals[tab.id]} active={activeTab === tab.id} />
             </button>
           ))}
         </nav>
       </div>
 
+      <TabTotalScope value={reportTabTotal}>
       <div className="pt-2">
         {activeTab === 'analytics' && canAnalytics && <AnalyticsTab />}
         {activeTab === 'reconciliation' && canReconciliation && <ReconciliationTab />}
         {activeTab === 'audit' && canAudit && <AuditLogsTab />}
       </div>
+      </TabTotalScope>
     </div>
   );
 }

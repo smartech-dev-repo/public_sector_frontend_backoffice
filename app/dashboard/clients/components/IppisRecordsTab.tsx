@@ -144,7 +144,7 @@ export default function IppisRecordsTab() {
      
      {meta && (
       <div className="border-t border-border/50 bg-card">
-       <Pagination 
+       <Pagination tabTotal 
         totalItems={meta.total || 0}
         currentPage={page || 1}
         itemsPerPage={limit || 25}

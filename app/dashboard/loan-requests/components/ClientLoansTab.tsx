@@ -13,6 +13,7 @@ import { createPortal } from 'react-dom';
 import Pagination from '@/app/components/ui/Pagination';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 import Link from 'next/link';
+import { useReportTabTotal } from '@/app/composables/useTabTotals';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 import TableDropdown from '@/app/components/ui/TableDropdown';
 import { FileText, User, CreditCard } from 'lucide-react';
@@ -33,6 +34,8 @@ function ClientLoansContent() {
  const canReadPlan = isSuperAdmin || hasPermission('client-loans:read');
  const searchParams = useSearchParams();
  const { loading, error, clientLoans, fetchClientLoans, getClientLoanRepaymentPlan, meta } = useLoans();
+ // Reported here, since the pager is hidden when a filter matches nothing.
+ useReportTabTotal(loading ? undefined : meta.total);
  const { addToast } = useToast();
 
  const [clientIdFilter, setClientIdFilter] = useState(searchParams.get('clientId') || '');

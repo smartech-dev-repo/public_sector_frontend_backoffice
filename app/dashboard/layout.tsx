@@ -11,7 +11,7 @@ import ProfileDropdown from '@/app/components/ui/ProfileDropdown';
 import { useProfile } from '@/app/composables/modules/useProfile';
 import { useTheme } from 'next-themes';
 import NotificationBell from '@/app/components/ui/NotificationBell';
-import { useNotificationSummary } from '@/app/composables/modules/useNotificationSummary';
+import { announceNotificationsChanged, useNotificationSummary } from '@/app/composables/modules/useNotificationSummary';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 import { clearAuthStorage } from '@/app/composables/core/useAuth';
 import { 
@@ -151,15 +151,20 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
 
  const notificationSummary = useNotificationSummary();
 
- // What each menu item counts: its own unread notifications, or for Approvals what awaits this admin.
- const menuCounts: Record<string, number> = {
-  '/dashboard/approvals': notificationSummary.pendingApprovals,
-  '/dashboard/loan-requests': notificationSummary.byCategory.loans ?? 0,
-  '/dashboard/clients': notificationSummary.byCategory.clients ?? 0,
-  '/dashboard/agent-management': notificationSummary.byCategory.agents ?? 0,
-  '/dashboard/broadsheet': notificationSummary.byCategory.uploads ?? 0,
-  '/dashboard/reports': notificationSummary.byCategory.security ?? 0,
+ // Menu alerts count only work waiting on this admin's decision, from live data, so they
+ // drop as soon as it is done. News that needs no decision stays in the notification bell.
+ const { alerts } = notificationSummary;
+ const menuAlerts: Record<string, { count: number; label: string }> = {
+  '/dashboard/approvals': { count: notificationSummary.pendingApprovals, label: 'waiting for your approval' },
+  '/dashboard/loan-requests': { count: alerts.loanRequests, label: 'loans to approve, reject or disburse' },
+  '/dashboard/loan-terms': { count: alerts.loanProducts, label: 'sectors with no active loan product' },
+  '/dashboard/broadsheet': { count: alerts.broadsheet, label: 'uploads waiting for you to confirm or cancel' },
+  '/dashboard/clients': { count: alerts.clients, label: 'clients waiting for manual review' },
+  '/dashboard/invites': { count: alerts.agentRecruitment, label: 'agent applications waiting for review' },
  };
+
+ // Opening a page is often the result of acting elsewhere, so recount on every move.
+ useEffect(() => { announceNotificationsChanged(); }, [pathname]);
 
  const navItems = useMemo(() => [
   {
@@ -350,11 +355,10 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
               <Icon className="w-[18px] h-[18px] shrink-0 transition-colors" />
               {!isSidebarMinimized && <span className="whitespace-nowrap flex-1">{item.label}</span>}
               {(() => {
-               const waiting = menuCounts[item.href] || 0;
-               const mine = item.href === '/dashboard/approvals' ? notificationSummary.myPendingRequests : 0;
-               const count = waiting || mine;
+               const alert = menuAlerts[item.href];
+               const count = alert?.count || 0;
                if (!count) return null;
-               const label = waiting ? `${count} waiting` : `${count} of your requests waiting for another admin`;
+               const label = `${count} ${alert.label}`;
                return (
                 <span title={label} aria-label={label} className={`flex items-center justify-center rounded-full bg-red-600 text-white font-bold leading-none tabular-nums shrink-0 ${isActive ? 'ring-1 ring-white/80' : ''} ${isSidebarMinimized ? 'absolute top-0.5 right-0.5 min-w-4 h-4 px-1 text-[9px]' : 'min-w-5 h-5 px-1.5 text-[11px]'}`}>
                  {count > 99 ? '99+' : count}

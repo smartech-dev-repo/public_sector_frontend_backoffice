@@ -1,6 +1,7 @@
 "use client";
 
 import TabCount from '@/app/components/ui/TabCount';
+import { TabTotalScope, useTabTotals } from '@/app/composables/useTabTotals';
 import { useListTotals } from '@/app/composables/useListTotals';
 import { useDataVersion } from '@/app/composables/useDataVersion';
 import { useCallback, useEffect, useState } from 'react';
@@ -99,14 +100,17 @@ export default function ApprovalsPage() {
   setPage(1);
  };
 
+ const { shown: shownTotals, report: reportTabTotal } = useTabTotals(totals, view);
+
  return (
+  <TabTotalScope value={reportTabTotal}>
   <main className="w-full space-y-4">
    <div className="border-b border-border">
     <nav className="-mb-px flex gap-4 sm:gap-8 overflow-x-auto overflow-y-hidden [scrollbar-width:none]" aria-label="Tabs">
      {VIEWS.map((tab) => (
       <button key={tab.id} onClick={() => switchView(tab.id)} aria-current={view === tab.id ? 'page' : undefined} className={`whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-sm transition-colors ${view === tab.id ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'}`}>
        {tab.label}
-       <TabCount count={totals[tab.id]} active={view === tab.id} />
+       <TabCount count={shownTotals[tab.id]} active={view === tab.id} />
       </button>
      ))}
     </nav>
@@ -167,7 +171,7 @@ export default function ApprovalsPage() {
      </div>
      {rows.length > 0 && (
       <div className="border-t border-border/50 py-4 px-4">
-       <Pagination totalItems={total} currentPage={page} itemsPerPage={limit} onPageChange={setPage} onItemsPerPageChange={(value) => { setLimit(value); setPage(1); }} />
+       <Pagination tabTotal totalItems={total} currentPage={page} itemsPerPage={limit} onPageChange={setPage} onItemsPerPageChange={(value) => { setLimit(value); setPage(1); }} />
       </div>
      )}
     </div>
@@ -179,5 +183,6 @@ export default function ApprovalsPage() {
     </label>
    </Modal>
   </main>
+  </TabTotalScope>
  );
 }
