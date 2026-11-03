@@ -10,12 +10,13 @@ import { useSearchParams } from 'next/navigation';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 import LoanSettingsTab from './components/LoanSettingsTab';
+import LoanEligibilityTab from './components/LoanEligibilityTab';
 import ManagementFeesTab from './components/ManagementFeesTab';
 import SecurityAlertsTab from './components/SecurityAlertsTab';
 import SectorsTab from './components/SectorsTab';
 import { sectors_api } from '@/app/api_factory/modules/sectors';
 
-type TabId = 'sectors' | 'loan-settings' | 'fees' | 'alerts';
+type TabId = 'sectors' | 'loan-settings' | 'loan-eligibility' | 'fees' | 'alerts';
 
 function ConfigurationTabs() {
  const { isSuperAdmin, hasPermission } = useAdminPermissions();
@@ -31,6 +32,7 @@ function ConfigurationTabs() {
  const tabs: { id: TabId; label: string }[] = [
   ...(isSuperAdmin || hasPermission('sectors:manage') ? [{ id: 'sectors' as const, label: 'Sectors' }] : []),
   ...(isSuperAdmin || hasPermission('loan-settings:manage') ? [{ id: 'loan-settings' as const, label: 'Loan Settings' }] : []),
+  ...(isSuperAdmin || hasPermission('loan-settings:manage') ? [{ id: 'loan-eligibility' as const, label: 'Loan Eligibility' }] : []),
   ...(isSuperAdmin || hasPermission('management-fees:manage') ? [{ id: 'fees' as const, label: 'Management Fees' }] : []),
   ...(isSuperAdmin || hasPermission('alerts:manage') ? [{ id: 'alerts' as const, label: 'Security Alerts' }] : []),
  ];
@@ -65,6 +67,7 @@ function ConfigurationTabs() {
    <TabTotalScope value={reportTabTotal}>
    <div className="pt-1">
     {activeTab === 'loan-settings' && <LoanSettingsTab />}
+    {activeTab === 'loan-eligibility' && <LoanEligibilityTab />}
     {activeTab === 'sectors' && <SectorsTab />}
     {activeTab === 'fees' && <ManagementFeesTab />}
     {activeTab === 'alerts' && <SecurityAlertsTab />}

@@ -1,5 +1,8 @@
 "use client";
 
+import AffordabilityWorkings from '@/app/dashboard/clients/components/AffordabilityWorkings';
+import { naira } from '@/app/dashboard/configuration/components/RepaymentCapacityFields';
+
 import { useDataVersion } from '@/app/composables/useDataVersion';
 import { allowedLoanActions } from '../loanActions';
 import { useEffect, useState, use } from 'react';
@@ -299,7 +302,7 @@ export default function LoanRequestDetailPage({ params }: { params: Promise<{ id
             {loanRequest.tenorMonths} <span className="text-sm font-normal text-muted-foreground">months</span>
           </div>
           <span className="text-[11px] text-muted-foreground mt-1 block">
-            Interest Rate: <span className="font-medium text-foreground">{loanRequest.interestRatePercent || 0}%</span>
+            Interest Rate: <span className="font-medium text-foreground">{loanRequest.interestRatePercent || 0}% a month</span>
           </span>
         </div>
 
@@ -426,7 +429,20 @@ export default function LoanRequestDetailPage({ params }: { params: Promise<{ id
         </div>
       </div>
 
-      {/* Dates & Timeline Details */}
+      {/* How the maximum was worked out when the request was made */}
+      {loanRequest.affordability && (
+        <div className="bg-card border border-border rounded-2xl p-6 shadow-xs">
+          <div className="flex flex-wrap items-baseline justify-between gap-2 mb-4">
+            <h3 className="font-semibold text-foreground text-base">How the maximum was worked out</h3>
+            <span className="text-xs text-muted-foreground">
+              Requested {naira(loanRequest.amount)} of {naira(loanRequest.affordability.maxAmount)} allowed · assessed {new Date(loanRequest.affordability.assessedAt).toLocaleString()}
+            </span>
+          </div>
+          <AffordabilityWorkings affordability={loanRequest.affordability} />
+        </div>
+      )}
+
+            {/* Dates & Timeline Details */}
       <div className="bg-card border border-border rounded-2xl p-6 shadow-xs">
         <h3 className="font-semibold text-foreground text-base mb-4 flex items-center gap-2">
           <Calendar className="w-5 h-5 text-emerald-600" />
