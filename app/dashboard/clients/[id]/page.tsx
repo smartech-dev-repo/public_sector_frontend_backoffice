@@ -373,7 +373,8 @@ export default function ClientWalletPage() {
   { key: 'onboarding' as const, label: 'Onboarding' },
   ...(canReadWallet ? [{ key: 'wallet' as const, label: 'Wallet' }] : []),
   ...(canReadLoans ? [{ key: 'loans' as const, label: 'Loans' }] : []),
-  ...(canReadClient ? [{ key: 'eligibility' as const, label: 'Eligibility' }] : []),
+  // The preview needs clients:read; clients:review alone opens this page but not the preview.
+  ...(isSuperAdmin || hasPermission('clients:read') ? [{ key: 'eligibility' as const, label: 'Eligibility' }] : []),
   ...(canReadActivities ? [{ key: 'activities' as const, label: 'Activities' }] : []),
  ];
 
