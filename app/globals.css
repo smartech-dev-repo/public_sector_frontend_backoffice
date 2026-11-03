@@ -1,13 +1,133 @@
-@import url('https://api.fontshare.com/v2/css?f[]=satoshi@900,700,500,300,400&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-html, body {
-  font-family: 'Satoshi', sans-serif !important;
+
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 154 100% 25%;
+
+    --primary: 154 100% 25%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --accent: 120 36% 95%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --success: 142 72% 36%;
+    --success-foreground: 144 100% 97%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 26 83% 14%;
+    --info: 199 89% 48%;
+    --info-foreground: 210 40% 98%;
+    --soft: 120 36% 95%;
+    --soft-foreground: 222 47% 11%;
+    
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222 47% 8%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --border: 215 25% 27%;
+    --input: 215 25% 27%;
+    --ring: 123 36% 45%;
+
+    --primary: 123 36% 45%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --accent: 215 25% 27%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 98%;
+    --success: 142 70% 45%;
+    --success-foreground: 144 100% 97%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 26 83% 14%;
+    --info: 199 89% 48%;
+    --info-foreground: 210 40% 98%;
+    --soft: 217 33% 17%;
+    --soft-foreground: 210 40% 98%;
+  }
 }
 
-.font-sans {
-  font-family: 'Satoshi', sans-serif !important;
+@layer base {
+  *,
+  *::before,
+  *::after {
+    border-color: hsl(var(--border));
+  }
+  
+  html {
+    scroll-behavior: smooth;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+  
+  html.dark {
+    color-scheme: dark;
+  }
+  
+  html:not(.dark) {
+    color-scheme: light;
+  }
+  
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: 'Satoshi', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  h1, h2, h3, h4, h5, h6, th {
+    font-family: 'Clash Display', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  }
 }
+
+/* Aggressively ensure ALL toasts float above backdrops, modals, drawers and overlays */
+[data-sonner-toaster],
+[data-sonner-toaster] *,
+[data-sonner-toast],
+.toaster,
+#toast-root,
+[data-toast-container],
+.toast-container {
+  z-index: 999999 !important;
+}
+
+/* Aggressively ensure modal overlays and dialogs float above all standard page filters and content */
+[data-radix-dialog-overlay] {
+  z-index: 100 !important;
+}
+[data-radix-dialog-content] {
+  z-index: 100 !important;
+}
+
+/* Aggressively ensure dropdowns, selects and popovers opened inside/outside modals stack on top */
+[data-radix-popper-content-wrapper],
+[data-radix-select-content],
+[data-radix-dropdown-menu-content],
+[data-radix-popover-content] {
+  z-index: 110 !important;
+}
+

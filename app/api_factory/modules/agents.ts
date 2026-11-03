@@ -10,10 +10,19 @@ export const agents_api = {
   approveAgent: (id: string) => {
     return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/agents/${id}/approve`);
   },
-  rejectAgent: (id: string) => {
-    return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/agents/${id}/reject`);
+  rejectAgent: (id: string, payload: any) => {
+    return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/agents/${id}/reject`, payload);
   },
   resendCredentials: (id: string) => {
     return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/agents/${id}/resend-credentials`);
+  },
+  updateOnboardingAccess: (id: string, payload: { canOnboardClients: boolean }) => {
+    return GATEWAY_ENDPOINT_WITH_AUTH.patch(`/admin/agents/${id}/onboarding-access`, payload);
+  },
+  revokeSessions: (id: string) => {
+    return GATEWAY_ENDPOINT_WITH_AUTH.post(`/admin/agents/${id}/sessions/revoke-all`);
+  },
+  getAgentAnalytics: (params?: { createdFrom?: string; createdTo?: string }) => {
+    return GATEWAY_ENDPOINT_WITH_AUTH.get('/admin/agents/analytics', { params });
   }
 };

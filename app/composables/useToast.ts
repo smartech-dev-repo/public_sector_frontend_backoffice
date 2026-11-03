@@ -1,54 +1,45 @@
-import { useState, useEffect } from 'react';
+"use client";
 
-type ToastType = 'success' | 'error' | 'info' | 'warning';
+import { toast } from 'sonner';
 
-interface Toast {
-  id: number;
-  message: string;
-  type: ToastType;
-}
+export type ToastType = 'success' | 'error' | 'info' | 'warning';
 
-let toasts: Toast[] = [];
-let toastIdCounter = 0;
-const listeners = new Set<() => void>();
+const recentToasts = new Map<string, number>();
 
-const notifyListeners = () => {
-  listeners.forEach((listener) => listener());
+export const addToast = (message: string, type: ToastType = 'success', duration = 3500) => {
+  if (!message || typeof message !== 'string') return;
+
+  const now = Date.now();
+  const lastTime = recentToasts.get(message);
+  // Deduplicate identical toast messages within 1.5 seconds
+  if (lastTime && now - lastTime < 1500) {
+    return;
+  }
+  recentToasts.set(message, now);
+
+  // Clean old entries
+  if (recentToasts.size > 20) {
+    for (const [k, v] of recentToasts.entries()) {
+      if (now - v > 5000) recentToasts.delete(k);
+    }
+  }
+
+  const toastFn = (toast as any)[type] || toast;
+  toastFn(message, { duration: duration || 3500 });
 };
 
-export const addToast = (message: string, type: ToastType = 'success', duration = 3000) => {
-  const id = ++toastIdCounter;
-  toasts = [...toasts, { id, message, type }];
-  notifyListeners();
-  
-  if (duration > 0) {
-    setTimeout(() => {
-      removeToast(id);
-    }, duration);
+export const removeToast = (id?: any) => {
+  if (id) {
+    toast.dismiss(id);
+  } else {
+    toast.dismiss();
   }
 };
 
-export const removeToast = (id: number) => {
-  toasts = toasts.filter((t) => t.id !== id);
-  notifyListeners();
-};
-
 export const useToast = () => {
-  const [currentToasts, setCurrentToasts] = useState<Toast[]>(toasts);
-
-  useEffect(() => {
-    const updateToasts = () => {
-      setCurrentToasts(toasts);
-    };
-    listeners.add(updateToasts);
-    return () => {
-      listeners.delete(updateToasts);
-    };
-  }, []);
-
   return {
-    toasts: currentToasts,
+    toasts: [] as any[],
     addToast,
-    removeToast
+    removeToast,
   };
 };
