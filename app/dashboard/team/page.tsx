@@ -1,6 +1,7 @@
 "use client";
 
 import TabCount from '@/app/components/ui/TabCount';
+import { TabTotalScope, useTabTotals } from '@/app/composables/useTabTotals';
 import { useListTotals } from '@/app/composables/useListTotals';
 import { admins_api } from '@/app/api_factory/modules/admins';
 import { roles_api } from '@/app/api_factory/modules/roles';
@@ -62,6 +63,8 @@ export default function TeamManagementPage() {
  });
 
 
+ const { shown: shownTotals, report: reportTabTotal } = useTabTotals(totals, activeTab);
+
  if (tabs.length === 0) {
   return (
    <div className="bg-card rounded-2xl border border-border p-12 text-center max-w-lg mx-auto mt-8">
@@ -89,18 +92,20 @@ export default function TeamManagementPage() {
        `}
       >
        {tab.label}
-       <TabCount count={totals[tab.id]} active={activeTab === tab.id} />
+       <TabCount count={shownTotals[tab.id]} active={activeTab === tab.id} />
       </button>
      ))}
     </nav>
    </div>
 
+   <TabTotalScope value={reportTabTotal}>
    <div className="pt-1">
     {activeTab === 'admins' && <AdminsTab />}
     {activeTab === 'roles' && <RolesTab />}
     {activeTab === 'departments' && <DepartmentsTab />}
     {activeTab === 'invites' && <InvitesTab />}
    </div>
+   </TabTotalScope>
   </div>
  );
 }

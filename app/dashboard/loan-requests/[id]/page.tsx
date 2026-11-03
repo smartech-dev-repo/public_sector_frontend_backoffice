@@ -452,6 +452,19 @@ export default function LoanRequestDetailPage({ params }: { params: Promise<{ id
           Timeline & Execution Dates
         </h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+          <div className="col-span-2 sm:col-span-4">
+            <span className="text-xs text-muted-foreground block">Requested By</span>
+            <span className="font-medium text-foreground">
+              {loanRequest.requestedByAgent
+                ? `Agent: ${loanRequest.requestedByAgent.fullName}`
+                : 'The client, in the app'}
+            </span>
+            {loanRequest.requestedByAgent && loanRequest.status === 'PENDING' && (
+              <span className="text-[11px] text-muted-foreground block mt-0.5">
+                The client was sent a code to text to the loan approval phone. Enter it with Confirm with Code.
+              </span>
+            )}
+          </div>
           <div>
             <span className="text-xs text-muted-foreground block">Created At</span>
             <span className="font-medium text-foreground">
@@ -538,12 +551,14 @@ export default function LoanRequestDetailPage({ params }: { params: Promise<{ id
             </div>
             <h3 className="text-lg font-semibold text-foreground mb-1">Confirm Loan Request Code</h3>
             <p className="text-xs text-muted-foreground mb-4">
-              Enter the OTP verification code issued to the client to confirm this stuck PENDING request on their behalf.
+              {loanRequest.requestedByAgent
+                ? 'An agent made this request. Enter the code the client sent to the loan approval phone. Another admin then approves it.'
+                : 'Enter the code sent to the client to confirm this pending request for them. Another admin then approves it.'}
             </p>
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
-                  Verification Code (OTP) *
+                  Verification Code *
                 </label>
                 <input 
                   type="text" 

@@ -1,6 +1,7 @@
 "use client";
 
 import TabCount from '@/app/components/ui/TabCount';
+import { TabTotalScope, useTabTotals } from '@/app/composables/useTabTotals';
 import { useListTotals } from '@/app/composables/useListTotals';
 import { management_fees_api } from '@/app/api_factory/modules/managementFees';
 import { alertRecipients_api } from '@/app/api_factory/modules/alertRecipients';
@@ -40,6 +41,8 @@ function ConfigurationTabs() {
 
  const activeTab = tabs.find((tab) => tab.id === (chosen ?? requested))?.id ?? tabs[0].id;
 
+ const { shown: shownTotals, report: reportTabTotal } = useTabTotals(totals, activeTab);
+
  return (
   <div className="space-y-3">
    <div className="border-b border-border">
@@ -52,17 +55,19 @@ function ConfigurationTabs() {
        className={`whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-sm transition-colors ${activeTab === tab.id ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'}`}
       >
        {tab.label}
-       <TabCount count={totals[tab.id]} active={activeTab === tab.id} />
+       <TabCount count={shownTotals[tab.id]} active={activeTab === tab.id} />
       </button>
      ))}
     </nav>
    </div>
+   <TabTotalScope value={reportTabTotal}>
    <div className="pt-1">
     {activeTab === 'loan-settings' && <LoanSettingsTab />}
     {activeTab === 'sectors' && <SectorsTab />}
     {activeTab === 'fees' && <ManagementFeesTab />}
     {activeTab === 'alerts' && <SecurityAlertsTab />}
    </div>
+   </TabTotalScope>
   </div>
  );
 }

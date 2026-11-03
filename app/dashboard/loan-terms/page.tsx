@@ -1,6 +1,7 @@
 "use client";
 
 import TabCount from '@/app/components/ui/TabCount';
+import { TabTotalScope, useTabTotals } from '@/app/composables/useTabTotals';
 import { useListTotals } from '@/app/composables/useListTotals';
 import { loans_api } from '@/app/api_factory/modules/loans';
 import { useState, useEffect } from 'react';
@@ -32,6 +33,8 @@ export default function LoanProductsPage() {
   }
  }, [tabs, activeTab]);
 
+ const { shown: shownTotals, report: reportTabTotal } = useTabTotals(totals, activeTab);
+
  if (tabs.length === 0) {
   return (
    <div className="p-8">
@@ -60,16 +63,18 @@ export default function LoanProductsPage() {
        `}
       >
        {tab.label}
-       <TabCount count={totals[tab.id]} active={activeTab === tab.id} />
+       <TabCount count={shownTotals[tab.id]} active={activeTab === tab.id} />
       </button>
      ))}
     </nav>
    </div>
 
+   <TabTotalScope value={reportTabTotal}>
    <div className="pt-1">
     {activeTab === 'configs' && canAccessConfigs && <ConfigurationsTab />}
     {activeTab === 'catalog' && canAccessCatalog && <LoansCatalogTab />}
    </div>
+   </TabTotalScope>
   </div>
  );
 }

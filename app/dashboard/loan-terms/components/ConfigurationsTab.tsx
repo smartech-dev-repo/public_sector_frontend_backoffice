@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from '@/app/components/ui/Select';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+import { useReportTabTotal } from '@/app/composables/useTabTotals';
 
 const SECTOR_OPTIONS = [
   { code: 'NPF', name: 'Nigerian Police Force' },
@@ -91,6 +92,7 @@ export default function ConfigurationsTab() {
       return true;
     });
   }, [loanProducts, sectorFilter, statusFilter]);
+  useReportTabTotal(filteredProducts.length);
 
   // Navigate to Standalone Create Page
   const handleOpenCreate = () => {

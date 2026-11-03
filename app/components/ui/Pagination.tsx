@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useReportTabTotal } from '@/app/composables/useTabTotals';
 
 export interface PaginationProps {
  totalItems: number;
@@ -8,6 +9,8 @@ export interface PaginationProps {
  itemsPerPage: number;
  onPageChange: (page: number) => void;
  onItemsPerPageChange: (itemsPerPage: number) => void;
+ /** Set on a tab's main list, so the tab's count follows its filters. */
+ tabTotal?: boolean;
 }
 
 export default function Pagination({
@@ -16,7 +19,9 @@ export default function Pagination({
  itemsPerPage,
  onPageChange,
  onItemsPerPageChange,
+ tabTotal = false,
 }: PaginationProps) {
+ useReportTabTotal(totalItems, tabTotal);
  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
  const dropdownRef = useRef<HTMLDivElement>(null);
 

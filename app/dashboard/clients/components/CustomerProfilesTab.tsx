@@ -779,7 +779,7 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
           </div>
 
           {meta && meta.total > 0 && (
-            <Pagination
+            <Pagination tabTotal
               totalItems={meta.total}
               currentPage={page}
               itemsPerPage={limit}
