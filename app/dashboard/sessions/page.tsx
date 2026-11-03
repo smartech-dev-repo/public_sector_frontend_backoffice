@@ -1,6 +1,7 @@
 "use client";
 
 import { useDataVersion } from '@/app/composables/useDataVersion';
+import ExportButton, { ExportColumn } from '@/app/components/ui/ExportButton';
 import { useCallback, useEffect, useState } from 'react';
 import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import Pagination from '@/app/components/ui/Pagination';
@@ -16,6 +17,22 @@ import UserSessionsPanel, { SessionStatusBadge, formatSessionDate } from './User
 
 const TH = 'px-4 py-3.5 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider whitespace-nowrap';
 const USER_TYPE_LABELS: Record<string, string> = { ADMIN: 'Admin', AGENT: 'Agent', CLIENT: 'Client' };
+
+
+// The list's last filters, reused by Export so it exports what the list shows.
+const exportParams: { current: Record<string, unknown> } = { current: {} };
+
+const EXPORT_COLUMNS: ExportColumn<any>[] = [
+ { header: 'User type', value: (r) => r.principalType },
+ { header: 'Name', value: (r) => r.user?.fullName },
+ { header: 'Email', value: (r) => r.user?.email },
+ { header: 'Phone', value: (r) => r.user?.phone },
+ { header: 'Status', value: (r) => r.status },
+ { header: 'IP address', value: (r) => r.ip },
+ { header: 'Device', value: (r) => r.userAgent },
+ { header: 'Started', value: (r) => r.createdAt },
+ { header: 'Last used', value: (r) => r.lastUsedAt },
+];
 
 export default function UserSessionsPage() {
  const dataVersion = useDataVersion();
@@ -40,6 +57,7 @@ export default function UserSessionsPage() {
   if (search.trim()) params.q = search.trim();
   if (userType && userType !== 'none') params.userType = userType;
   if (status && status !== 'none') params.status = status;
+  exportParams.current = params;
   const res: any = await sessions_api.getUserSessions(params);
   if (res?.type === 'ERROR') {
    setState('error');
@@ -76,7 +94,9 @@ export default function UserSessionsPage() {
      { key: 'userType', label: 'User type', type: 'select', value: userType, emptyValue: 'none', options: [{ value: 'ADMIN', label: 'Admin' }, { value: 'AGENT', label: 'Agent' }, { value: 'CLIENT', label: 'Client' }], onChange: setUserType },
      { key: 'signedIn', label: 'Signed in', type: 'dateRange', value: signedIn, onChange: setSignedIn },
     ]}
-   />
+   >
+    <ExportButton fileName="User_Sessions" resource="User sessions" columns={EXPORT_COLUMNS} fetchPage={(page, limit) => sessions_api.getUserSessions({ ...exportParams.current, page, limit })} />
+   </FilterBar>
    {state === 'loading' && <PulseLoader />}
    {state === 'error' && <p className="text-red-600 py-12 text-center">Could not load sessions.</p>}
    {state === 'ready' && (

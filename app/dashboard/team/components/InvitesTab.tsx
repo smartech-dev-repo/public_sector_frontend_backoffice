@@ -1,6 +1,8 @@
 "use client";
 
 import { useDataVersion } from '@/app/composables/useDataVersion';
+import ExportButton, { ExportColumn } from '@/app/components/ui/ExportButton';
+import { invites_api } from '@/app/api_factory/modules/invites';
 import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState } from 'react';
 import { useInvites } from '@/app/composables/modules/useInvites';
@@ -14,6 +16,18 @@ import TableDropdown from '@/app/components/ui/TableDropdown';
 import Pagination from '@/app/components/ui/Pagination';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+
+
+// The list's last filters, reused by Export so it exports what the list shows.
+const exportParams: { current: Record<string, unknown> } = { current: {} };
+
+const EXPORT_COLUMNS: ExportColumn<any>[] = [
+ { header: 'Email', value: (r) => r.email },
+ { header: 'Role', value: (r) => r.role?.name },
+ { header: 'Status', value: (r) => r.status },
+ { header: 'Sent', value: (r) => r.createdAt },
+ { header: 'Expires', value: (r) => r.expiresAt },
+];
 
 export default function InvitesTab() {
  const dataVersion = useDataVersion();
@@ -30,8 +44,6 @@ export default function InvitesTab() {
  const [showInviteModal, setShowInviteModal] = useState(false);
  const [submitting, setSubmitting] = useState(false);
  const [inviteForm, setInviteForm] = useState({ email: '', roleId: '' });
- const [roleSearch, setRoleSearch] = useState('');
- const [showRoleDropdown, setShowRoleDropdown] = useState(false);
  const [statusFilter, setStatusFilter] = useState('');
  const [q, setQ] = useState('');
  const [createdRange, setCreatedRange] = useState('');
@@ -44,6 +56,7 @@ export default function InvitesTab() {
   if (q.trim()) params.q = q.trim();
   Object.assign(params, dateRangeParams(createdRange, 'createdFrom', 'createdTo'));
   Object.assign(params, dateRangeParams(expiresRange, 'expiresFrom', 'expiresTo'));
+  exportParams.current = params;
   fetchInvites(params);
   fetchRoles();
  }, [fetchInvites, fetchRoles, page, limit, statusFilter, q, createdRange, expiresRange, canInvite, dataVersion]);
@@ -188,7 +201,9 @@ export default function InvitesTab() {
       { key: 'created', label: 'Created', type: 'dateRange', value: createdRange, onChange: setCreatedRange },
       { key: 'expires', label: 'Expires', type: 'dateRange', value: expiresRange, onChange: setExpiresRange },
      ]}
-    />
+    >
+     <ExportButton fileName="Admin_Invites" resource="Admin invites" columns={EXPORT_COLUMNS} fetchPage={(page, limit) => invites_api.getInvites({ ...exportParams.current, page, limit })} />
+    </FilterBar>
    </div>
 
    {loading && invites.length === 0 && <PulseLoader />}
@@ -272,57 +287,15 @@ export default function InvitesTab() {
          className="w-full px-4 py-2.5 border border-border rounded-lg text-sm focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 outline-none transition-all" 
         />
        </div>
-       <div className="relative">
+       <div>
         <label className="block text-sm font-medium text-foreground/90 mb-1">Role</label>
-        <div className="relative">
-         <div 
-          className="w-full px-4 py-2.5 border border-border rounded-lg text-sm bg-card cursor-pointer flex justify-between items-center focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 outline-none transition-all"
-          onClick={() => setShowRoleDropdown(!showRoleDropdown)}
-          tabIndex={0}
-          onBlur={(e) => {
-           if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-            setShowRoleDropdown(false);
-           }
-          }}
-         >
-          <span className={inviteForm.roleId ? 'text-foreground' : 'text-muted-foreground/70'}>
-           {inviteForm.roleId ? roles.find((r: any) => r.id === inviteForm.roleId)?.name : 'Select a role'}
-          </span>
-          <svg className={`w-4 h-4 text-muted-foreground/70 transition-transform ${showRoleDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-         </div>
-         
-         {showRoleDropdown && (
-          <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-lg max-h-60 flex flex-col" onMouseDown={(e) => e.preventDefault()}>
-           <div className="p-2 border-b border-border/50 shrink-0">
-            <input 
-             type="text" 
-             placeholder="Search roles..." 
-             value={roleSearch}
-             onChange={e => setRoleSearch(e.target.value)}
-             className="w-full px-3 py-1.5 text-sm bg-muted/30 border border-border rounded outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-            />
-           </div>
-           <div className="overflow-y-auto flex-1 p-1">
-            {roles.filter((r: any) => r.name.toLowerCase().includes(roleSearch.toLowerCase())).map((role: any) => (
-             <div 
-              key={role.id} 
-              onClick={() => {
-               setInviteForm({ ...inviteForm, roleId: role.id });
-               setShowRoleDropdown(false);
-               setRoleSearch('');
-              }}
-              className={`px-3 py-2 text-sm rounded cursor-pointer hover:bg-emerald-50 transition-colors ${inviteForm.roleId === role.id ? 'bg-emerald-50 text-emerald-700 font-medium' : 'text-foreground/90'}`}
-             >
-              {role.name}
-             </div>
-            ))}
-            {roles.filter((r: any) => r.name.toLowerCase().includes(roleSearch.toLowerCase())).length === 0 && (
-             <div className="px-3 py-2 text-sm text-muted-foreground text-center">No roles found</div>
-            )}
-           </div>
-          </div>
-         )}
-        </div>
+        {/* The shared Select opens above the modal, so the list is never cut off by it. */}
+        <Select value={inviteForm.roleId || undefined} onValueChange={(roleId) => setInviteForm({ ...inviteForm, roleId })}>
+         <SelectTrigger aria-label="Role" className="w-full"><SelectValue placeholder="Select a role" /></SelectTrigger>
+         <SelectContent>
+          {roles.map((role: any) => <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>)}
+         </SelectContent>
+        </Select>
        </div>
 
        {inviteForm.roleId && (

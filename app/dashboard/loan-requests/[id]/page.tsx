@@ -1,6 +1,7 @@
 "use client";
 
 import { useDataVersion } from '@/app/composables/useDataVersion';
+import { allowedLoanActions } from '../loanActions';
 import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -37,7 +38,8 @@ export default function LoanRequestDetailPage({ params }: { params: Promise<{ id
   const { confirm } = useConfirm();
   const { addToast } = useToast();
   const { isSuperAdmin, hasPermission } = useAdminPermissions();
-  const canReview = isSuperAdmin || hasPermission('loan-requests:review');
+  const canReview = isSuperAdmin || hasPermission('loan-requests:read');
+  const can = (permission: string) => isSuperAdmin || hasPermission(permission as any);
 
   const { 
     getLoanRequestById, 
@@ -190,34 +192,13 @@ export default function LoanRequestDetailPage({ params }: { params: Promise<{ id
   const ippis = onboarding?.ippisRecord;
   const clientName = onboarding?.employeeName || ippis?.employeeName || client?.fullName || 'Client';
 
-  const reqStatus = (loanRequest.status || '').toUpperCase();
   const availableActions: string[] = Array.isArray(loanRequest.availableActions) ? loanRequest.availableActions : [];
 
-  // 1. Confirm with Code: on PENDING loan requests
-  const canConfirmCode = canReview && !loanRequest.pendingApproval && (
-    availableActions.includes('confirm-code') || 
-    availableActions.includes('confirm') || 
-    reqStatus === 'PENDING'
-  );
-
-  // 2. Approve: on CONFIRMED loan requests
-  const canApprove = canReview && !loanRequest.pendingApproval && (
-    availableActions.includes('approve') || 
-    reqStatus === 'CONFIRMED'
-  );
-
-  // 3. Reject: on PENDING or CONFIRMED loan requests
-  const canReject = canReview && (
-    availableActions.includes('reject') || 
-    reqStatus === 'PENDING' || 
-    reqStatus === 'CONFIRMED'
-  );
-
-  // 4. Disburse: on APPROVED loan requests
-  const canDisburse = canReview && !loanRequest.pendingApproval && (
-    availableActions.includes('disburse') || 
-    reqStatus === 'APPROVED'
-  );
+  const allowed = allowedLoanActions(loanRequest, can);
+  const canConfirmCode = allowed.has('confirmCode');
+  const canApprove = allowed.has('approve');
+  const canReject = allowed.has('reject');
+  const canDisburse = allowed.has('disburse');
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-12">
@@ -350,7 +331,7 @@ export default function LoanRequestDetailPage({ params }: { params: Promise<{ id
             {loanRequest.pendingApproval && <Link href={`/dashboard/approvals/${loanRequest.pendingApproval.id}`} className="ml-2 text-xs font-semibold text-amber-800 dark:text-amber-400 hover:underline">Waiting for approval</Link>}
           </div>
           <span className="text-[11px] text-muted-foreground mt-2 block">
-            Available actions: {availableActions && availableActions.length > 0 ? availableActions.join(', ') : 'None'}
+            Available actions: {availableActions.length > 0 ? availableActions.join(', ') : 'None'}
           </span>
         </div>
       </div>

@@ -1,6 +1,8 @@
 "use client";
 
 import { useDataVersion } from '@/app/composables/useDataVersion';
+import ExportButton, { ExportColumn } from '@/app/components/ui/ExportButton';
+import { agent_recruitment_api } from '@/app/api_factory/modules/agentRecruitment';
 import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
@@ -18,6 +20,23 @@ import CustomDateRangePicker from '@/app/components/ui/CustomDateRangePicker';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 import SensitiveValue from '@/app/components/ui/SensitiveValue';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+
+
+// The list's last filters, reused by Export so it exports what the list shows.
+const exportParams: { current: Record<string, unknown> } = { current: {} };
+
+const EXPORT_COLUMNS: ExportColumn<any>[] = [
+ { header: 'Name', value: (r) => r.fullName },
+ { header: 'Email', value: (r) => r.email },
+ { header: 'Phone', value: (r) => r.phone },
+ { header: 'Application status', value: (r) => r.status },
+ { header: 'Review status', value: (r) => r.submittedAgent?.status },
+ { header: 'NIN verified', value: (r) => (r.ninVerified ? 'Yes' : r.ninVerified === false ? 'No' : '') },
+ { header: 'City', value: (r) => r.city },
+ { header: 'State', value: (r) => r.state },
+ { header: 'LGA', value: (r) => r.localGovernment },
+ { header: 'Started', value: (r) => r.createdAt },
+];
 
 export default function RecruitmentApplicationsTab() {
  const dataVersion = useDataVersion();
@@ -92,6 +111,7 @@ export default function RecruitmentApplicationsTab() {
     if (q.trim()) params.q = q.trim();
     if (statusFilter && statusFilter !== 'none') params.status = statusFilter;
     Object.assign(params, dateRangeParams(dateRange, 'createdFrom', 'createdTo'));
+    exportParams.current = params;
     fetchApplications(params);
   }, [fetchApplications, currentPage, itemsPerPage, q, statusFilter, dateRange, canReadRecruitment]);
 
@@ -441,7 +461,9 @@ export default function RecruitmentApplicationsTab() {
           { key: 'status', label: 'Status', type: 'select', value: statusFilter, emptyValue: 'none', options: [{ value: 'EMAIL_PENDING', label: 'Email Pending' }, { value: 'EMAIL_VERIFIED', label: 'Email Verified' }, { value: 'SUBMITTED', label: 'Submitted' }], onChange: setStatusFilter },
           { key: 'applied', label: 'Applied', type: 'dateRange', value: dateRange, onChange: setDateRange },
          ]}
-        />
+        >
+         <ExportButton fileName="Agent_Applications" resource="Agent applications" columns={EXPORT_COLUMNS} fetchPage={(page, limit) => agent_recruitment_api.getApplications({ ...exportParams.current, page, limit })} />
+        </FilterBar>
       </div>
 
       {/* ================= DATA TABLE ================= */}
@@ -618,7 +640,8 @@ export default function RecruitmentApplicationsTab() {
                               </>
                             )}
 
-                            {canManageRecruitment && (
+                            {/* Only abandoned applications can be deleted; a submitted one is reviewed instead. */}
+                            {canManageRecruitment && app.status !== 'SUBMITTED' && (
                               <button
                                 type="button"
                                 onClick={() => handleDelete(app)}

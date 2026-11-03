@@ -39,6 +39,9 @@ export default function CustomerManagementPage() {
     }
   }, [tabs, activeTab]);
 
+  // Before the early return, so React sees the same hooks on every render.
+  const { shown: shownTotals, report: reportTabTotal } = useTabTotals(totals, activeTab);
+
   if (tabs.length === 0) {
     return (
       <div className="p-8">
@@ -50,7 +53,6 @@ export default function CustomerManagementPage() {
     );
   }
 
-  const { shown: shownTotals, report: reportTabTotal } = useTabTotals(totals, activeTab);
 
   return (
     <div className="space-y-3">

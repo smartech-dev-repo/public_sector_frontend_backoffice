@@ -1,6 +1,9 @@
 "use client";
 
 import { useDataVersion } from '@/app/composables/useDataVersion';
+import ExportButton, { ExportColumn } from '@/app/components/ui/ExportButton';
+import { loans_api } from '@/app/api_factory/modules/loans';
+import { allowedLoanActions } from '../loanActions';
 import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState } from 'react';
 import { useLoans } from '@/app/composables/modules/useLoans';
@@ -16,10 +19,29 @@ import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 import Link from 'next/link';
 import { CheckCircle, XCircle, KeyRound, Send, User, FileText, CreditCard } from 'lucide-react';
 
+const LOAN_REQUEST_EXPORT_COLUMNS: ExportColumn<any>[] = [
+  { header: 'Client', value: (r) => r.client?.onboarding?.employeeName || r.client?.onboarding?.ippisRecord?.employeeName || '' },
+  { header: 'Phone', value: (r) => r.client?.phone },
+  { header: 'IPPIS number', value: (r) => r.client?.onboarding?.ippisRecord?.staffId },
+  { header: 'Sector', value: (r) => r.client?.onboarding?.agency },
+  { header: 'Type', value: (r) => r.type },
+  { header: 'Amount', value: (r) => Number(r.amount) },
+  { header: 'Tenor (months)', value: (r) => r.tenorMonths },
+  { header: 'Interest rate %', value: (r) => Number(r.interestRatePercent) },
+  { header: 'Management charge', value: (r) => Number(r.managementChargeAmount) },
+  { header: 'Status', value: (r) => r.status },
+  { header: 'Requested by', value: (r) => (r.requestedByAgent ? `Agent: ${r.requestedByAgent.fullName}` : 'Client') },
+  { header: 'Created', value: (r) => r.createdAt },
+  { header: 'Confirmed', value: (r) => r.confirmedAt },
+  { header: 'Disbursed', value: (r) => r.disbursedAt },
+  { header: 'Rejection reason', value: (r) => r.rejectionReason },
+];
+
 export default function RequestsTab() {
  const dataVersion = useDataVersion();
   const { isSuperAdmin, hasPermission } = useAdminPermissions();
-  const canReview = isSuperAdmin || hasPermission('loan-requests:review');
+  const canReview = isSuperAdmin || hasPermission('loan-requests:read');
+  const can = (permission: string) => isSuperAdmin || hasPermission(permission as any);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(25);
   const { confirm } = useConfirm();
@@ -49,15 +71,21 @@ export default function RequestsTab() {
   const [createdRange, setCreatedRange] = useState('');
   const [disbursedRange, setDisbursedRange] = useState('');
 
-  const loadData = () => {
-    if (!canReview) return;
-    const params: any = { page, limit };
+  // The list's filters, shared by the page on screen and the export.
+  const filterParams = () => {
+    const params: any = {};
     if (statusFilter && statusFilter !== 'none') params.status = statusFilter;
     if (typeFilter && typeFilter !== 'none') params.type = typeFilter;
-    if (clientIdFilter.trim()) params.clientId = clientIdFilter.trim();
+    // Name, phone, email, IPPIS number or client ID.
+    if (clientIdFilter.trim()) params.search = clientIdFilter.trim();
     Object.assign(params, dateRangeParams(createdRange, 'createdFrom', 'createdTo'));
     Object.assign(params, dateRangeParams(disbursedRange, 'disbursedFrom', 'disbursedTo'));
-    fetchLoanRequests(params);
+    return params;
+  };
+
+  const loadData = () => {
+    if (!canReview) return;
+    fetchLoanRequests({ ...filterParams(), page, limit });
   };
 
   useEffect(() => {
@@ -217,14 +245,21 @@ export default function RequestsTab() {
       <div className="mb-6 space-y-4">
         <FilterBar
          onChange={() => setPage(1)}
-         search={{ value: clientIdFilter, onChange: setClientIdFilter, placeholder: 'Client ID' }}
+         search={{ value: clientIdFilter, onChange: setClientIdFilter, placeholder: 'Name, phone or IPPIS number' }}
          filters={[
           { key: 'status', label: 'Status', type: 'select', value: statusFilter, emptyValue: 'none', options: [{ value: 'PENDING', label: 'PENDING' }, { value: 'CONFIRMED', label: 'CONFIRMED' }, { value: 'APPROVED', label: 'APPROVED' }, { value: 'DISBURSED', label: 'DISBURSED' }, { value: 'REJECTED', label: 'REJECTED' }, { value: 'FAILED', label: 'FAILED' }], onChange: setStatusFilter },
           { key: 'type', label: 'Type', type: 'select', value: typeFilter, emptyValue: 'none', options: [{ value: 'ORIGINATION', label: 'ORIGINATION' }, { value: 'TOPUP', label: 'TOPUP' }], onChange: setTypeFilter },
           { key: 'created', label: 'Created', type: 'dateRange', value: createdRange, onChange: setCreatedRange },
           { key: 'disbursed', label: 'Disbursed', type: 'dateRange', value: disbursedRange, onChange: setDisbursedRange },
          ]}
-        />
+        >
+         <ExportButton
+          fileName="Loan_Requests"
+          resource="Loan requests"
+          fetchPage={(p, l) => loans_api.getLoanRequests({ ...filterParams(), page: p, limit: l })}
+          columns={LOAN_REQUEST_EXPORT_COLUMNS}
+         />
+        </FilterBar>
       </div>
 
       {loading && loanRequests.length === 0 && <PulseLoader />}
@@ -266,35 +301,13 @@ export default function RequestsTab() {
                     const agency = req.client?.onboarding?.agency || req.client?.onboarding?.ippisRecord?.agency || req.agency;
                     const phone = req.client?.phone;
 
-                    const reqStatus = (req.status || '').toUpperCase();
-                    const availableActions: string[] = Array.isArray(req.availableActions) ? req.availableActions : [];
-
-                    // 1. Confirm with Code: on PENDING loan requests
                     const waiting = !!req.pendingApproval;
-                    const canConfirmCode = canReview && !waiting && (
-                      availableActions.includes('confirm-code') || 
-                      availableActions.includes('confirm') || 
-                      reqStatus === 'PENDING'
-                    );
 
-                    // 2. Approve: on CONFIRMED loan requests
-                    const canApprove = canReview && !waiting && (
-                      availableActions.includes('approve') || 
-                      reqStatus === 'CONFIRMED'
-                    );
-
-                    // 3. Reject: on PENDING or CONFIRMED loan requests
-                    const canReject = canReview && (
-                      availableActions.includes('reject') || 
-                      reqStatus === 'PENDING' || 
-                      reqStatus === 'CONFIRMED'
-                    );
-
-                    // 4. Disburse: on APPROVED loan requests
-                    const canDisburse = canReview && !waiting && (
-                      availableActions.includes('disburse') || 
-                      reqStatus === 'APPROVED'
-                    );
+                    const allowed = allowedLoanActions(req, can);
+                    const canConfirmCode = allowed.has('confirmCode');
+                    const canApprove = allowed.has('approve');
+                    const canReject = allowed.has('reject');
+                    const canDisburse = allowed.has('disburse');
 
                     return (
                       <tr key={req.id} className="hover:bg-muted/30 transition-colors">

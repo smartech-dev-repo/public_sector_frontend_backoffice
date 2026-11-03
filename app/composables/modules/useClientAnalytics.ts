@@ -36,6 +36,7 @@ export const useClientAnalytics = () => {
   const fetchAnalytics = useCallback(async (params?: { createdFrom?: string; createdTo?: string }) => {
     setLoading(true);
     setError(null);
+    setError(null);
     try {
       const res = await clients_api.getClientAnalytics(params);
       const data = res.data?.data || res.data;

@@ -25,7 +25,7 @@ function LoanRequestPageContent() {
       { 
         id: 'requests', 
         label: 'Loan Requests', 
-        visible: isSuperAdmin || hasPermission('loan-requests:review') 
+        visible: isSuperAdmin || hasPermission('loan-requests:read') 
       },
       { 
         id: 'client-loans', 
@@ -35,7 +35,7 @@ function LoanRequestPageContent() {
       { 
         id: 'disbursement', 
         label: 'Disbursement Summary', 
-        visible: isSuperAdmin || hasAnyPermission(['loan-requests:review', 'client-loans:read']) 
+        visible: isSuperAdmin || hasAnyPermission(['loan-requests:read', 'client-loans:read']) 
       },
     ];
     return allTabs.filter(t => t.visible);
@@ -68,6 +68,9 @@ function LoanRequestPageContent() {
     router.replace(`/dashboard/loan-requests?${params.toString()}`, { scroll: false });
   };
 
+  // Before the early return, so React sees the same hooks on every render.
+  const { shown: shownTotals, report: reportTabTotal } = useTabTotals(totals, activeTab);
+
   if (tabs.length === 0) {
     return (
       <div className="bg-card rounded-2xl border border-border p-12 text-center max-w-lg mx-auto mt-8">
@@ -78,7 +81,6 @@ function LoanRequestPageContent() {
     );
   }
 
-  const { shown: shownTotals, report: reportTabTotal } = useTabTotals(totals, activeTab);
 
   return (
     <div className="space-y-3">

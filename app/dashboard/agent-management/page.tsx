@@ -1,6 +1,7 @@
 "use client";
 
 import { useDataVersion } from '@/app/composables/useDataVersion';
+import ExportButton, { ExportColumn } from '@/app/components/ui/ExportButton';
 import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useAgents } from '@/app/composables/modules/useAgents';
@@ -19,6 +20,23 @@ import Link from 'next/link';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 import { Users, UserCheck, Clock, ShieldCheck, UserX } from 'lucide-react';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+
+
+// The list's last filters, reused by Export so it exports what the list shows.
+const exportParams: { current: Record<string, unknown> } = { current: {} };
+
+const EXPORT_COLUMNS: ExportColumn<any>[] = [
+ { header: 'Name', value: (r) => r.fullName },
+ { header: 'Email', value: (r) => r.email },
+ { header: 'Phone', value: (r) => r.phone },
+ { header: 'Status', value: (r) => r.status },
+ { header: 'Can onboard clients', value: (r) => (r.canOnboardClients ? 'Yes' : 'No') },
+ { header: 'Has signed in', value: (r) => (r.hasLoggedIn ? 'Yes' : 'No') },
+ { header: 'City', value: (r) => r.city },
+ { header: 'State', value: (r) => r.state },
+ { header: 'Applied', value: (r) => r.createdAt },
+ { header: 'Reviewed', value: (r) => r.reviewedAt },
+];
 
 export default function AgentManagementPage() {
  const dataVersion = useDataVersion();
@@ -99,6 +117,7 @@ export default function AgentManagementPage() {
   if (qFilter.trim()) params.q = qFilter.trim();
   Object.assign(params, dateRangeParams(createdRange, 'createdFrom', 'createdTo'));
   Object.assign(params, dateRangeParams(reviewedRange, 'reviewedFrom', 'reviewedTo'));
+  exportParams.current = params;
   fetchAgents(params);
  }, [fetchAgents, currentPage, itemsPerPage, statusFilter, qFilter, createdRange, reviewedRange, canReadAgents, dataVersion]);
 
@@ -389,7 +408,9 @@ export default function AgentManagementPage() {
       { key: 'created', label: 'Created', type: 'dateRange', value: createdRange, onChange: setCreatedRange },
       { key: 'reviewed', label: 'Reviewed', type: 'dateRange', value: reviewedRange, onChange: setReviewedRange },
      ]}
-    />
+    >
+     <ExportButton fileName="Agents" resource="Agents" columns={EXPORT_COLUMNS} fetchPage={(page, limit) => agents_api.getAgents({ ...exportParams.current, page, limit })} />
+    </FilterBar>
    </div>
 
    {loading && agents.length === 0 && <PulseLoader />}
@@ -441,7 +462,7 @@ export default function AgentManagementPage() {
                <div className="h-px bg-muted/50 my-1.5"></div>
               </>
              )}
-             {canSendCreds && agent.mustChangePassword !== false && agent.mustChangePassword !== 'false' && !agent.hasLoggedIn && (
+             {canSendCreds && agent.status === 'APPROVED' && agent.mustChangePassword !== false && agent.mustChangePassword !== 'false' && !agent.hasLoggedIn && (
               <button onClick={() => handleResendCredentials(agent.id)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-blue-700 hover:bg-blue-50 transition-colors flex items-center gap-2">
                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
                Resend Credentials

@@ -37,7 +37,27 @@ const TYPING_DEBOUNCE_MS = 300;
 export function dateRangeParams(range: string, fromKey: string, toKey: string): Record<string, string> {
   const [from, to] = range ? range.split(' to ') : [];
   if (!from) return {};
-  return { [fromKey]: `${from}T00:00:00.000Z`, [toKey]: `${to || from}T23:59:59.999Z` };
+  // Local midnight to local end of day, so a Lagos admin's "today" is their day, not UTC's.
+  const start = new Date(`${from}T00:00:00`);
+  const end = new Date(`${to || from}T23:59:59.999`);
+  return { [fromKey]: start.toISOString(), [toKey]: end.toISOString() };
+}
+
+// Local calendar dates, so "Today" means today where the admin is.
+const isoDay = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+/** Quick ranges offered on every date-range filter, above the custom From/To fields. */
+export function datePresets(now = new Date()): Array<{ label: string; value: string }> {
+  const today = isoDay(now);
+  const daysAgo = new Date(now);
+  daysAgo.setDate(daysAgo.getDate() - 89);
+  return [
+    { label: 'Today', value: `${today} to ${today}` },
+    { label: 'This month', value: `${isoDay(new Date(now.getFullYear(), now.getMonth(), 1))} to ${today}` },
+    { label: 'Last 90 days', value: `${isoDay(daysAgo)} to ${today}` },
+    { label: 'This year', value: `${isoDay(new Date(now.getFullYear(), 0, 1))} to ${today}` },
+  ];
 }
 
 const CHIP_CLASS = 'h-10 inline-flex items-center rounded-full text-[13px] font-medium whitespace-nowrap transition-colors';
@@ -78,6 +98,9 @@ function displayValue(filter: FilterDefinition): string {
   if (filter.type === 'select') {
     return filter.options?.find((option) => option.value === filter.value)?.label ?? filter.value;
   }
+  if (filter.type === 'dateRange') {
+    return datePresets().find((preset) => preset.value === filter.value)?.label ?? filter.value;
+  }
   return filter.value;
 }
 
@@ -110,6 +133,20 @@ function FilterEditor({ filter, onDone }: { filter: FilterDefinition; onDone: ()
     };
     return (
       <div className="space-y-2 p-1">
+        <div role="group" aria-label="Quick ranges" className="grid grid-cols-2 gap-1.5">
+          {datePresets().map((preset) => (
+            <button
+              key={preset.label}
+              type="button"
+              aria-pressed={filter.value === preset.value}
+              onClick={() => { filter.onChange(preset.value); onDone(); }}
+              className={`h-9 rounded-lg text-xs font-semibold border transition-colors ${filter.value === preset.value ? 'bg-[#018752] border-[#018752] text-white' : 'border-border text-foreground hover:bg-muted/50'}`}
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
+        <p className="pt-1 text-[11px] font-semibold text-muted-foreground">Custom range</p>
         <label className="block text-[11px] font-semibold text-muted-foreground">From
           <input type="date" value={from} max={to || undefined} onChange={(e) => write(e.target.value, to)} className={`${INPUT_CLASS} mt-1`} />
         </label>

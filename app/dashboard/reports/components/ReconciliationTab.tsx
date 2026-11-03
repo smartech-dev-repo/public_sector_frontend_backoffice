@@ -1,6 +1,8 @@
 "use client";
 
 import { useSectorOptions } from '@/app/composables/modules/useSectorOptions';
+import ExportButton, { ExportColumn } from '@/app/components/ui/ExportButton';
+import { reconciliation_api } from '@/app/api_factory/modules/reconciliation';
 import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
@@ -11,6 +13,20 @@ import TableDropdown from '@/app/components/ui/TableDropdown';
 import { useReconciliation } from '@/app/composables/modules/useReconciliation';
 import { FileSpreadsheet, Eye, Scale, CheckCircle2, AlertTriangle, AlertCircle, Clock } from 'lucide-react';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+
+
+// The list's last filters, reused by Export so it exports what the list shows.
+const exportParams: { current: Record<string, unknown> } = { current: {} };
+
+const EXPORT_COLUMNS: ExportColumn<any>[] = [
+ { header: 'Customer', value: (r) => r.loan?.customerName },
+ { header: 'Sector', value: (r) => r.loan?.agency },
+ { header: 'Period', value: (r) => r.period },
+ { header: 'Expected', value: (r) => Number(r.expectedAmount) },
+ { header: 'Actual', value: (r) => Number(r.actualAmount) },
+ { header: 'Variance', value: (r) => Number(r.variance) },
+ { header: 'Status', value: (r) => r.status },
+];
 
 export default function ReconciliationTab() {
  const agencyOptions = useSectorOptions();
@@ -36,6 +52,7 @@ export default function ReconciliationTab() {
     if (filterParams.period) params.period = filterParams.period;
     Object.assign(params, dateRangeParams(filterParams.generatedRange, 'generatedFrom', 'generatedTo'));
 
+    exportParams.current = params;
     fetchReconciliation(params).then((data) => {
       setRecordsList(data || []);
       setIsLoading(false);
@@ -122,8 +139,9 @@ export default function ReconciliationTab() {
             { key: 'period', label: 'Period', type: 'month', value: filterParams.period, onChange: (period) => setFilterParams({ ...filterParams, period }) },
             { key: 'generated', label: 'Generated', type: 'dateRange', value: filterParams.generatedRange, onChange: (generatedRange) => setFilterParams({ ...filterParams, generatedRange }) },
            ]}
-          />
-
+          >
+           <ExportButton fileName="Reconciliation" resource="Reconciliation" columns={EXPORT_COLUMNS} fetchPage={(page, limit) => reconciliation_api.getReconciliation({ ...exportParams.current, page, limit })} />
+          </FilterBar>
           {/* Table */}
           <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
             <div className="overflow-x-auto">

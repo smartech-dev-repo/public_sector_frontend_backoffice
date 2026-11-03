@@ -41,6 +41,7 @@ export const useLoans = () => {
 
   const fetchLoans = useCallback(async (params?: any) => {
     setLoading(true);
+    setError(null);
     try {
       const res = await loans_api.getLoans(params);
       unwrapResponse(res, 'Failed to fetch loans');
@@ -59,6 +60,7 @@ export const useLoans = () => {
 
   const fetchLoanTerms = useCallback(async (params?: any) => {
     setLoading(true);
+    setError(null);
     try {
       const res = await loans_api.getLoanTerms(params);
       unwrapResponse(res, 'Failed to fetch loan terms');
@@ -81,7 +83,6 @@ export const useLoans = () => {
       unwrapResponse(res, 'Failed to create loan term');
       return res.data;
     } catch (err: any) {
-      setError(err.message);
       throw err;
     } finally {
       setLoading(false);
@@ -95,7 +96,6 @@ export const useLoans = () => {
       unwrapResponse(res, 'Failed to update loan term');
       return res.data;
     } catch (err: any) {
-      setError(err.message);
       throw err;
     } finally {
       setLoading(false);
@@ -104,6 +104,7 @@ export const useLoans = () => {
 
   const fetchLoanProducts = useCallback(async (params?: any) => {
     setLoading(true);
+    setError(null);
     try {
       const res = await loans_api.getLoanProducts(params);
       unwrapResponse(res, 'Failed to fetch loan products');
@@ -127,7 +128,6 @@ export const useLoans = () => {
       unwrapResponse(res, 'Failed to create loan product');
       return res.data;
     } catch (err: any) {
-      setError(err.message);
       throw err;
     } finally {
       setLoading(false);
@@ -141,7 +141,6 @@ export const useLoans = () => {
       unwrapResponse(res, 'Failed to update loan product');
       return res.data;
     } catch (err: any) {
-      setError(err.message);
       throw err;
     } finally {
       setLoading(false);
@@ -182,7 +181,6 @@ export const useLoans = () => {
       setLoanSettings(res.data);
       return res.data;
     } catch (err: any) {
-      setError(err.message);
       throw err;
     } finally {
       setLoading(false);
@@ -191,6 +189,7 @@ export const useLoans = () => {
 
   const fetchLoanRequests = useCallback(async (params?: any) => {
     setLoading(true);
+    setError(null);
     try {
       const res = await loans_api.getLoanRequests(params);
       unwrapResponse(res, 'Failed to fetch loan requests');
@@ -214,7 +213,6 @@ export const useLoans = () => {
       unwrapResponse(res, 'Failed to fetch loan request');
       return res.data;
     } catch (err: any) {
-      setError(err.message);
       throw err;
     } finally {
       setLoading(false);
@@ -228,7 +226,6 @@ export const useLoans = () => {
       unwrapResponse(res, 'Failed to approve loan request');
       return res.data;
     } catch (err: any) {
-      setError(err.message);
       throw err;
     } finally {
       setLoading(false);
@@ -242,7 +239,6 @@ export const useLoans = () => {
       unwrapResponse(res, 'Failed to confirm loan request code');
       return res.data;
     } catch (err: any) {
-      setError(err.message);
       throw err;
     } finally {
       setLoading(false);
@@ -256,7 +252,6 @@ export const useLoans = () => {
       unwrapResponse(res, 'Failed to reject loan request');
       return res.data;
     } catch (err: any) {
-      setError(err.message);
       throw err;
     } finally {
       setLoading(false);
@@ -270,7 +265,6 @@ export const useLoans = () => {
       unwrapResponse(res, 'Failed to disburse loan request');
       return res.data;
     } catch (err: any) {
-      setError(err.message);
       throw err;
     } finally {
       setLoading(false);
@@ -279,6 +273,7 @@ export const useLoans = () => {
 
   const fetchDisbursementSummary = useCallback(async (params?: any) => {
     setLoading(true);
+    setError(null);
     try {
       const res = await loans_api.getDisbursementSummary(params);
       unwrapResponse(res, 'Failed to fetch disbursement summary');
@@ -322,7 +317,6 @@ export const useLoans = () => {
       unwrapResponse(res, 'Failed to fetch repayment plan');
       return res.data;
     } catch (err: any) {
-      setError(err.message);
       throw err;
     } finally {
       setLoading(false);

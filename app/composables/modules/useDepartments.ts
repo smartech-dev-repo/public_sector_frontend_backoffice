@@ -9,6 +9,7 @@ export const useDepartments = () => {
 
  const fetchDepartments = useCallback(async (params?: any) => {
   setLoading(true);
+  setError(null);
   try {
    const res = await departments_api.getDepartments(params);
    let dataList = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || res.data?.departments || []);
@@ -29,7 +30,6 @@ export const useDepartments = () => {
    const res = await departments_api.createDepartment(payload);
    return res.data;
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);
@@ -42,7 +42,6 @@ export const useDepartments = () => {
    const res = await departments_api.updateDepartment(id, payload);
    return res.data;
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);
@@ -55,7 +54,6 @@ export const useDepartments = () => {
    const res = await departments_api.deleteDepartment(id);
    return res.data;
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);

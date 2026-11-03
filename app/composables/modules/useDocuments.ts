@@ -13,7 +13,6 @@ export const useDocuments = () => {
    const res = await documents_api.uploadIppisBroadsheet(payload);
    return res.data;
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);
@@ -26,7 +25,6 @@ export const useDocuments = () => {
    const res = await documents_api.uploadDisbursedLoans(payload);
    return res.data;
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);
@@ -39,7 +37,6 @@ export const useDocuments = () => {
    const res = await documents_api.uploadRepaymentSchedule(payload);
    return res.data;
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);
@@ -48,6 +45,7 @@ export const useDocuments = () => {
 
  const fetchDocumentBatches = useCallback(async (params?: any) => {
   setLoading(true);
+  setError(null);
   try {
    const res = await documents_api.getDocumentBatches(params);
    let dataList = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || res.data?.agents || res.data?.clients || res.data?.roles || res.data?.admins || res.data?.logs || res.data?.invites || res.data?.permissions || res.data?.batches || []);
@@ -68,7 +66,6 @@ export const useDocuments = () => {
    const res = await documents_api.getDocumentBatchById(id);
    return res.data;
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);
@@ -81,7 +78,6 @@ export const useDocuments = () => {
    const res = await documents_api.getDocumentFile(fileKey);
    return res.data;
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);

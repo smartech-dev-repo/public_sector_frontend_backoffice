@@ -35,13 +35,15 @@ function ConfigurationTabs() {
   ...(isSuperAdmin || hasPermission('alerts:manage') ? [{ id: 'alerts' as const, label: 'Security Alerts' }] : []),
  ];
 
+ const activeTab = tabs.find((tab) => tab.id === (chosen ?? requested))?.id ?? tabs[0]?.id ?? 'sectors';
+
+ // Before the early return, so React sees the same hooks on every render.
+ const { shown: shownTotals, report: reportTabTotal } = useTabTotals(totals, activeTab);
+
  if (tabs.length === 0) {
   return <EmptyState title="Access Restricted" description="You do not have permission to view these configurations." />;
  }
 
- const activeTab = tabs.find((tab) => tab.id === (chosen ?? requested))?.id ?? tabs[0].id;
-
- const { shown: shownTotals, report: reportTabTotal } = useTabTotals(totals, activeTab);
 
  return (
   <div className="space-y-3">

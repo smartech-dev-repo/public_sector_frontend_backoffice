@@ -1,6 +1,7 @@
 "use client";
 
 import { useDataVersion } from '@/app/composables/useDataVersion';
+import { clients_api } from '@/app/api_factory/modules/clients';
 import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
@@ -26,6 +27,10 @@ import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 interface Props {
   onOpenOnboard?: () => void;
 }
+
+
+// The list's last filters, reused by Export so it exports what the list shows.
+const exportParams: { current: Record<string, unknown> } = { current: {} };
 
 export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
  const dataVersion = useDataVersion();
@@ -83,6 +88,8 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
 
   const [statusFilter, setStatusFilter] = useState('');
   const [q, setQ] = useState('');
+  // The agent's name, email or phone; a link from an agent's page uses agentId instead.
+  const [agentSearch, setAgentSearch] = useState('');
   const [createdRange, setCreatedRange] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(25);
@@ -125,9 +132,11 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
     if (statusFilter && statusFilter !== 'none') params.status = statusFilter;
     if (q.trim()) params.q = q.trim();
     if (agentIdFilter.trim()) params.agentId = agentIdFilter.trim();
+    if (agentSearch.trim()) params.agent = agentSearch.trim();
     Object.assign(params, dateRangeParams(createdRange, 'createdFrom', 'createdTo'));
+    exportParams.current = params;
     fetchClients(params);
-  }, [fetchClients, statusFilter, q, agentIdFilter, createdRange, page, limit, canReviewClient, dataVersion]);
+  }, [fetchClients, statusFilter, q, agentIdFilter, agentSearch, createdRange, page, limit, canReviewClient, dataVersion]);
 
   const openWalletModal = async (client: any) => {
     setSelectedClient(client);
@@ -440,9 +449,23 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
   };
 
   // Export table data to Excel (.xlsx)
-  const handleExportExcel = () => {
+  // Every customer matching the current filters, fetched page by page, not just the page on screen.
+  const handleExportExcel = async () => {
     try {
-      const dataToExport = clients.map((c: any) => ({
+      const all: any[] = [];
+      for (let p = 1; all.length < 20000; p += 1) {
+        const res: any = await clients_api.getClients({ ...exportParams.current, page: p, limit: 100 });
+        if (!res || res.type === 'ERROR') throw new Error('fetch failed');
+        const batch: any[] = Array.isArray(res.data) ? res.data : res.data?.data || [];
+        all.push(...batch);
+        const total = res.data?.meta?.total;
+        if (batch.length < 100 || (typeof total === 'number' && all.length >= total)) break;
+      }
+      if (all.length === 0) {
+        addToast('Nothing matches these filters, so there is nothing to export', 'info');
+        return;
+      }
+      const dataToExport = all.map((c: any) => ({
         'NAME': getClientName(c),
         'IPPIS NO.': getIppisNumber(c),
         'ONBOARDED BY': getAgentName(c),
@@ -458,7 +481,7 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
       xlsx.utils.book_append_sheet(workbook, worksheet, 'Customers');
       xlsx.writeFile(workbook, `Customer_Profiles_${new Date().toISOString().split('T')[0]}.xlsx`);
       auditLogs_api.reportDataAccess({ kind: 'export', resource: 'Customer profiles', recordCount: dataToExport.length });
-      addToast('Customers exported to Excel successfully', 'success');
+      addToast(`Exported ${dataToExport.length.toLocaleString()} customers`, 'success');
     } catch (err: any) {
       addToast('Failed to export to Excel', 'error');
     }
@@ -571,10 +594,10 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
       {canReviewClient && (
        <FilterBar
         onChange={() => setPage(1)}
-        search={{ value: q, onChange: setQ, placeholder: 'Search customers' }}
+        search={{ value: q, onChange: setQ, placeholder: 'Name, phone, email or IPPIS number' }}
         filters={[
          { key: 'status', label: 'Status', type: 'select', value: statusFilter, emptyValue: 'none', options: [{ value: 'PHONE_VERIFIED', label: 'Phone Verified' }, { value: 'PENDING_IPPIS', label: 'Pending IPPIS' }, { value: 'MANUAL_REVIEW', label: 'Manual Review' }, { value: 'VERIFIED', label: 'Verified' }], onChange: setStatusFilter },
-         { key: 'agent', label: 'Agent', type: 'text', value: agentIdFilter, placeholder: 'Agent UUID', onChange: (value) => { setAgentIdFilter(value); setAgentNameDisplay(''); } },
+         { key: 'agent', label: 'Agent', type: 'text', value: agentSearch, placeholder: 'Agent name, email or phone', onChange: setAgentSearch },
          { key: 'created', label: 'Date', type: 'dateRange', value: createdRange, onChange: setCreatedRange },
         ]}
        />
@@ -725,7 +748,8 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
                                 Wallet
                               </button>
                             )}
-                            {canReviewClient && (client.status === 'MANUAL_REVIEW' || client.status === 'PENDING' || client.status === 'SUBMITTED' || client.status === 'PENDING_REVIEW' || client.status === 'IN_REVIEW') && (
+                            {/* Approve and retry are decisions on a failed check, so only for clients in manual review. */}
+                            {canReviewClient && client.status === 'MANUAL_REVIEW' && (
                               <button 
                                 type="button"
                                 onClick={() => handleApprove(client.id)} 
@@ -735,7 +759,7 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
                                 Approve
                               </button>
                             )}
-                            {canReviewClient && (
+                            {canReviewClient && client.status === 'MANUAL_REVIEW' && (
                               <button 
                                 type="button"
                                 onClick={() => openRetryModal(client)} 

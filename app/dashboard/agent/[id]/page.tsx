@@ -458,7 +458,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
                 )}
 
                 {/* Resend Credentials */}
-                {canSendCreds && application?.mustChangePassword !== false && application?.mustChangePassword !== 'false' && !application?.hasLoggedIn && (
+                {canSendCreds && application?.status === 'APPROVED' && application?.mustChangePassword !== false && application?.mustChangePassword !== 'false' && !application?.hasLoggedIn && (
                   <button
                     onClick={() => { setActionsOpen(false); handleResendCredentials(); }}
                     className="w-full text-left px-3.5 py-2.5 text-xs sm:text-sm font-medium text-foreground hover:bg-muted flex items-center gap-2.5 transition-colors cursor-pointer"

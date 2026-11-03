@@ -10,6 +10,7 @@ export const useAuditLogs = () => {
  const fetchLogs = useCallback(async (params?: any) => {
   setLoading(true);
   setError(null);
+  setError(null);
   try {
    const res = await auditLogs_api.getLogs(params);
    // The axios layer resolves failures, so a rejected filter would otherwise read as "no results".

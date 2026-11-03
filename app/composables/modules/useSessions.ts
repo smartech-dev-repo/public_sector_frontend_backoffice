@@ -10,6 +10,7 @@ export const useSessions = () => {
 
  const fetchSessions = useCallback(async (params?: any) => {
   setLoading(true);
+  setError(null);
   try {
    const res = await auth_api.getSessions(params);
    let dataList = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.sessions || []);
@@ -30,7 +31,6 @@ export const useSessions = () => {
    const res = await auth_api.deleteSession(id);
    return res.data;
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);
@@ -43,7 +43,6 @@ export const useSessions = () => {
    const res = await sessions_api.revokeAgentSessions(agentId);
    return res.data;
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);
@@ -56,7 +55,6 @@ export const useSessions = () => {
    const res = await sessions_api.revokeClientSessions(clientId);
    return res.data;
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);

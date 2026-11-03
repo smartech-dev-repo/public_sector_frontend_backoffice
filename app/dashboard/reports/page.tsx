@@ -39,6 +39,9 @@ export default function SystemReportsPage() {
     }
   }, [availableTabs, activeTab]);
 
+  // Before the early return, so React sees the same hooks on every render.
+  const { shown: shownTotals, report: reportTabTotal } = useTabTotals(totals, activeTab);
+
   if (availableTabs.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-12 text-center bg-card rounded-2xl border border-border mt-6">
@@ -51,7 +54,6 @@ export default function SystemReportsPage() {
     );
   }
 
-  const { shown: shownTotals, report: reportTabTotal } = useTabTotals(totals, activeTab);
 
   return (
     <div className="space-y-4">

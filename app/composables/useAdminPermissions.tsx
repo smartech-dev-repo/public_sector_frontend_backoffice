@@ -29,7 +29,12 @@ export type AdminPermission =
   | 'loan-products:manage'
   | 'management-fees:manage'
   | 'loan-settings:manage'
-  | 'loan-requests:review'
+  | 'loan-requests:read'
+  | 'loan-requests:manage'
+  | 'loan-requests:confirm-code'
+  | 'loan-requests:reject'
+  | 'loan-requests:disburse'
+  | 'clients:all-records'
   | 'client-loans:read'
   | 'clients:read'
   | 'departments:manage'
@@ -67,7 +72,12 @@ export const ALL_PERMISSIONS: AdminPermission[] = [
   'loan-products:manage',
   'management-fees:manage',
   'loan-settings:manage',
-  'loan-requests:review',
+  'loan-requests:read',
+  'loan-requests:manage',
+  'loan-requests:confirm-code',
+  'loan-requests:reject',
+  'loan-requests:disburse',
+  'clients:all-records',
   'client-loans:read',
   'clients:read',
   'departments:manage',
@@ -98,7 +108,7 @@ export const ROUTE_PERMISSIONS: Record<string, AdminPermission[]> = {
   '/dashboard/agent-details': ['agents:read', 'agents:review'],
   '/dashboard/agent-management': ['agents:read', 'agents:review', 'agents:sessions:revoke', 'agents:onboarding-access:manage', 'agents:analytics:read'],
   '/dashboard/agent-security': ['agents:sessions:revoke', 'agents:read', 'agents:review'],
-  '/dashboard/loan-requests': ['loan-requests:review', 'client-loans:read', 'clients:read'],
+  '/dashboard/loan-requests': ['loan-requests:read', 'client-loans:read', 'clients:read'],
   '/dashboard/client-loans': ['client-loans:read', 'clients:read'],
   '/dashboard/clients': ['clients:read', 'clients:review', 'clients:onboard', 'clients:analytics:read', 'ippis:upload', 'wallets:read', 'wallets:manage'],
   '/dashboard/customer-details': ['clients:read', 'clients:review'],

@@ -17,6 +17,7 @@ const GROUPS: { name: string; labels: Record<string, string> }[] = [
  {
   name: 'Clients',
   labels: {
+   'clients:all-records': 'See all clients, not only ones they onboarded',
    'clients:read': 'View client history',
    'clients:review': 'Review flagged clients',
    'clients:onboard': 'Onboard clients',
@@ -27,7 +28,11 @@ const GROUPS: { name: string; labels: Record<string, string> }[] = [
  {
   name: 'Loans',
   labels: {
-   'loan-requests:review': 'Approve or disburse requests',
+   'loan-requests:read': 'View loan requests',
+   'loan-requests:manage': 'Send confirmed loans for approval',
+   'loan-requests:confirm-code': "Confirm loans with the client's code",
+   'loan-requests:reject': 'Reject loan requests',
+   'loan-requests:disburse': 'Send approved loans for disbursement',
    'client-loans:read': 'View client loans',
    'loan-products:manage': 'Manage loan products',
    'management-fees:manage': 'Manage management fees',
