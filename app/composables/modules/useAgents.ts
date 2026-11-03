@@ -51,6 +51,7 @@ export const useAgents = () => {
 
   const fetchAgents = useCallback(async (params?: any) => {
     setLoading(true);
+    setError(null);
     try {
       const res = await agents_api.getAgents(params);
       unwrapResponse(res, 'Failed to fetch agents');
@@ -74,7 +75,6 @@ export const useAgents = () => {
       unwrapResponse(res, 'Failed to fetch agent');
       return res.data;
     } catch (err: any) {
-      setError(err.message);
       throw err;
     } finally {
       setLoading(false);
@@ -88,7 +88,6 @@ export const useAgents = () => {
       unwrapResponse(res, 'Failed to approve agent');
       return res.data;
     } catch (err: any) {
-      setError(err.message);
       throw err;
     } finally {
       setLoading(false);
@@ -102,7 +101,6 @@ export const useAgents = () => {
       unwrapResponse(res, 'Failed to reject agent');
       return res.data;
     } catch (err: any) {
-      setError(err.message);
       throw err;
     } finally {
       setLoading(false);
@@ -116,7 +114,6 @@ export const useAgents = () => {
       unwrapResponse(res, 'Failed to resend credentials');
       return res.data;
     } catch (err: any) {
-      setError(err.message);
       throw err;
     } finally {
       setLoading(false);
@@ -131,7 +128,6 @@ export const useAgents = () => {
       unwrapResponse(res, 'Failed to update onboarding access');
       return res.data;
     } catch (err: any) {
-      setError(err.message);
       throw err;
     } finally {
       setLoading(false);
@@ -145,7 +141,6 @@ export const useAgents = () => {
       unwrapResponse(res, 'Failed to revoke sessions');
       return res.data;
     } catch (err: any) {
-      setError(err.message);
       throw err;
     } finally {
       setLoading(false);

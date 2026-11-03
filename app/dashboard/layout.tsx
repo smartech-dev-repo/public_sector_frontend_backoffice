@@ -180,7 +180,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
    icon: ClipboardCheck,
    match: (p: string) => p.startsWith('/dashboard/approvals'),
    // Anyone can be assigned a request, so a waiting item shows this whatever their role.
-   visible: hasAnyPermission(['approvals:loans', 'approvals:agents', 'approvals:wallets', 'loan-requests:review', 'agents:review', 'wallets:manage']) || notificationSummary.pendingApprovals + notificationSummary.myPendingRequests > 0,
+   visible: hasAnyPermission(['approvals:loans', 'approvals:agents', 'approvals:wallets', 'loan-requests:manage', 'agents:review', 'wallets:manage']) || notificationSummary.pendingApprovals + notificationSummary.myPendingRequests > 0,
   },
   {
    href: '/dashboard/loan-requests',
@@ -188,7 +188,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
    section: 'Lending',
    icon: Banknote,
    match: (p: string) => p.startsWith('/dashboard/loan-requests') || p.startsWith('/dashboard/client-loans') || p.startsWith('/dashboard/disbursement-summary'),
-   visible: hasAnyPermission(['loan-requests:review', 'client-loans:read', 'clients:read']),
+   visible: hasAnyPermission(['loan-requests:read', 'client-loans:read', 'clients:read']),
   },
   {
    href: '/dashboard/loan-terms',

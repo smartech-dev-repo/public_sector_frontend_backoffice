@@ -19,6 +19,7 @@ export const useRoles = () => {
 
  const fetchRoles = useCallback(async (params?: any) => {
   setLoading(true);
+  setError(null);
   try {
    const res = await roles_api.getRoles(params);
    unwrap(res);
@@ -37,6 +38,7 @@ export const useRoles = () => {
 
  const fetchAllRoles = useCallback(async () => {
   setLoading(true);
+  setError(null);
   try {
    const all: any[] = [];
    let page = 1;
@@ -74,7 +76,6 @@ export const useRoles = () => {
   try {
    return unwrap(await roles_api.createRole(payload));
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);
@@ -86,7 +87,6 @@ export const useRoles = () => {
   try {
    return unwrap(await roles_api.updateRole(id, payload));
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);
@@ -98,7 +98,6 @@ export const useRoles = () => {
   try {
    return unwrap(await roles_api.deleteRole(id));
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);
@@ -110,7 +109,6 @@ export const useRoles = () => {
   try {
    return unwrap(await roles_api.assignPermissionToRole(roleId, payload));
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);
@@ -122,7 +120,6 @@ export const useRoles = () => {
   try {
    return unwrap(await roles_api.removePermissionFromRole(roleId, permissionId));
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);
@@ -134,7 +131,6 @@ export const useRoles = () => {
   try {
    return unwrap(await roles_api.assignBulkPermissionsToRole(roleId, payload));
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);

@@ -9,6 +9,7 @@ export const useInvites = () => {
 
  const fetchInvites = useCallback(async (params?: any) => {
   setLoading(true);
+  setError(null);
   try {
    const res = await invites_api.getInvites(params);
    let dataList = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || res.data?.agents || res.data?.clients || res.data?.roles || res.data?.admins || res.data?.logs || res.data?.invites || res.data?.permissions || res.data?.batches || []);
@@ -29,7 +30,6 @@ export const useInvites = () => {
    const res = await invites_api.createInvite(payload);
    return res.data;
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);
@@ -42,7 +42,6 @@ export const useInvites = () => {
    const res = await invites_api.resendInvite(id);
    return res.data;
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);
@@ -55,7 +54,6 @@ export const useInvites = () => {
    const res = await invites_api.deleteInvite(id);
    return res.data;
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);
@@ -68,7 +66,6 @@ export const useInvites = () => {
    const res = await invites_api.revokeInvite(id);
    return res.data;
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);

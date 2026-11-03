@@ -88,6 +88,7 @@ export const useAgentRecruitment = () => {
   const fetchApplications = useCallback(async (params?: ListRecruitmentApplicationsParams) => {
     setLoading(true);
     setError(null);
+    setError(null);
     try {
       const res = await agent_recruitment_api.getApplications(params);
       unwrapResponse(res, 'Failed to fetch recruitment applications');

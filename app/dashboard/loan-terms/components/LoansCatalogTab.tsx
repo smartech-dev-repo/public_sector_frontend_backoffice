@@ -1,6 +1,8 @@
 "use client";
 
 import { useSectorOptions } from '@/app/composables/modules/useSectorOptions';
+import ExportButton, { ExportColumn } from '@/app/components/ui/ExportButton';
+import { loans_api } from '@/app/api_factory/modules/loans';
 import { useDataVersion } from '@/app/composables/useDataVersion';
 import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState } from 'react';
@@ -11,6 +13,21 @@ import Pagination from '@/app/components/ui/Pagination';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+
+
+// The list's last filters, reused by Export so it exports what the list shows.
+const exportParams: { current: Record<string, unknown> } = { current: {} };
+
+const EXPORT_COLUMNS: ExportColumn<any>[] = [
+ { header: 'Customer', value: (r) => r.customerName },
+ { header: 'IPPIS number', value: (r) => r.ippisNumber },
+ { header: 'Account number', value: (r) => r.accountNumber },
+ { header: 'Sector', value: (r) => r.agency },
+ { header: 'Product', value: (r) => r.product },
+ { header: 'Loan amount', value: (r) => Number(r.loanAmount) },
+ { header: 'Balance', value: (r) => Number(r.principalBalance) },
+ { header: 'Disbursed', value: (r) => r.disbursementDate },
+];
 
 export default function LoansCatalogTab() {
  const agencyOptions = useSectorOptions();
@@ -34,6 +51,7 @@ export default function LoansCatalogTab() {
   if (product !== 'all') params.product = product;
   Object.assign(params, dateRangeParams(dateRange, 'disbursedFrom', 'disbursedTo'));
   
+  exportParams.current = params;
   fetchLoans(params);
  }, [fetchLoans, page, limit, q, agency, product, dateRange, canAccessCatalog, dataVersion]);
 
@@ -58,7 +76,9 @@ export default function LoansCatalogTab() {
       { key: 'product', label: 'Product', type: 'text', value: product, emptyValue: 'all', placeholder: 'Exact product name', onChange: setProduct },
       { key: 'disbursed', label: 'Disbursed', type: 'dateRange', value: dateRange, onChange: setDateRange },
      ]}
-    />
+    >
+     <ExportButton fileName="Loan_Book" resource="Loan book" columns={EXPORT_COLUMNS} fetchPage={(page, limit) => loans_api.getLoans({ ...exportParams.current, page, limit })} />
+    </FilterBar>
    </div>
 
    {loading && loans.length === 0 && <PulseLoader />}

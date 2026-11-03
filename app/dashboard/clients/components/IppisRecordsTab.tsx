@@ -1,6 +1,8 @@
 "use client";
 
 import { useSectorOptions } from '@/app/composables/modules/useSectorOptions';
+import ExportButton, { ExportColumn } from '@/app/components/ui/ExportButton';
+import { ippis_api } from '@/app/api_factory/modules/ippis';
 import { useDataVersion } from '@/app/composables/useDataVersion';
 import FilterBar from '@/app/components/ui/FilterBar';
 import { useCallback, useEffect, useState } from 'react';
@@ -15,6 +17,27 @@ import IppisRecordDetailModal, { formatIppisAmount, formatIppisDate, isActiveEmp
 
 const HEADER_CLASS = 'px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider whitespace-nowrap';
 const HEADER_RIGHT_CLASS = HEADER_CLASS.replace('text-left', 'text-right');
+
+
+// The list's last filters, reused by Export so it exports what the list shows.
+const exportParams: { current: Record<string, unknown> } = { current: {} };
+
+const EXPORT_COLUMNS: ExportColumn<any>[] = [
+ { header: 'Name', value: (r) => r.employeeName },
+ { header: 'IPPIS number', value: (r) => r.staffId },
+ { header: 'Sector', value: (r) => r.agency },
+ { header: 'Phone', value: (r) => r.phone },
+ { header: 'Status', value: (r) => r.employeeStatus },
+ { header: 'Job title', value: (r) => r.jobTitle },
+ { header: 'Department', value: (r) => r.department },
+ { header: 'Grade', value: (r) => r.grade },
+ { header: 'Step', value: (r) => r.step },
+ { header: 'Hire date', value: (r) => r.hireDate },
+ { header: 'Salary', value: (r) => (r.salary == null ? '' : Number(r.salary)) },
+ { header: 'Payment last month', value: (r) => (r.paymentLastMonth == null ? '' : Number(r.paymentLastMonth)) },
+ { header: 'Payment 2 months ago', value: (r) => (r.paymentTwoMonthsAgo == null ? '' : Number(r.paymentTwoMonthsAgo)) },
+ { header: 'Payment 3 months ago', value: (r) => (r.paymentThreeMonthsAgo == null ? '' : Number(r.paymentThreeMonthsAgo)) },
+];
 
 export default function IppisRecordsTab() {
  const agencyOptions = useSectorOptions();
@@ -37,6 +60,7 @@ export default function IppisRecordsTab() {
   if (agency !== 'all') params.agency = agency;
   if (status !== 'all') params.employeeStatus = status;
   
+  exportParams.current = params;
   fetchIppisRecords(params);
  }, [fetchIppisRecords, page, limit, q, agency, status, canUploadIppis, dataVersion]);
 
@@ -63,7 +87,9 @@ export default function IppisRecordsTab() {
       { key: 'agency', label: 'Agency', type: 'select', value: agency, emptyValue: 'all', options: agencyOptions, onChange: setAgency },
       { key: 'status', label: 'Status', type: 'select', value: status, emptyValue: 'all', options: [{ value: 'ACTIVE', label: 'Active Employee' }, { value: 'INACTIVE', label: 'Ex Employee' }], onChange: setStatus },
      ]}
-    />
+    >
+     <ExportButton fileName="IPPIS_Records" resource="IPPIS records" columns={EXPORT_COLUMNS} fetchPage={(page, limit) => ippis_api.getIppisRecords({ ...exportParams.current, page, limit })} />
+    </FilterBar>
    </div>
 
    {loading && ippisRecords.length === 0 && <PulseLoader />}

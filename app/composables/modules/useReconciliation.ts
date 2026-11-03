@@ -10,6 +10,7 @@ export const useReconciliation = () => {
 
  const fetchReconciliation = useCallback(async (params?: any) => {
   setLoading(true);
+  setError(null);
   try {
    const res = await reconciliation_api.getReconciliation(params);
    let dataList = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || res.data?.agents || res.data?.clients || res.data?.roles || res.data?.admins || res.data?.logs || res.data?.invites || res.data?.permissions || res.data?.batches || []);

@@ -22,6 +22,7 @@ export const useClients = () => {
 
   const fetchClients = useCallback(async (params?: any) => {
   setLoading(true);
+  setError(null);
   try {
    const res = await clients_api.getClients(params);
    let dataList = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || res.data?.agents || res.data?.clients || res.data?.roles || res.data?.admins || res.data?.logs || res.data?.invites || res.data?.permissions || res.data?.batches || []);
@@ -67,7 +68,6 @@ export const useClients = () => {
    const res = await clients_api.getClientById(id);
    return unwrapResponse(res, 'Failed to fetch client');
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);
@@ -80,7 +80,6 @@ export const useClients = () => {
    const res = await clients_api.retryClient(id, payload);
    return res.data;
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);
@@ -93,7 +92,6 @@ export const useClients = () => {
    const res = await clients_api.revokeClientSessions(id);
    return res.data;
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);
@@ -106,7 +104,6 @@ export const useClients = () => {
    const res = await clients_api.approveClient(id);
    return res.data;
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);
@@ -119,7 +116,6 @@ export const useClients = () => {
    const res = await clients_api.getClientWallet(id, params);
    return res.data;
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);
@@ -132,7 +128,6 @@ export const useClients = () => {
    const res = await clients_api.creditClientWallet(id, payload);
    return unwrapResponse(res);
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);
@@ -145,7 +140,6 @@ export const useClients = () => {
    const res = await clients_api.debitClientWallet(id, payload);
    return unwrapResponse(res);
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);
@@ -158,7 +152,6 @@ export const useClients = () => {
    const res = await clients_api.getClientActivities(id);
    return res.data;
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);
@@ -171,7 +164,6 @@ export const useClients = () => {
    const res = await clients_api.getClientOnboardingStatus(id);
    return unwrapResponse(res, 'Failed to fetch onboarding status');
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);
@@ -184,7 +176,6 @@ export const useClients = () => {
       const res = await clients_api.clientIppisLookup(payload);
       return unwrapResponse(res, 'IPPIS lookup failed');
     } catch (err: any) {
-      setError(err.message);
       throw err;
     } finally {
       setLoading(false);
@@ -197,7 +188,6 @@ export const useClients = () => {
       const res = await clients_api.submitClientIdentity(clientId, payload);
       return unwrapResponse(res, 'Identity verification failed');
     } catch (err: any) {
-      setError(err.message);
       throw err;
     } finally {
       setLoading(false);
@@ -212,7 +202,6 @@ export const useClients = () => {
       const res = await clients_api.uploadClientDocument(clientId, type, formData);
       return unwrapResponse(res, `Failed to upload ${type}`);
     } catch (err: any) {
-      setError(err.message);
       throw err;
     } finally {
       setLoading(false);
@@ -225,7 +214,6 @@ export const useClients = () => {
       const res = await clients_api.submitClientFaceMatch(clientId, {});
       return unwrapResponse(res, 'Biometric cross-check failed');
     } catch (err: any) {
-      setError(err.message);
       throw err;
     } finally {
       setLoading(false);

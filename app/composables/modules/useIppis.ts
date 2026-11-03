@@ -10,6 +10,7 @@ export const useIppis = () => {
 
  const fetchIppisRecords = useCallback(async (params?: any) => {
   setLoading(true);
+  setError(null);
   try {
    const res = await ippis_api.getIppisRecords(params);
    let dataList = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || []);
@@ -26,6 +27,7 @@ export const useIppis = () => {
 
  const fetchBatches = useCallback(async (params?: any) => {
   setLoading(true);
+  setError(null);
   try {
    const res = await ippis_api.getDocumentBatches(params);
    let dataList = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.result || res.data?.agents || res.data?.clients || res.data?.roles || res.data?.admins || res.data?.logs || res.data?.invites || res.data?.permissions || res.data?.batches || []);
@@ -46,7 +48,6 @@ export const useIppis = () => {
    const res = await ippis_api.uploadBroadsheet(formData);
    return res.data;
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);
@@ -59,7 +60,6 @@ export const useIppis = () => {
    const res = await ippis_api.uploadDisbursedLoans(formData);
    return res.data;
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);
@@ -72,7 +72,6 @@ export const useIppis = () => {
    const res = await ippis_api.uploadRepaymentSchedule(formData);
    return res.data;
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);
@@ -85,7 +84,6 @@ export const useIppis = () => {
    const res = await ippis_api.downloadDocumentFile(key);
    return res.data; // Blob
   } catch (err: any) {
-   setError(err.message);
    throw err;
   } finally {
    setLoading(false);

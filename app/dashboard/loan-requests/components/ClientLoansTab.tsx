@@ -1,6 +1,8 @@
 "use client";
 
 import { useSectorOptions } from '@/app/composables/modules/useSectorOptions';
+import ExportButton, { ExportColumn } from '@/app/components/ui/ExportButton';
+import { loans_api } from '@/app/api_factory/modules/loans';
 import { useDataVersion } from '@/app/composables/useDataVersion';
 import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState, useRef, Suspense } from 'react';
@@ -17,6 +19,24 @@ import { useReportTabTotal } from '@/app/composables/useTabTotals';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 import TableDropdown from '@/app/components/ui/TableDropdown';
 import { FileText, User, CreditCard } from 'lucide-react';
+
+
+// The list's last filters, reused by Export so it exports what the list shows.
+const exportParams: { current: Record<string, unknown> } = { current: {} };
+
+const EXPORT_COLUMNS: ExportColumn<any>[] = [
+ { header: 'Client phone', value: (r) => r.client?.phone },
+ { header: 'IPPIS number', value: (r) => r.staffId },
+ { header: 'Sector', value: (r) => r.agency },
+ { header: 'Principal', value: (r) => Number(r.principalAmount) },
+ { header: 'Disbursed', value: (r) => Number(r.disbursedAmount) },
+ { header: 'Balance', value: (r) => Number(r.principalBalance) },
+ { header: 'Tenor (months)', value: (r) => r.tenorMonths },
+ { header: 'Interest rate %', value: (r) => Number(r.interestRatePercent) },
+ { header: 'Status', value: (r) => r.status },
+ { header: 'Disbursement date', value: (r) => r.disbursementDate },
+ { header: 'Maturity date', value: (r) => r.maturationDate },
+];
 
 export default function ClientLoansTab() {
  return (
@@ -72,10 +92,12 @@ function ClientLoansContent() {
  useEffect(() => {
   if (!canReadClientLoans) return;
   const params: any = { page, limit };
-  if (clientIdFilter.trim()) params.clientId = clientIdFilter.trim();
+  // Name, phone, email, IPPIS number, or a client ID from a link.
+  if (clientIdFilter.trim()) params.search = clientIdFilter.trim();
   if (statusFilter && statusFilter !== 'none') params.status = statusFilter;
   if (agencyFilter) params.agency = agencyFilter;
   Object.assign(params, dateRangeParams(disbursedRange, 'disbursedFrom', 'disbursedTo'));
+  exportParams.current = params;
   fetchClientLoans(params);
  }, [fetchClientLoans, page, limit, clientIdFilter, statusFilter, agencyFilter, disbursedRange, dataVersion]);
 
@@ -118,7 +140,7 @@ function ClientLoansContent() {
      <div className="relative">
       <input
        type="text"
-       placeholder="Client ID (optional)"
+       placeholder="Name, phone or IPPIS number"
        value={clientIdFilter}
        onChange={(e) => { setClientIdFilter(e.target.value); setPage(1); }}
        className="w-full pl-10 pr-4 py-2 border rounded-full text-sm bg-card border-border outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400"
@@ -135,13 +157,15 @@ function ClientLoansContent() {
    <div className="mb-6 space-y-4">
     <FilterBar
      onChange={() => setPage(1)}
-     search={{ value: clientIdFilter, onChange: setClientIdFilter, placeholder: 'Client ID' }}
+     search={{ value: clientIdFilter, onChange: setClientIdFilter, placeholder: 'Name, phone or IPPIS number' }}
      filters={[
       { key: 'status', label: 'Status', type: 'select', value: statusFilter, options: [{ value: 'ACTIVE', label: 'Active' }, { value: 'CLOSED', label: 'Closed' }, { value: 'DEFAULT', label: 'Default' }], onChange: setStatusFilter },
       { key: 'agency', label: 'Agency', type: 'select', value: agencyFilter, options: agencyOptions, onChange: setAgencyFilter },
       { key: 'disbursed', label: 'Disbursed', type: 'dateRange', value: disbursedRange, onChange: setDisbursedRange },
      ]}
-    />
+    >
+     <ExportButton fileName="Client_Loans" resource="Client loans" columns={EXPORT_COLUMNS} fetchPage={(page, limit) => loans_api.getClientLoans({ ...exportParams.current, page, limit })} />
+    </FilterBar>
    </div>
 
    {loading && clientLoans.length === 0 && <PulseLoader />}

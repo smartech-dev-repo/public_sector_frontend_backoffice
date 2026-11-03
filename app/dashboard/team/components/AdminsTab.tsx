@@ -1,6 +1,8 @@
 "use client";
 
 import { useDataVersion } from '@/app/composables/useDataVersion';
+import ExportButton, { ExportColumn } from '@/app/components/ui/ExportButton';
+import { admins_api } from '@/app/api_factory/modules/admins';
 import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState } from 'react'; 
 import Pagination from '@/app/components/ui/Pagination';
@@ -16,6 +18,19 @@ import { useConfirm } from '@/app/composables/useConfirm';
 import TableDropdown from '@/app/components/ui/TableDropdown';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+
+
+// The list's last filters, reused by Export so it exports what the list shows.
+const exportParams: { current: Record<string, unknown> } = { current: {} };
+
+const EXPORT_COLUMNS: ExportColumn<any>[] = [
+ { header: 'Name', value: (r) => r.fullName },
+ { header: 'Email', value: (r) => r.email },
+ { header: 'Role', value: (r) => r.role?.name },
+ { header: 'Department', value: (r) => r.department?.name },
+ { header: 'Active', value: (r) => (r.isActive ? 'Yes' : 'No') },
+ { header: 'Created', value: (r) => r.createdAt },
+];
 
 export default function AdminsTab() {
  const dataVersion = useDataVersion();
@@ -53,6 +68,7 @@ export default function AdminsTab() {
   if (search.trim()) params.q = search.trim();
   if (statusFilter && statusFilter !== 'none') params.isActive = statusFilter === 'active';
   Object.assign(params, dateRangeParams(dateRange, 'createdFrom', 'createdTo'));
+  exportParams.current = params;
   fetchAdmins(params);
   if (canAssignRole || canInvite) {
    fetchRoles();
@@ -138,7 +154,9 @@ export default function AdminsTab() {
       { key: 'status', label: 'Status', type: 'select', value: statusFilter, emptyValue: 'none', options: [{ value: 'active', label: 'Active' }, { value: 'suspended', label: 'Suspended' }], onChange: setStatusFilter },
       { key: 'created', label: 'Created', type: 'dateRange', value: dateRange, onChange: setDateRange },
      ]}
-    />
+    >
+     <ExportButton fileName="Admins" resource="Admins" columns={EXPORT_COLUMNS} fetchPage={(page, limit) => admins_api.getAdmins({ ...exportParams.current, page, limit })} />
+    </FilterBar>
    </div>
 
    {loading && admins.length === 0 && <PulseLoader />}

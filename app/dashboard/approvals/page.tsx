@@ -1,6 +1,7 @@
 "use client";
 
 import TabCount from '@/app/components/ui/TabCount';
+import ExportButton, { ExportColumn } from '@/app/components/ui/ExportButton';
 import { TabTotalScope, useTabTotals } from '@/app/composables/useTabTotals';
 import { useListTotals } from '@/app/composables/useListTotals';
 import { useDataVersion } from '@/app/composables/useDataVersion';
@@ -33,6 +34,21 @@ const waitingOn = (row: any): string | null => {
  return row.assignedTo ? 'Assigned to another admin' : 'Needs the approval permission';
 };
 
+
+// The list's last filters, reused by Export so it exports what the list shows.
+const exportParams: { current: Record<string, unknown> } = { current: {} };
+
+const EXPORT_COLUMNS: ExportColumn<any>[] = [
+ { header: 'Request', value: (r) => r.summary?.title },
+ { header: 'For', value: (r) => r.summary?.subject },
+ { header: 'Status', value: (r) => r.status },
+ { header: 'Requested by', value: (r) => r.requestedBy?.fullName },
+ { header: 'Assigned to', value: (r) => r.assignedTo?.fullName ?? 'Any approver' },
+ { header: 'Created', value: (r) => r.createdAt },
+ { header: 'Decided', value: (r) => r.decidedAt },
+ { header: 'Reason', value: (r) => r.decisionReason },
+];
+
 export default function ApprovalsPage() {
  const dataVersion = useDataVersion();
  const { confirm } = useConfirm();
@@ -59,6 +75,7 @@ export default function ApprovalsPage() {
   const params: any = { page, limit };
   if (view !== 'all') params.view = view;
   if (status && status !== 'none') params.status = status;
+  exportParams.current = params;
   const res: any = await approvals_api.list(params);
   if (res?.type === 'ERROR') {
    setState('error');
@@ -119,7 +136,9 @@ export default function ApprovalsPage() {
     <FilterBar
      onChange={() => setPage(1)}
      filters={[{ key: 'status', label: 'Status', type: 'select', value: status, emptyValue: 'none', options: Object.entries(APPROVAL_STATUS_LABELS).map(([value, label]) => ({ value, label })), onChange: setStatus }]}
-    />
+    >
+     <ExportButton fileName="Approvals" resource="Approvals" columns={EXPORT_COLUMNS} fetchPage={(page, limit) => approvals_api.list({ ...exportParams.current, page, limit })} />
+    </FilterBar>
    )}
    {state === 'loading' && <PulseLoader />}
    {state === 'error' && <p className="text-red-600 py-12 text-center">Could not load approvals.</p>}
