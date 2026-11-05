@@ -17,7 +17,8 @@ const GROUPS: { name: string; labels: Record<string, string> }[] = [
  {
   name: 'Clients',
   labels: {
-   'clients:all-records': 'See all clients, not only ones they onboarded',
+   'clients:all-records': 'See all clients, not only ones assigned to them',
+   'clients:assign': 'Assign clients to agents and admins',
    'clients:read': 'View client history',
    'clients:review': 'Review flagged clients',
    'clients:onboard': 'Onboard clients',
@@ -50,6 +51,13 @@ const GROUPS: { name: string; labels: Record<string, string> }[] = [
    'agents:recruitment:read': 'View recruitment applications',
    'agents:recruitment:analytics:read': 'View recruitment analytics',
    'agents:recruitment:manage': 'Delete abandoned applications',
+  },
+ },
+ {
+  name: 'Devices',
+  labels: {
+   'devices:read': 'View linked devices and release requests',
+   'devices:manage': 'Release devices and decide requests',
   },
  },
  {

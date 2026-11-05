@@ -32,6 +32,7 @@ import {
   LayoutDashboard,
  SlidersHorizontal,
  MonitorSmartphone,
+ Smartphone,
  ClipboardCheck
 } from 'lucide-react';
 
@@ -121,6 +122,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
   if (pathname.includes('/dashboard/loan-terms')) return 'Loan Products';
   if (pathname.includes('/dashboard/configuration') || pathname.includes('/dashboard/management-fees')) return 'Configuration';
   if (pathname.includes('/dashboard/sessions')) return 'User Sessions';
+  if (pathname.includes('/dashboard/devices')) return 'Devices';
   if (pathname.includes('/dashboard/approvals')) return 'Approvals';
   if (pathname.includes('/dashboard/notifications')) return 'Notifications';
   if (pathname.includes('/dashboard/invites')) return 'Agent Recruitment';
@@ -161,6 +163,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
   '/dashboard/broadsheet': { count: alerts.broadsheet, label: 'uploads waiting for you to confirm or cancel' },
   '/dashboard/clients': { count: alerts.clients, label: 'clients waiting for manual review' },
   '/dashboard/invites': { count: alerts.agentRecruitment, label: 'agent applications waiting for review' },
+  '/dashboard/devices': { count: alerts.deviceReleases, label: 'device release requests waiting for a decision' },
  };
 
  // Opening a page is often the result of acting elsewhere, so recount on every move.
@@ -253,6 +256,14 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
    icon: MonitorSmartphone,
    match: (p: string) => p.startsWith('/dashboard/sessions'),
    visible: hasAnyPermission(['sessions:manage']),
+  },
+  {
+   href: '/dashboard/devices',
+   label: 'Devices',
+   section: 'Administration',
+   icon: Smartphone,
+   match: (p: string) => p.startsWith('/dashboard/devices'),
+   visible: hasAnyPermission(['devices:read', 'devices:manage']),
   },
   {
    href: '/dashboard/configuration',

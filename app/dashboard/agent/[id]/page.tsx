@@ -1,5 +1,7 @@
 "use client";
 
+import AccountDevicePanel from '@/app/components/people/AccountDevicePanel';
+import MoveClientsDialog from '@/app/components/people/MoveClientsDialog';
 import { useDataVersion } from '@/app/composables/useDataVersion';
 import { auditLogs_api } from '@/app/api_factory/modules/auditLogs';
 import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
@@ -34,6 +36,10 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
   const canReadClients = isSuperAdmin || hasPermission('clients:read');
   const canReadDocs = isSuperAdmin || hasPermission('documents:read');
   const canSendCreds = isSuperAdmin || hasPermission('agents:review');
+  const canAssignClients = isSuperAdmin || hasPermission('clients:assign');
+  const canReadDevices = isSuperAdmin || hasPermission('devices:read');
+  const canManageDevices = isSuperAdmin || hasPermission('devices:manage');
+  const [movingClients, setMovingClients] = useState(false);
 
   const { getAgentById, approveAgent, rejectAgent, resendCredentials, updateOnboardingAccess } = useAgents();
   const { revokeAgentSessions } = useSessions();
@@ -511,6 +517,20 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
                   </>
                 )}
 
+                {/* Move this agent's clients to another agent */}
+                {canAssignClients && application.status === 'APPROVED' && (
+                  <>
+                    <div className="h-px bg-border/50 my-1"></div>
+                    <button
+                      onClick={() => { setActionsOpen(false); setMovingClients(true); }}
+                      className="w-full text-left px-3.5 py-2.5 text-xs sm:text-sm font-medium text-foreground hover:bg-muted/50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                    >
+                      <Users className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <span>Move Clients to Another Agent</span>
+                    </button>
+                  </>
+                )}
+
                 {/* Revoke Sessions */}
                 {canRevokeSessions && (
                   <>
@@ -700,6 +720,10 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
           </div>
         </div>
       </div>
+
+      {canReadDevices && application.status === 'APPROVED' && (
+        <AccountDevicePanel principalType="AGENT" principalId={application.id} canManage={canManageDevices} />
+      )}
 
       {/* ================= SUMMARY STATS CARDS ================= */}
       <div className={`grid grid-cols-1 ${
@@ -1083,6 +1107,10 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
             </div>
           )}
         </div>
+      )}
+
+      {movingClients && (
+        <MoveClientsDialog agentId={application.id} agentName={application.fullName} onClose={() => setMovingClients(false)} />
       )}
 
       {/* ================= AGENT UPLOADED DOCUMENTS MODAL ================= */}
