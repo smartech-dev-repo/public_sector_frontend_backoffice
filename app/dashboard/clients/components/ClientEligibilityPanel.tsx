@@ -20,7 +20,10 @@ interface Props {
 export default function ClientEligibilityPanel({ clientId, canManage }: Props) {
  const dataVersion = useDataVersion();
  const { addToast } = useToast();
+ // Starts at 12 only until the first answer says which tenors this client's products offer;
+ // then it moves to the longest one, unless the admin has already typed a tenor.
  const [tenor, setTenor] = useState('12');
+ const [tenorEdited, setTenorEdited] = useState(false);
  const [type, setType] = useState<'AUTO' | 'LOAN' | 'TOPUP'>('AUTO');
  const [result, setResult] = useState<any>(null);
  const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -73,6 +76,10 @@ export default function ClientEligibilityPanel({ clientId, canManage }: Props) {
  };
 
  const range = result?.tenorRange;
+
+ useEffect(() => {
+  if (!tenorEdited && range?.max && String(range.max) !== tenor) setTenor(String(range.max));
+ }, [range?.max, tenorEdited, tenor]);
  const isTopup = result?.type === 'TOPUP';
 
  return (
@@ -87,7 +94,7 @@ export default function ClientEligibilityPanel({ clientId, canManage }: Props) {
       max={range?.max ?? 360}
       inputMode="numeric"
       value={tenor}
-      onChange={(e) => setTenor(e.target.value)}
+      onChange={(e) => { setTenorEdited(true); setTenor(e.target.value); }}
       className="w-full h-11 px-3 bg-card border border-border rounded-lg text-sm outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400"
      />
      {range?.min != null && <span className="block mt-1 text-xs text-muted-foreground">Products for this sector offer {range.min}–{range.max} months.</span>}

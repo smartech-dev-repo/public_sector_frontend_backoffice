@@ -63,9 +63,11 @@ export default function AffordabilityWorkings({ affordability: a }: { affordabil
 
    {cap ? (
     <Step n={++n} title="Usable pay" value={naira(cap.usablePay)}>
-     {cap.method === 'BASE_PAY'
-      ? `Base pay ${naira(cap.basePayAmount)}: ${naira(salaryIn)} − ${naira(cap.basePayAmount)}`
-      : `DTI ${Number(cap.dtiPercent)}%: ${naira(salaryIn)} × ${Number(cap.dtiPercent)}%`}
+     {cap.method === 'BASE_PAY_DTI'
+      ? `Base pay + DTI: lower of ${naira(salaryIn)} × ${Number(cap.dtiPercent)}% and ${naira(salaryIn)} − ${naira(cap.basePayAmount)}; ${cap.limitedBy === 'BASE_PAY' ? 'cut back so the client keeps base pay' : 'the DTI share, base pay still kept'}`
+      : cap.method === 'BASE_PAY'
+       ? `Base pay ${naira(cap.basePayAmount)}: ${naira(salaryIn)} − ${naira(cap.basePayAmount)}`
+       : `DTI ${Number(cap.dtiPercent)}%: ${naira(salaryIn)} × ${Number(cap.dtiPercent)}%`}
      {' '}· from the {SOURCE[cap.source] ?? cap.source}
     </Step>
    ) : (

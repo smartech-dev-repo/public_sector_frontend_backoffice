@@ -26,25 +26,33 @@ export function capacityFormFrom(record: any): CapacityForm {
  };
 }
 
+const usesBasePay = (method: CapacityForm['method']) => method === 'BASE_PAY' || method === 'BASE_PAY_DTI';
+const usesDti = (method: CapacityForm['method']) => method === 'DTI' || method === 'BASE_PAY_DTI';
+
 export const sameCapacity = (a: CapacityForm, b: CapacityForm) =>
  a.method === b.method &&
- (a.method !== 'BASE_PAY' || Number(a.basePayAmount) === Number(b.basePayAmount)) &&
- (a.method !== 'DTI' || Number(a.dtiPercent) === Number(b.dtiPercent));
+ (!usesBasePay(a.method) || Number(a.basePayAmount) === Number(b.basePayAmount)) &&
+ (!usesDti(a.method) || Number(a.dtiPercent) === Number(b.dtiPercent));
 
 /** Null when the form is incomplete; the message says what is missing. */
 export function capacityPayload(form: CapacityForm): { payload: RepaymentCapacityPayload | null; error?: string } {
  if (form.method === 'NONE') return { payload: { affordabilityMethod: null } };
- if (form.method === 'BASE_PAY') {
+ const payload: RepaymentCapacityPayload = { affordabilityMethod: form.method };
+ if (usesBasePay(form.method)) {
   if (form.basePayAmount.trim() === '' || Number(form.basePayAmount) < 0) return { payload: null, error: 'Enter the base pay amount' };
-  return { payload: { affordabilityMethod: 'BASE_PAY', basePayAmount: Number(form.basePayAmount) } };
+  payload.basePayAmount = Number(form.basePayAmount);
  }
- const dti = Number(form.dtiPercent);
- if (form.dtiPercent.trim() === '' || dti <= 0 || dti > 100) return { payload: null, error: 'Enter a DTI between 0.01% and 100%' };
- return { payload: { affordabilityMethod: 'DTI', dtiPercent: dti } };
+ if (usesDti(form.method)) {
+  const dti = Number(form.dtiPercent);
+  if (form.dtiPercent.trim() === '' || dti <= 0 || dti > 100) return { payload: null, error: 'Enter a DTI between 0.01% and 100%' };
+  payload.dtiPercent = dti;
+ }
+ return { payload };
 }
 
-/** One line, e.g. "Base pay ₦50,000" or "DTI 33.33%". Null when not set. */
+/** One line, e.g. "Base pay ₦50,000", "DTI 33.33%" or "DTI 40%, keeping ₦50,000". Null when not set. */
 export function describeCapacity(record: any): string | null {
+ if (record?.affordabilityMethod === 'BASE_PAY_DTI') return `DTI ${Number(record.dtiPercent)}%, keeping ${naira(record.basePayAmount)}`;
  if (record?.affordabilityMethod === 'BASE_PAY') return `Base pay ${naira(record.basePayAmount)}`;
  if (record?.affordabilityMethod === 'DTI') return `DTI ${Number(record.dtiPercent)}%`;
  return null;
@@ -64,6 +72,7 @@ interface Props {
 const OPTIONS: { id: CapacityForm['method']; label: string; description: string; formula: string }[] = [
  { id: 'BASE_PAY', label: 'Base pay', description: 'The client keeps a fixed amount each month; the rest can go to repayment.', formula: 'Usable pay = Salary − Base pay' },
  { id: 'DTI', label: 'DTI', description: 'A share of the salary can go to repayment.', formula: 'Usable pay = Salary × DTI %' },
+ { id: 'BASE_PAY_DTI', label: 'Base pay + DTI', description: 'The DTI share, cut back when needed so the client still keeps base pay.', formula: 'Usable pay = lower of (Salary × DTI %) and (Salary − Base pay)' },
 ];
 
 /**
@@ -108,22 +117,30 @@ export default function RepaymentCapacityFields({ value, saved, onChange, notSet
     })}
    </div>
 
-   {value.method === 'BASE_PAY' && (
-    <div className="max-w-sm">
+   {value.method === 'BASE_PAY_DTI' && (
+    <p className="px-3 py-2.5 rounded-lg bg-muted/50 text-sm text-foreground/90 max-w-2xl">
+     The DTI share goes to repayment, but never so much that the client keeps less than base pay. With DTI 40% and base pay ₦50,000: a
+     ₦150,000 salary gives ₦60,000 (DTI); an ₦80,000 salary gives ₦30,000, so the client keeps ₦50,000.
+    </p>
+   )}
+   <div className="flex flex-wrap gap-4">
+   {usesBasePay(value.method) && (
+    <div className="w-full max-w-sm">
      <label htmlFor={`${idPrefix}-base-pay`} className="block text-sm font-semibold text-foreground mb-1.5">
       Base pay (₦ a month) {valueChanged('basePayAmount') && <span className="ml-1 text-[11px] font-bold text-amber-800 dark:text-amber-400">Changed</span>}
      </label>
      <input id={`${idPrefix}-base-pay`} type="number" min="0" step="0.01" inputMode="decimal" disabled={readOnly} value={value.basePayAmount} onChange={(e) => onChange({ ...value, basePayAmount: e.target.value })} className={INPUT} placeholder="50000" />
     </div>
    )}
-   {value.method === 'DTI' && (
-    <div className="max-w-sm">
+   {usesDti(value.method) && (
+    <div className="w-full max-w-sm">
      <label htmlFor={`${idPrefix}-dti`} className="block text-sm font-semibold text-foreground mb-1.5">
       DTI (% of salary) {valueChanged('dtiPercent') && <span className="ml-1 text-[11px] font-bold text-amber-800 dark:text-amber-400">Changed</span>}
      </label>
      <input id={`${idPrefix}-dti`} type="number" min="0.01" max="100" step="0.01" inputMode="decimal" disabled={readOnly} value={value.dtiPercent} onChange={(e) => onChange({ ...value, dtiPercent: e.target.value })} className={INPUT} placeholder="33.33" />
     </div>
    )}
+   </div>
   </div>
  );
 }
