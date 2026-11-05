@@ -123,11 +123,12 @@
   z-index: 100 !important;
 }
 
-/* Aggressively ensure dropdowns, selects and popovers opened inside/outside modals stack on top */
+/* Dropdowns, selects and popovers sit on the popup layer (160, tailwind.config.js), above every
+   dialog layer up to z-confirm (150), so a list opened inside the top-most dialog is never hidden. */
 [data-radix-popper-content-wrapper],
 [data-radix-select-content],
 [data-radix-dropdown-menu-content],
 [data-radix-popover-content] {
-  z-index: 110 !important;
+  z-index: 160 !important;
 }
 

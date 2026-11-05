@@ -1,6 +1,7 @@
 import { GATEWAY_ENDPOINT_WITH_AUTH } from '../axios.config';
 
-export type CapacityMethod = 'BASE_PAY' | 'DTI';
+/** BASE_PAY_DTI: the DTI share, but never leaving the client less than base pay. */
+export type CapacityMethod = 'BASE_PAY' | 'DTI' | 'BASE_PAY_DTI';
 
 /** Send affordabilityMethod: null to clear, so the level below applies. */
 export interface RepaymentCapacityPayload {
