@@ -42,6 +42,8 @@ import {
 } from 'lucide-react';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 import ClientEligibilityPanel from '../components/ClientEligibilityPanel';
+import ClientAssignmentPanel from '@/app/components/people/ClientAssignmentPanel';
+import AccountDevicePanel from '@/app/components/people/AccountDevicePanel';
 
 export default function ClientWalletPage() {
  const dataVersion = useDataVersion();
@@ -726,6 +728,11 @@ export default function ClientWalletPage() {
           </div>
          </div>
         </div>
+
+        <ClientAssignmentPanel clientId={clientId} canAssign={isSuperAdmin || hasPermission('clients:assign')} />
+        {(isSuperAdmin || hasPermission('devices:read')) && (
+         <AccountDevicePanel principalType="CLIENT" principalId={clientId} canManage={isSuperAdmin || hasPermission('devices:manage')} />
+        )}
 
         {/* Onboarding Metadata */}
         <div className="bg-card p-6 rounded-2xl border border-border shadow-xs">

@@ -35,6 +35,9 @@ export type AdminPermission =
   | 'loan-requests:reject'
   | 'loan-requests:disburse'
   | 'clients:all-records'
+  | 'clients:assign'
+  | 'devices:read'
+  | 'devices:manage'
   | 'client-loans:read'
   | 'clients:read'
   | 'departments:manage'
@@ -78,6 +81,9 @@ export const ALL_PERMISSIONS: AdminPermission[] = [
   'loan-requests:reject',
   'loan-requests:disburse',
   'clients:all-records',
+  'clients:assign',
+  'devices:read',
+  'devices:manage',
   'client-loans:read',
   'clients:read',
   'departments:manage',

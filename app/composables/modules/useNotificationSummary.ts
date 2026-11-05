@@ -13,6 +13,7 @@ export interface ActionAlerts {
  broadsheet: number;
  clients: number;
  agentRecruitment: number;
+ deviceReleases: number;
 }
 
 export interface NotificationSummary {
@@ -23,7 +24,7 @@ export interface NotificationSummary {
  alerts: ActionAlerts;
 }
 
-const NO_ALERTS: ActionAlerts = { loanRequests: 0, loanProducts: 0, broadsheet: 0, clients: 0, agentRecruitment: 0 };
+const NO_ALERTS: ActionAlerts = { loanRequests: 0, loanProducts: 0, broadsheet: 0, clients: 0, agentRecruitment: 0, deviceReleases: 0 };
 
 /** Call after reading a notification or deciding a request, so every count updates at once. */
 export const announceNotificationsChanged = () => window.dispatchEvent(new Event(CHANGED_EVENT));
