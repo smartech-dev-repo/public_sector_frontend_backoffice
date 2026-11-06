@@ -28,7 +28,7 @@ import {
  visibleDetails,
 } from './auditFormat';
 
-const TH = 'px-4 py-3.5 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider';
+const TH = 'px-4 py-3 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider';
 
 const dateTime = (value: string) =>
  new Date(value).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -155,18 +155,17 @@ export default function AuditLogsTab() {
       <table className="min-w-full divide-y divide-border">
        <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
         <tr>
+         <th scope="col" className={`pin-start ${TH}`}>Who</th>
          <th scope="col" className={TH}>When</th>
-         <th scope="col" className={TH}>Who</th>
          <th scope="col" className={TH}>What happened</th>
-         <th scope="col" className={TH}>Status</th>
          <th scope="col" className={TH}>Record</th>
          <th scope="col" className={TH}>From</th>
-         <th scope="col" aria-label="Details" className={TH}></th>
+         <th scope="col" aria-label="Details" className={`pin-end ${TH}`}></th>
         </tr>
        </thead>
        <tbody className="divide-y divide-border">
         {logs.length === 0 && (
-         <tr><td colSpan={7} className="p-8"><div className="flex justify-center w-full"><EmptyState title="No audit logs found." /></div></td></tr>
+         <tr><td colSpan={6} className="p-8"><div className="flex justify-center w-full"><EmptyState title="No audit logs found." /></div></td></tr>
         )}
         {logs.map((log: any) => {
          const request = parseRequest(log.action);
@@ -181,8 +180,7 @@ export default function AuditLogsTab() {
          return (
           <Fragment key={log.id}>
            <tr className="hover:bg-muted/30 transition-colors">
-            <td className="px-4 py-3 whitespace-nowrap text-xs text-foreground">{dateTime(log.createdAt)}</td>
-            <td className="px-4 py-3 whitespace-nowrap">
+            <td className="pin-start px-4 py-3 whitespace-nowrap">
              <span className="flex items-center gap-2.5">
               <Avatar name={actorName} size="sm" />
               <span className="min-w-0">
@@ -191,13 +189,14 @@ export default function AuditLogsTab() {
               </span>
              </span>
             </td>
-            <td className="px-4 py-3 text-sm">
-             <span className="block font-medium text-foreground">{describeAction(log.action)}</span>
-             <span className="block text-xs text-muted-foreground">{request ? 'Automatic record' : 'Named event'}</span>
-            </td>
-            <td className="px-4 py-3 text-sm max-w-[220px]">
-             <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${OUTCOME_STYLES[log.outcome]}`}>{OUTCOME_LABELS[log.outcome]}</span>
-             {log.reason && <span className="block text-xs text-muted-foreground mt-1">{log.reason}</span>}
+            <td className="px-4 py-3 whitespace-nowrap text-xs text-foreground">{dateTime(log.createdAt)}</td>
+            <td className="px-4 py-3 text-sm max-w-[260px]">
+             <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="font-medium text-foreground">{describeAction(log.action)}</span>
+              <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium ${OUTCOME_STYLES[log.outcome]}`}>{OUTCOME_LABELS[log.outcome]}</span>
+             </span>
+             <span className="block text-xs text-muted-foreground mt-0.5">{request ? 'Automatic record' : 'Named event'}</span>
+             {log.reason && <span className="block text-xs text-muted-foreground mt-0.5">{log.reason}</span>}
             </td>
             <td className="px-4 py-3 text-sm">
              {log.targetType ? (
@@ -217,7 +216,7 @@ export default function AuditLogsTab() {
               </>
              ) : <span className="text-muted-foreground" title="This was not recorded for older named events">Not recorded</span>}
             </td>
-            <td className="px-2 py-3 text-right">
+            <td className="pin-end px-2 py-3 text-right">
              <button
               type="button"
               onClick={() => setExpandedId(expanded ? '' : log.id)}
@@ -231,7 +230,7 @@ export default function AuditLogsTab() {
            </tr>
            {expanded && (
             <tr>
-             <td colSpan={7} className="px-4 py-4 bg-muted/30">
+             <td colSpan={6} className="px-4 py-3 bg-muted/30">
               <dl className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
                <DetailRow label="Done by" value={person || actorName || 'Unknown'} />
                <DetailRow label="Status" value={OUTCOME_LABELS[log.outcome]} />

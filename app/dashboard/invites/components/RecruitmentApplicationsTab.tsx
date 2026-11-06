@@ -7,7 +7,7 @@ import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import { Users, Clock, CheckCircle2, Eye, Trash2, ExternalLink, Filter, X, FileText, ShieldCheck, FileCheck2, TrendingUp, RefreshCw, UserCheck, KeyRound, Download } from 'lucide-react';
+import { Users, Clock, CheckCircle2, Eye, Trash2, ExternalLink, Filter, X, FileText, ShieldCheck, FileCheck2, TrendingUp, RefreshCw, KeyRound, Download } from 'lucide-react';
 import { useAgentRecruitment, AgentRecruitmentApplication } from '@/app/composables/modules/useAgentRecruitment';
 import { useAgents } from '@/app/composables/modules/useAgents';
 import { useConfirm } from '@/app/composables/useConfirm';
@@ -476,28 +476,22 @@ export default function RecruitmentApplicationsTab() {
             <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800/40">
               <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
                 <tr>
-                  <th className="px-5 py-4 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
+                  <th className="pin-start px-4 py-3 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
                     APPLICANT
                   </th>
-                  <th className="px-5 py-4 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
                     NIN VERIFICATION
                   </th>
-                  <th className="px-5 py-4 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
                     LOCATION
                   </th>
-                  <th className="px-5 py-4 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
-                    ONBOARDING STATUS
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
+                    STATUS
                   </th>
-                  <th className="px-5 py-4 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
-                    APPLICATION STATUS
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
+                    APPLIED
                   </th>
-                  <th className="px-5 py-4 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
-                    ENROLLMENT LINK
-                  </th>
-                  <th className="px-5 py-4 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
-                    DATE APPLIED
-                  </th>
-                  <th className="px-5 py-4 text-right text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
+                  <th className="pin-end px-4 py-3 text-right text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
                     ACTIONS
                   </th>
                 </tr>
@@ -511,11 +505,18 @@ export default function RecruitmentApplicationsTab() {
 
                   return (
                     <tr key={app.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-5 py-4">
-                        <div className="font-semibold text-foreground">
-                          {app.fullName || 'Draft Applicant'}
-                        </div>
-                        <div className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
+                      <td className="pin-start px-4 py-3">
+                        {/* Once the application became an agent, the name opens that agent's profile. */}
+                        {app.submittedAgent ? (
+                          <Link href={`/dashboard/agent/${app.submittedAgent.id}`} className="block max-w-[16rem] truncate font-semibold text-foreground hover:text-emerald-700 hover:underline" title="Open agent profile">
+                            {app.fullName || 'Draft Applicant'}
+                          </Link>
+                        ) : (
+                          <div className="max-w-[16rem] truncate font-semibold text-foreground">
+                            {app.fullName || 'Draft Applicant'}
+                          </div>
+                        )}
+                        <div className="max-w-[16rem] truncate text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
                           <span>{app.email}</span>
                           {app.phone && (
                             <>
@@ -526,7 +527,7 @@ export default function RecruitmentApplicationsTab() {
                         </div>
                       </td>
 
-                      <td className="px-5 py-4 whitespace-nowrap">
+                      <td className="px-4 py-3 whitespace-nowrap">
                         {app.nin ? (
                           <div className="flex items-center gap-1.5">
                             <SensitiveValue value={app.nin} allowCopy />
@@ -544,44 +545,26 @@ export default function RecruitmentApplicationsTab() {
                         )}
                       </td>
 
-                      <td className="px-5 py-4 text-xs text-foreground max-w-[180px] truncate" title={locationStr}>
+                      <td className="px-4 py-3 text-xs text-foreground max-w-[180px] truncate" title={locationStr}>
                         {locationStr}
                       </td>
 
-                      {/* Onboarding Status */}
-                      <td className="px-5 py-4 whitespace-nowrap">
-                        {renderOnboardingStatusBadge(app.status)}
-                      </td>
-
-                      {/* Application Status */}
-                      <td className="px-5 py-4 whitespace-nowrap">
-                        {renderApplicationStatusBadge(app)}
+                      {/* Onboarding progress, then the application decision. */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="flex flex-col items-start gap-1">
+                          {renderOnboardingStatusBadge(app.status)}
+                          {renderApplicationStatusBadge(app)}
+                        </div>
                         {app.pendingApproval && (
                           <Link href={`/dashboard/approvals/${app.pendingApproval.id}`} className="block mt-1 text-xs font-semibold text-amber-800 dark:text-amber-400 hover:underline">Waiting for approval</Link>
                         )}
                       </td>
 
-                      {/* Enrollment Link */}
-                      <td className="px-5 py-4 whitespace-nowrap">
-                        {app.submittedAgent ? (
-                          <Link
-                            href={`/dashboard/agent/${app.submittedAgent.id}`}
-                            className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 hover:underline"
-                          >
-                            <UserCheck className="w-3.5 h-3.5" />
-                            <span>Agent Profile</span>
-                            <ExternalLink className="w-3 h-3 opacity-60" />
-                          </Link>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">Draft Application</span>
-                        )}
-                      </td>
-
-                      <td className="px-5 py-4 whitespace-nowrap text-xs text-foreground font-mono">
+                      <td className="px-4 py-3 whitespace-nowrap text-xs text-foreground font-mono">
                         {dateStr}
                       </td>
 
-                      <td className="px-5 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <td className="pin-end px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end">
                           <TableDropdown>
                             <button
@@ -660,7 +643,7 @@ export default function RecruitmentApplicationsTab() {
 
                 {applications.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="p-0 border-b-0">
+                    <td colSpan={6} className="p-0 border-b-0">
                       <div className="p-8">
                         <EmptyState 
                           title="No recruitment applications found" 

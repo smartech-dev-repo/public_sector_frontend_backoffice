@@ -90,20 +90,20 @@ export default function AgentSecurityPage() {
        <table className="w-full text-sm text-left">
         <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
           <tr>
-          <th scope="col" className="px-4 py-4 tracking-wider">Agent Details</th>
-          <th scope="col" className="px-4 py-4 tracking-wider">Status</th>
-          {canRevokeSessions && <th scope="col" className="px-4 py-4 tracking-wider text-right">Action</th>}
+          <th scope="col" className="px-4 py-3 tracking-wider">Agent Details</th>
+          <th scope="col" className="px-4 py-3 tracking-wider">Status</th>
+          {canRevokeSessions && <th scope="col" className="px-4 py-3 tracking-wider text-right">Action</th>}
          </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
          {approvedAgents.length === 0 && (
           <tr>
-           <td colSpan={canRevokeSessions ? 3 : 2} className="px-6 py-8 text-center text-muted-foreground">No active agents found.</td>
+           <td colSpan={canRevokeSessions ? 3 : 2} className="px-4 py-8 text-center text-muted-foreground">No active agents found.</td>
           </tr>
          )}
          {approvedAgents.map((agent: any) => (
           <tr key={agent.id} className="hover:bg-muted/30/50 transition-colors">
-           <td className="px-4 py-4">
+           <td className="px-4 py-3">
             <div className="flex items-center gap-3">
              <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-medium">
               {agent.firstName?.charAt(0) || 'A'}
@@ -114,13 +114,13 @@ export default function AgentSecurityPage() {
              </div>
             </div>
            </td>
-           <td className="px-4 py-4">
+           <td className="px-4 py-3">
             <span className="px-2.5 py-1 rounded-md text-xs whitespace-nowrap bg-emerald-100 text-emerald-700">
              {agent.status}
             </span>
            </td>
            {canRevokeSessions && (
-            <td className="px-4 py-4 text-right relative">
+            <td className="px-4 py-3 text-right relative">
              <TableDropdown>
               <button onClick={() => handleRevoke(agent)} disabled={revokingId === agent.id} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-50">
                {revokingId === agent.id ? 'Revoking...' : 'Revoke All Sessions'}

@@ -423,31 +423,31 @@ export default function AgentManagementPage() {
        <table className="min-w-full divide-y divide-slate-200">
         <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
          <tr>
-          <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Date Created</th>
-          <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Name</th>
-          <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Email</th>
-          <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Phone</th>
-          <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Status</th>
-          <th className="px-4 py-4 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
+          <th className="pin-start px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Name</th>
+          <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Date Created</th>
+          <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Email</th>
+          <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Phone</th>
+          <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Status</th>
+          <th className="pin-end px-4 py-3 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
          </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
  {agents.length === 0 ? (<tr><td colSpan={6} className="p-8"><div className="flex justify-center w-full"><EmptyState title="No agents found." /></div></td></tr>) : (agents.map((agent: any) => (
           <tr key={agent.id} className="hover:bg-muted/30 transition-colors">
-           <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground font-mono">{new Date(agent.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-           <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground">
+           <td className="pin-start px-4 py-3 whitespace-nowrap text-sm text-foreground">
             <span className="flex items-center gap-2.5">
              <Avatar name={agent.fullName || `${agent.firstName} ${agent.lastName}`} sources={[agent.passportPhotoUrl]} size="sm" />
              {agent.fullName || `${agent.firstName} ${agent.lastName}`}
             </span>
            </td>
-           <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground">{agent.email}</td>
-           <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground">{agent.phone || '-'}</td>
-           <td className="px-4 py-4 whitespace-nowrap text-sm">
+           <td className="px-4 py-3 whitespace-nowrap text-sm text-foreground font-mono">{new Date(agent.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+           <td className="px-4 py-3 whitespace-nowrap text-sm text-foreground">{agent.email}</td>
+           <td className="px-4 py-3 whitespace-nowrap text-sm text-foreground">{agent.phone || '-'}</td>
+           <td className="px-4 py-3 whitespace-nowrap text-sm">
             {renderAgentStatusBadge(agent.status || agent.reviewStatus)}
             {agent.pendingApproval && <Link href={`/dashboard/approvals/${agent.pendingApproval.id}`} className="block mt-1 text-xs font-semibold text-amber-800 dark:text-amber-400 hover:underline">Waiting for approval</Link>}
            </td>
-           <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+           <td className="pin-end px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
             <TableDropdown>
              {(agent.status === 'PENDING_REVIEW' || agent.status === 'PENDING' || agent.status === 'SUBMITTED') && !agent.pendingApproval && canReviewAgent && (
               <>

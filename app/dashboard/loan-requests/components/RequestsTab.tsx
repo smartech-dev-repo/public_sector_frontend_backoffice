@@ -271,12 +271,12 @@ export default function RequestsTab() {
             <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
               <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
                 <tr>
-                  <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Date Created</th>
-                  <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Client</th>
-                  <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Amount</th>
-                  <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Status</th>
+                  <th className="pin-start px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Client</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Date Created</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Amount</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Status</th>
                   {canReview && (
-                    <th className="px-4 py-4 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
+                    <th className="pin-end px-4 py-3 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
                   )}
                 </tr>
               </thead>
@@ -311,10 +311,7 @@ export default function RequestsTab() {
 
                     return (
                       <tr key={req.id} className="hover:bg-muted/30 transition-colors">
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground font-mono">
-                          {new Date(req.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm">
+                        <td className="pin-start px-4 py-3 whitespace-nowrap text-sm">
                           <div className="flex flex-col">
                             <span className="font-semibold text-foreground">
                               {clientName || (phone ? phone : (req.clientId ? `${req.clientId.substring(0, 8)}...` : 'Client'))}
@@ -332,7 +329,10 @@ export default function RequestsTab() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-foreground font-mono">
+                          {new Date(req.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm">
                           <div className="flex flex-col">
                             <span className="font-semibold text-foreground">
                               ₦{Number(req.amount || 0).toLocaleString()}
@@ -347,11 +347,11 @@ export default function RequestsTab() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm">
                           {renderStatusBadge(req.status)}
                           {waiting && <Link href={`/dashboard/approvals/${req.pendingApproval.id}`} className="block mt-1 text-xs font-semibold text-amber-800 dark:text-amber-400 hover:underline">Waiting for approval</Link>}
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium relative">
+                        <td className="pin-end px-4 py-3 whitespace-nowrap text-right text-sm font-medium ">
                           <TableDropdown>
                             <Link 
                               href={`/dashboard/loan-requests/${req.id}`}

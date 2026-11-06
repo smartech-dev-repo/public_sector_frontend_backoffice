@@ -579,18 +579,18 @@ export default function AnalyticsTab() {
                 <table className="w-full text-left border-collapse text-sm">
                   <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-300 text-xs font-semibold uppercase tracking-wider">
                     <tr>
-                      <th className="px-5 py-3.5">Rank</th>
-                      <th className="px-5 py-3.5">Agent Name</th>
-                      <th className="px-5 py-3.5 text-center">Total Enrolled</th>
-                      <th className="px-5 py-3.5 text-center">Completed</th>
-                      <th className="px-5 py-3.5 text-center">Stalled / Pending</th>
-                      <th className="px-5 py-3.5 text-right">Completion Rate</th>
+                      <th className="px-4 py-3.5">Rank</th>
+                      <th className="px-4 py-3.5">Agent Name</th>
+                      <th className="px-4 py-3.5 text-center">Total Enrolled</th>
+                      <th className="px-4 py-3.5 text-center">Completed</th>
+                      <th className="px-4 py-3.5 text-center">Stalled / Pending</th>
+                      <th className="px-4 py-3.5 text-right">Completion Rate</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/40 text-foreground">
                     {(!analytics?.agentLeaderboard || analytics.agentLeaderboard.length === 0) ? (
                       <tr>
-                        <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
+                        <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
                           <EmptyState title="No Agent Activity" description="No agent-assisted onboardings recorded for this selected time window." />
                         </td>
                       </tr>
@@ -599,29 +599,29 @@ export default function AnalyticsTab() {
                         const rate = agent.totalOnboarded > 0 ? (agent.completedCount / agent.totalOnboarded) * 100 : 0;
                         return (
                           <tr key={agent.agentId || index} className="hover:bg-muted/20 transition-colors">
-                            <td className="px-5 py-4 font-mono text-xs text-muted-foreground">
+                            <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
                               {index === 0 ? '🥇 #1' : index === 1 ? '🥈 #2' : index === 2 ? '🥉 #3' : `#${index + 1}`}
                             </td>
-                            <td className="px-5 py-4">
+                            <td className="px-4 py-3">
                               <div className="font-medium text-foreground">{agent.agentName || 'Agent'}</div>
                               <div className="text-[11px] font-mono text-muted-foreground">{agent.agentId}</div>
                             </td>
-                            <td className="px-5 py-4 text-center font-bold text-foreground">
+                            <td className="px-4 py-3 text-center font-bold text-foreground">
                               {agent.totalOnboarded}
                             </td>
-                            <td className="px-5 py-4 text-center">
+                            <td className="px-4 py-3 text-center">
                               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50">
                                 <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                                 {agent.completedCount}
                               </span>
                             </td>
-                            <td className="px-5 py-4 text-center">
+                            <td className="px-4 py-3 text-center">
                               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/50">
                                 <Clock className="w-3 h-3 text-amber-600" />
                                 {agent.stalledCount}
                               </span>
                             </td>
-                            <td className="px-5 py-4 text-right">
+                            <td className="px-4 py-3 text-right">
                               <div className="inline-flex flex-col items-end gap-1">
                                 <span className="font-semibold text-xs font-mono">{rate.toFixed(1)}%</span>
                                 <div className="w-20 bg-muted/40 h-1.5 rounded-full overflow-hidden">
@@ -854,18 +854,18 @@ export default function AnalyticsTab() {
                 <table className="w-full text-left border-collapse text-sm">
                   <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-300 text-xs font-semibold uppercase tracking-wider">
                     <tr>
-                      <th className="px-5 py-3.5">Rank</th>
-                      <th className="px-5 py-3.5">Reviewer Name</th>
-                      <th className="px-5 py-3.5 text-center">Approved</th>
-                      <th className="px-5 py-3.5 text-center">Rejected</th>
-                      <th className="px-5 py-3.5 text-center">Total Decisions</th>
-                      <th className="px-5 py-3.5 text-right">Approval Ratio</th>
+                      <th className="px-4 py-3.5">Rank</th>
+                      <th className="px-4 py-3.5">Reviewer Name</th>
+                      <th className="px-4 py-3.5 text-center">Approved</th>
+                      <th className="px-4 py-3.5 text-center">Rejected</th>
+                      <th className="px-4 py-3.5 text-center">Total Decisions</th>
+                      <th className="px-4 py-3.5 text-right">Approval Ratio</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/40 text-foreground">
                     {(!agentAnalytics?.reviewerLeaderboard || agentAnalytics.reviewerLeaderboard.length === 0) ? (
                       <tr>
-                        <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
+                        <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
                           <EmptyState title="No Reviewer Activity" description="No administrative reviews logged for the selected period." />
                         </td>
                       </tr>
@@ -875,29 +875,29 @@ export default function AnalyticsTab() {
                         const ratio = totalDecisions > 0 ? (rev.approvedCount / totalDecisions) * 100 : 0;
                         return (
                           <tr key={rev.reviewerId || index} className="hover:bg-muted/20 transition-colors">
-                            <td className="px-5 py-4 font-mono text-xs text-muted-foreground">
+                            <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
                               {index === 0 ? '🥇 #1' : index === 1 ? '🥈 #2' : index === 2 ? '🥉 #3' : `#${index + 1}`}
                             </td>
-                            <td className="px-5 py-4">
+                            <td className="px-4 py-3">
                               <div className="font-medium text-foreground">{rev.reviewerName || 'Admin Reviewer'}</div>
                               <div className="text-[11px] font-mono text-muted-foreground">{rev.reviewerId}</div>
                             </td>
-                            <td className="px-5 py-4 text-center">
+                            <td className="px-4 py-3 text-center">
                               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50">
                                 <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                                 {rev.approvedCount || 0}
                               </span>
                             </td>
-                            <td className="px-5 py-4 text-center">
+                            <td className="px-4 py-3 text-center">
                               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-200/50">
                                 <XCircle className="w-3 h-3 text-rose-600" />
                                 {rev.rejectedCount || 0}
                               </span>
                             </td>
-                            <td className="px-5 py-4 text-center font-bold text-foreground">
+                            <td className="px-4 py-3 text-center font-bold text-foreground">
                               {totalDecisions}
                             </td>
-                            <td className="px-5 py-4 text-right">
+                            <td className="px-4 py-3 text-right">
                               <div className="inline-flex flex-col items-end gap-1">
                                 <span className="font-semibold text-xs font-mono">{ratio.toFixed(1)}%</span>
                                 <div className="w-20 bg-muted/40 h-1.5 rounded-full overflow-hidden">

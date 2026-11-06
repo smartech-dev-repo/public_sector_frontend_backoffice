@@ -18,7 +18,7 @@ import { useConfirm } from '@/app/composables/useConfirm';
 import { useToast } from '@/app/composables/useToast';
 import { APPROVAL_STATUS_LABELS, APPROVAL_STATUS_STYLES, formatApprovalDate } from './approvalLabels';
 
-const TH = 'px-4 py-3.5 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider whitespace-nowrap';
+const TH = 'px-4 py-3 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider whitespace-nowrap';
 
 type View = 'to_decide' | 'mine' | 'all';
 const VIEWS: { id: View; label: string }[] = [
@@ -148,12 +148,12 @@ export default function ApprovalsPage() {
       <table className="min-w-full divide-y divide-border">
        <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
         <tr>
-         <th scope="col" className={TH}>Request</th>
+         <th scope="col" className={`pin-start ${TH}`}>Request</th>
          <th scope="col" className={TH}>Requested by</th>
          <th scope="col" className={TH}>Assigned to</th>
          <th scope="col" className={TH}>Date</th>
          <th scope="col" className={TH}>Status</th>
-         <th scope="col" className={TH}>Actions</th>
+         <th scope="col" className={`pin-end ${TH}`}>Actions</th>
         </tr>
        </thead>
        <tbody className="divide-y divide-border">
@@ -162,7 +162,7 @@ export default function ApprovalsPage() {
         )}
         {rows.map((row) => (
          <tr key={row.id} className="hover:bg-muted/30 transition-colors">
-          <td className="px-4 py-3 text-sm">
+          <td className="pin-start px-4 py-3 text-sm">
            <Link href={`/dashboard/approvals/${row.id}`} className="block font-medium text-[#016B41] dark:text-emerald-400 hover:underline">{row.summary?.title}</Link>
            {row.summary?.subject && <span className="block text-xs text-muted-foreground">{row.summary.subject}</span>}
           </td>
@@ -170,7 +170,7 @@ export default function ApprovalsPage() {
           <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">{row.assignedTo?.fullName || <span className="text-muted-foreground">Any approver</span>}</td>
           <td className="px-4 py-3 text-xs text-foreground whitespace-nowrap">{formatApprovalDate(row.createdAt)}</td>
           <td className="px-4 py-3 whitespace-nowrap"><span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${APPROVAL_STATUS_STYLES[row.status]}`}>{APPROVAL_STATUS_LABELS[row.status]}</span></td>
-          <td className="px-4 py-3 whitespace-nowrap">
+          <td className="pin-end px-4 py-3 whitespace-nowrap">
            {row.canDecide ? (
             <div className="flex items-center gap-2">
              <button type="button" onClick={() => handleApprove(row)} disabled={busyId === row.id} aria-label={`Approve ${row.summary?.title}`} className="h-9 px-3 rounded-lg text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50">Approve</button>

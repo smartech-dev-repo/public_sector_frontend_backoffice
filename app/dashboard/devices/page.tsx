@@ -15,7 +15,7 @@ import { useDataVersion } from '@/app/composables/useDataVersion';
 import { useToast } from '@/app/composables/useToast';
 import ReasonDialog from './components/ReasonDialog';
 
-const TH = 'px-4 py-3.5 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider whitespace-nowrap';
+const TH = 'px-4 py-3 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider whitespace-nowrap';
 const when = (value?: string | null) =>
  value ? new Date(value).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
 
@@ -173,12 +173,12 @@ function DevicesTabs() {
         <table className="min-w-full divide-y divide-border">
          <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
           <tr>
-           <th scope="col" className={TH}>Who</th>
+           <th scope="col" className={`pin-start ${TH}`}>Who</th>
            <th scope="col" className={TH}>Linked phone → asked for</th>
            <th scope="col" className={TH}>Their reason</th>
            <th scope="col" className={TH}>Asked</th>
            <th scope="col" className={TH}>Status</th>
-           <th scope="col" aria-label="Actions" className={TH}></th>
+           <th scope="col" aria-label="Actions" className={`pin-end ${TH}`}></th>
           </tr>
          </thead>
          <tbody className="divide-y divide-border">
@@ -187,7 +187,7 @@ function DevicesTabs() {
           )}
           {requests.map((r) => (
            <tr key={r.id} className="hover:bg-muted/30 transition-colors align-top">
-            <td className="px-4 py-3 max-w-[220px]"><Person principal={r.principal} /></td>
+            <td className="pin-start px-4 py-3 max-w-[220px]"><Person principal={r.principal} /></td>
             <td className="px-4 py-3 text-sm">
              <span className="flex items-center gap-2 flex-wrap">
               <span className="inline-flex items-center gap-1.5 text-foreground"><Smartphone className="w-4 h-4 text-muted-foreground" />{r.device?.description ?? 'No linked device'}</span>
@@ -199,7 +199,7 @@ function DevicesTabs() {
             <td className="px-4 py-3 text-sm text-foreground max-w-[240px]">{r.reason || <span className="text-muted-foreground">None given</span>}</td>
             <td className="px-4 py-3 text-xs text-foreground whitespace-nowrap">{when(r.createdAt)}</td>
             <td className="px-4 py-3 whitespace-nowrap"><StatusBadge status={r.status} /></td>
-            <td className="px-4 py-3 text-right whitespace-nowrap">
+            <td className="pin-end px-4 py-3 text-right whitespace-nowrap">
              {r.status === 'PENDING' && canManage && (
               <>
                <button type="button" onClick={() => setDialog({ kind: 'approve', request: r })} className="h-10 px-3 text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 rounded-lg">Approve</button>
@@ -243,13 +243,13 @@ function DevicesTabs() {
         <table className="min-w-full divide-y divide-border">
          <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
           <tr>
-           <th scope="col" className={TH}>Who</th>
+           <th scope="col" className={`pin-start ${TH}`}>Who</th>
            <th scope="col" className={TH}>Device</th>
            <th scope="col" className={TH}>IMEI</th>
            <th scope="col" className={TH}>Linked</th>
            <th scope="col" className={TH}>Last seen</th>
            <th scope="col" className={TH}>Status</th>
-           <th scope="col" aria-label="Actions" className={TH}></th>
+           <th scope="col" aria-label="Actions" className={`pin-end ${TH}`}></th>
           </tr>
          </thead>
          <tbody className="divide-y divide-border">
@@ -258,7 +258,7 @@ function DevicesTabs() {
           )}
           {devices.map((d) => (
            <tr key={d.id} className="hover:bg-muted/30 transition-colors align-top">
-            <td className="px-4 py-3 max-w-[220px]"><Person principal={d.principal} /></td>
+            <td className="pin-start px-4 py-3 max-w-[220px]"><Person principal={d.principal} /></td>
             <td className="px-4 py-3">
              <span className="block text-sm text-foreground">{d.description}</span>
              <span className="block text-xs text-muted-foreground">
@@ -277,7 +277,7 @@ function DevicesTabs() {
              <StatusBadge status={d.status} />
              {d.status === 'RELEASED' && d.releaseReason && <span className="block mt-1 text-xs text-muted-foreground max-w-[200px]">{d.releaseReason}</span>}
             </td>
-            <td className="px-4 py-3 text-right whitespace-nowrap">
+            <td className="pin-end px-4 py-3 text-right whitespace-nowrap">
              {d.status === 'ACTIVE' && canManage && (
               <>
                {d.hasPushToken && (

@@ -201,15 +201,15 @@ function ClientLoansContent() {
         <table className="min-w-full divide-y divide-slate-200 min-w-[1000px]">
          <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
           <tr>
-           <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Loan ID</th>
-           <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Client</th>
-           <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Amount</th>
-           <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Outstanding</th>
-           <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Tenor</th>
-           <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Status</th>
-           <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Disbursed At</th>
+           <th className="pin-start px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Client</th>
+           <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Loan ID</th>
+           <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Amount</th>
+           <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Outstanding</th>
+           <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Tenor</th>
+           <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Status</th>
+           <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Disbursed At</th>
            {canReadPlan && (
-            <th className="px-4 py-4 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
+            <th className="pin-end px-4 py-3 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
            )}
           </tr>
          </thead>
@@ -227,30 +227,30 @@ function ClientLoansContent() {
            </tr>
           ) : (clientLoans.map((loan: any) => (
            <tr key={loan.id} className="hover:bg-muted/30 transition-colors">
-            <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground font-mono">{loan.id?.slice(0, 8)}...</td>
-            <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground font-medium">
+            <td className="pin-start px-4 py-3 whitespace-nowrap text-sm text-foreground font-medium">
              {loan.clientId ? (
               <Link href={`/dashboard/clients/${loan.clientId}`} className="text-emerald-700 hover:text-emerald-800 hover:underline">
                {loan.client?.onboarding?.employeeName || loan.client?.fullName || `${loan.clientId?.slice(0, 8)}...`}
               </Link>
              ) : '-'}
             </td>
-            <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">₦{loan.amount?.toLocaleString() || loan.principal?.toLocaleString() || '0'}</td>
-            <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">₦{loan.outstandingBalance?.toLocaleString() || loan.outstanding?.toLocaleString() || '0'}</td>
-            <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{loan.tenor || loan.tenorMonths || '-'} months</td>
-            <td className="px-4 py-4 whitespace-nowrap text-sm">
+            <td className="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground font-mono">{loan.id?.slice(0, 8)}...</td>
+            <td className="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">₦{loan.amount?.toLocaleString() || loan.principal?.toLocaleString() || '0'}</td>
+            <td className="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">₦{loan.outstandingBalance?.toLocaleString() || loan.outstanding?.toLocaleString() || '0'}</td>
+            <td className="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">{loan.tenor || loan.tenorMonths || '-'} months</td>
+            <td className="px-4 py-3 whitespace-nowrap text-sm">
              <span className={`px-2.5 py-1 text-xs rounded-full font-medium ${statusColor(loan.status)}`}>
               {loan.status || '-'}
              </span>
             </td>
-            <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground font-mono">
+            <td className="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground font-mono">
              {loan.disbursedAt || loan.createdAt
               ? new Date(loan.disbursedAt || loan.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
               : '-'
              }
             </td>
             {canReadPlan && (
-             <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+             <td className="pin-end px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
               <TableDropdown>
                <button
                 type="button"

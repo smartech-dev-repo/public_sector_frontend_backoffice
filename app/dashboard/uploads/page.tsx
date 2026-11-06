@@ -140,29 +140,29 @@ export default function UploadsPage() {
  <table className="min-w-full divide-y divide-slate-200">
          <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
           <tr>
-           <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Date Created</th>
-           <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Type</th>
-           <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Status</th>
-           <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Total Rows</th>
-           <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Processed</th>
-           <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Updated At</th>
-           <th className="px-4 py-4" />
+           <th className="pin-start px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Type</th>
+           <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Date Created</th>
+           <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Status</th>
+           <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Total Rows</th>
+           <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Processed</th>
+           <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Updated At</th>
+           <th className="pin-end px-4 py-3" />
           </tr>
          </thead>
          <tbody className="divide-y divide-slate-100">
           {batches.map((batch: any) => (
            <tr key={batch.id} className="hover:bg-muted/30 transition-colors">
-            <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground font-mono">{new Date(batch.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-            <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground">{batch.documentType}</td>
-            <td className="px-4 py-4 whitespace-nowrap text-sm">
+            <td className="pin-start px-4 py-3 whitespace-nowrap text-sm text-foreground">{batch.documentType}</td>
+            <td className="px-4 py-3 whitespace-nowrap text-sm text-foreground font-mono">{new Date(batch.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+            <td className="px-4 py-3 whitespace-nowrap text-sm">
              <span className={`px-2.5 py-1 text-xs rounded-full font-medium ${statusClass(batch.status)}`}>
               {batch.status.replaceAll('_', ' ')}
              </span>
             </td>
-            <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{batch.totalRows || 0}</td>
-            <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{batch.processedRows || 0}</td>
-            <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{new Date(batch.updatedAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-            <td className="px-4 py-4 whitespace-nowrap text-right">
+            <td className="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">{batch.totalRows || 0}</td>
+            <td className="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">{batch.processedRows || 0}</td>
+            <td className="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">{new Date(batch.updatedAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+            <td className="pin-end px-4 py-3 whitespace-nowrap text-right">
              {batch.status === 'AWAITING_CONFIRMATION' && (
               <button onClick={() => setWizard({ documentType: batch.documentType, resumeBatchId: batch.id })} className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 rounded-lg text-white text-xs font-medium transition-colors">Review</button>
              )}

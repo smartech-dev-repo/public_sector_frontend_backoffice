@@ -132,3 +132,73 @@
   z-index: 160 !important;
 }
 
+/* ---------- Record tables ----------
+   A table's scroll box is the containing block for everything inside it. Without this, absolute
+   children such as the row buttons' sr-only labels are placed against the page instead, land past
+   the right edge, and widen the whole screen with an empty strip. */
+.overflow-x-auto:has(> table),
+.overflow-auto:has(> table) {
+  position: relative;
+  overscroll-behavior-x: contain;
+}
+
+/* Pinned columns stay in view while the rest of the row scrolls sideways: .pin-start for the
+   column that says whose row it is (name, ID), .pin-end for the actions. They need a solid
+   background, so it is set here to match the header, the row and the row's hover. */
+@layer components {
+  .pin-start,
+  .pin-end {
+    position: sticky;
+    z-index: 2;
+    background-color: hsl(var(--card));
+    background-clip: padding-box;
+  }
+  .pin-start { left: 0; }
+  .pin-end { right: 0; }
+  thead .pin-start,
+  thead .pin-end {
+    z-index: 3;
+    background-color: #E9F4EE;
+  }
+  .dark thead .pin-start,
+  .dark thead .pin-end {
+    background-color: color-mix(in srgb, #022c22 20%, hsl(var(--card)));
+  }
+  tbody tr:hover > .pin-start,
+  tbody tr:hover > .pin-end {
+    background-color: color-mix(in srgb, hsl(var(--muted)) 30%, hsl(var(--card)));
+  }
+
+  /* A soft edge shows only when columns are hidden behind the pinned one (set by TableScrollEdges). */
+  .pin-start::after,
+  .pin-end::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 12px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 150ms ease;
+  }
+  .pin-start::after {
+    right: -12px;
+    background: linear-gradient(to right, rgb(15 23 42 / 0.09), transparent);
+  }
+  .pin-end::before {
+    left: -12px;
+    background: linear-gradient(to left, rgb(15 23 42 / 0.09), transparent);
+  }
+  .dark .pin-start::after { background: linear-gradient(to right, rgb(0 0 0 / 0.35), transparent); }
+  .dark .pin-end::before { background: linear-gradient(to left, rgb(0 0 0 / 0.35), transparent); }
+  [data-hidden-start] > table .pin-start::after,
+  [data-hidden-end] > table .pin-end::before {
+    opacity: 1;
+  }
+
+  /* On a phone the actions column scrolls with the row, so the pinned name keeps the room. */
+  @media (max-width: 767px) {
+    .pin-end { position: static; }
+    .pin-end::before { display: none; }
+  }
+}

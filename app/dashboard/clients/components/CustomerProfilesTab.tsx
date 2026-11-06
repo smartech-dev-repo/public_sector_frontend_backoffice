@@ -616,31 +616,25 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
             <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800/40">
               <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
-                    NAME
+                  <th className="pin-start px-4 py-3 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
+                    CLIENT
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
-                    IPPIS NO.
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
                     ONBOARDED BY
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
                     SECTOR
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
                     LOAN AMT
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
                     DATE
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
-                    USER STATUS
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
+                    STATUS
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
-                    ONBOARDING STATUS
-                  </th>
-                  <th className="px-6 py-4 text-right text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
+                  <th className="pin-end px-4 py-3 text-right text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
                     ACTION
                   </th>
                 </tr>
@@ -656,23 +650,30 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
 
                   return (
                     <tr key={client.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-foreground">
-                        <Link 
-                           href={`/dashboard/clients/${client.id}`}
-                          className="inline-flex items-center gap-2.5 hover:text-[#018752] transition-colors"
-                        >
+                      <td className="pin-start px-4 py-3 whitespace-nowrap text-sm">
+                        <div className="flex items-center gap-2.5">
                           <Avatar
                             name={clientName}
                             sources={[client.onboarding?.liveSelfieUrl, client.onboarding?.ninSelfieUrl, client.onboarding?.bvnSelfieUrl]}
                             size="sm"
                           />
-                          {clientName}
-                        </Link>
+                          <div className="min-w-0">
+                            <Link
+                              href={`/dashboard/clients/${client.id}`}
+                              className="block max-w-[14rem] truncate font-semibold text-foreground hover:text-[#018752] transition-colors"
+                              title={clientName}
+                            >
+                              {clientName}
+                            </Link>
+                            {ippisNo && ippisNo !== '—' && (
+                              <span className="block text-xs font-mono text-muted-foreground">
+                                <SensitiveValue value={ippisNo} allowCopy />
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-foreground">
-                        <SensitiveValue value={ippisNo} allowCopy />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-foreground">
                         {agentName === 'Self' ? (
                           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                             Self
@@ -704,22 +705,23 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
                           </div>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-foreground">
                         {sector === '—' ? <span className="text-muted-foreground">—</span> : sector}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-mono font-medium text-foreground">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-mono font-medium text-foreground">
                         {loanAmt === '—' ? <span className="text-muted-foreground font-sans font-normal">—</span> : loanAmt}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-foreground">
                         {dateStr}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {renderUserStatusBadge(client.status)}
+                      <td className="px-4 py-3 whitespace-nowrap text-sm">
+                        {/* Account status on top, onboarding progress under it. */}
+                        <div className="flex flex-col items-start gap-1">
+                          {renderUserStatusBadge(client.status)}
+                          {renderOnboardingStatusBadge(client.onboarding?.step, client)}
+                        </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {renderOnboardingStatusBadge(client.onboarding?.step, client)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <td className="pin-end px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end">
                           <TableDropdown>
                             <Link 
@@ -791,7 +793,7 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
 
                 {clients.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="p-0 border-b-0">
+                    <td colSpan={7} className="p-0 border-b-0">
                       <div className="p-8">
                         <EmptyState title="No customers found" description="There are no customers matching your criteria." />
                       </div>

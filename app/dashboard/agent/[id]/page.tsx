@@ -919,12 +919,12 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
                 <table className="w-full text-left text-sm">
                   <thead className="bg-[#E9F4EE] dark:bg-emerald-950/25 border-b border-border/70">
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Customer Name</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">IPPIS NO.</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Loan Amt</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Date</th>
-                      <th className="px-6 py-4 text-right text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Actions</th>
+                      <th className="pin-start px-4 py-3 text-left text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Customer Name</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">IPPIS NO.</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Status</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Loan Amt</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Date</th>
+                      <th className="pin-end px-4 py-3 text-right text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/60">
@@ -939,7 +939,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
                       </tr>
                     ) : clientLoans.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="px-6 py-20 text-center">
+                        <td colSpan={6} className="px-4 py-20 text-center">
                           <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
                             <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-3 border border-emerald-200/60 dark:border-emerald-800/60 shadow-xs">
                               <Banknote className="w-7 h-7" />
@@ -954,13 +954,13 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
                     ) : (
                       clientLoans.map((loan: any) => (
                         <tr key={loan.id} className="hover:bg-muted/40 transition-colors group">
-                          <td className="px-6 py-4 font-semibold text-foreground">
+                          <td className="pin-start px-4 py-3 font-semibold text-foreground">
                             {loan.client?.firstName} {loan.client?.lastName}
                           </td>
-                          <td className="px-6 py-4 text-muted-foreground font-mono text-xs">
+                          <td className="px-4 py-3 text-muted-foreground font-mono text-xs">
                             {loan.client?.ippisNumber || 'N/A'}
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-4 py-3">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                               loan.status === 'APPROVED' || loan.status === 'DISBURSED' || loan.status === 'ACTIVE'
                                 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50'
@@ -971,13 +971,13 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
                               {loan.status || 'PENDING'}
                             </span>
                           </td>
-                          <td className="px-6 py-4 font-bold text-foreground">
+                          <td className="px-4 py-3 font-bold text-foreground">
                             ₦{Number(loan.amount || 0).toLocaleString()}
                           </td>
-                          <td className="px-6 py-4 text-muted-foreground text-xs">
+                          <td className="px-4 py-3 text-muted-foreground text-xs">
                             {new Date(loan.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                           </td>
-                          <td className="px-6 py-4 text-right">
+                          <td className="pin-end px-4 py-3 text-right">
                             <Link 
                               href={`/dashboard/loan-requests?tab=client-loans`}
                               className="inline-flex items-center gap-1 font-medium text-xs text-emerald-700 dark:text-emerald-400 hover:underline"
@@ -1015,12 +1015,12 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
                 <table className="w-full text-left text-sm">
                   <thead className="bg-[#E9F4EE] dark:bg-emerald-950/25 border-b border-border/70">
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Customer Name</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">IPPIS NO.</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Agency / Sector</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Onboarded Date</th>
-                      <th className="px-6 py-4 text-right text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Actions</th>
+                      <th className="pin-start px-4 py-3 text-left text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Customer Name</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">IPPIS NO.</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Agency / Sector</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Status</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Onboarded Date</th>
+                      <th className="pin-end px-4 py-3 text-right text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/60">
@@ -1035,7 +1035,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
                       </tr>
                     ) : onboardedClients.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="px-6 py-20 text-center">
+                        <td colSpan={6} className="px-4 py-20 text-center">
                           <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
                             <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-3 border border-emerald-200/60 dark:border-emerald-800/60 shadow-xs">
                               <Users className="w-7 h-7" />
@@ -1054,14 +1054,14 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
                         const sector = client?.onboarding?.agency || client?.agency || '—';
                         return (
                           <tr key={client.id} className="hover:bg-muted/40 transition-colors group">
-                            <td className="px-6 py-4 font-semibold text-foreground">
+                            <td className="pin-start px-4 py-3 font-semibold text-foreground">
                               <Link href={`/dashboard/clients/${client.id}`} className="hover:text-emerald-600 transition-colors">
                                 {name}
                               </Link>
                             </td>
-                            <td className="px-6 py-4 font-mono text-xs text-muted-foreground">{ippis}</td>
-                            <td className="px-6 py-4 text-muted-foreground text-xs">{sector}</td>
-                            <td className="px-6 py-4">
+                            <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{ippis}</td>
+                            <td className="px-4 py-3 text-muted-foreground text-xs">{sector}</td>
+                            <td className="px-4 py-3">
                               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                                 client.status === 'VERIFIED' || client.status === 'APPROVED' || client.status === 'ACTIVE'
                                   ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50'
@@ -1072,10 +1072,10 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
                                 {client.status || 'VERIFIED'}
                               </span>
                             </td>
-                            <td className="px-6 py-4 text-muted-foreground text-xs">
+                            <td className="px-4 py-3 text-muted-foreground text-xs">
                               {client.createdAt ? new Date(client.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
                             </td>
-                            <td className="px-6 py-4 text-right">
+                            <td className="pin-end px-4 py-3 text-right">
                               <Link 
                                 href={`/dashboard/clients/${client.id}`}
                                 className="inline-flex items-center gap-1 font-medium text-xs text-emerald-700 dark:text-emerald-400 hover:underline"

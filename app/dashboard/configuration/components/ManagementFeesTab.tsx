@@ -122,26 +122,26 @@ export default function ManagementFeesTab() {
               <table className="min-w-full divide-y divide-border">
                 <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
                   <tr>
-                    {['Name', 'Value', 'Amount Range', 'Products', 'Status', ''].map((heading) => (
-                      <th key={heading} className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">{heading}</th>
+                    {['Name', 'Value', 'Amount Range', 'Products', 'Status', ''].map((heading, i, all) => (
+                      <th key={heading} className={`${i === 0 ? 'pin-start ' : i === all.length - 1 ? 'pin-end ' : ''}px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider`}>{heading}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {fees.map((fee: any) => (
                     <tr key={fee.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-4 text-sm font-medium text-foreground">{fee.name}</td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground">
+                      <td className="pin-start px-4 py-3 text-sm font-medium text-foreground">{fee.name}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-foreground">
                         {fee.type === 'PERCENTAGE' ? `${Number(fee.value)}%` : `₦${Number(fee.value).toLocaleString()} flat`}
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{formatFeeRange(fee)}</td>
-                      <td className="px-4 py-4 text-sm text-muted-foreground">{fee._count?.loanProducts ?? 0}</td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">{formatFeeRange(fee)}</td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground">{fee._count?.loanProducts ?? 0}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm">
                         <span className={`px-2.5 py-1 text-xs rounded-full font-medium ${fee.isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-muted text-muted-foreground'}`}>
                           {fee.isActive ? 'Active' : 'Inactive'}
                         </span>
                       </td>
-                      <td className="px-4 py-4 text-right whitespace-nowrap">
+                      <td className="pin-end px-4 py-3 text-right whitespace-nowrap">
                         <button onClick={() => openEdit(fee)} aria-label={`Edit ${fee.name}`} className="p-2 text-muted-foreground hover:text-foreground transition-colors"><Pencil className="w-4 h-4" /></button>
                         <button onClick={() => handleDelete(fee)} aria-label={`Delete ${fee.name}`} className="p-2 text-muted-foreground hover:text-rose-600 transition-colors"><Trash2 className="w-4 h-4" /></button>
                       </td>

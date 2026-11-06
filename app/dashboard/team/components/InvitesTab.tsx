@@ -215,12 +215,12 @@ export default function InvitesTab() {
 <table className="w-full min-w-full divide-y divide-slate-200">
       <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
          <tr>
-        <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Email</th>
-        <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Role</th>
-        <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Status</th>
-        <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Invited At</th>
+        <th className="pin-start px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Email</th>
+        <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Role</th>
+        <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Status</th>
+        <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Invited At</th>
         {canInvite && (
-         <th className="px-4 py-4 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
+         <th className="pin-end px-4 py-3 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
         )}
        </tr>
       </thead>
@@ -229,14 +229,14 @@ export default function InvitesTab() {
   <tr><td colSpan={canInvite ? 5 : 4} className="p-8"><div className="flex justify-center w-full"><EmptyState title="No pending invites." /></div></td></tr>
  ) : (invites.map((invite: any) => (
         <tr key={invite.id} className="hover:bg-muted/30 transition-colors">
-         <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground font-medium">{invite.email}</td>
-         <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{invite.role?.name || 'Unknown'}</td>
-         <td className="px-4 py-4 whitespace-nowrap text-sm">
+         <td className="pin-start px-4 py-3 whitespace-nowrap text-sm text-foreground font-medium">{invite.email}</td>
+         <td className="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">{invite.role?.name || 'Unknown'}</td>
+         <td className="px-4 py-3 whitespace-nowrap text-sm">
           {renderInviteStatusBadge(invite.status)}
          </td>
-         <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{new Date(invite.createdAt).toLocaleDateString()}</td>
+         <td className="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">{new Date(invite.createdAt).toLocaleDateString()}</td>
          {canInvite && (
-          <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium relative">
+          <td className="pin-end px-4 py-3 whitespace-nowrap text-right text-sm font-medium ">
            <TableDropdown>
             <button onClick={() => handleResend(invite.id, invite.email)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 hover:text-emerald-800 transition-colors">Resend</button>
             <button onClick={() => handleRevoke(invite.id, invite.email)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-amber-600 hover:bg-amber-50 hover:text-amber-800 transition-colors">Revoke</button>

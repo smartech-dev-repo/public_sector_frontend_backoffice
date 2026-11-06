@@ -90,12 +90,12 @@ export default function LoansCatalogTab() {
       <table className="min-w-full divide-y divide-slate-200">
        <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
         <tr>
-         <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Customer</th>
-         <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Agency / IPPIS</th>
-         <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Product</th>
-         <th className="px-4 py-4 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Loan Amount</th>
-         <th className="px-4 py-4 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Balance</th>
-         <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Disbursement Date</th>
+         <th className="pin-start px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Customer</th>
+         <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Agency / IPPIS</th>
+         <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Product</th>
+         <th className="px-4 py-3 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Loan Amount</th>
+         <th className="px-4 py-3 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Balance</th>
+         <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Disbursement Date</th>
         </tr>
        </thead>
        <tbody className="divide-y divide-slate-100">
@@ -103,24 +103,24 @@ export default function LoansCatalogTab() {
   <tr><td colSpan={6} className="p-8"><div className="flex justify-center w-full"><EmptyState title="No loans found." /></div></td></tr>
  ) : (loans.map((loan: any) => (
          <tr key={loan.id} className="hover:bg-muted/30 transition-colors">
-          <td className="px-4 py-4 whitespace-nowrap">
+          <td className="pin-start px-4 py-3 whitespace-nowrap">
            <div className="text-sm font-semibold text-foreground">{loan.customerName}</div>
            <div className="text-xs text-muted-foreground font-mono mt-0.5">{loan.accountNumber}</div>
           </td>
-          <td className="px-4 py-4 whitespace-nowrap">
+          <td className="px-4 py-3 whitespace-nowrap">
            <div className="text-sm text-foreground/90 font-medium">{loan.agency || 'N/A'}</div>
            <div className="text-xs text-muted-foreground font-mono mt-0.5">{loan.ippisNumber}</div>
           </td>
-          <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground/90">
+          <td className="px-4 py-3 whitespace-nowrap text-sm text-foreground/90">
            {loan.product || 'N/A'}
           </td>
-          <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground font-medium text-right">
+          <td className="px-4 py-3 whitespace-nowrap text-sm text-foreground font-medium text-right">
            ₦{Number(loan.loanAmount || 0).toLocaleString()}
           </td>
-          <td className="px-4 py-4 whitespace-nowrap text-sm text-amber-600 font-medium text-right">
+          <td className="px-4 py-3 whitespace-nowrap text-sm text-amber-600 font-medium text-right">
            ₦{Number(loan.principalBalance || 0).toLocaleString()}
           </td>
-          <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">
+          <td className="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">
            {loan.disbursementDate ? new Date(loan.disbursementDate).toLocaleDateString('en-GB') : 'N/A'}
           </td>
          </tr>

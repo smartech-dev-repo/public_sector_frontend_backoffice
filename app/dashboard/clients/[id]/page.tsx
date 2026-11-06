@@ -1532,32 +1532,32 @@ export default function ClientWalletPage() {
          <table className="min-w-full divide-y divide-slate-200">
           <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
            <tr>
-            <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Loan ID</th>
-            <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Amount</th>
-            <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Outstanding</th>
-            <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Tenor</th>
-            <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Status</th>
-            <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Disbursed At</th>
-            <th className="px-4 py-4 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Loan ID</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Amount</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Outstanding</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Tenor</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Status</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Disbursed At</th>
+            <th className="px-4 py-3 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
            </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
  {!loansLoading && clientLoans.length === 0 ? (<tr><td colSpan={13} className="p-8"><div className="flex justify-center w-full"><EmptyState title="No loans found for this client." /></div></td></tr>) : (clientLoans.map((loan: any) => (
             <>
              <tr key={loan.id} className="hover:bg-muted/30 transition-colors">
-              <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground font-mono">{loan.id?.slice(0, 8)}...</td>
-              <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground font-medium">₦{loan.amount?.toLocaleString() || loan.principal?.toLocaleString() || '0'}</td>
-              <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">₦{loan.outstandingBalance?.toLocaleString() || loan.outstanding?.toLocaleString() || '0'}</td>
-              <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{loan.tenor || loan.tenorMonths || '-'} months</td>
-              <td className="px-4 py-4 whitespace-nowrap text-sm">
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground font-mono">{loan.id?.slice(0, 8)}...</td>
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-foreground font-medium">₦{loan.amount?.toLocaleString() || loan.principal?.toLocaleString() || '0'}</td>
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">₦{loan.outstandingBalance?.toLocaleString() || loan.outstanding?.toLocaleString() || '0'}</td>
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">{loan.tenor || loan.tenorMonths || '-'} months</td>
+              <td className="px-4 py-3 whitespace-nowrap text-sm">
                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(loan.status)}`}>
                 {loan.status}
                </span>
               </td>
-              <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground font-mono">
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground font-mono">
                {loan.disbursementDate ? new Date(loan.disbursementDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
               </td>
-              <td className="px-4 py-4 whitespace-nowrap text-sm">
+              <td className="px-4 py-3 whitespace-nowrap text-sm">
                <button
                 onClick={() => handleViewRepayment(loan.id)}
                 className="text-emerald-600 hover:text-emerald-800 font-medium transition-colors text-sm"
@@ -1650,10 +1650,10 @@ export default function ClientWalletPage() {
          <table className="min-w-full divide-y divide-slate-200">
           <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
            <tr>
-            <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Date</th>
-            <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
-            <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Description</th>
-            <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Source</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Date</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Description</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Source</th>
            </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -1673,19 +1673,19 @@ export default function ClientWalletPage() {
 
              return (
               <tr key={activity.id || i} className="hover:bg-muted/30 transition-colors">
-               <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground font-mono">
+               <td className="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground font-mono">
                 <div className="font-medium text-foreground">{dateStr}</div>
                 <div className="text-[11px] text-muted-foreground/70">{timeStr}</div>
                </td>
-               <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground font-medium">
+               <td className="px-4 py-3 whitespace-nowrap text-sm text-foreground font-medium">
                 <span className="font-mono text-xs bg-muted/60 dark:bg-muted/30 px-2.5 py-1 rounded-md text-foreground">
                  {activity.type || activity.action || '-'}
                 </span>
                </td>
-               <td className="px-4 py-4 text-sm text-foreground/90 max-w-sm">
+               <td className="px-4 py-3 text-sm text-foreground/90 max-w-sm">
                 {activity.description || activity.message || '-'}
                </td>
-               <td className="px-4 py-4 whitespace-nowrap text-sm">
+               <td className="px-4 py-3 whitespace-nowrap text-sm">
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                  {activity.source || activity.status || 'ONBOARDING'}

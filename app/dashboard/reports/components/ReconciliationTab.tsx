@@ -148,7 +148,7 @@ export default function ReconciliationTab() {
               <table className="w-full min-w-full text-left border-collapse">
                 <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
                   <tr>
-                    <th className="px-4 py-3.5 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Ref ID</th>
+                    <th className="pin-start px-4 py-3.5 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Ref ID</th>
                     <th className="px-4 py-3.5 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Customer</th>
                     <th className="px-4 py-3.5 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Agency</th>
                     <th className="px-4 py-3.5 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Period</th>
@@ -156,13 +156,13 @@ export default function ReconciliationTab() {
                     <th className="px-4 py-3.5 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Actual</th>
                     <th className="px-4 py-3.5 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Variance</th>
                     <th className="px-4 py-3.5 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Status</th>
-                    <th className="px-4 py-3.5 text-right text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Actions</th>
+                    <th className="pin-end px-4 py-3.5 text-right text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/40 text-sm text-foreground">
                   {paginatedRecords.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="px-6 py-12 text-center text-muted-foreground">
+                      <td colSpan={9} className="px-4 py-12 text-center text-muted-foreground">
                         No reconciliation variance records found.
                       </td>
                     </tr>
@@ -171,7 +171,7 @@ export default function ReconciliationTab() {
                       const varianceNum = Number(record.variance || 0);
                       return (
                         <tr key={record.id} className="hover:bg-muted/20 transition-colors">
-                          <td className="px-4 py-3.5 font-mono text-xs text-muted-foreground">{record.id?.split('-')[0]}</td>
+                          <td className="pin-start px-4 py-3.5 font-mono text-xs text-muted-foreground">{record.id?.split('-')[0]}</td>
                           <td className="px-4 py-3.5 font-medium text-foreground">{record.loan?.customerName || 'N/A'}</td>
                           <td className="px-4 py-3.5 text-xs text-muted-foreground">{record.loan?.agency || '—'}</td>
                           <td className="px-4 py-3.5 font-mono text-xs text-muted-foreground">{record.period || '—'}</td>
@@ -193,7 +193,7 @@ export default function ReconciliationTab() {
                               {record.status?.replace(/_/g, ' ') || 'UNKNOWN'}
                             </span>
                           </td>
-                          <td className="px-4 py-3.5 text-right">
+                          <td className="pin-end px-4 py-3.5 text-right">
                             <button
                               onClick={() => viewRecordDetails(record)}
                               className="text-xs px-2.5 py-1 bg-muted/40 hover:bg-muted/70 text-foreground font-medium rounded-lg transition-colors inline-flex items-center gap-1"

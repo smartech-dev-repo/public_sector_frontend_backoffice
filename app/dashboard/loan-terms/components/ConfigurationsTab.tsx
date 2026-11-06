@@ -175,26 +175,26 @@ export default function ConfigurationsTab() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
-                  <th className="py-3.5 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  <th className="pin-start py-3.5 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Product Name
                   </th>
-                  <th className="py-3.5 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  <th className="py-3.5 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Product Code
                   </th>
-                  <th className="py-3.5 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  <th className="py-3.5 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Eligible Sectors
                   </th>
-                  <th className="py-3.5 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  <th className="py-3.5 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Amount Range
                   </th>
-                  <th className="py-3.5 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  <th className="py-3.5 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Tenor Band
                   </th>
-                  <th className="py-3.5 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  <th className="py-3.5 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Last Updated
                   </th>
                   {canManageProducts && (
-                    <th className="py-3.5 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                    <th className="pin-end py-3.5 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">
                       Actions
                     </th>
                   )}
@@ -225,26 +225,26 @@ export default function ConfigurationsTab() {
                         key={product.id || product.productCode} 
                         className="hover:bg-muted/40 transition-colors group"
                       >
-                        <td className="py-4 px-6 font-semibold text-sm text-foreground">
+                        <td className="pin-start py-3 px-4 font-semibold text-sm text-foreground">
                           {product.productName}
                         </td>
-                        <td className="py-4 px-6 text-sm font-mono text-muted-foreground">
+                        <td className="py-3 px-4 text-sm font-mono text-muted-foreground">
                           {product.productCode}
                         </td>
-                        <td className="py-4 px-6 text-sm text-foreground/80">
+                        <td className="py-3 px-4 text-sm text-foreground/80">
                           {getSectorLabel(product.sectors)}
                         </td>
-                        <td className="py-4 px-6 text-sm font-medium text-foreground">
+                        <td className="py-3 px-4 text-sm font-medium text-foreground">
                           {formatNaira(product.minimumAmount)} - {formatNaira(product.maximumAmount)}
                         </td>
-                        <td className="py-4 px-6 text-sm text-foreground/80">
+                        <td className="py-3 px-4 text-sm text-foreground/80">
                           {product.minimumTenorMonths}-{product.maximumTenorMonths} months
                         </td>
-                        <td className="py-4 px-6 text-sm text-muted-foreground whitespace-nowrap">
+                        <td className="py-3 px-4 text-sm text-muted-foreground whitespace-nowrap">
                           {updatedDate}
                         </td>
                         {canManageProducts && (
-                          <td className="py-4 px-6 text-right">
+                          <td className="pin-end py-3 px-4 text-right">
                             <button
                               type="button"
                               onClick={() => handleOpenEdit(product)}
