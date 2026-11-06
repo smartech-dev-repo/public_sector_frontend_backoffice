@@ -120,24 +120,24 @@ export default function IppisPage() {
             <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
               <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
                 <tr>
-                  <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Date Created</th>
-                  <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Type</th>
-                  <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Status</th>
-                  <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Period</th>
-                  <th className="px-4 py-4 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
+                  <th className="pin-start px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Type</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Date Created</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Period</th>
+                  <th className="pin-end px-4 py-3 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
                 {batches.map((batch: any) => (
                   <tr key={batch.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground font-mono">
-                      {new Date(batch.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground font-medium flex items-center gap-2">
+                    <td className="pin-start px-4 py-3 whitespace-nowrap text-sm text-foreground font-medium flex items-center gap-2">
                       <FileText className="w-4 h-4 text-emerald-600" />
                       {batch.documentType || 'IPPIS Broadsheet'}
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-foreground font-mono">
+                      {new Date(batch.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm">
                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-full font-semibold ${getStatusBadgeClass(batch.status)}`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${
                           batch.status === 'COMPLETED' ? 'bg-emerald-500' :
@@ -147,10 +147,10 @@ export default function IppisPage() {
                         {batch.status}
                       </span>
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground font-mono">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground font-mono">
                       {batch.period || new Date(batch.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="pin-end px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
                       <button
                         type="button"
                         disabled={downloadingId === batch.id || !(batch.storageKey || batch.fileKey)}

@@ -15,7 +15,7 @@ import { useToast } from '@/app/composables/useToast';
 import { describeDevice, principalName } from '@/app/dashboard/reports/components/auditFormat';
 import UserSessionsPanel, { SessionStatusBadge, formatSessionDate } from './UserSessionsPanel';
 
-const TH = 'px-4 py-3.5 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider whitespace-nowrap';
+const TH = 'px-4 py-3 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider whitespace-nowrap';
 const USER_TYPE_LABELS: Record<string, string> = { ADMIN: 'Admin', AGENT: 'Agent', CLIENT: 'Client' };
 
 
@@ -105,42 +105,43 @@ export default function UserSessionsPage() {
       <table className="min-w-full divide-y divide-border">
        <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
         <tr>
-         <th scope="col" className={TH}>User</th>
-         <th scope="col" className={TH}>Type</th>
+         <th scope="col" className={`pin-start ${TH}`}>User</th>
          <th scope="col" className={TH}>Device and IP</th>
-         <th scope="col" className={TH}>Signed in</th>
-         <th scope="col" className={TH}>Last active</th>
+         <th scope="col" className={TH}>Activity</th>
          <th scope="col" className={TH}>Status</th>
-         <th scope="col" aria-label="Actions" className={TH}></th>
+         <th scope="col" aria-label="Actions" className={`pin-end ${TH}`}></th>
         </tr>
        </thead>
        <tbody className="divide-y divide-border">
         {sessions.length === 0 && (
-         <tr><td colSpan={7} className="p-8"><div className="flex justify-center"><EmptyState title="No sessions found." /></div></td></tr>
+         <tr><td colSpan={5} className="p-8"><div className="flex justify-center"><EmptyState title="No sessions found." /></div></td></tr>
         )}
         {sessions.map((session) => {
          const name = principalName(session.user) || 'Removed user';
          const contact = session.user?.email || session.user?.phone;
          return (
           <tr key={session.id} className="hover:bg-muted/30 transition-colors">
-           <td className="px-4 py-3 whitespace-nowrap">
+           <td className="pin-start px-4 py-3 whitespace-nowrap">
             <span className="flex items-center gap-2.5">
              <Avatar name={name} />
              <span className="min-w-0">
-              <button type="button" onClick={() => setViewing(session)} className="block text-sm font-medium text-foreground hover:text-[#018752] hover:underline text-left">{name}</button>
-              {contact && contact !== name && <span className="block text-xs text-muted-foreground">{contact}</span>}
+              <button type="button" onClick={() => setViewing(session)} className="block max-w-[14rem] truncate text-sm font-medium text-foreground hover:text-[#018752] hover:underline text-left" title={name}>{name}</button>
+              <span className="block max-w-[14rem] truncate text-xs text-muted-foreground">
+               {[USER_TYPE_LABELS[session.principalType], contact && contact !== name ? contact : null].filter(Boolean).join(' · ')}
+              </span>
              </span>
             </span>
            </td>
-           <td className="px-4 py-3 text-sm text-foreground">{USER_TYPE_LABELS[session.principalType]}</td>
            <td className="px-4 py-3 whitespace-nowrap">
             <span className="block text-sm text-foreground">{describeDevice(session.userAgent) || 'Unknown device'}</span>
             <span className="block text-xs font-mono text-muted-foreground">{session.ip || 'IP not recorded'}</span>
            </td>
-           <td className="px-4 py-3 whitespace-nowrap text-xs text-foreground">{formatSessionDate(session.createdAt)}</td>
-           <td className="px-4 py-3 whitespace-nowrap text-xs text-foreground">{formatSessionDate(session.lastUsedAt)}</td>
+           <td className="px-4 py-3 whitespace-nowrap text-xs">
+            <span className="block text-foreground">Active {formatSessionDate(session.lastUsedAt)}</span>
+            <span className="block text-muted-foreground">Signed in {formatSessionDate(session.createdAt)}</span>
+           </td>
            <td className="px-4 py-3 whitespace-nowrap"><SessionStatusBadge status={session.status} /></td>
-           <td className="px-4 py-3 text-right whitespace-nowrap">
+           <td className="pin-end px-4 py-3 text-right whitespace-nowrap">
             <button type="button" onClick={() => setViewing(session)} className="h-10 px-3 text-xs font-semibold text-foreground hover:bg-muted/50 rounded-lg">View</button>
             {session.status === 'active' && (
              <button type="button" onClick={() => handleRevoke(session)} className="h-10 px-3 text-xs font-semibold text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-lg">Sign out</button>

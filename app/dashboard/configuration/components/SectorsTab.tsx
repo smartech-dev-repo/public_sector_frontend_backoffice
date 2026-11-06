@@ -9,7 +9,7 @@ import { useDataVersion } from '@/app/composables/useDataVersion';
 import { useConfirm } from '@/app/composables/useConfirm';
 import { useToast } from '@/app/composables/useToast';
 
-const TH = 'px-4 py-3.5 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider';
+const TH = 'px-4 py-3 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider';
 const INPUT = 'mt-1 w-full px-4 py-2.5 border border-border rounded-lg text-sm font-normal outline-none focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 disabled:opacity-60';
 
 type EditorState = { id?: string; code: string; name: string } | null;

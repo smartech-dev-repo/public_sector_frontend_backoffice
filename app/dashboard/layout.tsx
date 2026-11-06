@@ -14,6 +14,7 @@ import NotificationBell from '@/app/components/ui/NotificationBell';
 import { announceNotificationsChanged, useNotificationSummary } from '@/app/composables/modules/useNotificationSummary';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 import { clearAuthStorage } from '@/app/composables/core/useAuth';
+import TableScrollEdges from '@/app/components/ui/TableScrollEdges';
 import { 
   Sun, 
   Moon, 
@@ -290,7 +291,8 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
  }, [navItems, mounted]);
 
  return (
-  <div className="h-screen overflow-hidden bg-background font-sans flex text-foreground">
+  // relative: the shell is the containing block, so nothing absolute can widen the page past the screen.
+  <div className="relative h-screen overflow-hidden bg-background font-sans flex text-foreground">
    {/* Global Components */}
    <SessionManager />
    <SearchModal isOpen={showSearchModal} onClose={() => setShowSearchModal(false)} />
@@ -526,6 +528,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
         children
       )} */}
       {children}
+      <TableScrollEdges />
      </div>
     </main>
    </div>

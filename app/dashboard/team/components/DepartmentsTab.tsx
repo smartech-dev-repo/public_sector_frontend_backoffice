@@ -128,32 +128,32 @@ export default function DepartmentsTab() {
       <table className="w-full text-sm text-left">
        <thead className="bg-[#E9F4EE] dark:bg-emerald-950/20">
          <tr>
-         <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Date Created</th>
-         <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Name</th>
-         <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Description</th>
-         <th className="px-4 py-4 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Updated At</th>
+         <th className="pin-start px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Name</th>
+         <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Date Created</th>
+         <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Description</th>
+         <th className="px-4 py-3 text-left text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Updated At</th>
          {canManage && (
-          <th className="px-4 py-4 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
+          <th className="pin-end px-4 py-3 text-right text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Actions</th>
          )}
         </tr>
        </thead>
        <tbody className="divide-y divide-border">
         {departments.map((department: any) => (
          <tr key={department.id} className="hover:bg-accent/50 transition-colors">
-          <td className="px-4 py-4">
-           <div className="font-medium text-foreground font-mono">{new Date(department.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
-          </td>
-          <td className="px-4 py-4">
+          <td className="pin-start px-4 py-3">
            <div className="font-medium text-foreground">{department.name}</div>
           </td>
-          <td className="px-4 py-4">
+          <td className="px-4 py-3">
+           <div className="font-medium text-foreground font-mono">{new Date(department.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+          </td>
+          <td className="px-4 py-3">
            <div className="text-muted-foreground">{department.description || 'N/A'}</div>
           </td>
-          <td className="px-4 py-4">
+          <td className="px-4 py-3">
            <div className="text-muted-foreground text-sm">{new Date(department.updatedAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
           </td>
           {canManage && (
-           <td className="px-4 py-4 text-right">
+           <td className="pin-end px-4 py-3 text-right">
             <TableDropdown>
              <button onClick={() => handleEdit(department)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-foreground/90 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">Edit</button>
              <button onClick={() => handleDelete(department.id)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-colors">Delete</button>
