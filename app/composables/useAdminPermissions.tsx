@@ -48,7 +48,8 @@ export type AdminPermission =
   | 'agents:recruitment:read'
   | 'agents:recruitment:analytics:read'
   | 'agents:recruitment:manage'
-  | 'reconciliation:read';
+  | 'reconciliation:read'
+  | 'reconciliation:resolve';
 
 export const ALL_PERMISSIONS: AdminPermission[] = [
   'admins:create',
@@ -95,6 +96,7 @@ export const ALL_PERMISSIONS: AdminPermission[] = [
   'agents:recruitment:analytics:read',
   'agents:recruitment:manage',
   'reconciliation:read',
+  'reconciliation:resolve',
 ];
 
 /**

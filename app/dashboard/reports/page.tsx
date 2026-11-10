@@ -6,6 +6,7 @@ import { useListTotals } from '@/app/composables/useListTotals';
 import { auditLogs_api } from '@/app/api_factory/modules/auditLogs';
 import { useState, useMemo, useEffect } from 'react';
 import ReconciliationTab from './components/ReconciliationTab';
+import DeductionsTab from './components/DeductionsTab';
 import AuditLogsTab from './components/AuditLogsTab';
 import AnalyticsTab from './components/AnalyticsTab';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
@@ -23,14 +24,15 @@ export default function SystemReportsPage() {
   });
 
   const availableTabs = useMemo(() => {
-    const list: { id: 'analytics' | 'reconciliation' | 'audit'; label: string }[] = [];
+    const list: { id: 'analytics' | 'reconciliation' | 'deductions' | 'audit'; label: string }[] = [];
     if (canAnalytics) list.push({ id: 'analytics', label: 'Analytics Dashboard' });
     if (canReconciliation) list.push({ id: 'reconciliation', label: 'Finance Reconciliation' });
+    if (canReconciliation) list.push({ id: 'deductions', label: 'Payroll Deductions' });
     if (canAudit) list.push({ id: 'audit', label: 'Audit Trail Logs' });
     return list;
   }, [canAnalytics, canReconciliation, canAudit]);
 
-  const [activeTab, setActiveTab] = useState<'analytics' | 'reconciliation' | 'audit'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'reconciliation' | 'deductions' | 'audit'>('analytics');
 
   // Automatically adjust activeTab if the current one is not permitted
   useEffect(() => {
@@ -82,6 +84,7 @@ export default function SystemReportsPage() {
       <div className="pt-2">
         {activeTab === 'analytics' && canAnalytics && <AnalyticsTab />}
         {activeTab === 'reconciliation' && canReconciliation && <ReconciliationTab />}
+        {activeTab === 'deductions' && canReconciliation && <DeductionsTab />}
         {activeTab === 'audit' && canAudit && <AuditLogsTab />}
       </div>
       </TabTotalScope>
