@@ -68,6 +68,7 @@ const GROUPS: { name: string; labels: Record<string, string> }[] = [
    'repayments:upload': 'Upload repayment schedule',
    'documents:read': 'View upload batches',
    'reconciliation:read': 'View reconciliation',
+   'reconciliation:resolve': 'Assign, refund or dismiss unmatched deductions',
   },
  },
  {
