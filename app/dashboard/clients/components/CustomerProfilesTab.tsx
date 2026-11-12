@@ -39,7 +39,6 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
   const canOnboard = isSuperAdmin || hasPermission('clients:onboard');
   const canReadLoans = isSuperAdmin || hasPermission('client-loans:read');
   const canReadWallet = isSuperAdmin || hasPermission('wallets:read');
-  const canManageWallet = isSuperAdmin || hasPermission('wallets:manage');
   const canReviewClient = isSuperAdmin || hasPermission('clients:review');
   const canRevokeSessions = isSuperAdmin || hasPermission('clients:sessions:revoke');
 
@@ -54,22 +53,13 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
     fetchClientAnalytics,
     retryClient, 
     approveClient, 
-    getClientWallet, 
-    creditClientWallet, 
-    debitClientWallet, 
     meta 
   } = useClients();
-  const [showWalletModal, setShowWalletModal] = useState(false);
   const [showRetryModal, setShowRetryModal] = useState(false);
   const [retryClientId, setRetryClientId] = useState('');
   const [retryNote, setRetryNote] = useState('');
   const [retrySubmitting, setRetrySubmitting] = useState(false);
   const [selectedClient, setSelectedClient] = useState<any>(null);
-  const [wallet, setWallet] = useState<any>(null);
-  const [amount, setAmount] = useState<number | ''>('');
-  const [walletLoading, setWalletLoading] = useState(false);
-  const [walletAction, setWalletAction] = useState<'credit' | 'debit' | null>(null);
-  const [note, setNote] = useState('');
   const { revokeClientSessions } = useSessions();
   const { addToast } = useToast();
   const searchParams = useSearchParams();
@@ -137,61 +127,6 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
     exportParams.current = params;
     fetchClients(params);
   }, [fetchClients, statusFilter, q, agentIdFilter, agentSearch, createdRange, page, limit, canReviewClient, dataVersion]);
-
-  const openWalletModal = async (client: any) => {
-    setSelectedClient(client);
-    setWallet(null);
-    setAmount('');
-    setNote('');
-    setShowWalletModal(true);
-    setWalletLoading(true);
-    try {
-      const data = await getClientWallet(client.id);
-      setWallet(data);
-    } catch (e: any) {
-      addToast('Failed to load wallet', 'error');
-    } finally {
-      setWalletLoading(false);
-    }
-  };
-
-  const handleCredit = async () => {
-    if (!amount || amount <= 0) return addToast('Enter a valid amount', 'error');
-    setWalletLoading(true);
-    setWalletAction('credit');
-    try {
-      await creditClientWallet(selectedClient.id, { amount: Number(amount), reference: 'REF-' + Date.now(), description: note || 'Credit' });
-      addToast('Sent for approval. Another admin must approve it.', 'success');
-      setAmount('');
-      setNote('');
-      const data = await getClientWallet(selectedClient.id);
-      setWallet(data);
-    } catch (e: any) {
-      addToast(e?.response?.data?.message || 'Failed to credit wallet', 'error');
-    } finally {
-      setWalletLoading(false);
-      setWalletAction(null);
-    }
-  };
-
-  const handleDebit = async () => {
-    if (!amount || amount <= 0) return addToast('Enter a valid amount', 'error');
-    setWalletLoading(true);
-    setWalletAction('debit');
-    try {
-      await debitClientWallet(selectedClient.id, { amount: Number(amount), reference: 'REF-' + Date.now(), description: note || 'Debit' });
-      addToast('Sent for approval. Another admin must approve it.', 'success');
-      setAmount('');
-      setNote('');
-      const data = await getClientWallet(selectedClient.id);
-      setWallet(data);
-    } catch (e: any) {
-      addToast(e?.response?.data?.message || 'Failed to debit wallet', 'error');
-    } finally {
-      setWalletLoading(false);
-      setWalletAction(null);
-    }
-  };
 
   const handleApprove = async (id: string) => {
     const isConfirmed = await confirm({
@@ -741,14 +676,13 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
                               </Link>
                             )}
                             {canReadWallet && (
-                              <button 
-                                type="button"
-                                onClick={() => openWalletModal(client)} 
+                              <Link 
+                                href={`/dashboard/clients/${client.id}?tab=wallet`} 
                                 className="w-full text-left px-4 py-2.5 text-xs font-medium text-foreground hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-950/30 transition-colors flex items-center gap-2.5"
                               >
                                 <Wallet className="w-4 h-4 text-blue-600 shrink-0" />
                                 Wallet
-                              </button>
+                              </Link>
                             )}
                             {/* Approve and retry are decisions on a failed check, so only for clients in manual review. */}
                             {canReviewClient && client.status === 'MANUAL_REVIEW' && (
@@ -824,87 +758,6 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
             You do not have permission to view customer profiles.
           </p>
         </div>
-      )}
-
-      {/* ================= WALLET MODAL ================= */}
-      {showWalletModal && selectedClient && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-modal flex items-center justify-center">
-          <div className="fixed inset-0 bg-white/30 dark:bg-white/10 backdrop-blur-md" onClick={() => setShowWalletModal(false)}></div>
-          <div className="relative bg-card rounded-2xl p-6 w-full max-w-md mx-4 border border-slate-200 dark:border-slate-800 shadow-2xl shadow-black/10">
-            <div className="flex items-start justify-between mb-3">
-              <div>
-                <h3 className="text-lg font-bold text-foreground">Client Wallet</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {getClientName(selectedClient)}
-                  {selectedClient.phone ? ` • ${selectedClient.phone}` : ''}
-                </p>
-              </div>
-              <button onClick={() => setShowWalletModal(false)} className="text-muted-foreground/70 hover:text-muted-foreground bg-muted/50 hover:bg-slate-200 rounded-full p-1.5 transition-colors">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-              </button>
-            </div>
-            
-            <div className="bg-muted/30 p-4 rounded-xl border border-border/50 mb-3 text-center">
-              <p className="text-sm text-muted-foreground mb-1">Available Balance</p>
-              {walletLoading && !wallet ? (
-                <div className="animate-pulse h-8 w-32 bg-slate-200 rounded mx-auto"></div>
-              ) : (
-                <h4 className="text-3xl font-bold text-foreground">₦{wallet?.balance?.toLocaleString() || '0.00'}</h4>
-              )}
-            </div>
-
-            {canManageWallet ? (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-foreground/90 mb-1">Amount (₦)</label>
-                  <input 
-                    type="number" 
-                    value={amount}
-                    onChange={(e) => setAmount(Number(e.target.value))}
-                    placeholder="Enter amount" 
-                    className="w-full px-4 py-2.5 border border-border rounded-lg text-sm focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 outline-none transition-all" 
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground/90 mb-1">Note / Description</label>
-                  <input 
-                    type="text" 
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    placeholder="e.g. Refund or Adjustment" 
-                    className="w-full px-4 py-2.5 border border-border rounded-lg text-sm focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 outline-none transition-all" 
-                  />
-                </div>
-                
-                <div className="flex gap-3 pt-4">
-                  <button 
-                    onClick={handleDebit} 
-                    disabled={walletLoading || !amount} 
-                    className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
-                  >
-                    <ButtonLoader loading={walletLoading && walletAction === 'debit'} loadingText="Debiting...">
-                      Debit Wallet
-                    </ButtonLoader>
-                  </button>
-                  <button 
-                    onClick={handleCredit} 
-                    disabled={walletLoading || !amount} 
-                    className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
-                  >
-                    <ButtonLoader loading={walletLoading && walletAction === 'credit'} loadingText="Crediting...">
-                      Credit Wallet
-                    </ButtonLoader>
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <p className="text-center text-xs text-muted-foreground pt-2">
-                You do not have permission to credit or debit this wallet.
-              </p>
-            )}
-          </div>
-        </div>,
-        document.body
       )}
 
       {/* ================= RETRY VERIFICATION MODAL ================= */}
