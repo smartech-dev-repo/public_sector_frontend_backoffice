@@ -42,6 +42,7 @@ import {
 } from 'lucide-react';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 import ClientEligibilityPanel from '../components/ClientEligibilityPanel';
+import ClientWalletPanel from '@/app/components/wallet/ClientWalletPanel';
 import ClientAssignmentPanel from '@/app/components/people/ClientAssignmentPanel';
 import AccountDevicePanel from '@/app/components/people/AccountDevicePanel';
 
@@ -64,9 +65,6 @@ export default function ClientWalletPage() {
   loading, 
   error, 
   getClientById, 
-  getClientWallet, 
-  creditClientWallet, 
-  debitClientWallet, 
   getClientActivities, 
   getClientOnboardingStatus,
   approveClient,
@@ -78,7 +76,6 @@ export default function ClientWalletPage() {
  const { confirm } = useConfirm();
 
  const [client, setClient] = useState<any>(null);
- const [wallet, setWallet] = useState<any>(null);
  const [onboardingStatus, setOnboardingStatus] = useState<any>(null);
  const [onboardingLoading, setOnboardingLoading] = useState(false);
  const [activities, setActivities] = useState<any[]>([]);
@@ -86,12 +83,8 @@ export default function ClientWalletPage() {
  const [loansLoading, setLoansLoading] = useState(false);
  const [activeTab, setActiveTab] = useState<'profile' | 'onboarding' | 'wallet' | 'loans' | 'eligibility' | 'activities'>('profile');
  
- const [showCreditModal, setShowCreditModal] = useState(false);
- const [showDebitModal, setShowDebitModal] = useState(false);
  const [showRetryModal, setShowRetryModal] = useState(false);
  const [retryNote, setRetryNote] = useState('');
- const [amount, setAmount] = useState('');
- const [walletNote, setWalletNote] = useState('');
  const [submitting, setSubmitting] = useState(false);
 
  // Repayment plan state
@@ -139,10 +132,6 @@ export default function ClientWalletPage() {
   try {
    const clientData = await getClientById(clientId);
    setClient(clientData);
-   if (canReadWallet) {
-    const walletData = await getClientWallet(clientId);
-    setWallet(walletData);
-   }
   } catch (e: any) {
    addToast('Failed to load client data', 'error');
   }
@@ -221,66 +210,6 @@ export default function ClientWalletPage() {
    setRepaymentPlan(null);
   } finally {
    setRepaymentLoading(false);
-  }
- };
-
- const handleCredit = async () => {
-  if (!amount || isNaN(Number(amount))) {
-   addToast('Please enter a valid amount', 'error');
-   return;
-  }
-  if (!walletNote.trim()) {
-   addToast('Please enter a description', 'error');
-   return;
-  }
-  const confirmed = await confirm({
-   title: 'Confirm Credit',
-   message: `Are you sure you want to credit ₦${Number(amount).toLocaleString()} to this client's wallet?`,
-   confirmText: 'Credit',
-  });
-  if (!confirmed) return;
-  setSubmitting(true);
-  try {
-   await creditClientWallet(clientId, { amount: Number(amount), description: walletNote.trim() });
-   addToast('Sent for approval. Another admin must approve it.', 'success');
-   setShowCreditModal(false);
-   setAmount('');
-   setWalletNote('');
-   loadData();
-  } catch (e: any) {
-   addToast(e?.response?.data?.message || 'Failed to credit wallet', 'error');
-  } finally {
-   setSubmitting(false);
-  }
- };
-
- const handleDebit = async () => {
-  if (!amount || isNaN(Number(amount))) {
-   addToast('Please enter a valid amount', 'error');
-   return;
-  }
-  if (!walletNote.trim()) {
-   addToast('Please enter a description', 'error');
-   return;
-  }
-  const confirmed = await confirm({
-   title: 'Confirm Debit',
-   message: `Are you sure you want to debit ₦${Number(amount).toLocaleString()} from this client's wallet?`,
-   confirmText: 'Debit',
-  });
-  if (!confirmed) return;
-  setSubmitting(true);
-  try {
-   await debitClientWallet(clientId, { amount: Number(amount), description: walletNote.trim() });
-   addToast('Sent for approval. Another admin must approve it.', 'success');
-   setShowDebitModal(false);
-   setAmount('');
-   setWalletNote('');
-   loadData();
-  } catch (e: any) {
-   addToast(e?.response?.data?.message || 'Failed to debit wallet', 'error');
-  } finally {
-   setSubmitting(false);
   }
  };
 
@@ -379,6 +308,13 @@ export default function ClientWalletPage() {
   ...(isSuperAdmin || hasPermission('clients:read') ? [{ key: 'eligibility' as const, label: 'Eligibility' }] : []),
   ...(canReadActivities ? [{ key: 'activities' as const, label: 'Activities' }] : []),
  ];
+
+ // ?tab=wallet (and the other tab keys) opens that tab, e.g. from the Wallets page.
+ useEffect(() => {
+  const wanted = new URLSearchParams(window.location.search).get('tab');
+  if (wanted && tabs.some(t => t.key === wanted)) handleTabChange(wanted as typeof activeTab);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [tabs.length]);
 
  useEffect(() => {
   if (tabs.length > 0 && !tabs.some(t => t.key === activeTab)) {
@@ -1490,31 +1426,7 @@ export default function ClientWalletPage() {
 
      {/* Wallet Tab */}
      {activeTab === 'wallet' && (
-      <div className="bg-card p-6 rounded-2xl border border-border">
-       <h2 className="text-lg font-semibold text-foreground mb-4">Wallet</h2>
-       {wallet ? (
-        <div className="space-y-3">
-         <div>
-          <p className="text-muted-foreground text-sm font-medium mb-1">Available Balance</p>
-          <p className="text-3xl font-bold text-foreground">₦{wallet.balance?.toLocaleString() || 0}</p>
-         </div>
-         {wallet.pendingRequests > 0 && (
-          <p className="text-sm text-amber-900 dark:text-amber-300">
-           {wallet.pendingRequests} wallet {wallet.pendingRequests === 1 ? 'request is' : 'requests are'} waiting for approval, so the balance may change.{' '}
-           <Link href="/dashboard/approvals" className="font-semibold underline">View approvals</Link>
-          </p>
-         )}
-         {canManageWallet && (
-          <div className="flex gap-3">
-           <button onClick={() => setShowCreditModal(true)} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">Credit Wallet</button>
-           <button onClick={() => setShowDebitModal(true)} className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors">Debit Wallet</button>
-          </div>
-         )}
-        </div>
-       ) : (
-        <p className="text-muted-foreground text-sm">No wallet information available.</p>
-       )}
-      </div>
+      <ClientWalletPanel clientId={clientId} clientName={client?.onboarding?.employeeName} canManage={canManageWallet} />
      )}
 
      {/* Loans Tab */}
@@ -1703,53 +1615,6 @@ export default function ClientWalletPage() {
       </div>
      )}
     </>
-   )}
-
-   {/* Credit/Debit Modals */}
-   {(showCreditModal || showDebitModal) && typeof document !== 'undefined' && createPortal(
-    <div className="fixed inset-0 z-modal flex items-center justify-center">
-     <div className="fixed inset-0 bg-white/30 dark:bg-white/10 backdrop-blur-md" onClick={() => { setShowCreditModal(false); setShowDebitModal(false); }}></div>
-     <div className="relative bg-card rounded-2xl p-6 w-full max-w-md mx-4 animate-in fade-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-800 shadow-2xl shadow-black/10">
-      <div className="flex items-start justify-between mb-4">
-       <h3 className="text-lg font-semibold text-foreground">{showCreditModal ? 'Credit Wallet' : 'Debit Wallet'}</h3>
-       <button onClick={() => { setShowCreditModal(false); setShowDebitModal(false); }} className="text-muted-foreground/70 hover:text-muted-foreground">
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-       </button>
-      </div>
-      <div className="space-y-4">
-       <div>
-        <label className="block text-sm font-medium text-foreground/90 mb-1">Amount (₦)</label>
-        <input 
-         value={amount} 
-         onChange={(e) => setAmount(e.target.value)} 
-         type="number" 
-         className="w-full px-4 py-2.5 border border-border rounded-lg text-sm focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 outline-none transition-all" 
-         placeholder="Enter amount..."
-        />
-       </div>
-       <div>
-        <label htmlFor="wallet-description" className="block text-sm font-medium text-foreground/90 mb-1">Description</label>
-        <input
-         id="wallet-description"
-         value={walletNote}
-         onChange={(e) => setWalletNote(e.target.value)}
-         maxLength={200}
-         className="w-full px-4 py-2.5 border border-border rounded-lg text-sm focus:ring-1 focus:ring-emerald-200 focus:border-emerald-400 outline-none transition-all"
-         placeholder="Why is this being done?"
-        />
-       </div>
-      </div>
-      <div className="flex gap-3 mt-6 w-full">
-       <button onClick={() => { setShowCreditModal(false); setShowDebitModal(false); }} className="flex-1 px-5 py-2.5 rounded-lg text-sm text-foreground/90 bg-muted/50 hover:bg-slate-200 transition-colors">Cancel</button>
-       <button onClick={showCreditModal ? handleCredit : handleDebit} disabled={submitting} className={`px-5 py-2.5 rounded-lg text-sm text-white disabled:opacity-50 transition-colors flex items-center justify-center min-w-[100px] ${showCreditModal ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'}`}>
-        <ButtonLoader loading={submitting} loadingText="Processing...">
-         Confirm
-        </ButtonLoader>
-       </button>
-      </div>
-     </div>
-    </div>,
-    document.body
    )}
 
    {/* Retry Verification Modal */}

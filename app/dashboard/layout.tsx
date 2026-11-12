@@ -34,7 +34,8 @@ import {
  SlidersHorizontal,
  MonitorSmartphone,
  Smartphone,
- ClipboardCheck
+ ClipboardCheck,
+ Wallet
 } from 'lucide-react';
 
 export default function CreditRiskLayout({ children }: { children: React.ReactNode }) {
@@ -193,6 +194,14 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
    icon: Banknote,
    match: (p: string) => p.startsWith('/dashboard/loan-requests') || p.startsWith('/dashboard/client-loans') || p.startsWith('/dashboard/disbursement-summary'),
    visible: hasAnyPermission(['loan-requests:read', 'client-loans:read', 'clients:read']),
+  },
+  {
+   href: '/dashboard/wallets',
+   label: 'Wallets',
+   section: 'Lending',
+   icon: Wallet,
+   match: (p: string) => p.startsWith('/dashboard/wallets'),
+   visible: hasAnyPermission(['wallets:read']),
   },
   {
    href: '/dashboard/loan-terms',
