@@ -42,7 +42,7 @@ const DetailRow = ({ label, value, mono }: { label: string; value: React.ReactNo
  </div>
 );
 
-export default function AuditLogsTab() {
+export default function AuditTrail() {
  const dataVersion = useDataVersion();
  const { isSuperAdmin, hasPermission } = useAdminPermissions();
  const canAudit = isSuperAdmin || hasPermission('audit:read');
@@ -265,7 +265,7 @@ export default function AuditLogsTab() {
      </div>
      {meta && logs.length > 0 && (
       <div className="border-t border-border/50 py-4 px-4">
-       <Pagination tabTotal totalItems={meta.total || 0} currentPage={page || 1} itemsPerPage={limit || 25} onPageChange={setPage} onItemsPerPageChange={setLimit} />
+       <Pagination totalItems={meta.total || 0} currentPage={page || 1} itemsPerPage={limit || 25} onPageChange={setPage} onItemsPerPageChange={setLimit} />
       </div>
      )}
     </div>

@@ -10,7 +10,7 @@ import EmptyState from '@/app/components/ui/EmptyState';
 import { useSessions } from '@/app/composables/modules/useSessions';
 import { useConfirm } from '@/app/composables/useConfirm';
 import { useToast } from '@/app/composables/useToast';
-import { describeDevice } from '@/app/dashboard/reports/components/auditFormat';
+import { describeDevice } from '@/app/dashboard/audit-logs/components/auditFormat';
 
 const dateTime = (value: string) =>
  new Date(value).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });

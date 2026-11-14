@@ -18,7 +18,7 @@ function LoanRequestPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const tabParam = searchParams.get('tab') as TabId | null;
-  const { hasPermission, hasAnyPermission, isSuperAdmin } = useAdminPermissions();
+  const { hasPermission, hasAllPermissions, isSuperAdmin } = useAdminPermissions();
 
   const tabs = useMemo(() => {
     const allTabs: { id: TabId; label: string; visible: boolean }[] = [
@@ -30,16 +30,16 @@ function LoanRequestPageContent() {
       { 
         id: 'client-loans', 
         label: 'Client Loans', 
-        visible: isSuperAdmin || hasAnyPermission(['client-loans:read', 'clients:read']) 
+        visible: isSuperAdmin || hasAllPermissions(['client-loans:read', 'clients:read']) 
       },
       { 
         id: 'disbursement', 
         label: 'Disbursement Summary', 
-        visible: isSuperAdmin || hasAnyPermission(['loan-requests:read', 'client-loans:read']) 
+        visible: isSuperAdmin || hasPermission('client-loans:read') 
       },
     ];
     return allTabs.filter(t => t.visible);
-  }, [hasPermission, hasAnyPermission, isSuperAdmin]);
+  }, [hasPermission, hasAllPermissions, isSuperAdmin]);
 
   const totals = useListTotals({
     requests: tabs.some((tab) => tab.id === 'requests') ? () => loans_api.getLoanRequests({ limit: 1 }) : null,

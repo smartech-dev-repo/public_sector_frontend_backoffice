@@ -12,7 +12,7 @@ import { sessions_api } from '@/app/api_factory/modules/sessions';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 import { useConfirm } from '@/app/composables/useConfirm';
 import { useToast } from '@/app/composables/useToast';
-import { describeDevice, principalName } from '@/app/dashboard/reports/components/auditFormat';
+import { describeDevice, principalName } from '@/app/dashboard/audit-logs/components/auditFormat';
 import UserSessionsPanel, { SessionStatusBadge, formatSessionDate } from './UserSessionsPanel';
 
 const TH = 'px-4 py-3 text-left text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider whitespace-nowrap';

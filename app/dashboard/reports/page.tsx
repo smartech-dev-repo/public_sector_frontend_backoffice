@@ -2,12 +2,9 @@
 
 import TabCount from '@/app/components/ui/TabCount';
 import { TabTotalScope, useTabTotals } from '@/app/composables/useTabTotals';
-import { useListTotals } from '@/app/composables/useListTotals';
-import { auditLogs_api } from '@/app/api_factory/modules/auditLogs';
 import { useState, useMemo, useEffect } from 'react';
 import ReconciliationTab from './components/ReconciliationTab';
 import DeductionsTab from './components/DeductionsTab';
-import AuditLogsTab from './components/AuditLogsTab';
 import AnalyticsTab from './components/AnalyticsTab';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 import { ShieldAlert } from 'lucide-react';
@@ -17,22 +14,18 @@ export default function SystemReportsPage() {
 
   const canAnalytics = isSuperAdmin || hasAnyPermission(['clients:analytics:read', 'agents:analytics:read']);
   const canReconciliation = isSuperAdmin || hasPermission('reconciliation:read');
-  const canAudit = isSuperAdmin || hasPermission('audit:read');
 
-  const totals: Record<string, number> = useListTotals({
-    audit: canAudit ? () => auditLogs_api.getLogs({ limit: 1 }) : null,
-  });
+  const totals: Record<string, number> = {};
 
   const availableTabs = useMemo(() => {
-    const list: { id: 'analytics' | 'reconciliation' | 'deductions' | 'audit'; label: string }[] = [];
+    const list: { id: 'analytics' | 'reconciliation' | 'deductions'; label: string }[] = [];
     if (canAnalytics) list.push({ id: 'analytics', label: 'Analytics Dashboard' });
     if (canReconciliation) list.push({ id: 'reconciliation', label: 'Finance Reconciliation' });
     if (canReconciliation) list.push({ id: 'deductions', label: 'Payroll Deductions' });
-    if (canAudit) list.push({ id: 'audit', label: 'Audit Trail Logs' });
     return list;
-  }, [canAnalytics, canReconciliation, canAudit]);
+  }, [canAnalytics, canReconciliation]);
 
-  const [activeTab, setActiveTab] = useState<'analytics' | 'reconciliation' | 'deductions' | 'audit'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'reconciliation' | 'deductions'>('analytics');
 
   // Automatically adjust activeTab if the current one is not permitted
   useEffect(() => {
@@ -50,7 +43,7 @@ export default function SystemReportsPage() {
         <ShieldAlert className="w-10 h-10 text-amber-500 mb-3" />
         <h3 className="text-lg font-semibold text-foreground">No Report Permissions</h3>
         <p className="text-sm text-muted-foreground mt-1 max-w-sm">
-          You do not have access to any reporting modules. Please contact an administrator if you require audit, reconciliation, or analytics access.
+          You do not have access to any reporting modules. Please contact an administrator if you require reconciliation or analytics access.
         </p>
       </div>
     );
@@ -85,7 +78,6 @@ export default function SystemReportsPage() {
         {activeTab === 'analytics' && canAnalytics && <AnalyticsTab />}
         {activeTab === 'reconciliation' && canReconciliation && <ReconciliationTab />}
         {activeTab === 'deductions' && canReconciliation && <DeductionsTab />}
-        {activeTab === 'audit' && canAudit && <AuditLogsTab />}
       </div>
       </TabTotalScope>
     </div>

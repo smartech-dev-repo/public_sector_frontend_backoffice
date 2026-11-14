@@ -78,10 +78,10 @@ export default function LoanRequestDetailPage({ params }: { params: Promise<{ id
   };
 
   useEffect(() => {
-    if (id) {
+    if (id && canReview) {
       fetchDetail();
     }
-  }, [id, dataVersion]);
+  }, [id, dataVersion, canReview]);
 
   const handleApprove = async () => {
     const confirmed = await confirm({
@@ -160,6 +160,14 @@ export default function LoanRequestDetailPage({ params }: { params: Promise<{ id
       setActionLoading(false);
     }
   };
+
+  if (!canReview) {
+    return (
+      <div className="p-8 max-w-lg mx-auto">
+        <EmptyState title="Access Restricted" description="You do not have permission to view loan requests." />
+      </div>
+    );
+  }
 
   if (loading && !loanRequest) {
     return (

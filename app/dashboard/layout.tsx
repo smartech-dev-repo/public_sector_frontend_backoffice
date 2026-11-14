@@ -27,6 +27,7 @@ import {
  
   User, 
   LineChart, 
+  ScrollText, 
   ShieldCheck, 
   ChevronDown, 
   ShieldAlert,
@@ -135,7 +136,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
   if (pathname.includes('/dashboard/team') || pathname.includes('/dashboard/roles') || pathname.includes('/dashboard/admins')) return 'Team and Roles';
   if (pathname.includes('/dashboard/agent-security')) return 'Agent Security & Suspension';
   if (pathname.includes('/dashboard/agent')) return 'Agent Application Details';
-  if (pathname.includes('/dashboard/audit-logs')) return 'Audit Trail Log';
+  if (pathname.includes('/dashboard/audit-logs')) return 'Audit Trail';
   if (pathname.includes('/dashboard/uploads')) return 'Credit Risk Uploads';
   if (pathname.includes('/dashboard/analytics')) return 'Analytics & Reports';
   if (pathname.includes('/dashboard/client-loans')) return 'Client Loans';
@@ -193,7 +194,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
    section: 'Lending',
    icon: Banknote,
    match: (p: string) => p.startsWith('/dashboard/loan-requests') || p.startsWith('/dashboard/client-loans') || p.startsWith('/dashboard/disbursement-summary'),
-   visible: hasAnyPermission(['loan-requests:read', 'client-loans:read', 'clients:read']),
+   visible: hasAnyPermission(['loan-requests:read', 'client-loans:read']),
   },
   {
    href: '/dashboard/wallets',
@@ -225,7 +226,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
    section: 'People',
    icon: User,
    match: (p: string) => p.startsWith('/dashboard/clients') || p.startsWith('/dashboard/catalog/ippis'),
-   visible: hasAnyPermission(['clients:read', 'clients:review', 'clients:onboard', 'clients:analytics:read', 'ippis:upload', 'wallets:read', 'wallets:manage']),
+   visible: hasAnyPermission(['clients:review', 'clients:onboard', 'clients:analytics:read', 'ippis:upload']),
   },
   {
    href: '/dashboard/agent-management',
@@ -248,8 +249,16 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
    label: 'Reports',
    section: 'Insights',
    icon: LineChart,
-   match: (p: string) => p.startsWith('/dashboard/reports') || p.startsWith('/dashboard/analytics') || p.startsWith('/dashboard/reconciliation') || p.startsWith('/dashboard/audit-logs'),
-   visible: hasAnyPermission(['audit:read', 'reconciliation:read', 'clients:analytics:read', 'agents:analytics:read']),
+   match: (p: string) => p.startsWith('/dashboard/reports') || p.startsWith('/dashboard/analytics') || p.startsWith('/dashboard/reconciliation'),
+   visible: hasAnyPermission(['reconciliation:read', 'clients:analytics:read', 'agents:analytics:read']),
+  },
+  {
+   href: '/dashboard/audit-logs',
+   label: 'Audit Trail',
+   section: 'Insights',
+   icon: ScrollText,
+   match: (p: string) => p.startsWith('/dashboard/audit-logs'),
+   visible: hasAnyPermission(['audit:read']),
   },
   {
    href: '/dashboard/team',

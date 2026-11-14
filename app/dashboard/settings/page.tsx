@@ -68,6 +68,7 @@ export default function ProfileAndSecurityPage() {
   const [adminName, setAdminName] = useState('Admin');
   const [adminEmail, setAdminEmail] = useState('');
   const [adminDept, setAdminDept] = useState('Administrator');
+  const [adminRole, setAdminRole] = useState('');
   const [is2faEnabled, setIs2faEnabled] = useState(false);
 
   // Profile Form States
@@ -114,6 +115,7 @@ export default function ProfileAndSecurityPage() {
         if (data.email) setAdminEmail(data.email);
         if (data.role?.department?.name) setAdminDept(data.role.department.name);
         else if (data.role?.name) setAdminDept(data.role.name);
+        setAdminRole(typeof data.role === 'string' ? data.role : data.role?.name || '');
         if (typeof data.twoFactorEnabled === 'boolean') {
           setIs2faEnabled(data.twoFactorEnabled);
           if (typeof window !== 'undefined') {
@@ -351,9 +353,11 @@ export default function ProfileAndSecurityPage() {
                 <span className="px-3.5 py-1 bg-white text-[#018752] text-xs font-semibold rounded-full shadow-sm">
                   {adminDept || 'Administrator'}
                 </span>
-                <span className="px-3 py-1 bg-white/15 backdrop-blur-sm text-white text-xs font-medium rounded-full border border-white/20">
-                  Role: Super Administrator
-                </span>
+                {adminRole && adminRole !== adminDept && (
+                  <span className="px-3 py-1 bg-white/15 backdrop-blur-sm text-white text-xs font-medium rounded-full border border-white/20">
+                    Role: {adminRole}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -517,7 +521,7 @@ export default function ProfileAndSecurityPage() {
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-foreground">Assigned Role</label>
                 <div className="px-4 py-2.5 bg-muted/50 border border-border rounded-xl text-sm text-foreground flex items-center justify-between">
-                  <span className="font-medium">{adminDept || 'Administrator'}</span>
+                  <span className="font-medium">{adminRole || adminDept || 'Administrator'}</span>
                   <span className="text-xs bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-semibold px-2.5 py-0.5 rounded-full">Active</span>
                 </div>
               </div>
