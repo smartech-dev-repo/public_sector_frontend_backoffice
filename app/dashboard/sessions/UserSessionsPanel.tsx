@@ -11,7 +11,7 @@ import { auditLogs_api } from '@/app/api_factory/modules/auditLogs';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 import { useConfirm } from '@/app/composables/useConfirm';
 import { useToast } from '@/app/composables/useToast';
-import { OUTCOME_LABELS, OUTCOME_STYLES, describeAction, describeDevice, principalName } from '@/app/dashboard/reports/components/auditFormat';
+import { OUTCOME_LABELS, OUTCOME_STYLES, describeAction, describeDevice, principalName } from '@/app/dashboard/audit-logs/components/auditFormat';
 
 export const formatSessionDate = (value: string) =>
  new Date(value).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });

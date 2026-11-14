@@ -49,13 +49,16 @@ import AccountDevicePanel from '@/app/components/people/AccountDevicePanel';
 export default function ClientWalletPage() {
  const dataVersion = useDataVersion();
  const { isSuperAdmin, hasPermission } = useAdminPermissions();
- const canReadClient = isSuperAdmin || hasPermission(['clients:read', 'clients:review']);
+ // GET /admin/clients/:id needs clients:review.
+ const canReadClient = isSuperAdmin || hasPermission('clients:review');
  const canReview = isSuperAdmin || hasPermission('clients:review');
  const canRevokeSessions = isSuperAdmin || hasPermission('clients:sessions:revoke');
  const canReadWallet = isSuperAdmin || hasPermission('wallets:read');
  const canManageWallet = isSuperAdmin || hasPermission('wallets:manage');
- const canReadLoans = isSuperAdmin || hasPermission('client-loans:read');
- const canReadActivities = isSuperAdmin || hasPermission('audit:read') || hasPermission('clients:read');
+ // GET /admin/client-loans needs both client-loans:read and clients:read.
+ const canReadLoans = isSuperAdmin || (hasPermission('client-loans:read') && hasPermission('clients:read'));
+ // GET /admin/clients/:id/activities needs clients:read; audit:read alone isn't enough.
+ const canReadActivities = isSuperAdmin || hasPermission('clients:read');
  const canReadDocuments = isSuperAdmin || hasPermission('documents:read');
 
  const { id } = useParams();
@@ -665,7 +668,10 @@ export default function ClientWalletPage() {
          </div>
         </div>
 
-        <ClientAssignmentPanel clientId={clientId} canAssign={isSuperAdmin || hasPermission('clients:assign')} />
+        {/* GET /admin/clients/:id/assignment needs clients:read. */}
+        {(isSuperAdmin || hasPermission('clients:read')) && (
+         <ClientAssignmentPanel clientId={clientId} canAssign={isSuperAdmin || hasPermission('clients:assign')} />
+        )}
         {(isSuperAdmin || hasPermission('devices:read')) && (
          <AccountDevicePanel principalType="CLIENT" principalId={clientId} canManage={isSuperAdmin || hasPermission('devices:manage')} />
         )}

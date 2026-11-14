@@ -10,6 +10,7 @@ import PulseLoader from '@/app/components/ui/PulseLoader';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 import { useDataVersion } from '@/app/composables/useDataVersion';
 import WalletActionDialog from '@/app/components/wallet/WalletActionDialog';
+import WalletStatementDrawer from '@/app/components/wallet/WalletStatementDrawer';
 import { DIRECTION_META, SOURCE_META, SOURCE_OPTIONS, TH, actorLabel, dateOnly, dateTime, naira } from '@/app/components/wallet/walletFormat';
 
 type Tab = 'wallets' | 'transactions';
@@ -18,7 +19,9 @@ export default function WalletsPage() {
   const { isSuperAdmin, hasPermission } = useAdminPermissions();
   const canRead = isSuperAdmin || hasPermission('wallets:read');
   const canManage = isSuperAdmin || hasPermission('wallets:manage');
+  const canOpenClient = isSuperAdmin || hasPermission('clients:review');
   const [tab, setTab] = useState<Tab>('wallets');
+  const [statement, setStatement] = useState<{ clientId: string; name?: string | null } | null>(null);
   const [summary, setSummary] = useState<any>(null);
 
   if (!canRead) {
@@ -54,8 +57,17 @@ export default function WalletsPage() {
         ))}
       </div>
 
-      {tab === 'wallets' ? <WalletsTab canManage={canManage} onSummary={setSummary} /> : <TransactionsTab />}
+      {tab === 'wallets' ? <WalletsTab canManage={canManage} onSummary={setSummary} onStatement={setStatement} /> : <TransactionsTab onStatement={setStatement} />}
       {tab === 'transactions' && !summary && <SummaryLoader onSummary={setSummary} />}
+      {statement && (
+        <WalletStatementDrawer
+          clientId={statement.clientId}
+          clientName={statement.name}
+          canManage={canManage}
+          canOpenClient={canOpenClient}
+          onClose={() => setStatement(null)}
+        />
+      )}
     </div>
   );
 }
@@ -153,7 +165,9 @@ function Card({ label, value, tone, icon: Icon }: { label: string; value: string
   );
 }
 
-function WalletsTab({ canManage, onSummary }: { canManage: boolean; onSummary: (s: any) => void }) {
+type OpenStatement = (target: { clientId: string; name?: string | null }) => void;
+
+function WalletsTab({ canManage, onSummary, onStatement }: { canManage: boolean; onSummary: (s: any) => void; onStatement: OpenStatement }) {
   const dataVersion = useDataVersion();
   const [rows, setRows] = useState<any[] | null>(null);
   const [total, setTotal] = useState(0);
@@ -211,9 +225,9 @@ function WalletsTab({ canManage, onSummary }: { canManage: boolean; onSummary: (
                 rows.map((row) => (
                   <tr key={row.clientId} className="hover:bg-muted/20 transition-colors">
                     <td className="pin-start px-4 py-3.5">
-                      <Link href={`/dashboard/clients/${row.clientId}?tab=wallet`} className="font-medium text-foreground hover:text-[#018752] hover:underline">
+                      <button onClick={() => onStatement({ clientId: row.clientId, name: row.client?.name })} className="font-medium text-foreground text-left hover:text-[#018752] hover:underline">
                         {row.client?.name ?? row.client?.phone ?? 'Client'}
-                      </Link>
+                      </button>
                       <span className="block text-[11px] text-muted-foreground font-mono">{row.client?.staffId ?? row.client?.phone ?? ''}</span>
                     </td>
                     <td className="px-4 py-3.5 text-xs text-muted-foreground">{row.client?.agency ?? '—'}</td>
@@ -232,7 +246,7 @@ function WalletsTab({ canManage, onSummary }: { canManage: boolean; onSummary: (
                             <button onClick={() => setAction({ row, direction: 'DEBIT' })} disabled={row.balance <= 0} className="text-xs px-2.5 py-1 font-medium rounded-lg bg-muted/40 hover:bg-muted/70 text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed">Debit</button>
                           </>
                         )}
-                        <Link href={`/dashboard/clients/${row.clientId}?tab=wallet`} className="text-xs px-2.5 py-1 font-medium rounded-lg bg-muted/40 hover:bg-muted/70 text-foreground transition-colors">Statement</Link>
+                        <button onClick={() => onStatement({ clientId: row.clientId, name: row.client?.name })} className="text-xs px-2.5 py-1 font-medium rounded-lg bg-muted/40 hover:bg-muted/70 text-foreground transition-colors">Statement</button>
                       </div>
                     </td>
                   </tr>
@@ -261,7 +275,7 @@ function WalletsTab({ canManage, onSummary }: { canManage: boolean; onSummary: (
   );
 }
 
-function TransactionsTab() {
+function TransactionsTab({ onStatement }: { onStatement: OpenStatement }) {
   const dataVersion = useDataVersion();
   const [data, setData] = useState<any>(null);
   const [page, setPage] = useState(1);
@@ -330,7 +344,7 @@ function TransactionsTab() {
                     <tr key={e.id} className="hover:bg-muted/20 transition-colors">
                       <td className="pin-start px-4 py-3.5 text-xs text-muted-foreground whitespace-nowrap">{dateTime(e.createdAt)}</td>
                       <td className="px-4 py-3.5 whitespace-nowrap">
-                        <Link href={`/dashboard/clients/${e.client?.id}?tab=wallet`} className="font-medium text-foreground hover:text-[#018752] hover:underline">{e.client?.name ?? e.client?.phone ?? 'Client'}</Link>
+                        <button onClick={() => e.client?.id && onStatement({ clientId: e.client.id, name: e.client?.name })} className="font-medium text-foreground text-left hover:text-[#018752] hover:underline">{e.client?.name ?? e.client?.phone ?? 'Client'}</button>
                         <span className="block text-[11px] text-muted-foreground font-mono">{e.client?.staffId ?? ''}</span>
                       </td>
                       <td className="px-4 py-3.5 min-w-[16rem]">

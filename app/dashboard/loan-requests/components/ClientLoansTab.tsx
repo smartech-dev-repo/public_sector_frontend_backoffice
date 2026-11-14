@@ -50,7 +50,8 @@ function ClientLoansContent() {
  const agencyOptions = useSectorOptions();
  const dataVersion = useDataVersion();
  const { isSuperAdmin, hasPermission } = useAdminPermissions();
- const canReadClientLoans = isSuperAdmin || hasPermission('clients:read');
+ // GET /admin/client-loans needs both client-loans:read and clients:read.
+ const canReadClientLoans = isSuperAdmin || (hasPermission('client-loans:read') && hasPermission('clients:read'));
  const canReadPlan = isSuperAdmin || hasPermission('client-loans:read');
  const searchParams = useSearchParams();
  const { loading, error, clientLoans, fetchClientLoans, getClientLoanRepaymentPlan, meta } = useLoans();

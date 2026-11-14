@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
-import { User, Users, Folder, Settings, UserPlus, UserCog, ShieldCheck, ClipboardList, Scale, LineChart, Banknote, Search } from 'lucide-react';
+import { User, Users, Folder, Settings, UserPlus, UserCog, ShieldCheck, ClipboardList, Scale, LineChart, Banknote, Search, ScrollText, Wallet, Smartphone } from 'lucide-react';
+import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -22,7 +23,10 @@ const SYSTEM_ROUTES = [
   { name: 'Agent Recruitment', href: '/dashboard/invites', description: 'Manage new agent recruitment, invites, and invitations.', icon: UserPlus, keywords: 'agent recruitment invites invitations onboarding' },
   { name: 'Agents', href: '/dashboard/agent-management', description: 'Monitor active agents, credentials, and onboarding access.', icon: Users, keywords: 'agents field officers agents directory' },
   { name: 'Team and Roles', href: '/dashboard/team', description: 'Configure administrators, system roles, and access.', icon: UserCog, keywords: 'roles admins users team staff' },
-  { name: 'System Reports & Analytics', href: '/dashboard/reports', description: 'View client onboarding analytics, finance reconciliation, and audit logs.', icon: LineChart, keywords: 'reports analytics reconciliation audit logs kpi growth' }
+  { name: 'Wallets', href: '/dashboard/wallets', description: 'Client wallet balances, credits and debits.', icon: Wallet, keywords: 'wallets balance credit debit refund statement' },
+  { name: 'Devices', href: '/dashboard/devices', description: 'Phones agents and clients are locked to, and release requests.', icon: Smartphone, keywords: 'devices phones release binding' },
+  { name: 'System Reports & Analytics', href: '/dashboard/reports', description: 'View client onboarding analytics, finance reconciliation and payroll deductions.', icon: LineChart, keywords: 'reports analytics reconciliation deductions kpi growth' },
+  { name: 'Audit Trail', href: '/dashboard/audit-logs', description: 'Every recorded action: who did what, to which record, and from where.', icon: ScrollText, keywords: 'audit trail logs history activity who changed' }
 ];
 
 export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
@@ -30,6 +34,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [mounted, setMounted] = useState(false);
+  const { canAccessRoute } = useAdminPermissions();
 
   useEffect(() => {
     setMounted(true);
@@ -45,15 +50,17 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     }
   }, [isOpen]);
 
+  // Only screens this admin can open, matching the sidebar.
   const filteredRoutes = useMemo(() => {
-    if (!searchQuery.trim()) return SYSTEM_ROUTES;
+    const allowed = SYSTEM_ROUTES.filter((route) => canAccessRoute(route.href));
+    if (!searchQuery.trim()) return allowed;
     const query = searchQuery.toLowerCase().trim();
-    return SYSTEM_ROUTES.filter(route => 
+    return allowed.filter(route => 
       route.name.toLowerCase().includes(query) ||
       route.description.toLowerCase().includes(query) ||
       route.keywords.toLowerCase().includes(query)
     );
-  }, [searchQuery]);
+  }, [searchQuery, canAccessRoute]);
 
   if (!isOpen || !mounted) return null;
 

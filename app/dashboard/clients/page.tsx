@@ -18,13 +18,15 @@ export default function CustomerManagementPage() {
   const canReadProfiles = isSuperAdmin || hasPermission('clients:review') || hasPermission('clients:analytics:read');
   const canUploadIppis = isSuperAdmin || hasPermission('ippis:upload');
   const canOnboard = isSuperAdmin || hasPermission('clients:onboard');
+  // The client list itself (GET /admin/clients) needs clients:review; analytics-only admins see the summary.
+  const canListClients = isSuperAdmin || hasPermission('clients:review');
 
   const [refreshKey, setRefreshKey] = useState(0);
   const [activeTab, setActiveTab] = useState<'profiles' | 'ippis'>('profiles');
   const [onboardingOpen, setOnboardingOpen] = useState(false);
 
   const totals = useListTotals({
-    profiles: canReadProfiles ? () => clients_api.getClients({ limit: 1 }) : null,
+    profiles: canListClients ? () => clients_api.getClients({ limit: 1 }) : null,
     ippis: canUploadIppis ? () => ippis_api.getIppisRecords({ limit: 1 }) : null,
   });
 

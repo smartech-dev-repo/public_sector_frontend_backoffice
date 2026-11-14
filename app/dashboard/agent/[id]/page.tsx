@@ -32,8 +32,9 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
   const canReviewAgent = isSuperAdmin || hasPermission('agents:review');
   const canManageAccess = isSuperAdmin || hasPermission('agents:onboarding-access:manage');
   const canRevokeSessions = isSuperAdmin || hasPermission('agents:sessions:revoke');
-  const canReadLoans = isSuperAdmin || hasPermission('client-loans:read');
-  const canReadClients = isSuperAdmin || hasPermission('clients:read');
+  // Match the API: GET /admin/client-loans needs client-loans:read and clients:read, GET /admin/clients needs clients:review.
+  const canReadLoans = canReadAgent && (isSuperAdmin || (hasPermission('client-loans:read') && hasPermission('clients:read')));
+  const canReadClients = canReadAgent && (isSuperAdmin || hasPermission('clients:review'));
   const canReadDocs = isSuperAdmin || hasPermission('documents:read');
   const canSendCreds = isSuperAdmin || hasPermission('agents:review');
   const canAssignClients = isSuperAdmin || hasPermission('clients:assign');
