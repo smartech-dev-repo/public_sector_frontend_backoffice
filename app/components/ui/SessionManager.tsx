@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth, clearAuthStorage } from '@/app/composables/core/useAuth';
 import { refreshSession, notifySessionExpired, SESSION_EXPIRED_EVENT } from '@/app/api_factory/axios.config';
+import { getAccessToken } from '@/app/api_factory/tokenStore';
 import { createPortal } from 'react-dom';
 import { useToast } from '@/app/composables/useToast';
 import OtpInput from '@/app/components/ui/OtpInput';
@@ -59,8 +60,7 @@ export default function SessionManager() {
 
   const getTokenInfo = useCallback(() => {
     try {
-      const match = typeof document !== 'undefined' ? document.cookie.match(new RegExp('(^| )public_sector_token=([^;]+)')) : null;
-      const token = match ? decodeURIComponent(match[2]) : (typeof localStorage !== 'undefined' ? localStorage.getItem('token') : null);
+      const token = getAccessToken();
       if (!token) return { expiry: null, email: '' };
 
       const payload = JSON.parse(atob(token.split('.')[1]));
