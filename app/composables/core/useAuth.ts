@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { auth_api } from '@/app/api_factory/modules/auth';
+import { clearAccessToken, setAccessToken } from '@/app/api_factory/tokenStore';
 
 export function decodeJwtPayload(token: string): any {
   try {
@@ -22,7 +23,9 @@ export function decodeJwtPayload(token: string): any {
 }
 
 export function clearAuthStorage() {
+  clearAccessToken();
   if (typeof window !== 'undefined') {
+    // Tokens no longer live in scripts' reach; these clear what older versions left behind.
     document.cookie = 'public_sector_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     document.cookie = 'public_sector_user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     localStorage.removeItem('token');
@@ -38,9 +41,12 @@ export function clearAuthStorage() {
   }
 }
 
+/**
+ * Keeps a fresh access token in memory and caches what the menus need from it. The refresh
+ * token never reaches the page: the sign-in routes put it in an httpOnly cookie.
+ */
 export function setAuthToken(data: any) {
-  const token = data?.token || data?.accessToken || data?.data?.token || data?.data?.accessToken;
-  const refreshToken = data?.refreshToken || data?.data?.refreshToken;
+  const token = data?.accessToken || data?.data?.accessToken;
   if (token && typeof window !== 'undefined') {
     // 1. Wipe previous cached permissions & role immediately
     localStorage.removeItem('public_sector_permissions');
@@ -62,13 +68,13 @@ export function setAuthToken(data: any) {
       }
     }
 
-    document.cookie = `public_sector_token=${encodeURIComponent(token)}; path=/; max-age=31536000`; // 1 year
-    localStorage.setItem('token', token);
+    setAccessToken(token);
+    // Clear any token an older version stored where scripts can read it.
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+    document.cookie = 'public_sector_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     localStorage.setItem('public_sector_last_activity', String(Date.now()));
     window.dispatchEvent(new Event('public_sector_profile_updated'));
-  }
-  if (refreshToken && typeof window !== 'undefined') {
-    localStorage.setItem('refreshToken', refreshToken);
   }
 }
 
@@ -79,26 +85,6 @@ export const useAuth = () => {
   const [error, setError] = useState(null);
 
   const setToken = setAuthToken;
-
- const login = async (payload: any) => {
-  setLoading(true);
-  setError(null);
-  try {
-   const response = await auth_api.login(payload);
-   setToken(response.data);
-   setUser(response.data);
-   if (payload?.email && typeof window !== 'undefined') {
-    localStorage.setItem('public_sector_user_email', payload.email);
-   }
-   setIsAuthenticated(true);
-   return response.data;
-  } catch (err: any) {
-   setError(err.message);
-   throw err;
-  } finally {
-   setLoading(false);
-  }
- };
 
  const adminLogin = async (payload: any) => {
   setLoading(true);
@@ -201,53 +187,6 @@ export const useAuth = () => {
   }
  };
 
- const agentLogin = async (payload: any) => {
-  setLoading(true);
-  setError(null);
-  try {
-   const response = await auth_api.agentLogin(payload);
-   setToken(response.data);
-   setUser(response.data);
-   setIsAuthenticated(true);
-   return response.data;
-  } catch (err: any) {
-   setError(err.message);
-   throw err;
-  } finally {
-   setLoading(false);
-  }
- };
-
- const clientOtpRequest = async (payload: any) => {
-  setLoading(true);
-  setError(null);
-  try {
-   const response = await auth_api.clientOtpRequest(payload);
-   return response.data;
-  } catch (err: any) {
-   setError(err.message);
-   throw err;
-  } finally {
-   setLoading(false);
-  }
- };
-
- const clientOtpVerify = async (payload: any) => {
-  setLoading(true);
-  setError(null);
-  try {
-   const response = await auth_api.clientOtpVerify(payload);
-   setToken(response.data);
-   setUser(response.data);
-   setIsAuthenticated(true);
-   return response.data;
-  } catch (err: any) {
-   setError(err.message);
-   throw err;
-  } finally {
-   setLoading(false);
-  }
- };
 
  const logout = async () => {
   try {
@@ -267,6 +206,8 @@ export const useAuth = () => {
   } catch (err) {
    console.error('LogoutAll API failed', err);
   } finally {
+   // Clears this browser's refresh cookie too.
+   await auth_api.logout().catch(() => undefined);
    clearAuthStorage();
    setUser(null);
    setIsAuthenticated(false);
@@ -278,15 +219,11 @@ export const useAuth = () => {
   isAuthenticated,
   loading,
   error,
-  login,
   adminLogin,
   acceptInvite,
   forgotPassword,
   resetPassword,
   fetchAdminProfile,
-  agentLogin,
-  clientOtpRequest,
-  clientOtpVerify,
   logout,
   logoutAll,
   loginVerify2fa

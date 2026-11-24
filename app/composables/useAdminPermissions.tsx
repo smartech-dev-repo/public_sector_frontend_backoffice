@@ -3,6 +3,7 @@
 import { useLayoutEffect, useState, useEffect, useCallback, useMemo } from 'react';
 import { useProfile } from './modules/useProfile';
 import { decodeJwtPayload } from './core/useAuth';
+import { getAccessToken } from '@/app/api_factory/tokenStore';
 
 export type AdminPermission =
   | 'admins:create'
@@ -152,7 +153,7 @@ export const normalizePermissionList = (raw: any): string[] => {
 
 const readCachedPermissions = (): string[] => {
   try {
-    const token = localStorage.getItem('token');
+    const token = getAccessToken();
     const decoded = token ? decodeJwtPayload(token) : null;
     if (Array.isArray(decoded?.permissions)) {
       return normalizePermissionList(decoded.permissions);

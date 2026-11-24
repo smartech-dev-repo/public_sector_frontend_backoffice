@@ -13,7 +13,7 @@ import { useTheme } from 'next-themes';
 import NotificationBell from '@/app/components/ui/NotificationBell';
 import { announceNotificationsChanged, useNotificationSummary } from '@/app/composables/modules/useNotificationSummary';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
-import { clearAuthStorage } from '@/app/composables/core/useAuth';
+import { useAuth } from '@/app/composables/core/useAuth';
 import TableScrollEdges from '@/app/components/ui/TableScrollEdges';
 import { 
   Sun, 
@@ -42,6 +42,7 @@ import {
 export default function CreditRiskLayout({ children }: { children: React.ReactNode }) {
  const pathname = usePathname();
  const router = useRouter();
+ const { logout } = useAuth();
  const { theme, setTheme, resolvedTheme } = useTheme();
  const [mounted, setMounted] = useState(false);
  const { profile, fetchProfile } = useProfile();
@@ -148,9 +149,10 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
   setShowLogoutModal(true);
  };
 
- const confirmLogout = () => {
+ const confirmLogout = async () => {
   setShowLogoutModal(false);
-  clearAuthStorage();
+  // Revokes the session at the API and clears the refresh cookie, not just this browser's copy.
+  await logout();
   router.push('/login');
  };
 

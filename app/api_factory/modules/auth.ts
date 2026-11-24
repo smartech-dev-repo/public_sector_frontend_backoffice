@@ -1,14 +1,11 @@
-import { GATEWAY_ENDPOINT, GATEWAY_ENDPOINT_WITH_AUTH } from '../axios.config';
+import { GATEWAY_ENDPOINT, GATEWAY_ENDPOINT_WITH_AUTH, SESSION_ENDPOINT } from '../axios.config';
 
 export const auth_api = {
- login: (payload: any) => {
-  return GATEWAY_ENDPOINT.post('/auth/login', payload);
- },
  adminLogin: (payload: any) => {
-  return GATEWAY_ENDPOINT.post('/auth/admin/login', payload);
+  return SESSION_ENDPOINT.post('/login', payload);
  },
  acceptInvite: (payload: any) => {
-  return GATEWAY_ENDPOINT.post('/auth/admin/accept-invite', payload);
+  return SESSION_ENDPOINT.post('/accept-invite', payload);
  },
  forgotPassword: (payload: any) => {
   return GATEWAY_ENDPOINT.post('/auth/admin/forgot-password', payload);
@@ -29,19 +26,10 @@ export const auth_api = {
   return GATEWAY_ENDPOINT_WITH_AUTH.post('/auth/admin/2fa/disable', payload);
  },
  loginVerify2fa: (payload: any) => {
-  return GATEWAY_ENDPOINT.post('/auth/admin/2fa/login-verify', payload);
+  return SESSION_ENDPOINT.post('/verify-2fa', payload);
  },
  getAdminProfile: () => {
   return GATEWAY_ENDPOINT_WITH_AUTH.get('/admin/me');
- },
- agentLogin: (payload: any) => {
-  return GATEWAY_ENDPOINT.post('/auth/agent/login', payload);
- },
- clientOtpRequest: (payload: any) => {
-  return GATEWAY_ENDPOINT.post('/auth/client/otp/request', payload);
- },
- clientOtpVerify: (payload: any) => {
-  return GATEWAY_ENDPOINT.post('/auth/client/otp/verify', payload);
  },
  getSessions: (params?: any) => {
   return GATEWAY_ENDPOINT_WITH_AUTH.get('/auth/sessions', { params });
@@ -50,7 +38,7 @@ export const auth_api = {
   return GATEWAY_ENDPOINT_WITH_AUTH.delete(`/auth/sessions/${id}`);
  },
  logout: () => {
-  return GATEWAY_ENDPOINT_WITH_AUTH.post('/auth/logout');
+  return SESSION_ENDPOINT.post('/logout');
  },
  logoutAll: () => {
   return GATEWAY_ENDPOINT_WITH_AUTH.post('/auth/logout-all');
@@ -58,7 +46,4 @@ export const auth_api = {
  getProfile: () => {
   return GATEWAY_ENDPOINT_WITH_AUTH.get('/auth/profile');
  },
- refreshToken: (payload: any) => {
-  return GATEWAY_ENDPOINT.post('/auth/refresh', payload);
- }
 };
