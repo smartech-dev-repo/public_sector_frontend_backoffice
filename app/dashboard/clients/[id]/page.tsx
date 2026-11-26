@@ -46,6 +46,12 @@ import ClientWalletPanel from '@/app/components/wallet/ClientWalletPanel';
 import ClientAssignmentPanel from '@/app/components/people/ClientAssignmentPanel';
 import AccountDevicePanel from '@/app/components/people/AccountDevicePanel';
 
+const FACE_MATCH_PROBLEMS: Record<string, string> = {
+ BELOW_MINIMUM: 'Below the minimum score',
+ NO_FACE: 'No face found in the ID photo',
+ UNREADABLE_IMAGE: 'ID photo missing or unreadable',
+};
+
 export default function ClientWalletPage() {
  const dataVersion = useDataVersion();
  const { isSuperAdmin, hasPermission } = useAdminPermissions();
@@ -324,6 +330,10 @@ export default function ClientWalletPage() {
    setActiveTab(tabs[0].key);
   }
  }, [tabs, activeTab]);
+
+ // A photo was taken but face match was switched off at the time, so nothing was compared.
+ const faceMatchSkipped = client?.onboarding?.faceMatchPassed == null && Boolean(client?.onboarding?.liveSelfieUrl);
+ const faceMatchProblems: { bvn?: string; nin?: string } = client?.onboarding?.failureReasons?.faceMatch ?? {};
 
  return (
   <main className="w-full">
@@ -649,21 +659,25 @@ export default function ClientWalletPage() {
           </div>
           <div>
            <span className="text-xs text-muted-foreground block mb-0.5">Face Match Biometrics</span>
-           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${client.onboarding?.faceMatchPassed === true ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' : client.onboarding?.faceMatchPassed === false ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'}`}>
-            {client.onboarding?.faceMatchPassed === true ? 'Passed' : client.onboarding?.faceMatchPassed === false ? 'Failed' : 'Pending'}
+           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${client.onboarding?.faceMatchPassed === true ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' : client.onboarding?.faceMatchPassed === false ? 'bg-rose-100 text-rose-800' : faceMatchSkipped ? 'bg-muted text-muted-foreground' : 'bg-amber-100 text-amber-800'}`}>
+            {client.onboarding?.faceMatchPassed === true ? 'Passed' : client.onboarding?.faceMatchPassed === false ? 'Failed' : faceMatchSkipped ? 'Not checked' : 'Pending'}
            </span>
+           {faceMatchSkipped && <span className="text-[11px] text-muted-foreground block mt-1">Face match was switched off when the photo was taken.</span>}
+           {client.onboarding?.faceMatchMinimumScore != null && <span className="text-[11px] text-muted-foreground block mt-1">Minimum score at the time: {client.onboarding.faceMatchMinimumScore}%</span>}
           </div>
           <div>
            <span className="text-xs text-muted-foreground block mb-0.5">BVN Match Score</span>
            <span className="font-semibold text-foreground">
             {client.onboarding?.faceMatchBvnScore != null ? `${Math.round(client.onboarding.faceMatchBvnScore * 100)}%` : '—'}
            </span>
+           {faceMatchProblems.bvn && <span className="text-[11px] text-rose-700 dark:text-rose-400 block mt-1">{FACE_MATCH_PROBLEMS[faceMatchProblems.bvn] ?? faceMatchProblems.bvn}</span>}
           </div>
           <div>
            <span className="text-xs text-muted-foreground block mb-0.5">NIN Match Score</span>
            <span className="font-semibold text-foreground">
             {client.onboarding?.faceMatchNinScore != null ? `${Math.round(client.onboarding.faceMatchNinScore * 100)}%` : '—'}
            </span>
+           {faceMatchProblems.nin && <span className="text-[11px] text-rose-700 dark:text-rose-400 block mt-1">{FACE_MATCH_PROBLEMS[faceMatchProblems.nin] ?? faceMatchProblems.nin}</span>}
           </div>
          </div>
         </div>

@@ -22,6 +22,7 @@ const GROUPS: { name: string; labels: Record<string, string> }[] = [
    'clients:read': 'View client history',
    'clients:review': 'Review flagged clients',
    'clients:onboard': 'Onboard clients',
+   'face-match:manage': 'Manage face matching at onboarding',
    'clients:sessions:revoke': 'Force client logout',
    'clients:analytics:read': 'View client analytics',
   },
