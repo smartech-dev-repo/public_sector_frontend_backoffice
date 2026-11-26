@@ -14,9 +14,10 @@ import LoanEligibilityTab from './components/LoanEligibilityTab';
 import ManagementFeesTab from './components/ManagementFeesTab';
 import SecurityAlertsTab from './components/SecurityAlertsTab';
 import SectorsTab from './components/SectorsTab';
+import FaceMatchTab from './components/FaceMatchTab';
 import { sectors_api } from '@/app/api_factory/modules/sectors';
 
-type TabId = 'sectors' | 'loan-settings' | 'loan-eligibility' | 'fees' | 'alerts';
+type TabId = 'sectors' | 'loan-settings' | 'loan-eligibility' | 'fees' | 'face-match' | 'alerts';
 
 function ConfigurationTabs() {
  const { isSuperAdmin, hasPermission } = useAdminPermissions();
@@ -34,6 +35,7 @@ function ConfigurationTabs() {
   ...(isSuperAdmin || hasPermission('loan-settings:manage') ? [{ id: 'loan-settings' as const, label: 'Loan Settings' }] : []),
   ...(isSuperAdmin || hasPermission('loan-settings:manage') ? [{ id: 'loan-eligibility' as const, label: 'Loan Eligibility' }] : []),
   ...(isSuperAdmin || hasPermission('management-fees:manage') ? [{ id: 'fees' as const, label: 'Management Fees' }] : []),
+  ...(isSuperAdmin || hasPermission('face-match:manage') ? [{ id: 'face-match' as const, label: 'Face Match' }] : []),
   ...(isSuperAdmin || hasPermission('alerts:manage') ? [{ id: 'alerts' as const, label: 'Security Alerts' }] : []),
  ];
 
@@ -70,6 +72,7 @@ function ConfigurationTabs() {
     {activeTab === 'loan-eligibility' && <LoanEligibilityTab />}
     {activeTab === 'sectors' && <SectorsTab />}
     {activeTab === 'fees' && <ManagementFeesTab />}
+    {activeTab === 'face-match' && <FaceMatchTab />}
     {activeTab === 'alerts' && <SecurityAlertsTab />}
    </div>
    </TabTotalScope>

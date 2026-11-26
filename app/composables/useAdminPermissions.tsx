@@ -30,6 +30,7 @@ export type AdminPermission =
   | 'loan-products:manage'
   | 'management-fees:manage'
   | 'loan-settings:manage'
+  | 'face-match:manage'
   | 'loan-requests:read'
   | 'loan-requests:manage'
   | 'loan-requests:confirm-code'
@@ -77,6 +78,7 @@ export const ALL_PERMISSIONS: AdminPermission[] = [
   'loan-products:manage',
   'management-fees:manage',
   'loan-settings:manage',
+  'face-match:manage',
   'loan-requests:read',
   'loan-requests:manage',
   'loan-requests:confirm-code',
@@ -110,7 +112,7 @@ export const ROUTE_PERMISSIONS: Record<string, AdminPermission[]> = {
   '/dashboard/loan-terms': ['loan-products:manage', 'loans:upload'],
   '/dashboard/loan-products': ['loan-products:manage'],
   '/dashboard/management-fees': ['management-fees:manage'],
-  '/dashboard/configuration': ['management-fees:manage', 'loan-settings:manage', 'alerts:manage', 'sectors:manage'],
+  '/dashboard/configuration': ['management-fees:manage', 'loan-settings:manage', 'face-match:manage', 'alerts:manage', 'sectors:manage'],
   '/dashboard/sessions': ['sessions:manage'],
   '/dashboard/invites': ['agents:recruitment:read', 'agents:recruitment:manage', 'agents:recruitment:analytics:read'],
   '/dashboard/agent': ['agents:read', 'agents:review'],

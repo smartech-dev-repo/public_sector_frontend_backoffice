@@ -34,6 +34,7 @@ const ACTION_LABELS: Record<string, string> = {
  'loan-product.created': 'Loan product created',
  'loan-product.updated': 'Loan product edited',
  'loan-settings.updated': 'Loan settings changed',
+ 'face-match-settings.updated': 'Face match settings changed',
  'management-fee.created': 'Management fee created',
  'management-fee.updated': 'Management fee edited',
  'management-fee.deleted': 'Management fee deleted',
