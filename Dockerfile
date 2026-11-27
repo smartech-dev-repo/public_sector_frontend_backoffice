@@ -1,14 +1,17 @@
 # syntax=docker/dockerfile:1
 
+# Node and Alpine both pinned so every stage and every rebuild uses the same base. Bump deliberately.
+ARG NODE_IMAGE=node:22.23.5-alpine3.24
+
 # ---- deps: install node_modules from the lockfile ----
-FROM node:22-alpine AS deps
+FROM ${NODE_IMAGE} AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
 # ---- builder: compile the Next.js app ----
-FROM node:22-alpine AS builder
+FROM ${NODE_IMAGE} AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -24,7 +27,7 @@ ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL \
 RUN npm run build
 
 # ---- runner: minimal production image ----
-FROM node:22-alpine AS runner
+FROM ${NODE_IMAGE} AS runner
 WORKDIR /app
 
 # Defaults only; override at runtime with -e PORT=... / Dokploy "Environment".
