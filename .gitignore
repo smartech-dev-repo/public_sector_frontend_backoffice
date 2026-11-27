@@ -1,33 +1,71 @@
-# Nuxt dev/build outputs
-.output
-.data
-.nuxt
-.nitro
-.cache
-dist
+# What may be committed is enforced by scripts/check-repo-files.mjs (pre-commit hook + CI).
+# This file keeps the usual offenders out of `git status` in the first place.
 
-# Next.js
-.next
+# Dependencies
+node_modules/
 
-# Node dependencies
-node_modules
+# Next.js build output and caches
+.next/
+out/
+build/
+*.tsbuildinfo
 
-# Logs
-logs
-*.log
+# Old Nuxt output
+.nuxt/
+.output/
+.nitro/
+.data/
+dist/
 
-# Misc
-.DS_Store
-.fleet
-.idea
+# Tool and test caches
+.cache/
+.turbo/
+.vercel/
+.kilo/
+coverage/
 
-# Local env files
+# Env files: only the example is committed
 .env
 .env.*
 !.env.example
 
-# Python, CJS scripts, and text files
+# Secrets and keys
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Exports, dumps and archives (Postman exports live in the backend repo)
+*.postman_collection*.json
+*.postman_environment*.json
+*.csv
+*.xlsx
+*.xls
+*.sql
+*.zip
+*.tar.gz
+
+# Scratch scripts and notes at the repo root (config files are allowed back in below)
+/*.js
+/*.cjs
+/*.mjs
+/*.json
+/*.txt
 *.py
-*.cjs
 *.txt
-*.tsbuildinfo
+!/tailwind.config.js
+!/next.config.mjs
+!/postcss.config.mjs
+!/eslint.config.mjs
+!/package.json
+!/package-lock.json
+!/tsconfig.json
+
+# Logs and OS/editor files
+logs/
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.fleet/

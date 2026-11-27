@@ -1,106 +1,76 @@
-# Nuxt Minimal Starter
+# Public Sector back office
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+The admin web app for the public sector lending platform: client and agent onboarding, loan
+products and requests, IPPIS uploads, repayments, reports, roles and configuration. It talks to
+the API in `public-sector-backend`.
 
-## Setup
+Built with Next.js 16 (App Router), React 19 and Tailwind CSS. This Next.js has breaking changes
+from older versions; read `AGENTS.md` before changing framework code.
 
-Make sure to install dependencies:
+## Run it locally
 
-```bash
-# npm
-npm install
+Needs Node 22 and the API running.
 
-# pnpm
-pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
+```sh
+npm install          # also installs the pre-commit hook (see "What not to commit")
+cp .env.example .env # then fill in the values
+npm run dev          # http://localhost:4005
 ```
 
-## Development Server
-
-Start the development server on `http://localhost:3000`:
-
-```bash
-# npm
-npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
-```
-
-## Production
-
-Build the application for production:
-
-```bash
-# npm
-npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
-```
-
-Locally preview production build:
-
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
-
-## Admin sign-in and deployment settings
-
-Admins sign in through this app's own server, not straight from the browser
-to the API. The routes under `app/api/session/` (login, two-factor
-verification, invite acceptance, refresh, logout) call the API and keep the
-refresh token in an httpOnly cookie on this domain. The page only ever holds
-the 15-minute access token, in memory. These routes follow the proxy rules:
-a fixed API address, a fixed list of API paths, request bodies rebuilt field
-by field, and no redirects.
-
-Set these as **runtime** environment variables on the container, never as
-build args (build args are stored in the image):
-
-| Setting | What it does |
+| Script | What it does |
 |---|---|
-| `BACKOFFICE_PROXY_SECRET` | At least 32 characters (`openssl rand -hex 32`), the same value as on the API. Lets the API trust the admin's IP this server sends. |
-| `CLIENT_IP_HEADER` | Header the edge sets to the visitor's IP: `cf-connecting-ip` while Cloudflare is in front. |
-| `TRUST_PROXY_HOPS` | Use instead of `CLIENT_IP_HEADER` without Cloudflare: `1` for Traefik alone. |
-| `API_INTERNAL_URL` | Optional. The API address as this server reaches it. Defaults to `NEXT_PUBLIC_API_BASE_URL`. |
+| `npm run dev` | Development server on port 4005 |
+| `npm run build` | Production build (standalone output) |
+| `npm run start` | Serve the production build, reading `.env` if present |
+| `npm run lint` | Lint |
+| `npm run check:files` | Check the repository for files that must not be committed |
 
-`NEXT_PUBLIC_API_BASE_URL` stays a build arg, since the browser still calls
-the API directly for everything else.
+## Settings
 
-Without a working visitor-IP setting, the API sees this server's address for
-every sign-in, so all admins share one login rate limit (5 failed attempts
-in 15 minutes locks everyone out). **Revisit these settings whenever the
-proxy setup changes**, for example when Cloudflare is added or removed. The
-server logs a `[session][client-ip]` warning when the configured header is
-missing or a setting is wrong. See the backend README's "Visitor IP behind
-proxies" section for the full guide.
+Values baked into the browser bundle at build time (in Dokploy: **Build-time Arguments**):
+
+| Name | Purpose |
+|---|---|
+| `NEXT_PUBLIC_API_BASE_URL` | API address the browser calls |
+| `NEXT_PUBLIC_IMAGE_UPLOAD_BASE_URL` | Base address for uploaded images |
+
+Server-only values, read at runtime (in Dokploy: **Environment**). Never prefix these with
+`NEXT_PUBLIC_`.
+
+| Name | Purpose |
+|---|---|
+| `API_INTERNAL_URL` | API address as this server reaches it, for sign-in and session refresh. Falls back to `NEXT_PUBLIC_API_BASE_URL`. |
+| `BACKOFFICE_PROXY_SECRET` | Same value as the API's setting. Lets the API trust the admin IP this server sends. |
+| `CLIENT_IP_HEADER` | Header the edge sets to the visitor's IP, e.g. `cf-connecting-ip` behind Cloudflare. |
+| `TRUST_PROXY_HOPS` | If there is no such header: how many proxies in front of this server append to `X-Forwarded-For`. |
+| `PORT`, `HOSTNAME` | Where the server listens (the Docker image defaults to `3000` and `0.0.0.0`). |
+
+Sign-in goes through this server (`app/api/session/*`): the refresh token is kept in an httpOnly
+cookie and never reaches browser JavaScript.
+
+## Deploy
+
+`Dockerfile` builds a standalone image. Dokploy builds it from the branch; pass the
+`NEXT_PUBLIC_*` values as build arguments and the server-only values as environment.
+
+## Layout
+
+| Path | Contents |
+|---|---|
+| `app/` | Routes (`app/dashboard/...`), the API client (`app/api_factory/`), hooks (`app/composables/`), shared UI (`app/components/`) |
+| `app/api/session/` | Server routes for sign-in, refresh, 2FA and logout |
+| `components/` | Theme provider, dialog, modal and toaster |
+| `lib/` | Small helpers |
+| `public/` | Logos and favicon |
+| `scripts/` | Repository tooling |
+
+## What not to commit
+
+`scripts/check-repo-files.mjs` blocks build output (`.next/`), caches, env files, keys, Postman
+exports, data dumps, scratch scripts and files over 1 MB. It runs as a pre-commit hook (installed
+by `npm install`) and in CI on every push and pull request, so `--no-verify` doesn't get past it.
+
+The top level of the repo is an allowlist. A new top-level file or folder fails the check until
+it's added to `ROOT_ALLOWED` in that script, in the same change.
+
+The API's Postman collection lives in the backend repo (`postman/`), not here.

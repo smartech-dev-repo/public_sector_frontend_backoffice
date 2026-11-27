@@ -1,0 +1,4 @@
+#!/bin/sh
+# Blocks build output, scratch scripts, data dumps and secrets. Rules: scripts/check-repo-files.mjs
+# Installed by `npm install` (the "prepare" script sets core.hooksPath to .githooks).
+exec node scripts/check-repo-files.mjs --staged

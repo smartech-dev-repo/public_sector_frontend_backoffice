@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "node --env-file-if-exists=.env node_modules/next/dist/bin/next start",
     "preview": "next build && npm run start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "check:files": "node scripts/check-repo-files.mjs",
+    "prepare": "git rev-parse --git-dir >/dev/null 2>&1 && git config core.hooksPath .githooks || true"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.20",
