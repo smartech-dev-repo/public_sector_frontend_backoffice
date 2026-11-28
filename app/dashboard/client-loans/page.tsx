@@ -2,7 +2,7 @@
 
 import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { TableSkeleton } from '@/app/components/ui/Skeleton';
 import ClientLoansTab from '../loan-requests/components/ClientLoansTab';
 
 function ClientLoansRedirect() {
@@ -17,7 +17,7 @@ function ClientLoansRedirect() {
 
   return (
     <div className="space-y-4">
-      <Suspense fallback={<PulseLoader />}>
+      <Suspense fallback={<TableSkeleton columns={8} label="Loading client loans" />}>
         <ClientLoansTab />
       </Suspense>
     </div>
@@ -26,7 +26,7 @@ function ClientLoansRedirect() {
 
 export default function ClientLoansPage() {
   return (
-    <Suspense fallback={<PulseLoader />}>
+    <Suspense fallback={<TableSkeleton columns={8} label="Loading client loans" />}>
       <ClientLoansRedirect />
     </Suspense>
   );

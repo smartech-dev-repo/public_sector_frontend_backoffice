@@ -4,7 +4,6 @@ import { useEffect, useState, useMemo } from 'react';
 import { useAgents } from '@/app/composables/modules/useAgents';
 import { useSessions } from '@/app/composables/modules/useSessions';
 import { useToast } from '@/app/composables/useToast';
-import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { useConfirm } from '@/app/composables/useConfirm';
 import TableDropdown from '@/app/components/ui/TableDropdown';

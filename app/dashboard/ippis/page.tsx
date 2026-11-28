@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useIppis } from '@/app/composables/modules/useIppis';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { TableSkeleton } from '@/app/components/ui/Skeleton';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { useToast } from '@/app/composables/useToast';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
@@ -111,7 +111,7 @@ export default function IppisPage() {
         </div>
       )}
 
-      {loading && <PulseLoader />}
+      {loading && <TableSkeleton columns={5} label="Loading IPPIS uploads" />}
       {!loading && error && canReadDocs && <div className="text-red-500 py-12 text-center">{error}</div>}
       
       {!loading && !error && canReadDocs && (

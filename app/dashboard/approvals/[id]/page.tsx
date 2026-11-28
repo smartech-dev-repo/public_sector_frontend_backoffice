@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { DetailSkeleton } from '@/app/components/ui/Skeleton';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
 import { approvals_api } from '@/app/api_factory/modules/approvals';
@@ -81,7 +81,7 @@ export default function ApprovalDetailPage() {
   act(() => approvals_api.assign(id, value === ANY_APPROVER ? null : value), value === ANY_APPROVER ? 'Open to any approver' : 'Request assigned');
  };
 
- if (state === 'loading') return <PulseLoader />;
+ if (state === 'loading') return <DetailSkeleton tabs={0} cards={1} label="Loading request" className="w-full max-w-3xl" />;
  if (state === 'missing') return <EmptyState title="Request not found" description="It may not exist, or you may not have access to it." />;
 
  const { summary } = approval;

@@ -11,7 +11,7 @@ import { useSessions } from '@/app/composables/modules/useSessions';
 import { useToast } from '@/app/composables/useToast';
 import Avatar from '@/app/components/ui/Avatar';
 import { auditLogs_api } from '@/app/api_factory/modules/auditLogs';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { TableSkeleton } from '@/app/components/ui/Skeleton';
 import EmptyState from '@/app/components/ui/EmptyState';
 import ButtonLoader from '@/app/components/ui/ButtonLoader';
 import { useConfirm } from '@/app/composables/useConfirm';
@@ -539,7 +539,7 @@ export default function CustomerProfilesTab({ onOpenOnboard }: Props) {
       )}
 
       {/* ================= FULL-WIDTH PULSE LOADER ================= */}
-      {loading && clients.length === 0 && <PulseLoader />}
+      {loading && clients.length === 0 && <TableSkeleton columns={7} withAvatar label="Loading clients" />}
 
       {/* ================= ERROR STATE ================= */}
       {!loading && error && <div className="text-red-500 py-12 text-center">{error}</div>}

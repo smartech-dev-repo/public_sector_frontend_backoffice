@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { useToast } from '@/app/composables/useToast';
 import Toast from '@/app/components/ui/Toast';
 import { auth_api } from '@/app/api_factory/modules/auth';
+import { AuthCardSkeleton } from '@/app/components/ui/Skeleton';
 
 function CheckEmailContent() {
   const { addToast } = useToast();
@@ -66,7 +67,7 @@ export default function CheckEmailPage() {
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-muted/30">
       <Toast />
       <div className="max-w-[400px] w-full">
-        <Suspense fallback={<div className="p-8 text-center text-sm text-muted-foreground">Loading...</div>}>
+        <Suspense fallback={<div className="bg-card p-8 rounded-2xl border border-border/50"><AuthCardSkeleton /></div>}>
           <CheckEmailContent />
         </Suspense>
       </div>

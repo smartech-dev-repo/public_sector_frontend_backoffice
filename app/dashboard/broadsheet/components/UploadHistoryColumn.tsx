@@ -4,7 +4,7 @@ import { useDataVersion } from '@/app/composables/useDataVersion';
 import { useEffect, useRef, useState } from 'react';
 import { Download, UploadCloud } from 'lucide-react';
 import EmptyState from '@/app/components/ui/EmptyState';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { ListSkeleton } from '@/app/components/ui/Skeleton';
 import { ippis_api } from '@/app/api_factory/modules/ippis';
 import { useToast } from '@/app/composables/useToast';
 import { buildBatchParams, formatPeriod, formatUploadedOn, STATUS_LABELS, type UploadFilterValues } from './uploadBatches';
@@ -98,7 +98,7 @@ export default function UploadHistoryColumn({ title, documentType, filters, refr
             if (!loading && page < totalPages && target.scrollHeight - target.scrollTop <= target.clientHeight + 50) load(page + 1);
           }}
         >
-          {loading && batches.length === 0 && <PulseLoader />}
+          {loading && batches.length === 0 && <ListSkeleton withAvatar={false} label="Loading upload history" />}
           {!loading && batches.length === 0 && <EmptyState title="No uploads match these filters." />}
           {batches.map((batch) => (
             <div key={batch.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-border/50 pb-4 last:border-0 px-2">

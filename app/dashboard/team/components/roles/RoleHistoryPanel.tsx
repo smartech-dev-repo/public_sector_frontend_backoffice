@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { auditLogs_api } from '@/app/api_factory/modules/auditLogs';
 import Pagination from '@/app/components/ui/Pagination';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { ListSkeleton } from '@/app/components/ui/Skeleton';
 import EmptyState from '@/app/components/ui/EmptyState';
 
 const ACTION_LABELS: Record<string, string> = {
@@ -47,7 +47,7 @@ export default function RoleHistoryPanel({ roleId, version }: { roleId: string; 
   return () => { stale = true; };
  }, [roleId, page, limit, version]);
 
- if (status === 'loading') return <PulseLoader />;
+ if (status === 'loading') return <ListSkeleton withAvatar={false} label="Loading role history" />;
  if (status === 'error') return <p className="text-sm text-red-600 py-8 text-center">Could not load this role's history.</p>;
  if (logs.length === 0) return <EmptyState title="No changes recorded yet." />;
 

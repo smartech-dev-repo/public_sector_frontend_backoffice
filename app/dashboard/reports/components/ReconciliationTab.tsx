@@ -6,7 +6,7 @@ import { reconciliation_api } from '@/app/api_factory/modules/reconciliation';
 import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { StatsSkeleton, TableSkeleton } from '@/app/components/ui/Skeleton';
 import Pagination from '@/app/components/ui/Pagination';
 import { MonthPicker } from '@/app/components/ui/MonthPicker';
 import TableDropdown from '@/app/components/ui/TableDropdown';
@@ -81,8 +81,9 @@ export default function ReconciliationTab() {
   return (
     <div className="space-y-4">
       {isLoading ? (
-        <div className="py-12">
-          <PulseLoader />
+        <div className="space-y-4">
+          <StatsSkeleton cards={4} chart={false} label="Loading reconciliation summary" />
+          <TableSkeleton columns={8} label="Loading reconciliation records" />
         </div>
       ) : (
         <div className="space-y-4">

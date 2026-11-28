@@ -5,7 +5,7 @@ import { useRoles } from '@/app/composables/modules/useRoles';
 import { useToast } from '@/app/composables/useToast';
 import { useConfirm } from '@/app/composables/useConfirm';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { ListSkeleton, PanelSkeleton } from '@/app/components/ui/Skeleton';
 import EmptyState from '@/app/components/ui/EmptyState';
 import RolePermissionsEditor from './roles/RolePermissionsEditor';
 import RoleMembersPanel from './roles/RoleMembersPanel';
@@ -194,7 +194,16 @@ export default function RolesTab() {
     </div>
    </div>
 
-   {loading && roles.length === 0 && <PulseLoader />}
+   {loading && roles.length === 0 && (
+    <div className="flex flex-col lg:flex-row gap-4 items-start">
+     <div className="w-full lg:w-72 shrink-0 bg-card border border-border rounded-2xl px-4 py-1">
+      <ListSkeleton rows={6} withAvatar={false} label="Loading roles" />
+     </div>
+     <div className="flex-1 min-w-0 w-full bg-card border border-border rounded-2xl p-5">
+      <PanelSkeleton lines={6} label="Loading role permissions" />
+     </div>
+    </div>
+   )}
    {!loading && error && roles.length === 0 && (
     <div className="text-center py-12">
      <p className="text-red-600 mb-3">Could not load roles.</p>

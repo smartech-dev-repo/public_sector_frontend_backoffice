@@ -12,7 +12,7 @@ import { useLoans } from '@/app/composables/modules/useLoans';
 import { useToast } from '@/app/composables/useToast';
 import { useConfirm } from '@/app/composables/useConfirm';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { DetailSkeleton } from '@/app/components/ui/Skeleton';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { createPortal } from 'react-dom';
 import {
@@ -170,12 +170,7 @@ export default function LoanRequestDetailPage({ params }: { params: Promise<{ id
   }
 
   if (loading && !loanRequest) {
-    return (
-      <div className="py-20 flex flex-col items-center justify-center space-y-4">
-        <PulseLoader />
-        <span className="text-sm text-muted-foreground">Loading loan request details...</span>
-      </div>
-    );
+    return <DetailSkeleton tabs={0} cards={2} label="Loading loan request details" />;
   }
 
   if (error || !loanRequest) {

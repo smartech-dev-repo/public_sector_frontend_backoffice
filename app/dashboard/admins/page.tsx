@@ -7,7 +7,7 @@ import { useAdmins } from '@/app/composables/modules/useAdmins';
 import { useToast } from '@/app/composables/useToast';
 import { createPortal } from 'react-dom';
 import Avatar from '@/app/components/ui/Avatar';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { TableSkeleton } from '@/app/components/ui/Skeleton';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { useConfirm } from '@/app/composables/useConfirm';
 import TableDropdown from '@/app/components/ui/TableDropdown';
@@ -103,7 +103,7 @@ export default function AdminsPage() {
   <main className="w-full">
    <h1 className="sr-only">Admin Users</h1>
 
-   {loading && <PulseLoader />}
+   {loading && <TableSkeleton columns={canManageRoles ? 6 : 5} withAvatar label="Loading admins" />}
    {!loading && error && <div className="text-red-500 py-12 text-center">{error}</div>}
    
    {!loading && !error && (

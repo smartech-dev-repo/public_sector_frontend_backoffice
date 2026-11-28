@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { StatsSkeleton } from '@/app/components/ui/Skeleton';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { useClientAnalytics } from '@/app/composables/modules/useClientAnalytics';
 import { useAgents } from '@/app/composables/modules/useAgents';
@@ -284,9 +284,7 @@ export default function DashboardOverviewPage() {
 
       {/* ================= LOADING & ERROR STATES ================= */}
       {loading && !analytics && !agentAnalytics && !recruitmentAnalytics ? (
-        <div className="py-20">
-          <PulseLoader />
-        </div>
+        <StatsSkeleton cards={4} label="Loading dashboard" />
       ) : error && !analytics ? (
         <div className="p-8 bg-destructive/10 border border-destructive/20 rounded-2xl text-center space-y-3">
           <AlertCircle className="w-8 h-8 text-destructive mx-auto" />

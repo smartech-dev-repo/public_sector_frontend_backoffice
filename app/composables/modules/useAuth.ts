@@ -6,7 +6,6 @@ export const useAuth = () => {
  const [error, setError] = useState<string | null>(null);
  const [profile, setProfile] = useState<any>(null);
  const [twoFactorSetupData, setTwoFactorSetupData] = useState<any>(null);
- const [qrCode, setQrCode] = useState<string | null>(null);
 
  const getProfile = useCallback(async () => {
   setLoading(true);
@@ -47,12 +46,6 @@ export const useAuth = () => {
    const res = await auth_api.setup2fa(payload);
    const data = res.data?.data || res.data;
    setTwoFactorSetupData(data);
-   if (data?.otpauthUrl) {
-    const qrUrl = data.qrCodeUrl || `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.otpauthUrl)}`;
-    setQrCode(qrUrl);
-   } else {
-    setQrCode(null);
-   }
    return data;
   } catch (err: any) {
    setError(err.message);
@@ -92,7 +85,6 @@ export const useAuth = () => {
   loading, 
   error, 
   profile, 
-  qrCode, 
   twoFactorSetupData,
   getProfile, 
   changePassword, 

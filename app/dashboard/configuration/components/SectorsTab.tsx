@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { TableSkeleton } from '@/app/components/ui/Skeleton';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { sectors_api } from '@/app/api_factory/modules/sectors';
 import { useDataVersion } from '@/app/composables/useDataVersion';
@@ -67,7 +67,7 @@ export default function SectorsTab() {
     </button>
    </div>
 
-   {state === 'loading' && <PulseLoader />}
+   {state === 'loading' && <TableSkeleton columns={3} label="Loading sectors" />}
    {state === 'error' && <p className="text-red-600 py-12 text-center">Could not load sectors.</p>}
    {state === 'ready' && (
     <div className="bg-card rounded-2xl border border-border overflow-hidden">

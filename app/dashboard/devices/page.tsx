@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { AlertTriangle, ArrowRight, BellRing, FileText, Smartphone } from 'lucide-react';
 import FilterBar from '@/app/components/ui/FilterBar';
 import Pagination from '@/app/components/ui/Pagination';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { TableSkeleton } from '@/app/components/ui/Skeleton';
 import EmptyState from '@/app/components/ui/EmptyState';
 import TabCount from '@/app/components/ui/TabCount';
 import { devices_api } from '@/app/api_factory/modules/devices';
@@ -165,7 +165,7 @@ function DevicesTabs() {
        onChange: setReqStatus,
       }]}
      />
-     {reqState === 'loading' && <PulseLoader />}
+     {reqState === 'loading' && <TableSkeleton columns={6} label="Loading device release requests" />}
      {reqState === 'error' && <p className="text-red-600 py-12 text-center">Could not load release requests.</p>}
      {reqState === 'ready' && (
       <div className="bg-card rounded-2xl border border-border overflow-hidden">
@@ -235,7 +235,7 @@ function DevicesTabs() {
        { key: 'type', label: 'Account', type: 'select', value: principalType, emptyValue: 'none', options: [{ value: 'AGENT', label: 'Agents' }, { value: 'CLIENT', label: 'Clients' }], onChange: setPrincipalType },
       ]}
      />
-     {devState === 'loading' && <PulseLoader />}
+     {devState === 'loading' && <TableSkeleton columns={7} label="Loading devices" />}
      {devState === 'error' && <p className="text-red-600 py-12 text-center">Could not load devices.</p>}
      {devState === 'ready' && (
       <div className="bg-card rounded-2xl border border-border overflow-hidden">

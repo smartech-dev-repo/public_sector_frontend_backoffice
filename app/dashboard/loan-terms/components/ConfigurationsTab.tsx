@@ -6,7 +6,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLoans } from '@/app/composables/modules/useLoans';
 import { useToast } from '@/app/composables/useToast';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { TableSkeleton } from '@/app/components/ui/Skeleton';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { 
   Filter, 
@@ -156,11 +156,7 @@ export default function ConfigurationsTab() {
       />
 
       {/* Loading / Error States */}
-      {loading && (
-        <div className="py-12 flex justify-center">
-          <PulseLoader />
-        </div>
-      )}
+      {loading && <TableSkeleton columns={7} label="Loading loan products" />}
 
       {!loading && error && (
         <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-2xl text-destructive text-sm">

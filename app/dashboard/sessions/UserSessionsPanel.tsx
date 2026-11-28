@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { X } from 'lucide-react';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { ListSkeleton } from '@/app/components/ui/Skeleton';
 import EmptyState from '@/app/components/ui/EmptyState';
 import Pagination from '@/app/components/ui/Pagination';
 import Avatar from '@/app/components/ui/Avatar';
@@ -108,7 +108,7 @@ export default function UserSessionsPanel({ session, onClose, onChanged }: UserS
      </div>
     </div>
     <div className="flex-1 overflow-y-auto p-5">
-     {state === 'loading' && <PulseLoader />}
+     {state === 'loading' && <ListSkeleton withAvatar={false} label={tab === 'sessions' ? 'Loading sessions' : 'Loading activity'} />}
      {state === 'error' && <p className="text-sm text-red-600 py-8 text-center">Could not load this.</p>}
      {state === 'ready' && rows.length === 0 && <EmptyState title={tab === 'sessions' ? 'No sessions found.' : 'No activity recorded.'} />}
      {state === 'ready' && rows.length > 0 && (

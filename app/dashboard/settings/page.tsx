@@ -6,7 +6,7 @@ import { useSessions } from '@/app/composables/modules/useSessions';
 import ActiveSessionsTab from './components/ActiveSessionsTab';
 import { useToast } from '@/app/composables/useToast';
 import { useConfirm } from '@/app/composables/useConfirm';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import LazyImage from '@/app/components/ui/LazyImage';
 import OtpInput from '@/app/components/ui/OtpInput';
 import ButtonLoader from '@/app/components/ui/ButtonLoader';
 import { useProfile } from '@/app/composables/modules/useProfile';
@@ -33,6 +33,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
+import QrCodeImage from '@/app/components/ui/QrCode';
 
 export default function ProfileAndSecurityPage() {
   const { hasPermission, isSuperAdmin } = useAdminPermissions();
@@ -41,7 +42,6 @@ export default function ProfileAndSecurityPage() {
   const { 
     loading: authLoading, 
     profile, 
-    qrCode, 
     twoFactorSetupData,
     getProfile, 
     changePassword, 
@@ -327,7 +327,7 @@ export default function ProfileAndSecurityPage() {
           <div className="flex items-center gap-4 sm:gap-5">
             <div className="relative group w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-white flex items-center justify-center font-bold text-2xl shrink-0 shadow-inner overflow-hidden">
               {adminProfile?.profileImage ? (
-                <img src={adminProfile.profileImage} alt={adminName} className="w-full h-full object-cover" />
+                <LazyImage src={adminProfile.profileImage} alt={adminName} className="w-full h-full object-cover" frameClassName="w-full h-full" fallback={displayInitials} eager />
               ) : (
                 displayInitials
               )}
@@ -441,7 +441,7 @@ export default function ProfileAndSecurityPage() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 pb-6 border-b border-border mb-6">
               <div className="w-20 h-20 rounded-2xl bg-[#018752] text-white flex items-center justify-center font-bold text-2xl shadow-sm border border-emerald-600 overflow-hidden shrink-0">
                 {adminProfile?.profileImage ? (
-                  <img src={adminProfile.profileImage} alt={adminName} className="w-full h-full object-cover" />
+                  <LazyImage src={adminProfile.profileImage} alt={adminName} className="w-full h-full object-cover" frameClassName="w-full h-full" fallback={displayInitials} />
                 ) : (
                   displayInitials
                 )}
@@ -867,11 +867,7 @@ export default function ProfileAndSecurityPage() {
             <div className="space-y-4">
               <div className="flex flex-col items-center justify-center p-5 bg-white rounded-2xl border border-border/80 shadow-xs">
                 {twoFactorSetupData?.otpauthUrl ? (
-                  <img 
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(twoFactorSetupData.otpauthUrl)}`}
-                    alt="2FA QR Code" 
-                    className="w-44 h-44"
-                  />
+                  <QrCodeImage value={twoFactorSetupData.otpauthUrl} alt="2FA QR code" className="w-44 h-44" />
                 ) : (
                   <div className="w-44 h-44 flex items-center justify-center text-xs text-muted-foreground">
                     Generating QR code...

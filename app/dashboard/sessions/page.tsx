@@ -5,7 +5,7 @@ import ExportButton, { ExportColumn } from '@/app/components/ui/ExportButton';
 import { useCallback, useEffect, useState } from 'react';
 import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import Pagination from '@/app/components/ui/Pagination';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { TableSkeleton } from '@/app/components/ui/Skeleton';
 import EmptyState from '@/app/components/ui/EmptyState';
 import Avatar from '@/app/components/ui/Avatar';
 import { sessions_api } from '@/app/api_factory/modules/sessions';
@@ -97,7 +97,7 @@ export default function UserSessionsPage() {
    >
     <ExportButton fileName="User_Sessions" resource="User sessions" columns={EXPORT_COLUMNS} fetchPage={(page, limit) => sessions_api.getUserSessions({ ...exportParams.current, page, limit })} />
    </FilterBar>
-   {state === 'loading' && <PulseLoader />}
+   {state === 'loading' && <TableSkeleton columns={5} withAvatar label="Loading sessions" />}
    {state === 'error' && <p className="text-red-600 py-12 text-center">Could not load sessions.</p>}
    {state === 'ready' && (
     <div className="bg-card rounded-2xl border border-border overflow-hidden">

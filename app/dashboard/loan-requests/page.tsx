@@ -9,7 +9,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import RequestsTab from './components/RequestsTab';
 import ClientLoansTab from './components/ClientLoansTab';
 import DisbursementSummaryTab from './components/DisbursementSummaryTab';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { TableSkeleton, StatsSkeleton } from '@/app/components/ui/Skeleton';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
 type TabId = 'requests' | 'client-loans' | 'disbursement';
@@ -107,7 +107,7 @@ function LoanRequestPageContent() {
 
       <TabTotalScope value={reportTabTotal}>
       <div className="pt-1">
-        <Suspense fallback={<PulseLoader />}>
+        <Suspense fallback={activeTab === 'disbursement' ? <StatsSkeleton cards={2} chart={false} label="Loading disbursement summary" /> : <TableSkeleton columns={activeTab === 'client-loans' ? 8 : 5} label={activeTab === 'client-loans' ? 'Loading client loans' : 'Loading loan requests'} />}>
           {activeTab === 'requests' && <RequestsTab />}
           {activeTab === 'client-loans' && <ClientLoansTab />}
           {activeTab === 'disbursement' && <DisbursementSummaryTab />}
@@ -120,7 +120,7 @@ function LoanRequestPageContent() {
 
 export default function LoanRequestPage() {
   return (
-    <Suspense fallback={<PulseLoader />}>
+    <Suspense fallback={<TableSkeleton columns={5} label="Loading loan requests" />}>
       <LoanRequestPageContent />
     </Suspense>
   );

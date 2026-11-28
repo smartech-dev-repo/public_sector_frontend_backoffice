@@ -11,7 +11,8 @@ import { useClients } from '@/app/composables/modules/useClients';
 import { useLoans } from '@/app/composables/modules/useLoans';
 import { useToast } from '@/app/composables/useToast';
 import { useConfirm } from '@/app/composables/useConfirm';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { DetailSkeleton, TableSkeleton } from '@/app/components/ui/Skeleton';
+import LazyImage from '@/app/components/ui/LazyImage';
 import EmptyState from '@/app/components/ui/EmptyState';
 import ButtonLoader from '@/app/components/ui/ButtonLoader';
 import SensitiveValue from '@/app/components/ui/SensitiveValue';
@@ -408,7 +409,7 @@ export default function ClientWalletPage() {
     )}
    </div>
 
-   {loading && !client && <PulseLoader />}
+   {loading && !client && <DetailSkeleton tabs={tabs.length} cards={2} backLink={false} label="Loading client details" />}
    {!loading && !canReadClient && (
     <div className="p-8">
      <EmptyState
@@ -770,9 +771,10 @@ export default function ClientWalletPage() {
               })}
               className="relative group cursor-pointer aspect-square rounded-lg overflow-hidden bg-slate-900 border border-border flex items-center justify-center"
              >
-              <img 
-               src={client.onboarding.bvnSelfieUrl} 
-               alt="BVN Selfie" 
+              <LazyImage
+               src={client.onboarding.bvnSelfieUrl}
+               alt="BVN Selfie"
+               frameClassName="w-full h-full"
                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-xs font-medium">
@@ -810,9 +812,10 @@ export default function ClientWalletPage() {
               })}
               className="relative group cursor-pointer aspect-square rounded-lg overflow-hidden bg-slate-900 border border-border flex items-center justify-center"
              >
-              <img 
-               src={client.onboarding.ninSelfieUrl} 
-               alt="NIN Selfie" 
+              <LazyImage
+               src={client.onboarding.ninSelfieUrl}
+               alt="NIN Selfie"
+               frameClassName="w-full h-full"
                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-xs font-medium">
@@ -852,9 +855,10 @@ export default function ClientWalletPage() {
               })}
               className="relative group cursor-pointer aspect-square rounded-lg overflow-hidden bg-slate-900 border border-border flex items-center justify-center"
              >
-              <img 
-               src={client.onboarding.liveSelfieUrl} 
-               alt="Live Selfie" 
+              <LazyImage
+               src={client.onboarding.liveSelfieUrl}
+               alt="Live Selfie"
+               frameClassName="w-full h-full"
                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-xs font-medium">
@@ -940,10 +944,11 @@ export default function ClientWalletPage() {
                                   <span className="text-[11px] font-mono text-white">PDF Document</span>
                                 </div>
                               ) : (
-                                <img 
-                                  src={doc.url} 
-                                  alt={docTitle} 
-                                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
+                                <LazyImage
+                                  src={doc.url}
+                                  alt={docTitle}
+                                  frameClassName="w-full h-full"
+                                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                                 />
                               )}
                               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-xs font-medium">
@@ -1284,9 +1289,10 @@ export default function ClientWalletPage() {
               })}
               className="relative group cursor-pointer aspect-square rounded-lg overflow-hidden bg-slate-900 border border-border flex items-center justify-center"
              >
-              <img 
-               src={client.onboarding.bvnSelfieUrl} 
-               alt="BVN Selfie" 
+              <LazyImage
+               src={client.onboarding.bvnSelfieUrl}
+               alt="BVN Selfie"
+               frameClassName="w-full h-full"
                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-xs font-medium">
@@ -1324,9 +1330,10 @@ export default function ClientWalletPage() {
               })}
               className="relative group cursor-pointer aspect-square rounded-lg overflow-hidden bg-slate-900 border border-border flex items-center justify-center"
              >
-              <img 
-               src={client.onboarding.ninSelfieUrl} 
-               alt="NIN Selfie" 
+              <LazyImage
+               src={client.onboarding.ninSelfieUrl}
+               alt="NIN Selfie"
+               frameClassName="w-full h-full"
                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-xs font-medium">
@@ -1366,9 +1373,10 @@ export default function ClientWalletPage() {
               })}
               className="relative group cursor-pointer aspect-square rounded-lg overflow-hidden bg-slate-900 border border-border flex items-center justify-center"
              >
-              <img 
-               src={client.onboarding.liveSelfieUrl} 
-               alt="Live Selfie" 
+              <LazyImage
+               src={client.onboarding.liveSelfieUrl}
+               alt="Live Selfie"
+               frameClassName="w-full h-full"
                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-xs font-medium">
@@ -1456,7 +1464,7 @@ export default function ClientWalletPage() {
         <h2 className="text-lg font-semibold text-foreground">Client Loans</h2>
         <button onClick={loadClientLoans} className="text-sm text-emerald-600 hover:text-emerald-800 font-medium transition-colors">Refresh</button>
        </div>
-       {loansLoading && <PulseLoader />}
+       {loansLoading && <TableSkeleton columns={7} className="rounded-none border-0" label="Loading client loans" />}
        
        {!loansLoading && (
 
@@ -1504,7 +1512,7 @@ export default function ClientWalletPage() {
                <td colSpan={7} className="px-0 py-0 bg-muted/30">
                 <div className="px-6 py-4">
                  <h4 className="text-sm font-semibold text-foreground/90 mb-3">Repayment Schedule</h4>
-                 {repaymentLoading && <PulseLoader />}
+                 {repaymentLoading && <TableSkeleton rows={4} columns={6} className="rounded-lg" label="Loading repayment schedule" />}
                  {!repaymentLoading && !repaymentPlan && (
                   <p className="text-sm text-muted-foreground">No repayment plan available.</p>
                  )}
@@ -1574,7 +1582,7 @@ export default function ClientWalletPage() {
         <h2 className="text-lg font-semibold text-foreground">Activity History</h2>
         <button onClick={loadActivities} className="text-sm text-emerald-600 hover:text-emerald-800 font-medium transition-colors">Refresh</button>
        </div>
-       {activitiesLoading && <PulseLoader />}
+       {activitiesLoading && <TableSkeleton columns={4} className="rounded-none border-0" label="Loading activity history" />}
        
        {!activitiesLoading && (
 
@@ -1720,9 +1728,11 @@ export default function ClientWalletPage() {
          className="w-full h-[68vh] rounded-xl border border-border bg-white"
         />
        ) : (
-        <img
+        <LazyImage
+         eager
          src={previewImage.url}
          alt={previewImage.title}
+         frameClassName="inline-flex"
          className="max-h-[68vh] max-w-full w-auto object-contain rounded-xl shadow-md border border-border bg-slate-950/20"
         />
        )}

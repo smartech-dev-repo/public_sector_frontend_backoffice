@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { ChevronDown, X } from 'lucide-react';
 import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useAuditLogs } from '@/app/composables/modules/useAuditLogs';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { TableSkeleton } from '@/app/components/ui/Skeleton';
 import EmptyState from '@/app/components/ui/EmptyState';
 import Pagination from '@/app/components/ui/Pagination';
 import Avatar from '@/app/components/ui/Avatar';
@@ -146,7 +146,7 @@ export default function AuditTrail() {
     </div>
    )}
 
-   {loading && logs.length === 0 && <PulseLoader />}
+   {loading && logs.length === 0 && <TableSkeleton columns={6} withAvatar label="Loading audit logs" />}
    {!loading && error && <div className="text-red-500 py-12 text-center">{error}</div>}
 
    {!error && !(loading && logs.length === 0) && (

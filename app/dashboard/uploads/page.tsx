@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useDocuments } from '@/app/composables/modules/useDocuments';
-import PulseLoader from '@/app/components/ui/PulseLoader';
 import EmptyState from '@/app/components/ui/EmptyState';
 import Pagination from '@/app/components/ui/Pagination';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';

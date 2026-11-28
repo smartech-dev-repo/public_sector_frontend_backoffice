@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useAuth } from '@/app/composables/modules/useAuth';
 import { useToast } from '@/app/composables/useToast';
 import OtpInput from '@/app/components/ui/OtpInput';
+import QrCodeImage from '@/app/components/ui/QrCode';
 import { 
   KeyRound, 
   Lock, 
@@ -496,11 +497,7 @@ export default function ProfileDropdown({ isOpen, onClose, onLogout }: ProfileDr
             {mfaMethod === 'TOTP' && twoFactorData?.otpauthUrl && (
               <div className="space-y-4">
                 <div className="p-4 bg-white rounded-2xl flex flex-col items-center justify-center border border-border">
-                  <img 
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(twoFactorData.otpauthUrl)}`}
-                    alt="2FA QR Code" 
-                    className="w-36 h-36"
-                  />
+                  <QrCodeImage value={twoFactorData.otpauthUrl} alt="2FA QR code" className="w-36 h-36" />
                   <p className="text-xs text-slate-500 mt-2 text-center">
                     Scan with Google Authenticator or 1Password
                   </p>

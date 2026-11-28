@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { documents_api } from '@/app/api_factory/modules/documents';
+import LazyImage from '@/app/components/ui/LazyImage';
 
 type StepNumber = 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -633,6 +634,26 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
     );
   };
 
+  // Shown when there's no photo yet, and also if the photo can't be loaded.
+  const passportPlaceholder = (
+    <div className="size-full flex flex-col items-center justify-center bg-muted/30 p-2 text-center select-none">
+      <div className="size-10 rounded-full bg-muted text-muted-foreground flex items-center justify-center mb-1.5">
+        <User className="size-5" />
+      </div>
+      <span className="text-[11px] font-bold text-foreground">Passport Photo</span>
+      <span className="text-[9px] text-muted-foreground">In Uniform</span>
+    </div>
+  );
+  const bvnPhotoPlaceholder = (
+    <div className="size-full flex flex-col items-center justify-center bg-emerald-50/40 dark:bg-emerald-950/20 p-2 text-center select-none">
+      <div className="size-10 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-[#018752] flex items-center justify-center mb-1.5 shadow-xs">
+        <CheckCircle2 className="size-5" />
+      </div>
+      <span className="text-[11px] font-bold text-foreground">Biometric on File</span>
+      <span className="text-[9px] text-[#018752] font-semibold">NIBSS Verified</span>
+    </div>
+  );
+
   return (
     <Modal open={open} onOpenChange={onOpenChange}>
       <ModalContent 
@@ -1230,20 +1251,16 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
                   <div className="flex flex-col items-center">
                     <div className="size-28 sm:size-32 rounded-2xl bg-card border border-border/80 flex items-center justify-center overflow-hidden shadow-xs relative">
                       {passportBlobUrl && !passportPhotoFailed ? (
-                        <img 
-                          src={passportBlobUrl} 
-                          alt="Passport preview" 
+                        <LazyImage
+                          eager
+                          src={passportBlobUrl}
+                          alt="Passport preview"
+                          frameClassName="size-full p-0"
                           className="size-full object-cover"
-                          onError={() => setPassportPhotoFailed(true)}
+                          fallback={passportPlaceholder}
                         />
                       ) : (
-                        <div className="size-full flex flex-col items-center justify-center bg-muted/30 p-2 text-center select-none">
-                          <div className="size-10 rounded-full bg-muted text-muted-foreground flex items-center justify-center mb-1.5">
-                            <User className="size-5" />
-                          </div>
-                          <span className="text-[11px] font-bold text-foreground">Passport Photo</span>
-                          <span className="text-[9px] text-muted-foreground">In Uniform</span>
-                        </div>
+                        passportPlaceholder
                       )}
                     </div>
                     <span className="text-xs text-foreground/80 mt-2 font-semibold text-center">
@@ -1263,20 +1280,16 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
                   <div className="flex flex-col items-center">
                     <div className="size-28 sm:size-32 rounded-2xl bg-card border border-border/80 flex items-center justify-center overflow-hidden shadow-xs relative">
                       {bvnPhotoBlobUrl && !bvnPhotoFailed ? (
-                        <img 
-                          src={bvnPhotoBlobUrl} 
-                          alt="Biometric photo" 
-                          className="size-full object-cover" 
-                          onError={() => setBvnPhotoFailed(true)}
+                        <LazyImage
+                          eager
+                          src={bvnPhotoBlobUrl}
+                          alt="Biometric photo"
+                          frameClassName="size-full p-0"
+                          className="size-full object-cover"
+                          fallback={bvnPhotoPlaceholder}
                         />
                       ) : (
-                        <div className="size-full flex flex-col items-center justify-center bg-emerald-50/40 dark:bg-emerald-950/20 p-2 text-center select-none">
-                          <div className="size-10 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-[#018752] flex items-center justify-center mb-1.5 shadow-xs">
-                            <CheckCircle2 className="size-5" />
-                          </div>
-                          <span className="text-[11px] font-bold text-foreground">Biometric on File</span>
-                          <span className="text-[9px] text-[#018752] font-semibold">NIBSS Verified</span>
-                        </div>
+                        bvnPhotoPlaceholder
                       )}
                     </div>
                     <span className="text-xs text-foreground/80 mt-2 font-semibold text-center">

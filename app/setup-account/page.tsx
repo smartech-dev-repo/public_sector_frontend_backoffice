@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useToast } from '@/app/composables/useToast';
 import { useAuth, clearAuthStorage } from '@/app/composables/core/useAuth';
 import AuthInput from '@/app/components/Auth/Input';
+import { AuthCardSkeleton } from '@/app/components/ui/Skeleton';
 
 function SetupAccountContent() {
   const router = useRouter();
@@ -194,7 +195,7 @@ export default function SetupAccountPage() {
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-muted/30">
       <div className="max-w-[420px] w-full">
-        <Suspense fallback={<div className="text-center p-8 text-sm text-muted-foreground">Loading account setup...</div>}>
+        <Suspense fallback={<div className="bg-card p-8 rounded-2xl border border-border/50 shadow-sm"><AuthCardSkeleton label="Loading account setup" /></div>}>
           <SetupAccountContent />
         </Suspense>
       </div>

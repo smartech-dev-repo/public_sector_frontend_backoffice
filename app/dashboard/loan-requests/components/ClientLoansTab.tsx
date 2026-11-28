@@ -9,7 +9,7 @@ import { useEffect, useState, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useLoans } from '@/app/composables/modules/useLoans';
 import { useToast } from '@/app/composables/useToast';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { TableSkeleton } from '@/app/components/ui/Skeleton';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { createPortal } from 'react-dom';
 import Pagination from '@/app/components/ui/Pagination';
@@ -40,7 +40,7 @@ const EXPORT_COLUMNS: ExportColumn<any>[] = [
 
 export default function ClientLoansTab() {
  return (
-  <Suspense fallback={<PulseLoader />}>
+  <Suspense fallback={<TableSkeleton columns={8} label="Loading client loans" />}>
    <ClientLoansContent />
   </Suspense>
  );
@@ -169,7 +169,7 @@ function ClientLoansContent() {
     </FilterBar>
    </div>
 
-   {loading && clientLoans.length === 0 && <PulseLoader />}
+   {loading && clientLoans.length === 0 && <TableSkeleton columns={canReadPlan ? 8 : 7} label="Loading client loans" />}
    {!loading && !canReadClientLoans && (
     <div className="p-8">
      <EmptyState
@@ -324,7 +324,7 @@ function ClientLoansContent() {
        </button>
       </div>
 
-      {repaymentLoading && <PulseLoader />}
+      {repaymentLoading && <TableSkeleton rows={5} columns={4} label="Loading repayment plan" />}
 
       {!repaymentLoading && repaymentPlan && (
        <div>

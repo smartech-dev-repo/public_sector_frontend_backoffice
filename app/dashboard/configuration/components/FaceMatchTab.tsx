@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 import ButtonLoader from '@/app/components/ui/ButtonLoader';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { FormSkeleton } from '@/app/components/ui/Skeleton';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { useDataVersion } from '@/app/composables/useDataVersion';
 import { useToast } from '@/app/composables/useToast';
@@ -50,7 +50,7 @@ export default function FaceMatchTab() {
   addToast('Face match settings saved', 'success');
  };
 
- if (state === 'loading') return <PulseLoader />;
+ if (state === 'loading') return <FormSkeleton fields={2} label="Loading face match settings" />;
  if (state === 'error' || !settings) {
   return <EmptyState title="Couldn't load face match settings" description="Refresh the page to try again." />;
  }

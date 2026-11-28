@@ -5,7 +5,7 @@ import { auditLogs_api } from '@/app/api_factory/modules/auditLogs';
 import { useEffect, useState } from 'react';
 import { useLoans } from '@/app/composables/modules/useLoans';
 import { useToast } from '@/app/composables/useToast';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { StatsSkeleton } from '@/app/components/ui/Skeleton';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { MonthPicker } from '@/app/components/ui/MonthPicker';
 import { GATEWAY_ENDPOINT_WITH_AUTH } from '@/app/api_factory/axios.config';
@@ -81,7 +81,7 @@ export default function DisbursementSummaryTab() {
     </div>
    </div>
 
-   {loading && <PulseLoader />}
+   {loading && <StatsSkeleton cards={2} chart={false} label="Loading disbursement summary" className="mb-8" />}
    {!loading && error && <div className="text-red-500 py-12 text-center">{error}</div>}
    
    {!loading && !error && disbursementSummary && (

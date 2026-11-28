@@ -6,7 +6,7 @@ import { ArrowDownLeft, ArrowUpRight, Clock, Wallet } from 'lucide-react';
 import { wallets_api, type WalletDirection, type WalletSource } from '@/app/api_factory/modules/wallets';
 import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import Pagination from '@/app/components/ui/Pagination';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { TableRowsSkeleton } from '@/app/components/ui/Skeleton';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 import { useDataVersion } from '@/app/composables/useDataVersion';
 import WalletActionDialog from '@/app/components/wallet/WalletActionDialog';
@@ -218,7 +218,7 @@ function WalletsTab({ canManage, onSummary, onStatement }: { canManage: boolean;
             </thead>
             <tbody className="divide-y divide-border/40 text-sm text-foreground">
               {rows === null ? (
-                <tr><td colSpan={7} className="py-12"><PulseLoader /></td></tr>
+                <TableRowsSkeleton columns={7} />
               ) : rows.length === 0 ? (
                 <tr><td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">{search || filters.balance ? 'No wallets match these filters.' : 'No client has had money in their wallet yet.'}</td></tr>
               ) : (
@@ -332,7 +332,7 @@ function TransactionsTab({ onStatement }: { onStatement: OpenStatement }) {
             </thead>
             <tbody className="divide-y divide-border/40 text-sm text-foreground">
               {!data ? (
-                <tr><td colSpan={5} className="py-12"><PulseLoader /></td></tr>
+                <TableRowsSkeleton columns={5} />
               ) : rows.length === 0 ? (
                 <tr><td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">{filtered ? 'No movements match these filters.' : 'No money has moved through any wallet yet.'}</td></tr>
               ) : (

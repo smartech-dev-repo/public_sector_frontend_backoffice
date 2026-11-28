@@ -12,7 +12,7 @@ import { useRoles } from '@/app/composables/modules/useRoles';
 import { useToast } from '@/app/composables/useToast';
 import { createPortal } from 'react-dom';
 import Avatar from '@/app/components/ui/Avatar';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { TableSkeleton } from '@/app/components/ui/Skeleton';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { useConfirm } from '@/app/composables/useConfirm';
 import TableDropdown from '@/app/components/ui/TableDropdown';
@@ -159,7 +159,7 @@ export default function AdminsTab() {
     </FilterBar>
    </div>
 
-   {loading && admins.length === 0 && <PulseLoader />}
+   {loading && admins.length === 0 && <TableSkeleton columns={hasActions ? 6 : 5} withAvatar label="Loading admins" />}
    {!loading && error && <div className="text-red-500 py-12 text-center">{error}</div>}
    
    {!error && !(loading && admins.length === 0) && (

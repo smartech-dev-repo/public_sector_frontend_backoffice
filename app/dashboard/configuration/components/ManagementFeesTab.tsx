@@ -6,7 +6,7 @@ import { Plus, Pencil, Trash2 } from 'lucide-react';
 import Modal from '@/app/components/ui/Modal';
 import EmptyState from '@/app/components/ui/EmptyState';
 import Pagination from '@/app/components/ui/Pagination';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { TableSkeleton } from '@/app/components/ui/Skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/Select';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 import { useConfirm } from '@/app/composables/useConfirm';
@@ -113,7 +113,7 @@ export default function ManagementFeesTab() {
 
       <div className="bg-card rounded-2xl border border-border overflow-hidden">
         {loading && fees.length === 0 ? (
-          <div className="p-6"><PulseLoader /></div>
+          <TableSkeleton columns={6} label="Loading management fees" className="border-0 rounded-none" />
         ) : fees.length === 0 ? (
           <EmptyState title="No management fees yet" description="Add a fee, then pick it on a loan product." />
         ) : (

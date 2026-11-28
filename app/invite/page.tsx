@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useToast } from '@/app/composables/useToast';
+import { AuthCardSkeleton } from '@/app/components/ui/Skeleton';
 
 function InviteForm() {
   const router = useRouter();
@@ -110,7 +111,7 @@ export default function InvitePage() {
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-muted/30">
       <div className="max-w-[400px] w-full">
-        <Suspense fallback={<div className="text-center p-8 text-sm text-muted-foreground">Loading...</div>}>
+        <Suspense fallback={<div className="bg-card p-8 rounded-2xl border border-border/50 shadow-sm"><AuthCardSkeleton label="Loading invitation" /></div>}>
           <InviteForm />
         </Suspense>
       </div>

@@ -7,7 +7,7 @@ import { useLoans } from '@/app/composables/modules/useLoans';
 import { loans_api } from '@/app/api_factory/modules/loans';
 import { formatFeeRange } from '@/app/dashboard/configuration/components/formatFeeRange';
 import { useToast } from '@/app/composables/useToast';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { FormSkeleton } from '@/app/components/ui/Skeleton';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 import { 
@@ -488,11 +488,7 @@ function ProductFormContent() {
   }
 
   if (loadingData) {
-    return (
-      <div className="py-24 flex justify-center items-center">
-        <PulseLoader />
-      </div>
-    );
+    return <FormSkeleton fields={6} label="Loading loan product" className="max-w-7xl mx-auto" />;
   }
 
   return (
@@ -1169,11 +1165,7 @@ function ProductFormContent() {
 
 export default function StandaloneProductPage() {
   return (
-    <Suspense fallback={
-      <div className="py-24 flex justify-center items-center">
-        <PulseLoader />
-      </div>
-    }>
+    <Suspense fallback={<FormSkeleton fields={6} label="Loading loan product" className="max-w-7xl mx-auto" />}>
       <ProductFormContent />
     </Suspense>
   );

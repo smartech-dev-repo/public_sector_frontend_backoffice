@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { admins_api } from '@/app/api_factory/modules/admins';
 import Pagination from '@/app/components/ui/Pagination';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { ListSkeleton } from '@/app/components/ui/Skeleton';
 import EmptyState from '@/app/components/ui/EmptyState';
 
 export default function RoleMembersPanel({ roleId }: { roleId: string }) {
@@ -31,7 +31,7 @@ export default function RoleMembersPanel({ roleId }: { roleId: string }) {
   return () => { stale = true; };
  }, [roleId, page, limit]);
 
- if (status === 'loading') return <PulseLoader />;
+ if (status === 'loading') return <ListSkeleton withAvatar={false} label="Loading role members" />;
  if (status === 'error') return <p className="text-sm text-red-600 py-8 text-center">Could not load the admins holding this role.</p>;
  if (members.length === 0) return <EmptyState title="No admins hold this role." />;
 

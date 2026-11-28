@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { ListSkeleton, PanelSkeleton } from '@/app/components/ui/Skeleton';
 import { loanEligibility_api } from '@/app/api_factory/modules/loanEligibility';
 import { useToast } from '@/app/composables/useToast';
 import { useDataVersion } from '@/app/composables/useDataVersion';
@@ -114,7 +114,7 @@ export default function ClientEligibilityPanel({ clientId, canManage }: Props) {
      ))}
     </div>
 
-    {state === 'loading' && <PulseLoader />}
+    {state === 'loading' && <PanelSkeleton lines={1} className="rounded-lg border border-border px-4 py-3" label="Working out eligibility" />}
     {state === 'error' && <p className="text-sm text-red-600">Could not work out eligibility.</p>}
     {state === 'ready' && result && (
      <div className={`rounded-lg border px-4 py-3 ${result.eligible ? 'border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/20' : 'border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/20'}`}>
@@ -137,7 +137,7 @@ export default function ClientEligibilityPanel({ clientId, canManage }: Props) {
      <h2 className="text-lg font-bold text-foreground">How the maximum is worked out</h2>
      <p className="text-sm text-muted-foreground">From the last three salary payments on the broadsheet, the repayment capacity and the product rate for this tenor.</p>
     </div>
-    <div className="p-5">{result ? <AffordabilityWorkings affordability={result} /> : <PulseLoader />}</div>
+    <div className="p-5">{result ? <AffordabilityWorkings affordability={result} /> : <ListSkeleton rows={5} label="Loading eligibility workings" />}</div>
 
     {canManage && (
      <>

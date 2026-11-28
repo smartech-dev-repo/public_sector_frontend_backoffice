@@ -6,7 +6,7 @@ import { ArrowDownLeft, ArrowUpRight, Clock, ExternalLink, Wallet } from 'lucide
 import { wallets_api, type WalletDirection } from '@/app/api_factory/modules/wallets';
 import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import Pagination from '@/app/components/ui/Pagination';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { Skeleton, TableSkeleton } from '@/app/components/ui/Skeleton';
 import { useDataVersion } from '@/app/composables/useDataVersion';
 import WalletActionDialog from './WalletActionDialog';
 import { DIRECTION_META, SOURCE_META, SOURCE_OPTIONS, TH, actorLabel, dateTime, naira } from './walletFormat';
@@ -47,7 +47,15 @@ export default function ClientWalletPanel({ clientId, clientName, canManage }: P
     return failed ? (
       <div className="bg-card p-6 rounded-2xl border border-border text-sm text-muted-foreground">The wallet couldn’t be loaded. Try again shortly.</div>
     ) : (
-      <div className="py-12"><PulseLoader /></div>
+      <div className="space-y-4">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+          <Skeleton className="h-44 rounded-3xl" />
+          <div className="grid grid-cols-2 gap-3">
+            {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-2xl" />)}
+          </div>
+        </div>
+        <TableSkeleton columns={5} label="Loading wallet" />
+      </div>
     );
   }
 

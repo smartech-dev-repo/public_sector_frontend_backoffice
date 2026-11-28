@@ -9,7 +9,7 @@ import { useClients } from '@/app/composables/modules/useClients';
 import { agents_api } from '@/app/api_factory/modules/agents';
 import { useToast } from '@/app/composables/useToast';
 import Avatar from '@/app/components/ui/Avatar';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { TableSkeleton } from '@/app/components/ui/Skeleton';
 import EmptyState from '@/app/components/ui/EmptyState';
 import ButtonLoader from '@/app/components/ui/ButtonLoader';
 import { createPortal } from 'react-dom';
@@ -413,7 +413,7 @@ export default function AgentManagementPage() {
     </FilterBar>
    </div>
 
-   {loading && agents.length === 0 && <PulseLoader />}
+   {loading && agents.length === 0 && <TableSkeleton columns={6} withAvatar label="Loading agents" />}
    {!loading && error && <div className="text-red-500 py-12 text-center">{error}</div>}
    
    {!error && !(loading && agents.length === 0) && (

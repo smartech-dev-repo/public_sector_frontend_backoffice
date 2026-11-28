@@ -3,7 +3,7 @@
 import { useDataVersion } from '@/app/composables/useDataVersion';
 import { useCallback, useEffect, useState } from 'react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { TableSkeleton } from '@/app/components/ui/Skeleton';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { alertRecipients_api } from '@/app/api_factory/modules/alertRecipients';
 import { useConfirm } from '@/app/composables/useConfirm';
@@ -89,7 +89,7 @@ export default function SecurityAlertsTab() {
     </p>
    )}
 
-   {state === 'loading' && <PulseLoader />}
+   {state === 'loading' && <TableSkeleton columns={3} label="Loading recipients" />}
    {state === 'error' && <p className="text-red-600 py-12 text-center">Could not load recipients.</p>}
    {state === 'ready' && (
     <div className="bg-card rounded-2xl border border-border overflow-hidden">

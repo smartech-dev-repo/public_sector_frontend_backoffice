@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { User } from 'lucide-react';
 
 const SIZES = {
@@ -41,22 +41,32 @@ interface AvatarProps {
 export default function Avatar({ name, sources = [], size = 'md' }: AvatarProps) {
  const candidates = useMemo(() => sources.filter(Boolean) as string[], [sources.join('|')]); // eslint-disable-line react-hooks/exhaustive-deps
  const [index, setIndex] = useState(0);
+ const [loaded, setLoaded] = useState(false);
+ const img = useRef<HTMLImageElement>(null);
 
  useEffect(() => { setIndex(0); }, [candidates]);
+ useEffect(() => {
+  setLoaded(false);
+  // A cached photo can finish before React attaches onLoad.
+  if (img.current?.complete && img.current.naturalWidth > 0) setLoaded(true);
+ }, [candidates, index]);
 
  const shape = `${SIZES[size]} rounded-full shrink-0 overflow-hidden inline-flex items-center justify-center font-semibold`;
  const source = candidates[index];
 
  if (source) {
   return (
-   <span className={`${shape} bg-muted`}>
+   <span className={`${shape} bg-muted ${loaded ? '' : 'motion-safe:animate-pulse'}`}>
     <img
+     ref={img}
      src={source}
      alt={name ? `${name}'s photo` : 'Photo'}
      loading="lazy"
+     decoding="async"
      referrerPolicy="no-referrer"
+     onLoad={() => setLoaded(true)}
      onError={() => setIndex((current) => current + 1)}
-     className="w-full h-full object-cover"
+     className={`w-full h-full object-cover motion-safe:transition-opacity motion-safe:duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
     />
    </span>
   );

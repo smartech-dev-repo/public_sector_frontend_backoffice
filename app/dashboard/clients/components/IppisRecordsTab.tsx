@@ -7,7 +7,7 @@ import { useDataVersion } from '@/app/composables/useDataVersion';
 import FilterBar from '@/app/components/ui/FilterBar';
 import { useCallback, useEffect, useState } from 'react';
 import { useIppis } from '@/app/composables/modules/useIppis';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { TableSkeleton } from '@/app/components/ui/Skeleton';
 import EmptyState from '@/app/components/ui/EmptyState';
 import Pagination from '@/app/components/ui/Pagination';
 import SensitiveValue from '@/app/components/ui/SensitiveValue';
@@ -97,7 +97,7 @@ export default function IppisRecordsTab() {
     </FilterBar>
    </div>
 
-   {loading && ippisRecords.length === 0 && <PulseLoader />}
+   {loading && ippisRecords.length === 0 && <TableSkeleton columns={8} label="Loading IPPIS records" />}
    {!loading && error && <div className="text-red-500 py-12 text-center">{error}</div>}
    
    {!error && !(loading && ippisRecords.length === 0) && (

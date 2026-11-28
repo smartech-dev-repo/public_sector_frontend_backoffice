@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useSectorOptions } from '@/app/composables/modules/useSectorOptions';
 import { reconciliation_api } from '@/app/api_factory/modules/reconciliation';
 import FilterBar from '@/app/components/ui/FilterBar';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { ListSkeleton, StatsSkeleton, TableSkeleton } from '@/app/components/ui/Skeleton';
 import Pagination from '@/app/components/ui/Pagination';
 import { createPortal } from 'react-dom';
 import { MonthPicker } from '@/app/components/ui/MonthPicker';
@@ -76,7 +76,12 @@ export default function DeductionsTab() {
  const resolvedCount = Object.values(summary.resolved ?? {}).reduce((sum: number, r: any) => sum + (r?.count ?? 0), 0);
  const done = () => { setAction(null); load(); };
 
- if (isLoading) return <div className="py-12"><PulseLoader /></div>;
+ if (isLoading) return (
+  <div className="space-y-4">
+   <StatsSkeleton cards={4} chart={false} label="Loading deduction summary" />
+   <TableSkeleton columns={8} label="Loading deductions" />
+  </div>
+ );
 
  return (
   <div className="space-y-4">
@@ -262,7 +267,7 @@ function AssignModal({ row, onClose, onDone }: { row: any; onClose: () => void; 
  return (
   <Dialog onClose={onClose} title="Assign to a loan">
    <Summary row={row} />
-   {loans === null ? <div className="py-6"><PulseLoader /></div> : loans.length === 0 ? (
+   {loans === null ? <ListSkeleton rows={3} withAvatar={false} label="Loading loans" /> : loans.length === 0 ? (
     <p className="text-sm rounded-xl border border-border bg-muted/20 p-3">This staff number has no loans in the app or the disbursed-loans upload, so there is nothing to assign it to. Refund or dismiss it instead.</p>
    ) : (
     <div className="space-y-3 text-sm">

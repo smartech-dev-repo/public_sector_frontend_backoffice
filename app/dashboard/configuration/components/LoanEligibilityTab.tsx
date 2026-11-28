@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { FormSkeleton, ListSkeleton } from '@/app/components/ui/Skeleton';
 import { loans_api } from '@/app/api_factory/modules/loans';
 import { sectors_api } from '@/app/api_factory/modules/sectors';
 import { useConfirm } from '@/app/composables/useConfirm';
@@ -117,7 +117,14 @@ export default function LoanEligibilityTab() {
   return `${parts.join(', ')} · ${reach}`;
  };
 
- if (state === 'loading') return <PulseLoader />;
+ if (state === 'loading') return (
+  <div className="flex flex-col lg:flex-row gap-4 items-start">
+   <div className="w-full lg:w-72 shrink-0 bg-card border border-border rounded-2xl px-4 py-1">
+    <ListSkeleton rows={6} withAvatar={false} label="Loading sectors" />
+   </div>
+   <FormSkeleton fields={3} label="Loading loan eligibility settings" className="flex-1 min-w-0 w-full" />
+  </div>
+ );
  if (state === 'error') {
   return (
    <div className="text-center py-12">

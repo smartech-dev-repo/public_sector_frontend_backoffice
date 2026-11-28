@@ -8,7 +8,7 @@ import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState } from 'react';
 import { useLoans } from '@/app/composables/modules/useLoans';
 import { useToast } from '@/app/composables/useToast';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { TableSkeleton } from '@/app/components/ui/Skeleton';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { createPortal } from 'react-dom';
 import TableDropdown from '@/app/components/ui/TableDropdown';
@@ -262,7 +262,7 @@ export default function RequestsTab() {
         </FilterBar>
       </div>
 
-      {loading && loanRequests.length === 0 && <PulseLoader />}
+      {loading && loanRequests.length === 0 && <TableSkeleton columns={canReview ? 5 : 4} label="Loading loan requests" />}
       {!loading && error && <div className="text-red-500 py-12 text-center">{error}</div>}
       
       {!error && !(loading && loanRequests.length === 0) && (

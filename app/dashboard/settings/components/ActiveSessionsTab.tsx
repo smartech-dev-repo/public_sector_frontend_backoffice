@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { Laptop } from 'lucide-react';
 import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import Pagination from '@/app/components/ui/Pagination';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { TableSkeleton } from '@/app/components/ui/Skeleton';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { useSessions } from '@/app/composables/modules/useSessions';
 import { useConfirm } from '@/app/composables/useConfirm';
@@ -59,7 +59,7 @@ export default function ActiveSessionsTab({ onCountChange }: { onCountChange?: (
     search={{ value: search, onChange: setSearch, placeholder: 'Search IP or device' }}
     filters={[{ key: 'signedIn', label: 'Signed in', type: 'dateRange', value: signedIn, onChange: setSignedIn }]}
    />
-   {loading && sessions.length === 0 ? <PulseLoader /> : (
+   {loading && sessions.length === 0 ? <TableSkeleton columns={4} label="Loading sessions" /> : (
     <div className="bg-card border border-border rounded-2xl overflow-hidden">
      <div className="overflow-x-auto">
       <table className="w-full text-left text-sm">

@@ -7,7 +7,7 @@ import { useDataVersion } from '@/app/composables/useDataVersion';
 import FilterBar, { dateRangeParams } from '@/app/components/ui/FilterBar';
 import { useEffect, useState } from 'react';
 import { useLoans } from '@/app/composables/modules/useLoans';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { TableSkeleton } from '@/app/components/ui/Skeleton';
 import EmptyState from '@/app/components/ui/EmptyState';
 import Pagination from '@/app/components/ui/Pagination';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/components/ui/Select';
@@ -81,7 +81,7 @@ export default function LoansCatalogTab() {
     </FilterBar>
    </div>
 
-   {loading && loans.length === 0 && <PulseLoader />}
+   {loading && loans.length === 0 && <TableSkeleton columns={6} label="Loading loans" />}
    {!loading && error && <div className="text-red-500 py-12 text-center">{error}</div>}
    
    {!error && !(loading && loans.length === 0) && (

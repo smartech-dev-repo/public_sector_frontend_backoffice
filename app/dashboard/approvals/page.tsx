@@ -9,7 +9,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import FilterBar from '@/app/components/ui/FilterBar';
 import Pagination from '@/app/components/ui/Pagination';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { TableSkeleton } from '@/app/components/ui/Skeleton';
 import EmptyState from '@/app/components/ui/EmptyState';
 import Modal from '@/app/components/ui/Modal';
 import { approvals_api } from '@/app/api_factory/modules/approvals';
@@ -140,7 +140,7 @@ export default function ApprovalsPage() {
      <ExportButton fileName="Approvals" resource="Approvals" columns={EXPORT_COLUMNS} fetchPage={(page, limit) => approvals_api.list({ ...exportParams.current, page, limit })} />
     </FilterBar>
    )}
-   {state === 'loading' && <PulseLoader />}
+   {state === 'loading' && <TableSkeleton columns={6} label="Loading approvals" />}
    {state === 'error' && <p className="text-red-600 py-12 text-center">Could not load approvals.</p>}
    {state === 'ready' && (
     <div className="bg-card rounded-2xl border border-border overflow-hidden">

@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import FilterBar from '@/app/components/ui/FilterBar';
 import Pagination from '@/app/components/ui/Pagination';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { ListSkeleton } from '@/app/components/ui/Skeleton';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { timeAgo } from '@/app/components/ui/NotificationBell';
 import { notifications_api } from '@/app/api_factory/modules/notifications';
@@ -72,7 +72,11 @@ export default function NotificationsPage() {
     />
     <button type="button" onClick={markAll} className="h-11 px-4 border border-border bg-card rounded-lg text-sm font-medium text-foreground hover:bg-muted/50">Mark all as read</button>
    </div>
-   {state === 'loading' && <PulseLoader />}
+   {state === 'loading' && (
+    <div className="bg-card rounded-2xl border border-border overflow-hidden px-5">
+     <ListSkeleton withAvatar={false} label="Loading notifications" />
+    </div>
+   )}
    {state === 'error' && <p className="text-red-600 py-12 text-center">Could not load notifications.</p>}
    {state === 'ready' && items.length === 0 && <EmptyState title="No notifications." />}
    {state === 'ready' && items.length > 0 && (

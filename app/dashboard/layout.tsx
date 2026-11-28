@@ -15,6 +15,7 @@ import { announceNotificationsChanged, useNotificationSummary } from '@/app/comp
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 import { useAuth } from '@/app/composables/core/useAuth';
 import TableScrollEdges from '@/app/components/ui/TableScrollEdges';
+import LazyImage from '@/app/components/ui/LazyImage';
 import { 
   Sun, 
   Moon, 
@@ -499,7 +500,7 @@ export default function CreditRiskLayout({ children }: { children: React.ReactNo
        >
         <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#018752] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-sm border border-emerald-600 overflow-hidden">
          {profile?.profileImage ? (
-          <img src={profile.profileImage} alt={displayName} className="w-full h-full object-cover" />
+          <LazyImage src={profile.profileImage} alt={displayName} className="w-full h-full object-cover" frameClassName="w-full h-full" fallback={displayInitials} eager />
          ) : (
           displayInitials
          )}

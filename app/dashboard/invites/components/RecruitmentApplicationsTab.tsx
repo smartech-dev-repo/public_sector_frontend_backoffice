@@ -12,7 +12,8 @@ import { useAgentRecruitment, AgentRecruitmentApplication } from '@/app/composab
 import { useAgents } from '@/app/composables/modules/useAgents';
 import { useConfirm } from '@/app/composables/useConfirm';
 import { useToast } from '@/app/composables/useToast';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { TableSkeleton, PanelSkeleton } from '@/app/components/ui/Skeleton';
+import LazyImage from '@/app/components/ui/LazyImage';
 import EmptyState from '@/app/components/ui/EmptyState';
 import TableDropdown from '@/app/components/ui/TableDropdown';
 import Pagination from '@/app/components/ui/Pagination';
@@ -467,7 +468,7 @@ export default function RecruitmentApplicationsTab() {
       </div>
 
       {/* ================= DATA TABLE ================= */}
-      {loading && applications.length === 0 && <PulseLoader />}
+      {loading && applications.length === 0 && <TableSkeleton columns={6} label="Loading applications" />}
       {!loading && error && <div className="text-red-500 py-12 text-center">{error}</div>}
 
       {!error && !(loading && applications.length === 0) && (
@@ -711,9 +712,7 @@ export default function RecruitmentApplicationsTab() {
             {/* Modal Body */}
             <div className="p-6 overflow-y-auto space-y-6">
               {detailLoading || !selectedApp ? (
-                <div className="py-12">
-                  <PulseLoader />
-                </div>
+                <PanelSkeleton lines={8} label="Loading application" />
               ) : (
                 <>
                   {/* Status Banner */}
@@ -1163,9 +1162,11 @@ export default function RecruitmentApplicationsTab() {
                   </div>
                 </div>
               ) : (
-                <img
+                <LazyImage
                   src={previewDoc.url}
                   alt={previewDoc.title}
+                  eager
+                  frameClassName="inline-flex"
                   className="max-h-[68vh] max-w-full w-auto object-contain rounded-xl shadow-md border border-border bg-slate-950/20"
                 />
               )}

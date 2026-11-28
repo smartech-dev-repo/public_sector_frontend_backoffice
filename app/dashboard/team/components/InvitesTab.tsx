@@ -10,7 +10,7 @@ import { useRoles } from '@/app/composables/modules/useRoles';
 import { useToast } from '@/app/composables/useToast';
 import { useConfirm } from '@/app/composables/useConfirm';
 import { createPortal } from 'react-dom';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { TableSkeleton } from '@/app/components/ui/Skeleton';
 import EmptyState from '@/app/components/ui/EmptyState';
 import TableDropdown from '@/app/components/ui/TableDropdown';
 import Pagination from '@/app/components/ui/Pagination';
@@ -206,7 +206,7 @@ export default function InvitesTab() {
     </FilterBar>
    </div>
 
-   {loading && invites.length === 0 && <PulseLoader />}
+   {loading && invites.length === 0 && <TableSkeleton columns={canInvite ? 5 : 4} label="Loading invites" />}
    {!loading && error && <div className="text-red-500 py-12 text-center">{error}</div>}
    
    {!error && !(loading && invites.length === 0) && (

@@ -9,7 +9,7 @@ import { useState, Suspense, useEffect } from 'react';
 import CustomerProfilesTab from './components/CustomerProfilesTab';
 import ClientOnboardingModal from './components/ClientOnboardingModal';
 import IppisRecordsTab from './components/IppisRecordsTab';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { TableSkeleton } from '@/app/components/ui/Skeleton';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 
@@ -90,7 +90,7 @@ export default function CustomerManagementPage() {
       <TabTotalScope value={reportTabTotal}>
       <div className="pt-1">
         {activeTab === 'profiles' && canReadProfiles && (
-          <Suspense fallback={<PulseLoader />}>
+          <Suspense fallback={<TableSkeleton columns={7} withAvatar label="Loading clients" />}>
             <CustomerProfilesTab key={refreshKey} onOpenOnboard={() => setOnboardingOpen(true)} />
           </Suspense>
         )}

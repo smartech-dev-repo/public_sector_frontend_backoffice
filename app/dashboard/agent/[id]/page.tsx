@@ -15,7 +15,8 @@ import { useLoans } from '@/app/composables/modules/useLoans';
 import { useSessions } from '@/app/composables/modules/useSessions';
 import { useToast } from '@/app/composables/useToast';
 import { clients_api } from '@/app/api_factory/modules/clients';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { DetailSkeleton, TableRowsSkeleton } from '@/app/components/ui/Skeleton';
+import LazyImage from '@/app/components/ui/LazyImage';
 import Pagination from '@/app/components/ui/Pagination';
 import DatePicker from '@/app/components/ui/DatePicker';
 import { useConfirm } from '@/app/composables/useConfirm';
@@ -338,7 +339,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
   };
 
   if (loading && !application) {
-    return <PulseLoader />;
+    return <DetailSkeleton tabs={2} cards={2} label="Loading agent" />;
   }
 
   if (!canReadAgent) {
@@ -930,14 +931,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
                   </thead>
                   <tbody className="divide-y divide-border/60">
                     {loansLoading ? (
-                      <tr>
-                        <td colSpan={6} className="text-center py-16 text-muted-foreground">
-                          <div className="flex flex-col items-center justify-center">
-                            <PulseLoader />
-                            <span className="text-xs text-muted-foreground mt-2">Loading originated loans...</span>
-                          </div>
-                        </td>
-                      </tr>
+                      <TableRowsSkeleton columns={6} />
                     ) : clientLoans.length === 0 ? (
                       <tr>
                         <td colSpan={6} className="px-4 py-20 text-center">
@@ -1026,14 +1020,7 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
                   </thead>
                   <tbody className="divide-y divide-border/60">
                     {clientsLoading ? (
-                      <tr>
-                        <td colSpan={6} className="text-center py-16 text-muted-foreground">
-                          <div className="flex flex-col items-center justify-center">
-                            <PulseLoader />
-                            <span className="text-xs text-muted-foreground mt-2">Loading onboarded customers...</span>
-                          </div>
-                        </td>
-                      </tr>
+                      <TableRowsSkeleton columns={6} />
                     ) : onboardedClients.length === 0 ? (
                       <tr>
                         <td colSpan={6} className="px-4 py-20 text-center">
@@ -1317,9 +1304,11 @@ export default function AgentPage({ params }: { params: Promise<{ id: string }> 
                   </div>
                 </div>
               ) : (
-                <img
+                <LazyImage
                   src={previewDoc.url}
                   alt={previewDoc.title}
+                  eager
+                  frameClassName="inline-flex"
                   className="max-h-[68vh] max-w-full w-auto object-contain rounded-xl shadow-md border border-border bg-slate-950/20"
                 />
               )}

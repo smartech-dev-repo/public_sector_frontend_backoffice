@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { useDepartments } from '@/app/composables/modules/useDepartments';
 import { useToast } from '@/app/composables/useToast';
 import { createPortal } from 'react-dom';
-import PulseLoader from '@/app/components/ui/PulseLoader';
+import { TableSkeleton } from '@/app/components/ui/Skeleton';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { useConfirm } from '@/app/composables/useConfirm';
 import TableDropdown from '@/app/components/ui/TableDropdown';
@@ -110,9 +110,7 @@ export default function DepartmentsTab() {
    />
 
    {loading && departments.length === 0 ? (
-    <div className="flex justify-center items-center p-12">
-     <PulseLoader />
-    </div>
+    <TableSkeleton columns={canManage ? 5 : 4} label="Loading departments" />
    ) : error ? (
     <div className="bg-destructive/10 text-destructive p-4 rounded-lg text-sm">
      {error}
