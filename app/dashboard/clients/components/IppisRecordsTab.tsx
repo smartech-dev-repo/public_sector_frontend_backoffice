@@ -147,8 +147,11 @@ export default function IppisRecordsTab() {
           </td>
           <td className="px-4 py-3 whitespace-nowrap text-sm text-foreground font-medium text-right">{formatIppisAmount(record.salary)}</td>
           <td className="px-4 py-3 whitespace-nowrap text-right">
-           {/* Oldest to newest, the order the eligibility workings read them. */}
-           <div className="inline-grid grid-cols-3 gap-x-3 text-right">
+           {/* Oldest to newest, the order the eligibility workings read them. Columns never shrink
+               below their content (grid-cols-3 is minmax(0, 1fr), which a table squeezes to zero, so
+               the amounts drew on top of each other), and the 6.5rem floor fits ₦9,999,999.99 so
+               the columns line up from row to row. */}
+           <div className="inline-grid grid-cols-[repeat(3,minmax(6.5rem,auto))] gap-x-4 text-right">
             {PAYMENT_MONTHS.map(([label]) => <span key={label} className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</span>)}
             {PAYMENT_MONTHS.map(([label, key]) => <span key={label} className="text-sm text-foreground/90 tabular-nums">{formatIppisAmount(record[key])}</span>)}
            </div>
