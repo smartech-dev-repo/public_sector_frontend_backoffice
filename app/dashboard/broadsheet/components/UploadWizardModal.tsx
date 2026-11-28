@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { checkUploadFile } from '@/app/lib/file-signature';
 import { createPortal } from 'react-dom';
 import { AlertTriangle, Check, CheckCircle2, Download, FileSpreadsheet, Loader2, UploadCloud, X, XCircle } from 'lucide-react';
 import { documents_api, type DocumentSlug } from '@/app/api_factory/modules/documents';
@@ -75,6 +76,8 @@ export default function UploadWizardModal({ isOpen, onClose, onChanged, document
   const [showAllIssues, setShowAllIssues] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
+  // The file whose contents are being checked; a slower check for an earlier pick is ignored.
+  const chosenRef = useRef<File | null>(null);
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Held in a ref: the page passes a new function each render, and the opening effect
   // below must not re-run because of it, or it resets the wizard and reloads forever.
@@ -179,6 +182,10 @@ export default function UploadWizardModal({ isOpen, onClose, onChanged, document
       setFileError(`This file is ${formatBytes(candidate.size)}. The limit is ${formatBytes(template.maxFileSizeBytes)}.`);
     } else {
       setFileError(null);
+      chosenRef.current = candidate;
+      void checkUploadFile(candidate, 'spreadsheet').then((problem) => {
+        if (problem && chosenRef.current === candidate) setFileError(problem);
+      });
     }
   };
 

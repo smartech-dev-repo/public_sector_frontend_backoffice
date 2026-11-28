@@ -39,6 +39,7 @@ const ACTION_LABELS: Record<string, string> = {
  'management-fee.updated': 'Management fee edited',
  'management-fee.deleted': 'Management fee deleted',
  'access.denied': 'Access denied',
+ 'upload.rejected': 'File upload refused',
  'sector.created': 'Sector added',
  'sector.updated': 'Sector renamed',
  'sector.deleted': 'Sector removed',

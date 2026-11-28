@@ -19,6 +19,7 @@ import {
 import { toast } from 'sonner';
 import { documents_api } from '@/app/api_factory/modules/documents';
 import LazyImage from '@/app/components/ui/LazyImage';
+import { checkUploadFile } from '@/app/lib/file-signature';
 
 type StepNumber = 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -245,6 +246,13 @@ export default function ClientOnboardingModal({ open, onOpenChange, onSuccess }:
 
     if (file.size > 5 * 1024 * 1024) {
       toast.error('File size cannot exceed 5MB');
+      return;
+    }
+
+    // What the file really is, from its bytes. The passport photo is compared with the face on the ID, so it must be a photo.
+    const problem = await checkUploadFile(file, key === 'passport' ? 'photo' : 'document');
+    if (problem) {
+      toast.error(problem);
       return;
     }
 

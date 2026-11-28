@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 import QrCodeImage from '@/app/components/ui/QrCode';
+import { checkUploadFile } from '@/app/lib/file-signature';
 
 export default function ProfileAndSecurityPage() {
   const { hasPermission, isSuperAdmin } = useAdminPermissions();
@@ -259,8 +260,10 @@ export default function ProfileAndSecurityPage() {
   const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      return addToast('Please select a valid image file (JPEG or PNG)', 'error');
+    const problem = await checkUploadFile(file, 'photo');
+    if (problem) {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return addToast(problem, 'error');
     }
     setImageUploading(true);
     try {

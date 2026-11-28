@@ -7,6 +7,7 @@ import EmptyState from '@/app/components/ui/EmptyState';
 import { useToast } from '@/app/composables/useToast';
 import { useAdminPermissions } from '@/app/composables/useAdminPermissions';
 import { Download, Upload, FileText } from 'lucide-react';
+import { checkUploadFile } from '@/app/lib/file-signature';
 
 export default function IppisPage() {
   const { isSuperAdmin, hasPermission } = useAdminPermissions();
@@ -26,6 +27,12 @@ export default function IppisPage() {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const problem = await checkUploadFile(file, 'spreadsheet');
+    if (problem) {
+      addToast(problem, 'error');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
     const formData = new FormData();
     formData.append('file', file);
     try {

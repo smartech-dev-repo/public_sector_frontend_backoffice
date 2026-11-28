@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Paperclip, X } from 'lucide-react';
+import { checkUploadFile } from '@/app/lib/file-signature';
 
 interface Props {
  title: string;
@@ -28,10 +29,12 @@ export default function ReasonDialog({ title, description, confirmText, tone = '
  const [busy, setBusy] = useState(false);
  const tooShort = reason.trim().length < 5;
 
- const pick = (file: File | null) => {
+ const pick = async (file: File | null) => {
   setError('');
   if (file && !PROOF_TYPES.includes(file.type)) return setError('Proof must be a JPEG, PNG or PDF file.');
   if (file && file.size > MAX_PROOF) return setError('Proof must be 5 MB or smaller.');
+  const problem = file ? await checkUploadFile(file, 'document') : null;
+  if (problem) return setError(problem);
   setProof(file);
  };
 
@@ -78,7 +81,7 @@ export default function ReasonDialog({ title, description, confirmText, tone = '
       ) : (
        <label className="flex items-center justify-center gap-2 h-11 rounded-lg border border-dashed border-border text-sm text-muted-foreground cursor-pointer hover:bg-muted/40">
         <Paperclip className="w-4 h-4" /> Attach a letter, report or screenshot
-        <input type="file" accept="image/jpeg,image/png,application/pdf" className="sr-only" onChange={(e) => pick(e.target.files?.[0] ?? null)} />
+        <input type="file" accept="image/jpeg,image/png,application/pdf" className="sr-only" onChange={(e) => void pick(e.target.files?.[0] ?? null)} />
        </label>
       )}
       <span className="block mt-1 text-xs text-muted-foreground">JPEG, PNG or PDF, up to 5 MB.</span>
